@@ -13,22 +13,54 @@ use cassowary::{ Solver, Variable };
 use cassowary::WeightedRelation::*;
 use cassowary::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
 
-struct Node {
+trait WidgetDrawable {
+    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d);
+}
+
+struct RectDrawable {
+    background: Color,
+}
+impl RectDrawable {
+    fn new(color: [f32; 3]) -> Self {
+        RectDrawable { background: [color[0], color[1], color[2], 1.0] }
+    }
+}
+impl WidgetDrawable for RectDrawable {
+    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d) {
+        Rectangle::new(self.background).draw(bounds, &c.draw_state, c.transform, g);
+    }
+}
+
+struct EllipseDrawable {
+    background: Color,
+}
+impl EllipseDrawable {
+    fn new(color: [f32; 3]) -> Self {
+        EllipseDrawable { background: [color[0], color[1], color[2], 1.0] }
+    }
+}
+impl WidgetDrawable for EllipseDrawable {
+    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d) {
+        Ellipse::new(self.background).draw(bounds, &c.draw_state, c.transform, g);
+    }
+}
+
+struct Node<'a> {
     left: Variable,
     right: Variable,
     top: Variable,
     bottom: Variable,
-    background: Color,
+    drawable: &'a WidgetDrawable,
 }
 
-impl Node {
-    fn new(color: [f32; 3]) -> Self {
+impl<'a>  Node<'a>  {
+    fn new<W: WidgetDrawable>(drawable: &'a W) -> Self {
         Node {
             left: Variable::new(),
             right: Variable::new(),
             top: Variable::new(),
             bottom: Variable::new(),
-            background: [color[0], color[1], color[2], 1.0],
+            drawable: drawable,
         }
     }
     fn print(&self, solver: &mut Solver) {
@@ -39,13 +71,13 @@ impl Node {
             solver.get_value(self.bottom));
     }
     fn draw(&self, solver: &mut Solver, c: Context, g: &mut G2d) {
-        Rectangle::new(self.background)
-            .draw([
+        let bounds = [
                 solver.get_value(self.left),
                 solver.get_value(self.top),
                 solver.get_value(self.right) - solver.get_value(self.left),
                 solver.get_value(self.bottom) - solver.get_value(self.top),
-                ], &c.draw_state, c.transform, g);
+                ];
+        self.drawable.draw(bounds, c, g);
     }
 }
 
@@ -64,8 +96,10 @@ fn main() {
     let window_width = Variable::new();
     let window_height = Variable::new();
 
-    let box1 = Node::new([1.0, 0.0, 0.0]);
-    let box2 = Node::new([1.0, 0.0, 1.0]);
+    let rect = &RectDrawable::new([1.0, 0.0, 0.0]);
+    let box1 = Node::new(rect);
+    let circle = CircleDrawable::new([1.0, 0.0, 1.0]);
+    let box2 = Node::new(&circle);
 
     let mut solver = Solver::new();
     solver.add_constraints(&[
