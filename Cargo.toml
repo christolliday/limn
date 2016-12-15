@@ -5,7 +5,8 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 
 [dependencies]
 backend = { path = "backend" }
-shader_version = "0.2.0"
-pistoncore-window = "0.24.0"
-pistoncore-glutin_window = "0.33.0"
 piston2d-graphics = "0.19"
+cassowary = "0.2.0"
+
+[replace]
+"cassowary:0.2.0" = { path = "../cassowary-rs" }

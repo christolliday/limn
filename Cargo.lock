@@ -3,10 +3,8 @@ name = "grafiki"
 version = "0.1.0"
 dependencies = [
  "backend 0.1.0",
+ "cassowary 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-graphics 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pistoncore-glutin_window 0.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pistoncore-window 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "shader_version 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -93,6 +91,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "byteorder"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "cassowary"
+version = "0.2.0"
+
+[[package]]
+name = "cassowary"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+replace = "cassowary 0.2.0"
 
 [[package]]
 name = "cfg-if"
@@ -1100,6 +1108,7 @@ dependencies = [
 "checksum block 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 "checksum byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "96c8b41881888cc08af32d47ac4edd52bc7fa27fef774be47a92443756451304"
 "checksum byteorder 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "0fc10e8cc6b2580fda3f36eb6dc5316657f812a3df879a44a66fc9f0fdbc4855"
+"checksum cassowary 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "70424fdca5b900e52931be16d8fa8237b8d102d20c308eac138b330977df2d73"
 "checksum cfg-if 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "de1e760d7b6535af4241fca8bd8adf68e2e7edacc6b29f5d399050c5e48cf88c"
 "checksum cgl 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "8bdd78cca65a739cb5475dbf6b6bbb49373e327f4a6f2b499c0f98632df38c10"
 "checksum cocoa 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "3afe4613f57a171039a98db1773f5840b5743cf85aaf03afb65ddfade4f4a9db"
