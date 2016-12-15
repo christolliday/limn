@@ -1,7 +1,9 @@
 extern crate backend;
 extern crate graphics;
 extern crate cassowary;
+extern crate input;
 
+use input::ResizeEvent;
 use backend::{Window, WindowEvents, OpenGL};
 use backend::gfx::G2d;
 use graphics::*;
@@ -16,10 +18,6 @@ struct Node {
     right: Variable,
     top: Variable,
     bottom: Variable,
-    width: Variable,
-    height: Variable,
-    h_center: Variable,
-    v_center: Variable,
     background: Color,
 }
 
@@ -30,10 +28,6 @@ impl Node {
             right: Variable::new(),
             top: Variable::new(),
             bottom: Variable::new(),
-            width: Variable::new(),
-            height: Variable::new(),
-            h_center: Variable::new(),
-            v_center: Variable::new(),
             background: [color[0], color[1], color[2], 1.0],
         }
     }
@@ -50,7 +44,8 @@ impl Node {
                 solver.get_value(self.left),
                 solver.get_value(self.top),
                 solver.get_value(self.right) - solver.get_value(self.left),
-                solver.get_value(self.top) - solver.get_value(self.bottom)], &c.draw_state, c.transform, g);
+                solver.get_value(self.bottom) - solver.get_value(self.top),
+                ], &c.draw_state, c.transform, g);
     }
 }
 
@@ -73,7 +68,11 @@ fn main() {
     let box2 = Node::new([1.0, 0.0, 1.0]);
 
     let mut solver = Solver::new();
-    solver.add_constraints(&[window_width |GE(REQUIRED)| 0.0, // positive window width
+    solver.add_constraints(&[
+                            window_width |GE(REQUIRED)| 0.0, // positive window width
+                            window_height |GE(REQUIRED)| 0.0, // positive window width
+                            box1.top |EQ(REQUIRED)| 0.0, // top align
+                            box2.bottom |EQ(REQUIRED)| window_height, // bottom align
                             box1.left |EQ(REQUIRED)| 0.0, // left align
                             box2.right |EQ(REQUIRED)| window_width, // right align
                             box2.left |GE(REQUIRED)| box1.right, // no overlap
@@ -84,18 +83,23 @@ fn main() {
                             box1.right - box1.left |EQ(WEAK)| 50.0,
                             box2.right - box2.left |EQ(WEAK)| 100.0,
                             // heights
-                            box1.top - box1.bottom |EQ(WEAK)| 100.0,
-                            box2.top - box2.bottom |EQ(WEAK)| 100.0],
+                            box1.bottom - box1.top |EQ(WEAK)| 100.0,
+                            box2.bottom - box2.top |EQ(WEAK)| 100.0],
                             ).unwrap();
     
     solver.add_edit_variable(window_width, STRONG).unwrap();
+    solver.add_edit_variable(window_height, STRONG).unwrap();
     solver.suggest_value(window_width, WIN_W).unwrap();
+    solver.suggest_value(window_height, WIN_H).unwrap();
 
-    //box1.print(&mut solver);
-    //box2.print(&mut solver);
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
         window.handle_event(&event);
+        if let Some(w_h) = event.resize_args() {
+            println!("{:?} {:?}",w_h[0], w_h[1]);
+            solver.suggest_value(window_width, w_h[0] as f64).unwrap();
+            solver.suggest_value(window_height, w_h[1] as f64).unwrap();
+        }
 
         window.draw_2d(&event, |c, g| {
             clear([0.8, 0.8, 0.8, 1.0], g);

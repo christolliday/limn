@@ -5,6 +5,7 @@ dependencies = [
  "backend 0.1.0",
  "cassowary 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-graphics 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pistoncore-input 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
