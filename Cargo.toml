@@ -8,6 +8,7 @@ backend = { path = "backend" }
 piston2d-graphics = "0.19"
 cassowary = "0.2.0"
 pistoncore-input = "0.15.0"
+pistoncore-window = "0.24.0"
 
 [replace]
 "cassowary:0.2.0" = { path = "../cassowary-rs" }
