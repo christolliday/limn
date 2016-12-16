@@ -3,6 +3,7 @@ extern crate graphics;
 extern crate cassowary;
 extern crate input;
 extern crate window;
+extern crate petgraph;
 
 use input::ResizeEvent;
 use backend::{Window, WindowEvents, OpenGL};
@@ -14,6 +15,10 @@ use window::Size;
 use cassowary::{ Solver, Variable, Constraint };
 use cassowary::WeightedRelation::*;
 use cassowary::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
+
+use petgraph::Graph;
+use petgraph::graph::NodeIndex;
+use petgraph::visit::Dfs;
 
 #[derive(Copy, Clone)]
 struct Dimensions { width: Scalar, height: Scalar, }
@@ -64,7 +69,6 @@ struct Node<'a> {
     bottom: Variable,
     drawable: Option<&'a WidgetDrawable>,
     constraints: Vec<Constraint>,
-    nodes: Vec<Node<'a>>,
 }
 
 impl<'a>  Node<'a>  {
@@ -76,7 +80,6 @@ impl<'a>  Node<'a>  {
             bottom: Variable::new(),
             drawable: drawable,
             constraints: Vec::new(),
-            nodes: Vec::new(),
         }
     }
     fn print(&self, solver: &mut Solver) {
@@ -110,13 +113,20 @@ impl<'a>  Node<'a>  {
     fn height(&mut self, height: Scalar, strength: f64) {
         self.constraints.push(self.bottom - self.top |EQ(strength)| height)
     }
-    fn add_node(&mut self, node: Node<'a>) {
-        self.nodes.push(node);
+    fn add_node(&mut self, node: &mut Node<'a>) {
+        let constraints = [
+            node.left |GE(REQUIRED)| self.left,
+            node.top |GE(REQUIRED)| self.top,
+            node.right |LE(REQUIRED)| self.right,
+            node.bottom |LE(REQUIRED)| self.bottom,
+        ];
+        node.add_constraints(&constraints);
     }
 }
 
 struct Ui<'a> {
-    window: Node<'a>,
+    graph: Graph<Node<'a>, ()>,
+    window: NodeIndex,
     constraints: Vec<Constraint>,
     pub solver: Solver,
     window_width: Variable,
@@ -133,26 +143,45 @@ impl<'a> Ui<'a> {
         solver.add_edit_variable(window_height, STRONG).unwrap();
         solver.suggest_value(window_width, window_dim.width).unwrap();
         solver.suggest_value(window_height, window_dim.height).unwrap();
-        Ui { window: window, solver: solver, constraints: constraints, window_width: window_width, window_height: window_height }
+
+        let mut graph = Graph::<Node, ()>::new();
+        let window = graph.add_node(window);
+        Ui { 
+            window: window, 
+            graph: graph, solver: solver, constraints: constraints, window_width: window_width, window_height: window_height }
     }
     fn resize_window(&mut self, window_dims: [u32; 2]) {
         self.solver.suggest_value(self.window_width, window_dims[0] as f64).unwrap();
         self.solver.suggest_value(self.window_height, window_dims[1] as f64).unwrap();
     }
     fn init(&mut self) {
-        for ref mut node in &mut self.window.nodes {
+        let mut dfs = Dfs::new(&self.graph, self.window);
+        while let Some(node_index) = dfs.next(&self.graph) {
+
+            let ref mut node = self.graph[node_index];
             let constraints = &mut node.constraints;
             self.constraints.append(constraints);
         }
         self.solver.add_constraints(&self.constraints);
     }
     fn draw(&mut self, c: Context, g: &mut G2d) {
-        for ref node in &self.window.nodes {
+        let mut dfs = Dfs::new(&self.graph, self.window);
+        while let Some(node_index) = dfs.next(&self.graph) {
+            let ref node = self.graph[node_index];
             node.draw(&mut self.solver, c, g);
         }
     }
+    fn add_node(&mut self, parent: NodeIndex, child: Node<'a>) -> NodeIndex {
+        let child_index = self.graph.add_node(child);
+        self.add_child(parent, child_index);
+        child_index
+    }
+    fn add_child(&mut self, parent: NodeIndex, child: NodeIndex) {
+        self.graph.add_edge(parent, child, ());
+        let (parent_node, child_node) = self.graph.index_twice_mut(parent, child);
+        parent_node.add_node(child_node);
+    }
 }
-
 fn main() {
     let window_dim = Dimensions { width: 400.0, height: 720.0 };
 
@@ -164,12 +193,12 @@ fn main() {
     // Create the event loop.
     let mut events = WindowEvents::new();
 
+    let circle2 = EllipseDrawable::new([1.0, 1.0, 1.0]);
+    let mut box3 = Node::new(Some(&circle2));
     let rect = RectDrawable::new([1.0, 0.0, 0.0]);
     let mut box1 = Node::new(Some(&rect));
     let circle = EllipseDrawable::new([1.0, 0.0, 1.0]);
     let mut box2 = Node::new(Some(&circle));
-    //let circle2 = EllipseDrawable::new([1.0, 1.0, 1.0]);
-    //let mut box3 = Node::new(Some(&circle2));
 
     let ui = &mut Ui::new(window_dim);
 
@@ -190,9 +219,10 @@ fn main() {
     box2.height(100.0, WEAK);
     box2.add_constraints(&box2_constraints);
 
-    ui.window.add_node(box1);
-    ui.window.add_node(box2);
-    //box1.add_node(box3);
+    let window_index = ui.window;
+    let box1_index = ui.add_node(window_index, box1);
+    ui.add_node(window_index, box2);
+    ui.add_node(box1_index, box3);
     ui.init();
 
     // Poll events from the window.
