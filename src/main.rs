@@ -18,11 +18,15 @@ use cassowary::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
 
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::Dfs;
+use petgraph::visit::{ Dfs, DfsPostOrder };
+
+pub mod widget;
+use widget::*;
 
 #[derive(Copy, Clone)]
-struct Dimensions { width: Scalar, height: Scalar, }
-struct Point { x: Scalar, y: Scalar, }
+pub struct Dimensions { width: Scalar, height: Scalar, }
+#[derive(Copy, Clone)]
+pub struct Point { x: Scalar, y: Scalar, }
 
 impl Into<Size> for Dimensions {
     fn into(self) -> Size {
@@ -30,123 +34,9 @@ impl Into<Size> for Dimensions {
     }
 }
 
-trait WidgetDrawable {
-    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d);
-}
-
-struct RectDrawable {
-    background: Color,
-}
-impl RectDrawable {
-    fn new(color: [f32; 3]) -> Self {
-        RectDrawable { background: [color[0], color[1], color[2], 1.0] }
-    }
-}
-impl WidgetDrawable for RectDrawable {
-    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d) {
-        Rectangle::new(self.background).draw(bounds, &c.draw_state, c.transform, g);
-    }
-}
-
-struct EllipseDrawable {
-    background: Color,
-}
-impl EllipseDrawable {
-    fn new(color: [f32; 3]) -> Self {
-        EllipseDrawable { background: [color[0], color[1], color[2], 1.0] }
-    }
-}
-impl WidgetDrawable for EllipseDrawable {
-    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d) {
-        Ellipse::new(self.background).draw(bounds, &c.draw_state, c.transform, g);
-    }
-}
-
-struct WidgetLayout {
-    left: Variable,
-    right: Variable,
-    top: Variable,
-    bottom: Variable,
-    constraints: Vec<Constraint>,
-}
-impl WidgetLayout {
-    fn new() -> Self {
-        WidgetLayout {
-            left: Variable::new(),
-            right: Variable::new(),
-            top: Variable::new(),
-            bottom: Variable::new(),
-            constraints: Vec::new(),
-        }
-    }
-    // layout
-    fn add_constraint(&mut self, constraint: Constraint) {
-        self.constraints.push(constraint);
-    }
-    fn add_constraints(&mut self, constraints: &[Constraint]) {
-        self.constraints.extend_from_slice(constraints);
-    }
-    fn width(&mut self, width: Scalar, strength: f64) {
-        self.constraints.push(self.right - self.left |EQ(strength)| width)
-    }
-    fn height(&mut self, height: Scalar, strength: f64) {
-        self.constraints.push(self.bottom - self.top |EQ(strength)| height)
-    }
-    fn bound_by<'a>(&mut self, layout: &WidgetLayout) {
-        let constraints = [
-            layout.left |GE(REQUIRED)| self.left,
-            layout.top |GE(REQUIRED)| self.top,
-            layout.right |LE(REQUIRED)| self.right,
-            layout.bottom |LE(REQUIRED)| self.bottom,
-        ];
-        self.add_constraints(&constraints);
-    }
-}
-
-trait WidgetControl {
-    fn handle_event();
-}
-
-struct ButtonControl {
-
-}
-
-struct Widget<'a> {
-    drawable: Option<&'a WidgetDrawable>,
-    layout: WidgetLayout,
-    listeners: Vec<&'a EventListener>
-}
-
-impl<'a> Widget<'a>  {
-    fn new(drawable: Option<&'a WidgetDrawable>) -> Self {
-        Widget {
-            drawable: drawable,
-            layout: WidgetLayout::new(),
-            listeners: Vec::new(),
-        }
-    }
-    fn print(&self, solver: &mut Solver) {
-        println!("{:?} {:?} {:?} {:?}",
-            solver.get_value(self.layout.left),
-            solver.get_value(self.layout.top),
-            solver.get_value(self.layout.right),
-            solver.get_value(self.layout.bottom));
-    }
-    fn draw(&self, solver: &mut Solver, c: Context, g: &mut G2d) {
-        if let Some(drawable) = self.drawable {
-            let bounds = [
-                    solver.get_value(self.layout.left),
-                    solver.get_value(self.layout.top),
-                    solver.get_value(self.layout.right) - solver.get_value(self.layout.left),
-                    solver.get_value(self.layout.bottom) - solver.get_value(self.layout.top),
-                    ];
-            drawable.draw(bounds, c, g);
-        }
-    }
-}
 #[derive(Copy, Clone)]
-struct Event {}
-trait EventListener {
+pub struct Event {}
+pub trait EventListener {
     fn handle_event(&self, event: Event);
     fn matches(&self, event: Event) -> bool {
         true
@@ -235,6 +125,14 @@ impl<'a> Ui<'a> {
         self.event_bus.listeners.append(&mut child.listeners);
 
         child_index
+    }
+    fn widgets_under_mouse(&mut self, pos: Point) {
+        
+        let mut dfs = DfsPostOrder::new(&self.graph, self.window);
+        while let Some(node_index) = dfs.next(&self.graph) {
+            let ref node = self.graph[node_index];
+            node.is_mouse_over(&mut self.solver, pos);
+        }
     }
 }
 fn main() {
