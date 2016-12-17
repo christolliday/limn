@@ -114,6 +114,7 @@ struct ButtonControl {
 struct Widget<'a> {
     drawable: Option<&'a WidgetDrawable>,
     layout: WidgetLayout,
+    listeners: Vec<&'a EventListener>
 }
 
 impl<'a> Widget<'a>  {
@@ -121,6 +122,7 @@ impl<'a> Widget<'a>  {
         Widget {
             drawable: drawable,
             layout: WidgetLayout::new(),
+            listeners: Vec::new(),
         }
     }
     fn print(&self, solver: &mut Solver) {
@@ -142,6 +144,35 @@ impl<'a> Widget<'a>  {
         }
     }
 }
+#[derive(Copy, Clone)]
+struct Event {}
+trait EventListener {
+    fn handle_event(&self, event: Event);
+    fn matches(&self, event: Event) -> bool {
+        true
+    }
+}
+struct EventBus<'a> {
+    listeners: Vec<&'a EventListener>,
+}
+impl<'a> EventBus<'a> {
+    fn find_listeners(&self, event: Event) -> Vec<&'a EventListener> {
+        let mut matching_listeners = Vec::new();
+        let ref listeners = self.listeners;
+        for listener in listeners {
+            if listener.matches(event) {
+                matching_listeners.push(*listener);
+            }
+        }
+        matching_listeners
+    }
+    fn publish(&self, event: Event) {
+        let listeners = self.find_listeners(event);
+        for listener in listeners {
+            listener.handle_event(event);
+        }
+    }
+}
 
 struct Ui<'a> {
     graph: Graph<Widget<'a>, ()>,
@@ -150,6 +181,7 @@ struct Ui<'a> {
     pub solver: Solver,
     window_width: Variable,
     window_height: Variable,
+    event_bus: EventBus<'a>,
 }
 impl<'a> Ui<'a> {
     fn new(window_dim: Dimensions) -> Self {
@@ -165,7 +197,12 @@ impl<'a> Ui<'a> {
 
         let mut graph = Graph::<Widget, ()>::new();
         let window = graph.add_node(window);
-        Ui { graph: graph, window: window, solver: solver, constraints: constraints, window_width: window_width, window_height: window_height }
+        Ui {
+            graph: graph, window: window,
+            solver: solver, constraints: constraints,
+            window_width: window_width, window_height: window_height,
+            event_bus: EventBus { listeners: Vec::new() },
+        }
     }
     fn resize_window(&mut self, window_dims: [u32; 2]) {
         self.solver.suggest_value(self.window_width, window_dims[0] as f64).unwrap();
@@ -195,6 +232,8 @@ impl<'a> Ui<'a> {
         let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
         child.layout.bound_by(&parent.layout);
         
+        self.event_bus.listeners.append(&mut child.listeners);
+
         child_index
     }
 }
@@ -214,7 +253,17 @@ fn main() {
     let rect = RectDrawable::new([1.0, 0.0, 0.0]);
     let mut box1 = Widget::new(Some(&rect));
     let circle = EllipseDrawable::new([1.0, 0.0, 1.0]);
+
+    struct ClickListener {
+    }
+    impl EventListener for ClickListener {
+        fn handle_event(&self, event: Event) {
+            println!("event");
+        }
+    }
+    let listener = ClickListener {};
     let mut box2 = Widget::new(Some(&circle));
+    box2.listeners.push(&listener);
 
     let ui = &mut Ui::new(window_dim);
 
@@ -248,7 +297,8 @@ fn main() {
             ui.resize_window(window_dims);
         }
         if let Some(xy) = event.mouse_cursor_args() {
-            println!("{:?}", xy);
+            //println!("{:?}", xy);
+            ui.event_bus.publish(Event {});
         }
 
         window.draw_2d(&event, |c, g| {
