@@ -3,20 +3,22 @@ use backend::gfx::G2d;
 use graphics::*;
 
 use graphics::types::{Color, Scalar};
-use super::Point;
-use super::EventListener;
+use super::{Point, Dimensions, EventListener};
 
 use cassowary::{ Solver, Variable, Constraint };
 use cassowary::WeightedRelation::*;
 use cassowary::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
 
-fn is_mouse_over(bounds: types::Rectangle, mouse: Point) -> bool {
-    true
+fn point_inside_rect(point: Point, rect: types::Rectangle) -> bool {
+    point.x > rect[0] && point.y > rect[1] && point.x < rect[0] + rect[2] && point.y < rect[1] + rect[3]
+}
+fn point_inside_ellipse(point: Point, center: Point, radius: Dimensions) -> bool {
+    (point.x - center.x).powi(2) / radius.width.powi(2) + (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
 }
 pub trait WidgetDrawable {
     fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d);
-    fn is_mouse_over(&self, bounds: types::Rectangle, mouse: Point) -> bool {
-        is_mouse_over(bounds, mouse)
+    fn is_mouse_over(&self, mouse: Point, bounds: types::Rectangle) -> bool {
+        point_inside_rect(mouse, bounds)
     }
 }
 
@@ -45,6 +47,11 @@ impl EllipseDrawable {
 impl WidgetDrawable for EllipseDrawable {
     fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d) {
         Ellipse::new(self.background).draw(bounds, &c.draw_state, c.transform, g);
+    }
+    fn is_mouse_over(&self, mouse: Point, bounds: types::Rectangle) -> bool {
+        let radius = Dimensions { width: bounds[2] / 2.0, height: bounds[3] / 2.0 };
+        let center = Point { x: bounds[0] + radius.width, y: bounds[1] + radius.height };
+        point_inside_ellipse(mouse, center, radius)
     }
 }
 
@@ -97,14 +104,6 @@ impl WidgetLayout {
     }
 }
 
-trait WidgetControl {
-    fn handle_event();
-}
-
-struct ButtonControl {
-
-}
-
 pub struct Widget<'a> {
     pub drawable: Option<&'a WidgetDrawable>,
     pub layout: WidgetLayout,
@@ -120,29 +119,20 @@ impl<'a> Widget<'a>  {
         }
     }
     pub fn print(&self, solver: &mut Solver) {
-        println!("{:?} {:?} {:?} {:?}",
-            solver.get_value(self.layout.left),
-            solver.get_value(self.layout.top),
-            solver.get_value(self.layout.right),
-            solver.get_value(self.layout.bottom));
+        println!("{:?}",
+            self.layout.bounds(solver));
     }
     pub fn draw(&self, solver: &mut Solver, c: Context, g: &mut G2d) {
         if let Some(drawable) = self.drawable {
-            let bounds = [
-                    solver.get_value(self.layout.left),
-                    solver.get_value(self.layout.top),
-                    solver.get_value(self.layout.right) - solver.get_value(self.layout.left),
-                    solver.get_value(self.layout.bottom) - solver.get_value(self.layout.top),
-                    ];
-            drawable.draw(bounds, c, g);
+            drawable.draw(self.layout.bounds(solver), c, g);
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
         let bounds = self.layout.bounds(solver);
         if let Some(drawable) = self.drawable {
-            drawable.is_mouse_over(bounds, mouse)
+            drawable.is_mouse_over(mouse, bounds)
         } else {
-            is_mouse_over(bounds, mouse)
+            point_inside_rect(mouse, bounds)
         }
     }
 }

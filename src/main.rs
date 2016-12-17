@@ -18,19 +18,24 @@ use cassowary::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
 
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{ Dfs, DfsPostOrder };
+use petgraph::visit::{ Dfs, DfsPostOrder, Walker };
 
 pub mod widget;
 use widget::*;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Dimensions { width: Scalar, height: Scalar, }
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Point { x: Scalar, y: Scalar, }
 
 impl Into<Size> for Dimensions {
     fn into(self) -> Size {
         Size { width: self.width as u32, height: self.height as u32 }
+    }
+}
+impl Into<Point> for [f64; 2] {
+    fn into(self) -> Point {
+        Point { x: self[0], y: self[1] }
     }
 }
 
@@ -63,7 +68,6 @@ impl<'a> EventBus<'a> {
         }
     }
 }
-
 struct Ui<'a> {
     graph: Graph<Widget<'a>, ()>,
     window: NodeIndex,
@@ -126,12 +130,13 @@ impl<'a> Ui<'a> {
 
         child_index
     }
-    fn widgets_under_mouse(&mut self, pos: Point) {
-        
+    fn check_mouse_over(&mut self, pos: Point) {
         let mut dfs = DfsPostOrder::new(&self.graph, self.window);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref node = self.graph[node_index];
-            node.is_mouse_over(&mut self.solver, pos);
+            if node.is_mouse_over(&mut self.solver, pos) {
+                println!("found widget");
+            }
         }
     }
 }
@@ -195,7 +200,7 @@ fn main() {
             ui.resize_window(window_dims);
         }
         if let Some(xy) = event.mouse_cursor_args() {
-            //println!("{:?}", xy);
+            ui.check_mouse_over(xy.into());
             ui.event_bus.publish(Event {});
         }
 
