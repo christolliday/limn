@@ -17,14 +17,40 @@ pub type Font = rusttype::Font<'static>;
 /// The RustType `PositionedGlyph` type used by conrod.
 pub type PositionedGlyph = rusttype::PositionedGlyph<'static>;
 
+/// The way in which text should wrap around the width.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Wrap {
+    NoWrap,
+    /// Wrap at the first character that exceeds the width.
+    Character,
+    /// Wrap at the first word that exceeds the width.
+    Whitespace,
+}
+
+pub fn get_positioned_glyphs(text: &str, bounds: Rectangle, font: &Font, font_size: FontSize, line_spacing: f64, line_wrap: Wrap) -> Vec<PositionedGlyph> {
+    let line_infos: Vec<line::Info> = match line_wrap {
+        Wrap::NoWrap => line::infos(text, font, font_size),
+        Wrap::Character => line::infos(text, font, font_size).wrap_by_character(bounds.width),
+        Wrap::Whitespace => line::infos(text, font, font_size).wrap_by_whitespace(bounds.width),
+    }.collect();
+    let text = Text {
+        text: text,
+        line_infos: &line_infos,
+        font: font,
+        font_size: font_size,
+        rect: bounds,
+        x_align: Align::Start,
+        y_align: Align::End,
+        line_spacing: line_spacing,
+    };
+    text.positioned_glyphs()
+}
 
 /// A type used for producing a `PositionedGlyph` iterator.
 ///
 /// We produce this type rather than the `&[PositionedGlyph]`s directly so that we can properly
 /// handle "HiDPI" scales when caching glyphs.
 pub struct Text<'a> {
-    pub positioned_glyphs: &'a mut Vec<PositionedGlyph>,
-    pub window_dim: conrod::Dimensions,
     pub text: &'a str,
     pub line_infos: &'a [line::Info],
     pub font: &'a Font,
@@ -35,7 +61,6 @@ pub struct Text<'a> {
     pub line_spacing: Scalar,
 }
 impl<'a> Text<'a> {
-
     /// Produces a list of `PositionedGlyph`s which may be used to cache and render the text.
     ///
     /// `dpi_factor`, aka "dots per inch factor" is a multiplier representing the density of
@@ -47,10 +72,8 @@ impl<'a> Text<'a> {
     /// out text. This is because conrod positioning uses a "pixel-agnostic" `Scalar` value
     /// representing *perceived* distances for its positioning and layout, rather than pixel
     /// values. During rendering however, the pixel density must be known
-    pub fn positioned_glyphs(self, dpi_factor: f32) -> &'a [PositionedGlyph] {
+    pub fn positioned_glyphs(self) -> Vec<PositionedGlyph> {
         let Text {
-            positioned_glyphs,
-            window_dim,
             text,
             line_infos,
             font,
@@ -61,23 +84,16 @@ impl<'a> Text<'a> {
             line_spacing,
         } = self;
 
-        // Convert conrod coordinates to pixel coordinates.
-        let trans_x = |x: Scalar| (x + window_dim[0] / 2.0) * dpi_factor as Scalar;
-        let trans_y = |y: Scalar| ((-y) + window_dim[1] / 2.0) * dpi_factor as Scalar;
-
         // Produce the text layout iterators.
         let line_infos = line_infos.iter().cloned();
-        let lines = line_infos.clone().map(|info| &text[info.byte_range()]);
+        let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
         let line_rects = line::rects(line_infos, font_size, rect,
                                            x_align, y_align, line_spacing);
 
-        // Clear the existing glyphs and fill the buffer with glyphs for this Text.
-        positioned_glyphs.clear();
-        let scale = pt_to_scale((font_size as f32 * dpi_factor) as FontSize);
-        for (line, line_rect) in lines.zip(line_rects) {
-            let (x, y) = (trans_x(line_rect.left) as f32, trans_y(line_rect.bottom()) as f32);
-            let point = rusttype::Point { x: x, y: y };
-            positioned_glyphs.extend(font.layout(line, scale, point).map(|g| g.standalone()));
+        let mut positioned_glyphs = Vec::new();
+        for (line_text, line_rect) in line_texts.zip(line_rects) {
+            let point = rusttype::Point { x: line_rect.left as f32, y: line_rect.top as f32 };
+            positioned_glyphs.extend(font.layout(line_text, Scale::uniform(12.0), point).map(|g| g.standalone()));
         }
 
         positioned_glyphs
@@ -180,16 +196,13 @@ pub mod font {
     }
 
     impl Id {
-
         /// Returns the inner `usize` from the `Id`.
         pub fn index(self) -> usize {
             self.0
         }
-
     }
 
     impl Map {
-
         /// Construct the new, empty `Map`.
         pub fn new() -> Self {
             Map {
@@ -241,7 +254,6 @@ pub mod font {
         pub fn ids(&self) -> Ids {
             Ids { keys: self.map.keys() }
         }
-
     }
 
 
@@ -300,7 +312,6 @@ pub mod font {
             writeln!(f, "{}", std::error::Error::description(self))
         }
     }
-
 }
 
 
@@ -503,7 +514,6 @@ pub mod glyph {
                 })
         }
     }
-
 }
 
 
@@ -728,7 +738,6 @@ pub mod cursor {
                 None => Index { line: 0, char: 0 },
             }
         }
-
     }
 
 
@@ -1035,9 +1044,7 @@ pub mod line {
     /// wrapping function.
     pub type NextBreakFnPtr = fn(&str, &super::Font, FontSize, Scalar) -> (Break, Scalar);
 
-
     impl Break {
-
         /// Return the index at which the break occurs.
         pub fn byte_index(self) -> usize {
             match self {
@@ -1057,7 +1064,6 @@ pub mod line {
                 Break::End { char, .. } => char,
             }
         }
-
     }
 
     impl<'a, F> Clone for Infos<'a, F>
@@ -1098,7 +1104,6 @@ pub mod line {
         pub fn char_range(self) -> std::ops::Range<usize> {
             self.start_char..self.end_char()
         }
-
     }
 
     impl<'a> Infos<'a, NextBreakFnPtr> {
@@ -1118,7 +1123,6 @@ pub mod line {
             self.max_width = max_width;
             self
         }
-
     }
 
 
@@ -1546,5 +1550,4 @@ pub mod line {
             None
         }
     }
-
 }

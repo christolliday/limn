@@ -67,8 +67,13 @@ fn main() {
 
     let text_drawable = TextDrawable { font_id: font_id };
     let mut text_widget = Widget::new(Some(Box::new(text_drawable)));
+    let text_constraints = [
+        text_widget.layout.top |EQ(REQUIRED)| 100.0,
+        text_widget.layout.left |EQ(REQUIRED)| 100.0,
+    ];
     text_widget.layout.width(100.0, WEAK);
     text_widget.layout.height(100.0, WEAK);
+    text_widget.layout.add_constraints(&text_constraints);
 
     let box1_constraints = [
         box1.layout.top |EQ(REQUIRED)| 0.0,
@@ -91,7 +96,7 @@ fn main() {
     let box1_index = ui.add_widget(root_index, box1);
     ui.add_widget(root_index, box2);
     ui.add_widget(box1_index, box3);
-    ui.add_widget(box1_index, text_widget);
+    ui.add_widget(root_index, text_widget);
     ui.init();
 
     // Poll events from the window.

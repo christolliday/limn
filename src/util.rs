@@ -56,3 +56,28 @@ impl Rectangle {
         self.top + self.height
     }
 }
+use rusttype;
+use std;
+pub fn map_rect_i32(rect: rusttype::Rect<i32>) -> types::Rectangle {
+    [ rect.min.x as f64, rect.min.y as f64, (rect.max.x - rect.min.x) as f64, (rect.max.y - rect.min.y) as f64 ]
+}
+pub fn map_rect_f32(rect: rusttype::Rect<f32>) -> types::Rectangle {
+    [ rect.min.x as f64, rect.min.y as f64, (rect.max.x - rect.min.x) as f64, (rect.max.y - rect.min.y) as f64 ]
+}
+use std::ops::Mul;
+impl Mul<Dimensions> for types::Rectangle {
+    type Output = Self;
+    fn mul(self, rhs: Dimensions) -> Self {
+        [ self[0] * rhs.width, self[1] * rhs.height,
+          self[2] * rhs.width, self[3] * rhs.height ]
+    }
+}
+/*pub fn map_rect_f32(rect: rusttype::Rect<f32>) -> types::Rectangle {
+    [ rect[0] as f64, rect[1] as f64, rect[2] as f64, rect[3] as f64 ]
+}*/
+/*use rusttype;
+impl Into<[f64; 4]> for rusttype::Rect<u32> {
+    fn into(self) -> types::Rectangle {
+        [ self[0] as f64, self[1] as f64, self[2] as f64, self[3] as f64 ]
+    }
+}*/

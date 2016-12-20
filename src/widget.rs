@@ -63,82 +63,30 @@ impl WidgetDrawable for EllipseDrawable {
 pub struct TextDrawable {
     pub font_id: text::font::Id,
 }
-pub struct TextPrimitive<'a> {
-    /// The colour of the `Text`.
-    color: Color,
-    /// All glyphs within the `Text` laid out in their correct positions in order from top-left
-    /// to bottom right.
-    text: Text<'a>,
-    /// The unique identifier for the font, useful for the `glyph_cache.rect_for(id, glyph)`
-    /// method when using the `conrod::text::GlyphCache` (rusttype's GPU `Cache`).
-    font_id: text::font::Id,
+// Retrieve the "dots per inch" factor by dividing the window width by the view.
+fn get_dpi(context: &Context) -> f32 {
+    let view_size = context.get_view_size();
+    context.viewport
+        .map(|v| v.window_size[0] as f32 / view_size[0] as f32)
+        .unwrap_or(1.0)
 }
+use text::{Wrap, FontSize, Font};
 impl WidgetDrawable for TextDrawable {
     fn draw(&self, fonts: &text::font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d) {
 
-        let view_size = context.get_view_size();
-        //let GlyphCache { ref mut text_texture_cache, ref mut glyph_cache, ref mut vertex_data } = *ui.glyph_cache;
-        let GlyphCache { ref mut texture, ref mut cache, ref mut vertex_data } = *glyph_cache;
+        graphics::Rectangle::new([1.0,1.0,1.0,1.0]).draw(bounds, &context.draw_state, context.transform, graphics);
 
-        let text_texture_cache = texture;
-        let glyph_cache = cache;
-
-        // A function used for caching glyphs from `Text` widgets.
-        let mut cache_queued_glyphs_fn = |graphics: &mut G2d,
-                                    cache: &mut G2dTexture<'static>,
-                                    rect: rusttype::Rect<u32>,
-                                    data: &[u8]|
-        {
-            glyph::cache_queued_glyphs(graphics, cache, rect, data, vertex_data);
-        };
-        let mut positioned_glyphs = Vec::new();
+        let GlyphCache { texture: ref mut text_texture_cache, cache: ref mut glyph_cache, ref mut vertex_data } = *glyph_cache;
 
         let font_id = self.font_id;
         let font = fonts.get(font_id).unwrap();
-        let color = [1.0,1.0,1.0,1.0];
+        let color = [0.0,0.0,0.0,1.0];
         let font_size = 12;
         let line_spacing = 1.0;
-        let window_dim = Dimensions { width: 400.0, height: 720.0 };
+        let line_wrap = Wrap::Character;
+        let text_string = "Testing ︱︱︱\nWord";
 
-        let text_string = "Testing";
-        let line_infos: Vec<text::line::Info> = text::line::infos(text_string, font, font_size).collect();
-        let text_a = Text {
-            positioned_glyphs: &mut positioned_glyphs,
-            window_dim: window_dim.into(),
-            text: &text_string,
-            line_infos: &line_infos,
-            font: font,
-            font_size: font_size,
-            rect: bounds,
-            x_align: Align::Start,
-            y_align: Align::End,
-            line_spacing: line_spacing,
-        };
-
-        let text = TextPrimitive {
-            color: color,
-            text: text_a,
-            font_id: font_id,
-        };
-        //let text = get_text(fonts, self.font_id, bounds, &mut positioned_glyphs, line_infos);
-        let font_id = text.font_id;
-        let color = text.color;
-        //let ref text = self.text;
-        // A re-usable buffer of rectangles describing the glyph's screen and texture positions.
-        let mut glyph_rectangles = Vec::new();
-
-        //Rectangle::new(self.color).draw(bounds, &c.draw_state, c.transform, g);
-
-        // Retrieve the "dots per inch" factor by dividing the window width by the view.
-        //
-        // TODO: Perhaps this should be a method on the `Context` type?
-        let dpi_factor = context.viewport
-            .map(|v| v.window_size[0] as f32 / view_size[0] as f32)
-            .unwrap_or(1.0);
-        let positioned_glyphs = text.text.positioned_glyphs(dpi_factor);
-        // Re-orient the context to top-left origin with *y* facing downwards, as the
-        // `positioned_glyphs` yield pixel positioning.
-        let context = context.scale(1.0, -1.0).trans(-view_size[0] / 2.0, -view_size[1] / 2.0);
+        let positioned_glyphs = &text::get_positioned_glyphs(text_string, bounds, font, font_size, line_spacing, line_wrap);
 
         // Queue the glyphs to be cached.
         for glyph in positioned_glyphs.iter() {
@@ -147,43 +95,28 @@ impl WidgetDrawable for TextDrawable {
 
         // Cache the glyphs within the GPU cache.
         glyph_cache.cache_queued(|rect, data| {
-            cache_queued_glyphs_fn(graphics, text_texture_cache, rect, data)
+            glyph::cache_queued_glyphs(graphics, text_texture_cache, rect, data, vertex_data)
         }).unwrap();
 
-        let cache_id = font_id.index();
-        let (tex_w, tex_h) = text_texture_cache.get_size();
-        //let color = color.to_fsa();
+        let tex_dim = {
+            let (tex_w, tex_h) = text_texture_cache.get_size();
+            Dimensions { width: tex_w as f64, height: tex_h as f64 }
+        };
 
         let rectangles = positioned_glyphs.into_iter()
-            .filter_map(|g| glyph_cache.rect_for(cache_id, g).ok().unwrap_or(None))
+            .filter_map(|g| glyph_cache.rect_for(font_id.index(), g).ok().unwrap_or(None))
             .map(|(uv_rect, screen_rect)| {
-                let rectangle = {
-                    let div_dpi_factor = |s| (s as f32 / dpi_factor as f32) as f64;
-                    let left = div_dpi_factor(screen_rect.min.x);
-                    let top = div_dpi_factor(screen_rect.min.y);
-                    let right = div_dpi_factor(screen_rect.max.x);
-                    let bottom = div_dpi_factor(screen_rect.max.y);
-                    let w = right - left;
-                    let h = bottom - top;
-                    [left, top, w, h]
-                };
-                let source_rectangle = {
-                    let x = (uv_rect.min.x * tex_w as f32) as f64;
-                    let y = (uv_rect.min.y * tex_h as f32) as f64;
-                    let w = ((uv_rect.max.x - uv_rect.min.x) * tex_w as f32) as f64;
-                    let h = ((uv_rect.max.y - uv_rect.min.y) * tex_h as f32) as f64;
-                    [x, y, w, h]
-                };
-                (rectangle, source_rectangle)
+                (map_rect_i32(screen_rect), map_rect_f32(uv_rect) * tex_dim)
             });
-        glyph_rectangles.clear();
+        // A re-usable buffer of rectangles describing the glyph's screen and texture positions.
+        let mut glyph_rectangles = Vec::new();
         glyph_rectangles.extend(rectangles);
         graphics::image::draw_many(&glyph_rectangles,
-                                          color,
-                                          text_texture_cache,
-                                          &context.draw_state,
-                                          context.transform,
-                                          graphics);
+                                   color,
+                                   text_texture_cache,
+                                   &context.draw_state,
+                                   context.transform,
+                                   graphics);
     }
 }
 
@@ -212,7 +145,6 @@ impl WidgetLayout {
             height: solver.get_value(self.bottom) - solver.get_value(self.top),
         }
     }
-    // layout
     pub fn add_constraint(&mut self, constraint: Constraint) {
         self.constraints.push(constraint);
     }
