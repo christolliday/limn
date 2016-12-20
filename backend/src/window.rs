@@ -73,7 +73,7 @@
 extern crate window as pistoncore_window;
 extern crate glutin_window;
 
-use piston_input::{Event, GenericEvent, AfterRenderEvent};
+use input::{Event, GenericEvent, AfterRenderEvent};
 use self::glutin_window::GlutinWindow;
 use self::pistoncore_window::Window as BasicWindow;
 use std::time::Duration;
@@ -85,7 +85,7 @@ pub use self::pistoncore_window::{AdvancedWindow, Position, Size, OpenGLWindow,
                                   WindowSettings, BuildFromWindowSettings};
 //pub use super::gfx::draw;
 
-pub use super::piston_graphics::Context;
+pub use super::graphics::Context;
 
 /// Contains everything required for controlling window, graphics, event loop.
 pub struct Window<W: BasicWindow = GlutinWindow> {

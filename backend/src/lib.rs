@@ -1,11 +1,14 @@
-//! Functionality for simplifying the work involved when using conrod along-side piston.
-
 extern crate shader_version;
-extern crate input as piston_input;
-extern crate graphics as piston_graphics;
 
+extern crate window as pistoncore_window;
+extern crate input;
+extern crate graphics;
 extern crate glutin_window;
-use glutin_window::GlutinWindow;
+extern crate texture;
+
+extern crate gfx_core;
+extern crate gfx_device_gl;
+extern crate gfx_graphics;
 
 pub mod window;
 pub mod gfx;
@@ -13,4 +16,4 @@ pub mod events;
 
 pub use self::window::{Window, WindowEvents};
 pub use self::shader_version::OpenGL;
-pub use self::gfx::GfxContext;
+pub use gfx::GfxContext;

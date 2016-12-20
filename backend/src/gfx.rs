@@ -1,29 +1,23 @@
 //! Contains the GfxContext wrapper for convenient integration with `backend::piston::Window`
 
-extern crate window as pistoncore_window;
-extern crate graphics as piston_graphics;
 extern crate gfx;
-extern crate gfx_core;
-extern crate gfx_device_gl;
-extern crate gfx_graphics;
-extern crate shader_version;
-extern crate texture;
 
-use self::shader_version::OpenGL;
-use self::gfx_graphics::{Gfx2d, GfxGraphics};
-use self::gfx_core::factory::Typed;
+use shader_version::OpenGL;
+use gfx_graphics::{Gfx2d, GfxGraphics};
+use gfx_core::factory::Typed;
 use self::gfx::Device;
 
-use self::pistoncore_window::{OpenGLWindow, Size};
-use piston_input::RenderArgs;
+use pistoncore_window::{OpenGLWindow, Size};
 
-pub use self::piston_graphics::{Context, DrawState, Graphics, ImageSize, Transformed};
-pub use self::gfx_graphics::{GlyphError, Texture, TextureSettings, Flip};
+use texture;
+use gfx_device_gl;
+use input::RenderArgs;
+
+pub use graphics::{Context, DrawState, Graphics, ImageSize, Transformed};
+pub use gfx_graphics::{GlyphError, Texture, TextureSettings, Flip};
 
 /// Actual gfx::Stream implementation carried by the window.
 pub type GfxEncoder = gfx::Encoder<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>;
-/// Glyph cache.
-pub type Glyphs = gfx_graphics::GlyphCache<gfx_device_gl::Resources, gfx_device_gl::Factory>;
 /// 2D graphics.
 pub type G2d<'a> = GfxGraphics<'a, gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>;
 /// Texture type compatible with `G2d`.
@@ -51,7 +45,7 @@ fn create_main_targets(dim: gfx::tex::Dimensions) ->
     (gfx::handle::RenderTargetView<gfx_device_gl::Resources, gfx::format::Srgba8>,
      gfx::handle::DepthStencilView<gfx_device_gl::Resources, gfx::format::DepthStencil>)
  {
-    use self::gfx_core::factory::Typed;
+    use gfx_core::factory::Typed;
     use self::gfx::format::{DepthStencil, Format, Formatted, Srgba8};
 
     let color_format: Format = <Srgba8 as Formatted>::get_format();

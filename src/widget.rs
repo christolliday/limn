@@ -2,51 +2,43 @@
 use backend::gfx::G2d;
 use graphics::*;
 
+use input::Event;
 use graphics::types::{Color, Scalar};
-use super::{Point, Dimensions, EventListener};
+use super::util::*;
 
 use cassowary::{ Solver, Variable, Constraint };
 use cassowary::WeightedRelation::*;
-use cassowary::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
+use cassowary::strength::*;
 
-fn point_inside_rect(point: Point, rect: types::Rectangle) -> bool {
-    point.x > rect[0] && point.y > rect[1] && point.x < rect[0] + rect[2] && point.y < rect[1] + rect[3]
+pub trait EventListener {
+    fn handle_event(&self, event: &Event);
+    fn matches(&self, event: &Event) -> bool {
+        false
+    }
 }
-fn point_inside_ellipse(point: Point, center: Point, radius: Dimensions) -> bool {
-    (point.x - center.x).powi(2) / radius.width.powi(2) + (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
-}
+
 pub trait WidgetDrawable {
-    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d);
+    fn draw(&self, bounds: types::Rectangle, context: Context, graphics: &mut G2d);
     fn is_mouse_over(&self, mouse: Point, bounds: types::Rectangle) -> bool {
         point_inside_rect(mouse, bounds)
     }
 }
 
 pub struct RectDrawable {
-    background: Color,
-}
-impl RectDrawable {
-    pub fn new(color: [f32; 3]) -> Self {
-        RectDrawable { background: [color[0], color[1], color[2], 1.0] }
-    }
+    pub background: Color,
 }
 impl WidgetDrawable for RectDrawable {
-    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d) {
-        Rectangle::new(self.background).draw(bounds, &c.draw_state, c.transform, g);
+    fn draw(&self, bounds: types::Rectangle, context: Context, graphics: &mut G2d) {
+        Rectangle::new(self.background).draw(bounds, &context.draw_state, context.transform, graphics);
     }
 }
 
 pub struct EllipseDrawable {
-    background: Color,
-}
-impl EllipseDrawable {
-    pub fn new(color: [f32; 3]) -> Self {
-        EllipseDrawable { background: [color[0], color[1], color[2], 1.0] }
-    }
+    pub background: Color,
 }
 impl WidgetDrawable for EllipseDrawable {
-    fn draw(&self, bounds: types::Rectangle, c: Context, g: &mut G2d) {
-        Ellipse::new(self.background).draw(bounds, &c.draw_state, c.transform, g);
+    fn draw(&self, bounds: types::Rectangle, context: Context, graphics: &mut G2d) {
+        Ellipse::new(self.background).draw(bounds, &context.draw_state, context.transform, graphics);
     }
     fn is_mouse_over(&self, mouse: Point, bounds: types::Rectangle) -> bool {
         let radius = Dimensions { width: bounds[2] / 2.0, height: bounds[3] / 2.0 };

@@ -11,6 +11,8 @@ pistoncore-input = "0.15.0"
 pistoncore-window = "0.24.0"
 petgraph = "0.4.1"
 matches = "0.1.4"
+rusttype = "0.2.0"
+find_folder = "0.3.0"
 
 [replace]
 "cassowary:0.2.0" = { path = "../cassowary-rs" }
