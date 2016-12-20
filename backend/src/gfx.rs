@@ -12,6 +12,7 @@ use pistoncore_window::{OpenGLWindow, Size};
 use texture;
 use gfx_device_gl;
 use input::RenderArgs;
+use super::glyph::GlyphCache;
 
 pub use graphics::{Context, DrawState, Graphics, ImageSize, Transformed};
 pub use gfx_graphics::{GlyphError, Texture, TextureSettings, Flip};
@@ -58,7 +59,6 @@ fn create_main_targets(dim: gfx::tex::Dimensions) ->
     let output_stencil = Typed::new(output_stencil);
     (output_color, output_stencil)
 }
-
 impl GfxContext {
     /// Constructor for a new `GfxContext`
     pub fn new<W>(window: &mut W, opengl: OpenGL, samples: u8) -> Self
@@ -76,6 +76,7 @@ impl GfxContext {
 
         let g2d = Gfx2d::new(opengl, &mut factory);
         let encoder = factory.create_command_buffer().into();
+
         GfxContext {
             encoder: encoder,
             device: device,

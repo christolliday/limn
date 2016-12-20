@@ -13,6 +13,7 @@ extern crate gfx_graphics;
 pub mod window;
 pub mod gfx;
 pub mod events;
+pub mod glyph;
 
 pub use self::window::{Window, WindowEvents};
 pub use self::shader_version::OpenGL;

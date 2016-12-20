@@ -13,18 +13,26 @@ use cassowary::strength::*;
 use graphics::Context;
 use super::widget::*;
 use super::util::*;
+use super::text;
+use backend::glyph::GlyphCache;
+use backend::window::Window;
+use backend::glyph;
 
 pub struct Ui {
     graph: Graph<Widget, ()>,
-    pub window: NodeIndex,
+    pub root: NodeIndex,
     constraints: Vec<Constraint>,
     pub solver: Solver,
     pub window_width: Variable,
     pub window_height: Variable,
+    // Manages all fonts that have been loaded by the user.
+    //pub fonts: text::font::Map,
+    pub glyph_cache: GlyphCache,
+    pub fonts: text::font::Map, 
 }
 impl Ui {
-    pub fn new(window_dim: Dimensions) -> Self {
-        let window = Widget::new(None);
+    pub fn new(window: &mut Window, window_dim: Dimensions) -> Self {
+        let root = Widget::new(None);
         let window_width = Variable::new();
         let window_height = Variable::new();
         let constraints = Vec::new();
@@ -35,11 +43,15 @@ impl Ui {
         solver.suggest_value(window_height, window_dim.height).unwrap();
 
         let mut graph = Graph::<Widget, ()>::new();
-        let window = graph.add_node(window);
+        let root = graph.add_node(root);
+
+        let fonts = text::font::Map::new();
+        let glyph_cache = GlyphCache::new(&mut window.context.factory, window_dim.width as u32, window_dim.height as u32);
         Ui {
-            graph: graph, window: window,
+            graph: graph, root: root,
             solver: solver, constraints: constraints,
             window_width: window_width, window_height: window_height,
+            glyph_cache: glyph_cache, fonts: fonts,
         }
     }
     pub fn resize_window(&mut self, window_dims: [u32; 2]) {
@@ -47,7 +59,7 @@ impl Ui {
         self.solver.suggest_value(self.window_height, window_dims[1] as f64).unwrap();
     }
     pub fn init(&mut self) {
-        let mut dfs = Dfs::new(&self.graph, self.window);
+        let mut dfs = Dfs::new(&self.graph, self.root);
         while let Some(node_index) = dfs.next(&self.graph) {
 
             let ref mut node = self.graph[node_index];
@@ -57,10 +69,10 @@ impl Ui {
         self.solver.add_constraints(&self.constraints).unwrap();
     }
     pub fn draw(&mut self, c: Context, g: &mut G2d) {
-        let mut dfs = Dfs::new(&self.graph, self.window);
+        let mut dfs = Dfs::new(&self.graph, self.root);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
-            widget.draw(&mut self.solver, c, g);
+            widget.draw(&self.fonts, &mut self.glyph_cache, &mut self.solver, c, g);
         }
     }
     pub fn add_widget(&mut self, parent_index: NodeIndex, child: Widget) -> NodeIndex {
@@ -73,7 +85,7 @@ impl Ui {
         child_index
     }
     pub fn post_event(&mut self, event: &Event) {
-        let mut dfs = Dfs::new(&self.graph, self.window);
+        let mut dfs = Dfs::new(&self.graph, self.root);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
             match event {

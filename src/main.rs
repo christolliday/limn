@@ -5,12 +5,15 @@ extern crate input;
 extern crate window;
 extern crate petgraph;
 extern crate find_folder;
+extern crate rusttype;
+extern crate conrod;
 
 #[macro_use] extern crate matches;
 
 pub mod widget;
 pub mod ui;
 pub mod util;
+pub mod text;
 
 use widget::*;
 use ui::*;
@@ -18,7 +21,7 @@ use util::*;
 
 use input::{ResizeEvent, MouseCursorEvent, Event, Input};
 use backend::{Window, WindowEvents, OpenGL};
-use graphics::*;
+use graphics::{clear};
 
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
@@ -33,6 +36,11 @@ fn main() {
 
     // Create the event loop.
     let mut events = WindowEvents::new();
+
+    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
+    let font_path = assets.join("fonts/NotoSans/NotoSans-Regular.ttf");
+
+
 
     let circle2 = EllipseDrawable { background: [1.0, 1.0, 1.0, 1.0] };
     let box3 = Widget::new(Some(Box::new(circle2)));
@@ -53,7 +61,14 @@ fn main() {
     let mut box2 = Widget::new(Some(Box::new(circle)));
     box2.listeners.push(Box::new(listener));
 
-    let ui = &mut Ui::new(window_dim);
+    let ui = &mut Ui::new(&mut window, window_dim);
+
+    let font_id = ui.fonts.insert_from_file(font_path).unwrap();
+
+    let text_drawable = TextDrawable { font_id: font_id };
+    let mut text_widget = Widget::new(Some(Box::new(text_drawable)));
+    text_widget.layout.width(100.0, WEAK);
+    text_widget.layout.height(100.0, WEAK);
 
     let box1_constraints = [
         box1.layout.top |EQ(REQUIRED)| 0.0,
@@ -72,10 +87,11 @@ fn main() {
     box2.layout.height(100.0, WEAK);
     box2.layout.add_constraints(&box2_constraints);
 
-    let window_index = ui.window;
-    let box1_index = ui.add_widget(window_index, box1);
-    ui.add_widget(window_index, box2);
+    let root_index = ui.root;
+    let box1_index = ui.add_widget(root_index, box1);
+    ui.add_widget(root_index, box2);
     ui.add_widget(box1_index, box3);
+    ui.add_widget(box1_index, text_widget);
     ui.init();
 
     // Poll events from the window.
