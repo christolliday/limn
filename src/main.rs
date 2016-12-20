@@ -5,7 +5,9 @@ extern crate input;
 extern crate window;
 extern crate petgraph;
 
-use input::{ResizeEvent, MouseCursorEvent};
+#[macro_use] extern crate matches;
+
+use input::{ResizeEvent, MouseCursorEvent, Event, Input, Motion};
 use backend::{Window, WindowEvents, OpenGL};
 use backend::gfx::G2d;
 use graphics::*;
@@ -39,45 +41,21 @@ impl Into<Point> for [f64; 2] {
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct Event {}
 pub trait EventListener {
-    fn handle_event(&self, event: Event);
-    fn matches(&self, event: Event) -> bool {
-        true
+    fn handle_event(&self, event: &Event);
+    fn matches(&self, event: &Event) -> bool {
+        false
     }
 }
-struct EventBus<'a> {
-    listeners: Vec<&'a EventListener>,
-}
-impl<'a> EventBus<'a> {
-    fn find_listeners(&self, event: Event) -> Vec<&'a EventListener> {
-        let mut matching_listeners = Vec::new();
-        let ref listeners = self.listeners;
-        for listener in listeners {
-            if listener.matches(event) {
-                matching_listeners.push(*listener);
-            }
-        }
-        matching_listeners
-    }
-    fn publish(&self, event: Event) {
-        let listeners = self.find_listeners(event);
-        for listener in listeners {
-            listener.handle_event(event);
-        }
-    }
-}
-struct Ui<'a> {
-    graph: Graph<Widget<'a>, ()>,
+struct Ui {
+    graph: Graph<Widget, ()>,
     window: NodeIndex,
     constraints: Vec<Constraint>,
     pub solver: Solver,
     window_width: Variable,
     window_height: Variable,
-    event_bus: EventBus<'a>,
 }
-impl<'a> Ui<'a> {
+impl Ui {
     fn new(window_dim: Dimensions) -> Self {
         let window = Widget::new(None);
         let window_width = Variable::new();
@@ -95,7 +73,6 @@ impl<'a> Ui<'a> {
             graph: graph, window: window,
             solver: solver, constraints: constraints,
             window_width: window_width, window_height: window_height,
-            event_bus: EventBus { listeners: Vec::new() },
         }
     }
     fn resize_window(&mut self, window_dims: [u32; 2]) {
@@ -115,27 +92,32 @@ impl<'a> Ui<'a> {
     fn draw(&mut self, c: Context, g: &mut G2d) {
         let mut dfs = Dfs::new(&self.graph, self.window);
         while let Some(node_index) = dfs.next(&self.graph) {
-            let ref node = self.graph[node_index];
-            node.draw(&mut self.solver, c, g);
+            let ref widget = self.graph[node_index];
+            widget.draw(&mut self.solver, c, g);
         }
     }
-    fn add_widget(&mut self, parent_index: NodeIndex, child: Widget<'a>) -> NodeIndex {
+    fn add_widget(&mut self, parent_index: NodeIndex, child: Widget) -> NodeIndex {
         let child_index = self.graph.add_node(child);
         self.graph.add_edge(parent_index, child_index, ());
 
         let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
         child.layout.bound_by(&parent.layout);
-        
-        self.event_bus.listeners.append(&mut child.listeners);
 
         child_index
     }
-    fn check_mouse_over(&mut self, pos: Point) {
-        let mut dfs = DfsPostOrder::new(&self.graph, self.window);
+    fn post_event(&mut self, event: &Event) {
+        let mut dfs = Dfs::new(&self.graph, self.window);
         while let Some(node_index) = dfs.next(&self.graph) {
-            let ref node = self.graph[node_index];
-            if node.is_mouse_over(&mut self.solver, pos) {
-                println!("found widget");
+            let ref widget = self.graph[node_index];
+            match event {
+                &Event::Input(Input::Move(Motion::MouseCursor(x, y))) => {
+                    let pos = Point{x: x, y: y};
+                    for listener in &widget.listeners {
+                        if widget.is_mouse_over(&mut self.solver, pos) && listener.matches(event) {
+                            listener.handle_event(event);
+                        }
+                    }
+                }, _ => {}
             }
         }
     }
@@ -152,21 +134,23 @@ fn main() {
     let mut events = WindowEvents::new();
 
     let circle2 = EllipseDrawable::new([1.0, 1.0, 1.0]);
-    let mut box3 = Widget::new(Some(&circle2));
+    let mut box3 = Widget::new(Some(Box::new(circle2)));
     let rect = RectDrawable::new([1.0, 0.0, 0.0]);
-    let mut box1 = Widget::new(Some(&rect));
+    let mut box1 = Widget::new(Some(Box::new(rect)));
     let circle = EllipseDrawable::new([1.0, 0.0, 1.0]);
 
-    struct ClickListener {
-    }
+    struct ClickListener {}
     impl EventListener for ClickListener {
-        fn handle_event(&self, event: Event) {
+        fn matches(&self, event: &Event) -> bool {
+            matches!(event, &Event::Input(Input::Move(_)))
+        }
+        fn handle_event(&self, event: &Event) {
             println!("event");
         }
     }
     let listener = ClickListener {};
-    let mut box2 = Widget::new(Some(&circle));
-    box2.listeners.push(&listener);
+    let mut box2 = Widget::new(Some(Box::new(circle)));
+    box2.listeners.push(Box::new(listener));
 
     let ui = &mut Ui::new(window_dim);
 
@@ -200,8 +184,7 @@ fn main() {
             ui.resize_window(window_dims);
         }
         if let Some(xy) = event.mouse_cursor_args() {
-            ui.check_mouse_over(xy.into());
-            ui.event_bus.publish(Event {});
+            ui.post_event(&event);
         }
 
         window.draw_2d(&event, |c, g| {

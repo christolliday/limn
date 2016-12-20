@@ -93,7 +93,7 @@ impl WidgetLayout {
     pub fn height(&mut self, height: Scalar, strength: f64) {
         self.constraints.push(self.bottom - self.top |EQ(strength)| height)
     }
-    pub fn bound_by<'a>(&mut self, layout: &WidgetLayout) {
+    pub fn bound_by(&mut self, layout: &WidgetLayout) {
         let constraints = [
             layout.left |GE(REQUIRED)| self.left,
             layout.top |GE(REQUIRED)| self.top,
@@ -104,14 +104,14 @@ impl WidgetLayout {
     }
 }
 
-pub struct Widget<'a> {
-    pub drawable: Option<&'a WidgetDrawable>,
+pub struct Widget {
+    pub drawable: Option<Box<WidgetDrawable>>,
     pub layout: WidgetLayout,
-    pub listeners: Vec<&'a EventListener>
+    pub listeners: Vec<Box<EventListener>>
 }
 
-impl<'a> Widget<'a>  {
-    pub fn new(drawable: Option<&'a WidgetDrawable>) -> Self {
+impl Widget  {
+    pub fn new(drawable: Option<Box<WidgetDrawable>>) -> Self {
         Widget {
             drawable: drawable,
             layout: WidgetLayout::new(),
@@ -123,13 +123,13 @@ impl<'a> Widget<'a>  {
             self.layout.bounds(solver));
     }
     pub fn draw(&self, solver: &mut Solver, c: Context, g: &mut G2d) {
-        if let Some(drawable) = self.drawable {
+        if let Some(ref drawable) = self.drawable {
             drawable.draw(self.layout.bounds(solver), c, g);
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
         let bounds = self.layout.bounds(solver);
-        if let Some(drawable) = self.drawable {
+        if let Some(ref drawable) = self.drawable {
             drawable.is_mouse_over(mouse, bounds)
         } else {
             point_inside_rect(mouse, bounds)
