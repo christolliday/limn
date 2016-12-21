@@ -313,12 +313,11 @@ pub mod glyph {
 pub mod cursor {
     // use {FontSize, Range, Rect, Scalar, Point, Align};
     use std;
-    use util::{Range, Align, Rectangle, Scalar};
+    use util::{Range, Align, Rectangle, Point, Scalar};
     use super::FontSize;
     use font::Font;
     use rusttype;
     use rusttype::LayoutIter;
-    use conrod;
 
     /// Every possible cursor position within each line of text yielded by the given iterator.
     ///
@@ -682,20 +681,20 @@ pub mod cursor {
     /// cursor.
     ///
     /// Returns `None` if the given `text` is empty.
-    pub fn closest_cursor_index_and_xy<'a, I>(xy: conrod::Point,
+    pub fn closest_cursor_index_and_xy<'a, I>(point: Point,
                                               xys_per_line: I)
-                                              -> Option<(Index, conrod::Point)>
+                                              -> Option<(Index, Point)>
         where I: Iterator<Item = (Xs<'a, 'a>, Range)>
     {
-        closest_line(xy[1], xys_per_line)
+        closest_line(point.x, xys_per_line)
             .and_then(|(closest_line_idx, closest_line_xs, closest_line_y)| {
-                let (closest_char_idx, closest_x) = closest_cursor_index_on_line(xy[0],
+                let (closest_char_idx, closest_x) = closest_cursor_index_on_line(point.y,
                                                                                  closest_line_xs);
                 let index = Index {
                     line: closest_line_idx,
                     char: closest_char_idx,
                 };
-                let point = [closest_x, closest_line_y.middle()];
+                let point = Point { x: closest_x, y: closest_line_y.middle() };
                 Some((index, point))
             })
     }

@@ -13,7 +13,6 @@ petgraph = "0.4.1"
 matches = "0.1.4"
 rusttype = "0.2.0"
 find_folder = "0.3.0"
-conrod = "0.47.2"
 
 [replace]
 "cassowary:0.2.0" = { path = "../cassowary-rs" }

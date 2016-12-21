@@ -6,7 +6,6 @@ extern crate window;
 extern crate petgraph;
 extern crate find_folder;
 extern crate rusttype;
-extern crate conrod;
 
 #[macro_use]
 extern crate matches;
