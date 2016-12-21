@@ -6,14 +6,11 @@ use rusttype;
 use rusttype::{Glyph, GlyphId, GlyphIter, LayoutIter, Scale};
 use rusttype::gpu_cache::Cache as GlyphCache;
 use conrod;
+use font::Font;
 
 /// Font size used throughout Conrod.
 pub type FontSize = u32;
 
-/// The RustType `FontCollection` type used by conrod.
-pub type FontCollection = rusttype::FontCollection<'static>;
-/// The RustType `Font` type used by conrod.
-pub type Font = rusttype::Font<'static>;
 /// The RustType `PositionedGlyph` type used by conrod.
 pub type PositionedGlyph = rusttype::PositionedGlyph<'static>;
 
@@ -154,170 +151,10 @@ impl<'a, I> Iterator for Lines<'a, I>
 }
 
 
-/// The `font::Id` and `font::Map` types.
-pub mod font {
-    use std;
-    use util::Rectangle;
-
-    /// A type-safe wrapper around the `FontId`.
-    ///
-    /// This is used as both:
-    ///
-    /// - The key for the `font::Map`'s inner `HashMap`.
-    /// - The `font_id` field for the rusttype::gpu_cache::Cache.
-    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct Id(usize);
-
-    /// A collection of mappings from `font::Id`s to `rusttype::Font`s.
-    pub struct Map {
-        next_index: usize,
-        map: std::collections::HashMap<Id, super::Font>,
-    }
-
-    /// An iterator yielding an `Id` for each new `rusttype::Font` inserted into the `Map` via the
-    /// `insert_collection` method.
-    pub struct NewIds {
-        index_range: std::ops::Range<usize>,
-    }
-
-    /// Yields the `Id` for each `Font` within the `Map`.
-    #[derive(Clone)]
-    pub struct Ids<'a> {
-        keys: std::collections::hash_map::Keys<'a, Id, super::Font>,
-    }
-
-    /// Returned when loading new fonts from file or bytes.
-    #[derive(Debug)]
-    pub enum Error {
-        /// Some error occurred while loading a `FontCollection` from a file.
-        IO(std::io::Error),
-        /// No `Font`s could be yielded from the `FontCollection`.
-        NoFont,
-    }
-
-    impl Id {
-        /// Returns the inner `usize` from the `Id`.
-        pub fn index(self) -> usize {
-            self.0
-        }
-    }
-
-    impl Map {
-        /// Construct the new, empty `Map`.
-        pub fn new() -> Self {
-            Map {
-                next_index: 0,
-                map: std::collections::HashMap::new(),
-            }
-        }
-
-        /// Borrow the `rusttype::Font` associated with the given `font::Id`.
-        pub fn get(&self, id: Id) -> Option<&super::Font> {
-            self.map.get(&id)
-        }
-
-        /// Adds the given `rusttype::Font` to the `Map` and returns a unique `Id` for it.
-        pub fn insert(&mut self, font: super::Font) -> Id {
-            let index = self.next_index;
-            self.next_index = index.wrapping_add(1);
-            let id = Id(index);
-            self.map.insert(id, font);
-            id
-        }
-
-        /// Insert a single `Font` into the map by loading it from the given file path.
-        pub fn insert_from_file<P>(&mut self, path: P) -> Result<Id, Error>
-            where P: AsRef<std::path::Path>,
-        {
-            let font = try!(from_file(path));
-            Ok(self.insert(font))
-        }
-
-        // /// Adds each font in the given `rusttype::FontCollection` to the `Map` and returns an
-        // /// iterator yielding a unique `Id` for each.
-        // pub fn insert_collection(&mut self, collection: super::FontCollection) -> NewIds {
-        //     let start_index = self.next_index;
-        //     let mut end_index = start_index;
-        //     for index in 0.. {
-        //         match collection.font_at(index) {
-        //             Some(font) => {
-        //                 self.insert(font);
-        //                 end_index += 1;
-        //             }
-        //             None => break,
-        //         }
-        //     }
-        //     NewIds { index_range: start_index..end_index }
-        // }
-
-        /// Produces an iterator yielding the `Id` for each `Font` within the `Map`.
-        pub fn ids(&self) -> Ids {
-            Ids { keys: self.map.keys() }
-        }
-    }
-
-
-    /// Load a `super::FontCollection` from a file at a given path.
-    pub fn collection_from_file<P>(path: P) -> Result<super::FontCollection, std::io::Error>
-        where P: AsRef<std::path::Path>,
-    {
-        use std::io::Read;
-        let path = path.as_ref();
-        let mut file = try!(std::fs::File::open(path));
-        let mut file_buffer = Vec::new();
-        try!(file.read_to_end(&mut file_buffer));
-        Ok(super::FontCollection::from_bytes(file_buffer))
-    }
-
-    /// Load a single `Font` from a file at the given path.
-    pub fn from_file<P>(path: P) -> Result<super::Font, Error>
-        where P: AsRef<std::path::Path>
-    {
-        let collection = try!(collection_from_file(path));
-        collection.into_font().ok_or(Error::NoFont)
-    }
-
-
-    impl Iterator for NewIds {
-        type Item = Id;
-        fn next(&mut self) -> Option<Self::Item> {
-            self.index_range.next().map(|i| Id(i))
-        }
-    }
-
-    impl<'a> Iterator for Ids<'a> {
-        type Item = Id;
-        fn next(&mut self) -> Option<Self::Item> {
-            self.keys.next().map(|&id| id)
-        }
-    }
-
-    impl From<std::io::Error> for Error {
-        fn from(e: std::io::Error) -> Self {
-            Error::IO(e)
-        }
-    }
-
-    impl std::error::Error for Error {
-        fn description(&self) -> &str {
-            match *self {
-                Error::IO(ref e) => std::error::Error::description(e),
-                Error::NoFont => "No `Font` found in the loaded `FontCollection`.",
-            }
-        }
-    }
-
-    impl std::fmt::Display for Error {
-        fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-            writeln!(f, "{}", std::error::Error::description(self))
-        }
-    }
-}
-
-
 /// Logic and types specific to individual glyph layout.
 pub mod glyph {
     use super::{FontSize};
+    use font::Font;
     use util::{Range, Rectangle, Scalar};
     use std;
     use rusttype;
@@ -345,7 +182,7 @@ pub mod glyph {
     /// produces an iterator that yields a `Rect` for every character in that line.
     pub struct RectsPerLine<'a, I> {
         lines_with_rects: I,
-        font: &'a super::Font,
+        font: &'a Font,
         font_size: FontSize,
     }
 
@@ -395,7 +232,7 @@ pub mod glyph {
     /// This is useful when information about character positioning is needed when reasoning about
     /// text layout.
     pub fn rects_per_line<'a, I>(lines_with_rects: I,
-                                 font: &'a super::Font,
+                                 font: &'a Font,
                                  font_size: FontSize) -> RectsPerLine<'a, I>
         where I: Iterator<Item=(&'a str, Rectangle)>,
     {
@@ -414,7 +251,7 @@ pub mod glyph {
     ///
     /// All lines that have no selected `Rect`s will be skipped.
     pub fn selected_rects_per_line<'a, I>(lines_with_rects: I,
-                                          font: &'a super::Font,
+                                          font: &'a Font,
                                           font_size: FontSize,
                                           start: super::cursor::Index,
                                           end: super::cursor::Index) -> SelectedRectsPerLine<'a, I>
@@ -523,6 +360,7 @@ pub mod cursor {
     use std;
     use util::{Range, Align, Rectangle, Scalar};
     use super::{FontSize};
+    use font::Font;
     use rusttype;
     use rusttype::{LayoutIter};
     use conrod;
@@ -534,7 +372,7 @@ pub mod cursor {
     #[derive(Clone)]
     pub struct XysPerLine<'a, I> {
         lines_with_rects: I,
-        font: &'a super::Font,
+        font: &'a Font,
         text: &'a str,
         font_size: FontSize,
     }
@@ -746,7 +584,7 @@ pub mod cursor {
     /// Yields `(xs, y_range)`, where `y_range` is the `Range` occupied by the line across the *y*
     /// axis and `xs` is every possible cursor position along the *x* axis
     pub fn xys_per_line<'a, I>(lines_with_rects: I,
-                               font: &'a super::Font,
+                               font: &'a Font,
                                text: &'a str,
                                font_size: FontSize) -> XysPerLine<'a, I>
     {
@@ -769,7 +607,7 @@ pub mod cursor {
     /// axis and `xs` is every possible cursor position along the *x* axis.
     pub fn xys_per_line_from_text<'a>(text: &'a str,
                                       line_infos: &'a [super::line::Info],
-                                      font: &'a super::Font,
+                                      font: &'a Font,
                                       font_size: FontSize,
                                       x_align: Align,
                                       y_align: Align,
@@ -944,6 +782,7 @@ pub mod line {
     use rusttype;
     //use Scale;
     //use {Align, FontSize, Scale};
+    use font::Font;
     use super::FontSize;
     use rusttype::Scale;
     use util::{Rectangle, Scalar, Range, Align};
@@ -1010,7 +849,7 @@ pub mod line {
     /// [wrap_by_whitespace](./struct.Infos.html#method.wrap_by_whitespace).
     pub struct Infos<'a, F> {
         text: &'a str,
-        font: &'a super::Font,
+        font: &'a Font,
         font_size: FontSize,
         max_width: Scalar,
         next_break_fn: F,
@@ -1042,7 +881,7 @@ pub mod line {
 
     /// An alias for function pointers that are compatible with the `Block`'s required text
     /// wrapping function.
-    pub type NextBreakFnPtr = fn(&str, &super::Font, FontSize, Scalar) -> (Break, Scalar);
+    pub type NextBreakFnPtr = fn(&str, &Font, FontSize, Scalar) -> (Break, Scalar);
 
     impl Break {
         /// Return the index at which the break occurs.
@@ -1135,7 +974,7 @@ pub mod line {
     ///
     /// The following code is adapted from the rusttype::LayoutIter::next src.
     fn advance_width(ch: char,
-                     font: &super::Font,
+                     font: &Font,
                      scale: Scale,
                      last_glyph: &mut Option<GlyphId>) -> Scalar
     {
@@ -1152,7 +991,7 @@ pub mod line {
     /// Returns the next index at which the text naturally breaks via a newline character,
     /// along with the width of the line.
     fn next_break(text: &str,
-                  font: &super::Font,
+                  font: &Font,
                   font_size: FontSize) -> (Break, Scalar)
     {
         let scale = super::pt_to_scale(font_size);
@@ -1186,7 +1025,7 @@ pub mod line {
     ///
     /// Also returns the width of each line alongside the Break.
     fn next_break_by_character(text: &str,
-                               font: &super::Font,
+                               font: &Font,
                                font_size: FontSize,
                                max_width: Scalar) -> (Break, Scalar)
     {
@@ -1234,7 +1073,7 @@ pub mod line {
     ///
     /// Also returns the width the line alongside the Break.
     fn next_break_by_whitespace(text: &str,
-                                font: &super::Font,
+                                font: &Font,
                                 font_size: FontSize,
                                 max_width: Scalar) -> (Break, Scalar)
     {
@@ -1290,7 +1129,7 @@ pub mod line {
 
 
     /// Produce the width of the given line of text including spaces (i.e. ' ').
-    pub fn width(text: &str, font: &super::Font, font_size: FontSize) -> Scalar {
+    pub fn width(text: &str, font: &Font, font_size: FontSize) -> Scalar {
         let scale = Scale::uniform(super::pt_to_px(font_size));
         let point = rusttype::Point { x: 0.0, y: 0.0 };
 
@@ -1308,11 +1147,11 @@ pub mod line {
 
     /// Produce an `Infos` iterator wrapped by the given `next_break_fn`.
     pub fn infos_wrapped_by<'a, F>(text: &'a str,
-                                   font: &'a super::Font,
+                                   font: &'a Font,
                                    font_size: FontSize,
                                    max_width: Scalar,
                                    next_break_fn: F) -> Infos<'a, F>
-        where F: for<'b> FnMut(&'b str, &'b super::Font, FontSize, Scalar) -> (Break, Scalar)
+        where F: for<'b> FnMut(&'b str, &'b Font, FontSize, Scalar) -> (Break, Scalar)
     {
         Infos {
             text: text,
@@ -1331,11 +1170,11 @@ pub mod line {
     /// The produced `Infos` iterator will not wrap the text, and only break each line via newline
     /// characters within the text (either `\n` or `\r\n`).
     pub fn infos<'a>(text: &'a str,
-                     font: &'a super::Font,
+                     font: &'a Font,
                      font_size: FontSize) -> Infos<'a, NextBreakFnPtr>
     {
         fn no_wrap(text: &str,
-                   font: &super::Font,
+                   font: &Font,
                    font_size: FontSize,
                    _max_width: Scalar) -> (Break, Scalar)
         {
@@ -1399,7 +1238,7 @@ pub mod line {
     ///
     /// Lines that do not contain any selected text will be skipped.
     pub fn selected_rects<'a, I>(lines_with_rects: I,
-                                 font: &'a super::Font,
+                                 font: &'a Font,
                                  font_size: FontSize,
                                  start: super::cursor::Index,
                                  end: super::cursor::Index) -> SelectedRects<'a, I>
@@ -1413,7 +1252,7 @@ pub mod line {
 
 
     impl<'a, F> Iterator for Infos<'a, F>
-        where F: for<'b> FnMut(&'b str, &'b super::Font, FontSize, Scalar) -> (Break, Scalar)
+        where F: for<'b> FnMut(&'b str, &'b Font, FontSize, Scalar) -> (Break, Scalar)
     {
         type Item = Info;
         fn next(&mut self) -> Option<Self::Item> {

@@ -14,6 +14,7 @@ use graphics::Context;
 use super::widget::*;
 use super::util::*;
 use super::text;
+use super::font;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
 use backend::glyph;
@@ -28,7 +29,7 @@ pub struct Ui {
     // Manages all fonts that have been loaded by the user.
     //pub fonts: text::font::Map,
     pub glyph_cache: GlyphCache,
-    pub fonts: text::font::Map, 
+    pub fonts: font::Map, 
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dim: Dimensions) -> Self {
@@ -45,7 +46,7 @@ impl Ui {
         let mut graph = Graph::<Widget, ()>::new();
         let root = graph.add_node(root);
 
-        let fonts = text::font::Map::new();
+        let fonts = font::Map::new();
         let glyph_cache = GlyphCache::new(&mut window.context.factory, window_dim.width as u32, window_dim.height as u32);
         Ui {
             graph: graph, root: root,

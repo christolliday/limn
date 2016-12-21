@@ -22,6 +22,9 @@ use find_folder;
 use backend::glyph;
 use graphics::Transformed;
 use text::PositionedGlyph;
+use text::{Wrap, FontSize};
+use font::Font;
+use font;
 
 pub trait EventListener {
     fn handle_event(&self, event: &Event);
@@ -31,7 +34,7 @@ pub trait EventListener {
 }
 
 pub trait WidgetDrawable {
-    fn draw(&self, fonts: &text::font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d);
+    fn draw(&self, fonts: &font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d);
     fn is_mouse_over(&self, mouse: Point, bounds: Rectangle) -> bool {
         point_inside_rect(mouse, bounds)
     }
@@ -41,7 +44,7 @@ pub struct RectDrawable {
     pub background: Color,
 }
 impl WidgetDrawable for RectDrawable {
-    fn draw(&self, fonts: &text::font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d) {
+    fn draw(&self, fonts: &font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d) {
         graphics::Rectangle::new(self.background).draw(bounds, &context.draw_state, context.transform, graphics);
     }
 }
@@ -50,7 +53,7 @@ pub struct EllipseDrawable {
     pub background: Color,
 }
 impl WidgetDrawable for EllipseDrawable {
-    fn draw(&self, fonts: &text::font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d) {
+    fn draw(&self, fonts: &font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d) {
         graphics::Ellipse::new(self.background).draw(bounds, &context.draw_state, context.transform, graphics);
     }
     fn is_mouse_over(&self, mouse: Point, bounds: Rectangle) -> bool {
@@ -61,7 +64,7 @@ impl WidgetDrawable for EllipseDrawable {
 }
 
 pub struct TextDrawable {
-    pub font_id: text::font::Id,
+    pub font_id: font::Id,
 }
 // Retrieve the "dots per inch" factor by dividing the window width by the view.
 fn get_dpi(context: &Context) -> f32 {
@@ -70,9 +73,8 @@ fn get_dpi(context: &Context) -> f32 {
         .map(|v| v.window_size[0] as f32 / view_size[0] as f32)
         .unwrap_or(1.0)
 }
-use text::{Wrap, FontSize, Font};
 impl WidgetDrawable for TextDrawable {
-    fn draw(&self, fonts: &text::font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d) {
+    fn draw(&self, fonts: &font::Map, glyph_cache: &mut GlyphCache, bounds: Rectangle, context: Context, graphics: &mut G2d) {
 
         graphics::Rectangle::new([1.0,1.0,1.0,1.0]).draw(bounds, &context.draw_state, context.transform, graphics);
 
@@ -186,7 +188,7 @@ impl Widget  {
         println!("{:?}",
             self.layout.bounds(solver));
     }
-    pub fn draw(&self, fonts: &text::font::Map, glyph_cache: &mut GlyphCache, solver: &mut Solver, c: Context, g: &mut G2d) {
+    pub fn draw(&self, fonts: &font::Map, glyph_cache: &mut GlyphCache, solver: &mut Solver, c: Context, g: &mut G2d) {
         if let Some(ref drawable) = self.drawable {
             drawable.draw(fonts, glyph_cache, self.layout.bounds(solver), c, g);
         }
