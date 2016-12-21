@@ -13,7 +13,7 @@ use cassowary::strength::*;
 use graphics::Context;
 use super::widget::*;
 use super::util::*;
-use super::font;
+use text::font;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
 

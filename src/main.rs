@@ -14,7 +14,6 @@ pub mod widget;
 pub mod ui;
 pub mod util;
 pub mod text;
-pub mod font;
 
 use widget::*;
 use ui::*;

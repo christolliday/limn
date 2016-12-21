@@ -16,7 +16,7 @@ use backend::glyph::GlyphCache;
 use backend::gfx::ImageSize;
 use backend::glyph;
 use text::Wrap;
-use font;
+use text::font;
 
 pub trait EventListener {
     fn handle_event(&self, event: &Event);

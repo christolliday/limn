@@ -5,10 +5,10 @@ pub use graphics::types::Scalar;
 use rusttype;
 use graphics::Context;
 
-/*#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Px(pub f64);
-#[derive(Copy, Clone, Debug)]
-pub struct Dp(pub f64);*/
+// #[derive(Copy, Clone, Debug, PartialEq)]
+// pub struct Px(pub f64);
+// #[derive(Copy, Clone, Debug)]
+// pub struct Dp(pub f64);
 
 #[derive(Copy, Clone, Debug)]
 pub struct Dimensions {
@@ -71,13 +71,23 @@ impl Range {
         self_direction == other_direction
     }
     pub fn shift(self, amount: Scalar) -> Range {
-        Range { start: self.start + amount, end: self.end + amount }
+        Range {
+            start: self.start + amount,
+            end: self.end + amount,
+        }
     }
     pub fn undirected(self) -> Range {
-        if self.start > self.end { self.invert() } else { self }
+        if self.start > self.end {
+            self.invert()
+        } else {
+            self
+        }
     }
     pub fn invert(self) -> Range {
-        Range { start: self.end, end: self.start }
+        Range {
+            start: self.end,
+            end: self.start,
+        }
     }
     pub fn align_start_of(self, other: Self) -> Self {
         let diff = if self.has_same_direction(other) {
