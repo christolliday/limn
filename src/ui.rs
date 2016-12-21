@@ -13,11 +13,9 @@ use cassowary::strength::*;
 use graphics::Context;
 use super::widget::*;
 use super::util::*;
-use super::text;
 use super::font;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
-use backend::glyph;
 
 pub struct Ui {
     graph: Graph<Widget, ()>,
@@ -26,8 +24,6 @@ pub struct Ui {
     pub solver: Solver,
     pub window_width: Variable,
     pub window_height: Variable,
-    // Manages all fonts that have been loaded by the user.
-    // pub fonts: text::font::Map,
     pub glyph_cache: GlyphCache,
     pub fonts: font::Map,
 }

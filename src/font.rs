@@ -1,6 +1,5 @@
 /// The `font::Id` and `font::Map` types.
 use std;
-use util::Rectangle;
 use rusttype;
 
 /// The RustType `FontCollection` type used by conrod.

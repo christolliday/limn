@@ -11,19 +11,11 @@ use cassowary::{Solver, Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use super::ui::Ui;
-use super::text::Text;
 use super::text;
 use backend::glyph::GlyphCache;
-use backend::gfx::G2dTexture;
-use rusttype;
 use backend::gfx::ImageSize;
-use find_folder;
 use backend::glyph;
-use graphics::Transformed;
-use text::PositionedGlyph;
-use text::{Wrap, FontSize};
-use font::Font;
+use text::Wrap;
 use font;
 
 pub trait EventListener {
@@ -89,13 +81,6 @@ impl WidgetDrawable for EllipseDrawable {
 pub struct TextDrawable {
     pub font_id: font::Id,
 }
-// Retrieve the "dots per inch" factor by dividing the window width by the view.
-fn get_dpi(context: &Context) -> f32 {
-    let view_size = context.get_view_size();
-    context.viewport
-        .map(|v| v.window_size[0] as f32 / view_size[0] as f32)
-        .unwrap_or(1.0)
-}
 impl WidgetDrawable for TextDrawable {
     fn draw(&self,
             fonts: &font::Map,
@@ -124,7 +109,9 @@ impl WidgetDrawable for TextDrawable {
                                                              font,
                                                              font_size,
                                                              line_spacing,
-                                                             line_wrap);
+                                                             line_wrap,
+                                                             Align::Start,
+                                                             Align::End);
 
         // Queue the glyphs to be cached.
         for glyph in positioned_glyphs.iter() {

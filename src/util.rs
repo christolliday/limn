@@ -1,9 +1,16 @@
-
 use window::Size;
 use graphics::types;
 
 pub use conrod::{Range, Align};
 pub use graphics::types::Scalar;
+use rusttype;
+use graphics::Context;
+
+/*#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Px(pub f64);
+#[derive(Copy, Clone, Debug)]
+pub struct Dp(pub f64);*/
+
 #[derive(Copy, Clone, Debug)]
 pub struct Dimensions {
     pub width: Scalar,
@@ -80,8 +87,6 @@ impl Rectangle {
         self.top + self.height
     }
 }
-use rusttype;
-use std;
 pub fn map_rect_i32(rect: rusttype::Rect<i32>) -> types::Rectangle {
     [rect.min.x as f64,
      rect.min.y as f64,
@@ -101,12 +106,11 @@ impl Mul<Dimensions> for types::Rectangle {
         [self[0] * rhs.width, self[1] * rhs.height, self[2] * rhs.width, self[3] * rhs.height]
     }
 }
-// pub fn map_rect_f32(rect: rusttype::Rect<f32>) -> types::Rectangle {
-// [ rect[0] as f64, rect[1] as f64, rect[2] as f64, rect[3] as f64 ]
-// }
-// use rusttype;
-// impl Into<[f64; 4]> for rusttype::Rect<u32> {
-// fn into(self) -> types::Rectangle {
-// [ self[0] as f64, self[1] as f64, self[2] as f64, self[3] as f64 ]
-// }
-// }
+
+// Retrieve the "dots per inch" factor by dividing the window width by the view.
+fn get_dpi(context: &Context) -> f32 {
+    let view_size = context.get_view_size();
+    context.viewport
+        .map(|v| v.window_size[0] as f32 / view_size[0] as f32)
+        .unwrap_or(1.0)
+}

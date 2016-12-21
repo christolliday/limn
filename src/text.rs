@@ -3,14 +3,10 @@
 use std;
 use util::*;
 use rusttype;
-use rusttype::{Glyph, GlyphId, GlyphIter, LayoutIter, Scale};
-use rusttype::gpu_cache::Cache as GlyphCache;
-use conrod;
+use rusttype::Scale;
 use font::Font;
 
-/// Font size used throughout Conrod.
 pub type FontSize = u32;
-
 /// The RustType `PositionedGlyph` type used by conrod.
 pub type PositionedGlyph = rusttype::PositionedGlyph<'static>;
 
@@ -25,77 +21,34 @@ pub enum Wrap {
 }
 
 pub fn get_positioned_glyphs(text: &str,
-                             bounds: Rectangle,
+                             rect: Rectangle,
                              font: &Font,
                              font_size: FontSize,
                              line_spacing: f64,
-                             line_wrap: Wrap)
+                             line_wrap: Wrap,
+                             x_align: Align,
+                             y_align: Align)
                              -> Vec<PositionedGlyph> {
     let line_infos: Vec<line::Info> = match line_wrap {
             Wrap::NoWrap => line::infos(text, font, font_size),
-            Wrap::Character => line::infos(text, font, font_size).wrap_by_character(bounds.width),
-            Wrap::Whitespace => line::infos(text, font, font_size).wrap_by_whitespace(bounds.width),
+            Wrap::Character => line::infos(text, font, font_size).wrap_by_character(rect.width),
+            Wrap::Whitespace => line::infos(text, font, font_size).wrap_by_whitespace(rect.width),
         }
         .collect();
-    let text = Text {
-        text: text,
-        line_infos: &line_infos,
-        font: font,
-        font_size: font_size,
-        rect: bounds,
-        x_align: Align::Start,
-        y_align: Align::End,
-        line_spacing: line_spacing,
-    };
-    text.positioned_glyphs()
-}
+    let line_infos = line_infos.iter().cloned();
+    let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
+    let line_rects = line::rects(line_infos, font_size, rect, x_align, y_align, line_spacing);
 
-/// A type used for producing a `PositionedGlyph` iterator.
-///
-/// We produce this type rather than the `&[PositionedGlyph]`s directly so that we can properly
-/// handle "HiDPI" scales when caching glyphs.
-pub struct Text<'a> {
-    pub text: &'a str,
-    pub line_infos: &'a [line::Info],
-    pub font: &'a Font,
-    pub font_size: FontSize,
-    pub rect: Rectangle,
-    pub x_align: Align,
-    pub y_align: Align,
-    pub line_spacing: Scalar,
-}
-impl<'a> Text<'a> {
-    /// Produces a list of `PositionedGlyph`s which may be used to cache and render the text.
-    ///
-    /// `dpi_factor`, aka "dots per inch factor" is a multiplier representing the density of
-    /// the display's pixels. The `Scale` of the font will be multiplied by this factor in order to
-    /// ensure that each `PositionedGlyph`'s `pixel_bounding_box` is accurate and that the GPU
-    /// cache receives glyphs of a size that will display correctly on displays regardless of DPI.
-    ///
-    /// Note that conrod does not require this factor when instantiating `Text` widgets and laying
-    /// out text. This is because conrod positioning uses a "pixel-agnostic" `Scalar` value
-    /// representing *perceived* distances for its positioning and layout, rather than pixel
-    /// values. During rendering however, the pixel density must be known
-    pub fn positioned_glyphs(self) -> Vec<PositionedGlyph> {
-        let Text { text, line_infos, font, font_size, rect, x_align, y_align, line_spacing } = self;
-
-        // Produce the text layout iterators.
-        let line_infos = line_infos.iter().cloned();
-        let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
-        let line_rects = line::rects(line_infos, font_size, rect, x_align, y_align, line_spacing);
-
-        let mut positioned_glyphs = Vec::new();
-        for (line_text, line_rect) in line_texts.zip(line_rects) {
-            let point = rusttype::Point {
-                x: line_rect.left as f32,
-                y: line_rect.top as f32,
-            };
-            positioned_glyphs.extend(font.layout(line_text, Scale::uniform(12.0), point)
-                .map(|g| g.standalone()));
-        }
-
-        positioned_glyphs
+    let mut positioned_glyphs = Vec::new();
+    for (line_text, line_rect) in line_texts.zip(line_rects) {
+        let point = rusttype::Point {
+            x: line_rect.left as f32,
+            y: line_rect.top as f32,
+        };
+        positioned_glyphs.extend(font.layout(line_text, Scale::uniform(12.0), point)
+            .map(|g| g.standalone()));
     }
+    positioned_glyphs
 }
 
 /// An iterator yielding each line within the given `text` as a new `&str`, where the start and end
