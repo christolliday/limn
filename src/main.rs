@@ -8,7 +8,8 @@ extern crate find_folder;
 extern crate rusttype;
 extern crate conrod;
 
-#[macro_use] extern crate matches;
+#[macro_use]
+extern crate matches;
 
 pub mod widget;
 pub mod ui;
@@ -22,18 +23,24 @@ use util::*;
 
 use input::{ResizeEvent, MouseCursorEvent, Event, Input};
 use backend::{Window, WindowEvents, OpenGL};
-use graphics::{clear};
+use graphics::clear;
 
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
 fn main() {
-    let window_dim = Dimensions { width: 400.0, height: 720.0 };
+    let window_dim = Dimensions {
+        width: 400.0,
+        height: 720.0,
+    };
 
     // Construct the window.
-    let mut window: Window =
-        backend::window::WindowSettings::new("Grafiki Demo", window_dim)
-            .opengl(OpenGL::V3_2).samples(4).exit_on_esc(true).build().unwrap();
+    let mut window: Window = backend::window::WindowSettings::new("Grafiki Demo", window_dim)
+        .opengl(OpenGL::V3_2)
+        .samples(4)
+        .exit_on_esc(true)
+        .build()
+        .unwrap();
 
     // Create the event loop.
     let mut events = WindowEvents::new();
@@ -68,27 +75,23 @@ fn main() {
 
     let text_drawable = TextDrawable { font_id: font_id };
     let mut text_widget = Widget::new(Some(Box::new(text_drawable)));
-    let text_constraints = [
-        text_widget.layout.top |EQ(REQUIRED)| 100.0,
-        text_widget.layout.left |EQ(REQUIRED)| 100.0,
-    ];
+    let text_constraints = [text_widget.layout.top | EQ(REQUIRED) | 100.0,
+                            text_widget.layout.left | EQ(REQUIRED) | 100.0];
     text_widget.layout.width(100.0, WEAK);
     text_widget.layout.height(100.0, WEAK);
     text_widget.layout.add_constraints(&text_constraints);
 
-    let box1_constraints = [
-        box1.layout.top |EQ(REQUIRED)| 0.0,
-        box1.layout.left |EQ(REQUIRED)| 0.0,
-        box1.layout.left |LE(REQUIRED)| box1.layout.right];
+    let box1_constraints = [box1.layout.top | EQ(REQUIRED) | 0.0,
+                            box1.layout.left | EQ(REQUIRED) | 0.0,
+                            box1.layout.left | LE(REQUIRED) | box1.layout.right];
     box1.layout.width(50.0, WEAK);
     box1.layout.height(100.0, WEAK);
     box1.layout.add_constraints(&box1_constraints);
 
-    let box2_constraints = [
-        box2.layout.bottom |EQ(REQUIRED)| ui.window_height, // bottom align
-        box2.layout.right |EQ(REQUIRED)| ui.window_width, // right align
-        box2.layout.left |GE(REQUIRED)| box1.layout.right, // no overlap
-        box2.layout.left |LE(REQUIRED)| box2.layout.right];
+    let box2_constraints = [box2.layout.bottom | EQ(REQUIRED) | ui.window_height, // bottom align
+                            box2.layout.right | EQ(REQUIRED) | ui.window_width, // right align
+                            box2.layout.left | GE(REQUIRED) | box1.layout.right, // no overlap
+                            box2.layout.left | LE(REQUIRED) | box2.layout.right];
     box2.layout.width(100.0, WEAK);
     box2.layout.height(100.0, WEAK);
     box2.layout.add_constraints(&box2_constraints);

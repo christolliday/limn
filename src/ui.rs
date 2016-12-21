@@ -3,11 +3,11 @@ use backend::gfx::G2d;
 
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{ Dfs };
+use petgraph::visit::Dfs;
 
 use input::{Event, Input, Motion};
 
-use cassowary::{ Solver, Variable, Constraint };
+use cassowary::{Solver, Variable, Constraint};
 use cassowary::strength::*;
 
 use graphics::Context;
@@ -27,9 +27,9 @@ pub struct Ui {
     pub window_width: Variable,
     pub window_height: Variable,
     // Manages all fonts that have been loaded by the user.
-    //pub fonts: text::font::Map,
+    // pub fonts: text::font::Map,
     pub glyph_cache: GlyphCache,
-    pub fonts: font::Map, 
+    pub fonts: font::Map,
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dim: Dimensions) -> Self {
@@ -47,12 +47,18 @@ impl Ui {
         let root = graph.add_node(root);
 
         let fonts = font::Map::new();
-        let glyph_cache = GlyphCache::new(&mut window.context.factory, window_dim.width as u32, window_dim.height as u32);
+        let glyph_cache = GlyphCache::new(&mut window.context.factory,
+                                          window_dim.width as u32,
+                                          window_dim.height as u32);
         Ui {
-            graph: graph, root: root,
-            solver: solver, constraints: constraints,
-            window_width: window_width, window_height: window_height,
-            glyph_cache: glyph_cache, fonts: fonts,
+            graph: graph,
+            root: root,
+            solver: solver,
+            constraints: constraints,
+            window_width: window_width,
+            window_height: window_height,
+            glyph_cache: glyph_cache,
+            fonts: fonts,
         }
     }
     pub fn resize_window(&mut self, window_dims: [u32; 2]) {
@@ -91,13 +97,14 @@ impl Ui {
             let ref widget = self.graph[node_index];
             match event {
                 &Event::Input(Input::Move(Motion::MouseCursor(x, y))) => {
-                    let pos = Point{x: x, y: y};
+                    let pos = Point { x: x, y: y };
                     for listener in &widget.listeners {
                         if widget.is_mouse_over(&mut self.solver, pos) && listener.matches(event) {
                             listener.handle_event(event);
                         }
                     }
-                }, _ => {}
+                }
+                _ => {}
             }
         }
     }
