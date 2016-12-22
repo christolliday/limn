@@ -28,8 +28,8 @@ use cassowary::strength::*;
 
 fn main() {
     let window_dim = Dimensions {
-        width: 400.0,
-        height: 720.0,
+        width: 720.0,
+        height: 400.0,
     };
 
     // Construct the window.
@@ -75,8 +75,8 @@ fn main() {
     let mut text_widget = Widget::new(Some(Box::new(text_drawable)));
     let text_constraints = [text_widget.layout.top | EQ(REQUIRED) | 100.0,
                             text_widget.layout.left | EQ(REQUIRED) | 100.0];
-    text_widget.layout.width(100.0, WEAK);
-    text_widget.layout.height(100.0, WEAK);
+    text_widget.layout.width(300.0, WEAK);
+    text_widget.layout.height(50.0, WEAK);
     text_widget.layout.add_constraints(&text_constraints);
 
     let box1_constraints = [box1.layout.top | EQ(REQUIRED) | 0.0,

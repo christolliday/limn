@@ -3,14 +3,14 @@
 ///
 /// This module is the core of multi-line text handling.
 use rusttype;
-// use Scale;
-// use {Align, FontSize, Scale};
 use super::font::Font;
 use super::FontSize;
 use rusttype::Scale;
 use util::{Rectangle, Scalar, Range, Align};
 use std;
 use rusttype::GlyphId;
+use std::str::CharIndices;
+use std::iter::Peekable;
 
 /// The two types of **Break** indices returned by the **WrapIndicesBy** iterators.
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -99,7 +99,7 @@ pub struct Rects<I> {
 ///
 /// Lines that do not contain any selected text will be skipped.
 pub struct SelectedRects<'a, I> {
-    selected_char_rects_per_line: super::glyph::SelectedRectsPerLine<'a, I>,
+    selected_glyph_rects_per_line: super::glyph::SelectedGlyphRectsPerLine<'a, I>,
 }
 
 /// An alias for function pointers that are compatible with the `Block`'s required text
@@ -203,6 +203,13 @@ fn advance_width(ch: char, font: &Font, scale: Scale, last_glyph: &mut Option<Gl
     (kern + advance_width) as Scalar
 }
 
+fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char: char) -> bool {
+    if let Some(&(_, next_char)) = char_indices.peek() {
+        true
+    } else {
+        false
+    }
+}
 
 /// Returns the next index at which the text naturally breaks via a newline character,
 /// along with the width of the line.
@@ -239,15 +246,6 @@ fn next_break(text: &str, font: &Font, font_size: FontSize) -> (Break, Scalar) {
         char: char_i,
     };
     (break_, width)
-}
-use std::str::CharIndices;
-use std::iter::Peekable;
-fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char: char) -> bool {
-    if let Some(&(_, next_char)) = char_indices.peek() {
-        true
-    } else {
-        false
-    }
 }
 /// Returns the next index at which the text will break by either:
 /// - A newline character.
@@ -333,15 +331,13 @@ fn next_break_by_whitespace(text: &str,
     while let Some((byte_i, ch)) = char_indices.next() {
 
         // Check for a newline.
-        if ch == '\r' {
-            if let Some(&(_, '\n')) = char_indices.peek() {
-                let break_ = Break::Newline {
-                    byte: byte_i,
-                    char: char_i,
-                    len_bytes: 2,
-                };
-                return (break_, width);
-            }
+        if ch == '\r' && peek_next_char(&mut char_indices, '\n') {
+            let break_ = Break::Newline {
+                byte: byte_i,
+                char: char_i,
+                len_bytes: 2,
+            };
+            return (break_, width);
         } else if ch == '\n' {
             let break_ = Break::Newline {
                 byte: byte_i,
@@ -514,7 +510,7 @@ pub fn selected_rects<'a, I>(lines_with_rects: I,
     where I: Iterator<Item = (&'a str, Rectangle)>
 {
     SelectedRects {
-        selected_char_rects_per_line: super::glyph::selected_rects_per_line(lines_with_rects,
+        selected_glyph_rects_per_line: super::glyph::selected_rects_per_line(lines_with_rects,
                                                                             font,
                                                                             font_size,
                                                                             start,
@@ -653,7 +649,7 @@ impl<'a, I> Iterator for SelectedRects<'a, I>
 {
     type Item = Rectangle;
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(mut rects) = self.selected_char_rects_per_line.next() {
+        while let Some(mut rects) = self.selected_glyph_rects_per_line.next() {
             if let Some(first_rect) = rects.next() {
                 let total_selected_rect = rects.fold(first_rect, |mut total, next| {
                     // TODO ?

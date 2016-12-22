@@ -99,7 +99,7 @@ impl WidgetDrawable for TextDrawable {
         let font_id = self.font_id;
         let font = fonts.get(font_id).unwrap();
         let color = [0.0, 0.0, 0.0, 1.0];
-        let font_size = 12;
+        let font_size = 50;
         let line_spacing = 1.0;
         let line_wrap = Wrap::Character;
         let text_string = "Testing ︱︱︱\nWord";

@@ -50,7 +50,8 @@ pub fn get_positioned_glyphs(text: &str,
             x: line_rect.left as f32,
             y: line_rect.top as f32,
         };
-        positioned_glyphs.extend(font.layout(line_text, Scale::uniform(12.0), point)
+        println!("{:?} {:?}", line_text, point);
+        positioned_glyphs.extend(font.layout(line_text, Scale::uniform(font_size as f32), point)
             .map(|g| g.standalone()));
     }
     positioned_glyphs
@@ -59,7 +60,9 @@ pub fn get_positioned_glyphs(text: &str,
 /// An iterator yielding each line within the given `text` as a new `&str`, where the start and end
 /// indices into each line are provided by the given iterator.
 #[derive(Clone)]
-pub struct Lines<'a, I> {
+pub struct Lines<'a, I>
+    where I: Iterator<Item = std::ops::Range<usize>>
+{
     text: &'a str,
     ranges: I,
 }
@@ -87,18 +90,6 @@ pub fn lines<I>(text: &str, ranges: I) -> Lines<I>
     }
 }
 
-
-/// Converts the given font size in "points" to its font size in pixels.
-pub fn pt_to_px(font_size_in_points: FontSize) -> f32 {
-    (font_size_in_points * 4) as f32 / 3.0
-}
-
-/// Converts the given font size in "points" to a uniform `rusttype::Scale`.
-pub fn pt_to_scale(font_size_in_points: FontSize) -> Scale {
-    Scale::uniform(pt_to_px(font_size_in_points))
-}
-
-
 impl<'a, I> Iterator for Lines<'a, I>
     where I: Iterator<Item = std::ops::Range<usize>>
 {
@@ -108,3 +99,16 @@ impl<'a, I> Iterator for Lines<'a, I>
         ranges.next().map(|range| &text[range])
     }
 }
+
+
+/// Converts the given font size in "points" to its font size in pixels.
+pub fn pt_to_px(font_size_in_points: FontSize) -> f32 {
+    font_size_in_points as f32
+    //(font_size_in_points * 4) as f32 / 3.0
+}
+
+/// Converts the given font size in "points" to a uniform `rusttype::Scale`.
+pub fn pt_to_scale(font_size_in_points: FontSize) -> Scale {
+    Scale::uniform(pt_to_px(font_size_in_points))
+}
+
