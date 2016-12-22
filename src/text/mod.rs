@@ -10,6 +10,7 @@ use util::*;
 use rusttype;
 use rusttype::Scale;
 use self::font::Font;
+use self::line::{LineRects, LineInfo, LineInfos};
 
 pub type FontSize = u32;
 /// The RustType `PositionedGlyph` type used by conrod.
@@ -28,25 +29,25 @@ pub enum Wrap {
 pub fn get_positioned_glyphs(text: &str,
                              rect: Rectangle,
                              font: &Font,
-                             font_size: FontSize,
-                             line_spacing: f64,
+                             font_size: Scalar,
                              line_wrap: Wrap,
                              x_align: Align,
                              y_align: Align)
                              -> Vec<PositionedGlyph> {
 
-    let line_infos: Vec<line::Info> = line::infos(text, font, font_size, line_wrap, rect.width).collect();
+    let line_height = font_size * 1.25;
+
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width).collect();
     let line_infos = line_infos.iter().cloned();
     let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
-    let line_rects = line::rects(line_infos, font_size, rect, x_align, y_align, line_spacing);
+    let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
 
     let mut positioned_glyphs = Vec::new();
     for (line_text, line_rect) in line_texts.zip(line_rects) {
         let point = rusttype::Point {
             x: line_rect.left as f32,
-            y: line_rect.top as f32,
+            y: line_rect.top as f32 + font_size as f32,
         };
-        println!("{:?} {:?}", line_text, point);
         positioned_glyphs.extend(font.layout(line_text, Scale::uniform(font_size as f32), point)
             .map(|g| g.standalone()));
     }
@@ -66,9 +67,10 @@ pub struct Lines<'a, I>
 
 /// Determine the total height of a block of text with the given number of lines, font size and
 /// `line_spacing` (the space that separates each line of text).
-pub fn height(num_lines: usize, font_size: FontSize, line_spacing: Scalar) -> Scalar {
+pub fn height(num_lines: usize, font_size: Scalar, line_height: Scalar) -> Scalar {
     if num_lines > 0 {
-        num_lines as Scalar * font_size as Scalar + (num_lines - 1) as Scalar * line_spacing
+        num_lines as Scalar * line_height
+        //num_lines as Scalar * font_size as Scalar + (num_lines - 1) as Scalar * line_spacing
     } else {
         0.0
     }
@@ -98,13 +100,12 @@ impl<'a, I> Iterator for Lines<'a, I>
 
 
 /// Converts the given font size in "points" to its font size in pixels.
-pub fn pt_to_px(font_size_in_points: FontSize) -> f32 {
+pub fn pt_to_px(font_size_in_points: Scalar) -> f32 {
     font_size_in_points as f32
-    //(font_size_in_points * 4) as f32 / 3.0
 }
 
 /// Converts the given font size in "points" to a uniform `rusttype::Scale`.
-pub fn pt_to_scale(font_size_in_points: FontSize) -> Scale {
+pub fn pt_to_scale(font_size_in_points: Scalar) -> Scale {
     Scale::uniform(pt_to_px(font_size_in_points))
 }
 

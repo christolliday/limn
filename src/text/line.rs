@@ -12,6 +12,7 @@ use rusttype::GlyphId;
 use std::str::CharIndices;
 use std::iter::Peekable;
 use super::Wrap;
+use super::glyph::SelectedGlyphRectsPerLine;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum BreakType {
@@ -52,7 +53,7 @@ impl Break {
 /// blocks of text given some `&str`. The `start` and `end_break` can be used for indexing into
 /// the `&str`, and the `width` can be used for calculating line `Rect`s, alignment, etc.
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Info {
+pub struct LineInfo {
     /// The index into the `&str` that represents the first character within the line.
     pub start_byte: usize,
     /// The character index of the first character in the line.
@@ -65,48 +66,7 @@ pub struct Info {
     pub width: Scalar,
 }
 
-/// An iterator yielding an `Info` struct for each line in the given `text` wrapped by the
-/// given `next_break_fn`.
-///
-/// `Infos` is a fundamental part of performing lazy reasoning about text within conrod.
-///
-/// Construct an `Infos` iterator via the [infos function](./fn.infos.html) and its two builder
-/// methods, [wrap_by_character](./struct.Infos.html#method.wrap_by_character) and
-/// [wrap_by_whitespace](./struct.Infos.html#method.wrap_by_whitespace).
-#[derive(Copy, Clone)]
-pub struct Infos<'a> {
-    text: &'a str,
-    font: &'a Font,
-    font_size: FontSize,
-    max_width: Scalar,
-    line_wrap: Wrap,
-    /// The index that indicates the start of the next line to be yielded.
-    start_byte: usize,
-    /// The character index that indicates the start of the next line to be yielded.
-    start_char: usize,
-    /// The break type of the previously yielded line
-    last_break: Option<Break>,
-}
-
-/// An iterator yielding a `Rect` for each line in
-#[derive(Clone)]
-pub struct Rects<I> {
-    infos: I,
-    x_align: Align,
-    line_spacing: Scalar,
-    next: Option<Rectangle>,
-}
-
-/// An iterator yielding a `Rect` for each selected line in a block of text.
-///
-/// The yielded `Rect`s represent the selected range within each line of text.
-///
-/// Lines that do not contain any selected text will be skipped.
-pub struct SelectedRects<'a, I> {
-    selected_glyph_rects_per_line: super::glyph::SelectedGlyphRectsPerLine<'a, I>,
-}
-
-impl Info {
+impl LineInfo {
     /// The end of the byte index range for indexing into the slice.
     pub fn end_byte(&self) -> usize {
         self.end_break.byte
@@ -125,6 +85,255 @@ impl Info {
     /// The index range for indexing into a `char` iterator over the original str slice.
     pub fn char_range(self) -> std::ops::Range<usize> {
         self.start_char..self.end_char()
+    }
+}
+
+/// An iterator yielding an `Info` struct for each line in the given `text` wrapped by the
+/// given `next_break_fn`.
+///
+/// `Infos` is a fundamental part of performing lazy reasoning about text within conrod.
+///
+/// Construct an `Infos` iterator via the [infos function](./fn.infos.html) and its two builder
+/// methods, [wrap_by_character](./struct.Infos.html#method.wrap_by_character) and
+/// [wrap_by_whitespace](./struct.Infos.html#method.wrap_by_whitespace).
+#[derive(Copy, Clone)]
+pub struct LineInfos<'a> {
+    text: &'a str,
+    font: &'a Font,
+    font_size: Scalar,
+    max_width: Scalar,
+    line_wrap: Wrap,
+    /// The index that indicates the start of the next line to be yielded.
+    start_byte: usize,
+    /// The character index that indicates the start of the next line to be yielded.
+    start_char: usize,
+    /// The break type of the previously yielded line
+    last_break: Option<Break>,
+}
+
+impl<'a> LineInfos<'a> {
+    pub fn new(text: &'a str, font: &'a Font, font_size: Scalar, line_wrap: Wrap, max_width: Scalar) -> Self {
+        LineInfos {
+            text: text,
+            font: font,
+            font_size: font_size,
+            max_width: max_width,
+            line_wrap: line_wrap,
+            start_byte: 0,
+            start_char: 0,
+            last_break: None,
+        }
+    }
+}
+
+impl<'a> Iterator for LineInfos<'a> {
+    type Item = LineInfo;
+    fn next(&mut self) -> Option<Self::Item> {
+        let LineInfos { text,
+                        font,
+                        font_size,
+                        max_width,
+                        line_wrap,
+                        ref mut start_byte,
+                        ref mut start_char,
+                        ref mut last_break } = *self;
+
+        let text_line = &text[*start_byte..];
+        let (next, width) = match line_wrap {
+            Wrap::NoWrap => next_break(text_line, font, font_size),
+            Wrap::Character => next_break_by_character(text_line, font, font_size, max_width),
+            Wrap::Whitespace => next_break_by_whitespace(text_line, font, font_size, max_width),
+        };
+        match next.break_type {
+            BreakType::Newline {len_bytes} | BreakType::Wrap {len_bytes} => {
+                let next_break = Break::new(*start_byte + next.byte, *start_char + next.char, next.break_type);
+                let info = LineInfo {
+                    start_byte: *start_byte,
+                    start_char: *start_char,
+                    end_break: next_break,
+                    width: width,
+                };
+                *start_byte = info.start_byte + next.byte + len_bytes;
+                *start_char = info.start_char + next.char + 1;
+                *last_break = Some(next_break);
+                Some(info)
+            },
+            BreakType::End => {
+                let char = next.char;
+                // if the last line ends in a new line, or the entire text is empty,
+                // return an empty line Info
+                let empty_line = {
+                    match *last_break {
+                        Some(last_break_) => {
+                            match last_break_.break_type {
+                                BreakType::Newline { .. } => true,
+                                _ => false,
+                            }
+                        }
+                        None => true,
+                    }
+                };
+                if *start_byte < text.len() || empty_line {
+                    let total_bytes = text.len();
+                    let total_chars = *start_char + char;
+                    let end_break = Break::new(total_bytes, total_chars, BreakType::End);
+                    let info = LineInfo {
+                        start_byte: *start_byte,
+                        start_char: *start_char,
+                        end_break: end_break,
+                        width: width,
+                    };
+                    *start_byte = total_bytes;
+                    *start_char = total_chars;
+                    *last_break = Some(end_break);
+                    Some(info)
+                } else {
+                    None
+                }
+            }
+        }
+    }
+}
+
+/// An iterator yielding a `Rect` for each line in
+#[derive(Clone)]
+pub struct LineRects<I> {
+    infos: I,
+    x_align: Align,
+    line_height: Scalar,
+    next: Option<Rectangle>,
+}
+
+impl<I> LineRects<I> 
+    where I: Iterator<Item = LineInfo> + ExactSizeIterator
+{
+    /// Produce an iterator yielding the bounding `Rect` for each line in the text.
+    ///
+    /// This function assumes that `font_size` is the same `FontSize` used to produce the `Info`s
+    /// yielded by the `infos` Iterator.
+    pub fn new(mut infos: I,
+               font_size: Scalar,
+               bounding_rect: Rectangle,
+               x_align: Align,
+               y_align: Align,
+               line_height: Scalar)
+               -> Self
+    {
+        let num_lines = infos.len();
+        let first_rect = infos.next().map(|first_info| {
+            let bounding_x = bounding_rect.x_range();
+            let bounding_y = bounding_rect.y_range();
+            // Calculate the `x` `Range` of the first line `Rect`.
+            let range = Range::new(0.0, first_info.width);
+            let x = match x_align {
+                Align::Start => range.align_start_of(bounding_x),
+                Align::Middle => range.align_middle_of(bounding_x),
+                Align::End => range.align_end_of(bounding_x),
+            };
+
+            // Calculate the `y` `Range` of the first line `Rect`.
+            let total_text_height = super::height(num_lines, font_size, line_height);
+            let total_text_y_range = Range::new(0.0, total_text_height);
+            let total_text_y = match y_align {
+                Align::Start => total_text_y_range.align_start_of(bounding_y),
+                Align::Middle => total_text_y_range.align_middle_of(bounding_y),
+                Align::End => total_text_y_range.align_end_of(bounding_y),
+            };
+            let range = Range::new(0.0, font_size as Scalar);
+            let y = range.align_start_of(total_text_y);
+
+            Rectangle::from_ranges(x, y)
+        });
+
+        LineRects {
+            infos: infos,
+            next: first_rect,
+            x_align: x_align,
+            line_height: line_height,
+        }
+    }
+}
+
+impl<I> Iterator for LineRects<I>
+    where I: Iterator<Item = LineInfo>
+{
+    type Item = Rectangle;
+    fn next(&mut self) -> Option<Self::Item> {
+        let LineRects { ref mut next, ref mut infos, x_align, line_height } = *self;
+        next.map(|line_rect| {
+            *next = infos.next().map(|info| {
+
+                let y = {
+                    //let h = line_rect.height;
+                    //let y = line_rect.top + h + line_spacing;
+                    Range::new(line_rect.bottom(), line_rect.bottom() + line_height)
+                    //Range::from_pos_and_len(y, h)
+                };
+
+                let x = {
+                    let range = Range::new(0.0, info.width);
+                    match x_align {
+                        Align::Start => range.align_start_of(line_rect.x_range()),
+                        Align::Middle => range.align_middle_of(line_rect.x_range()),
+                        Align::End => range.align_end_of(line_rect.x_range()),
+                    }
+                };
+                Rectangle::from_ranges(x, y)
+            });
+
+            line_rect
+        })
+    }
+}
+
+/// An iterator yielding a `Rect` for each selected line in a block of text.
+///
+/// The yielded `Rect`s represent the selected range within each line of text.
+///
+/// Lines that do not contain any selected text will be skipped.
+pub struct SelectedLineRects<'a, I> {
+    selected_glyph_rects_per_line: super::glyph::SelectedGlyphRectsPerLine<'a, I>,
+}
+impl<'a, I> SelectedLineRects<'a, I> 
+    where I: Iterator<Item = (&'a str, Rectangle)>
+{
+    /// Produces an iterator yielding a `Rect` for the selected range in each
+    /// selected line in a block of text.
+    ///
+    /// The yielded `Rect`s represent the selected range within each line of text.
+    ///
+    /// Lines that do not contain any selected text will be skipped.
+    pub fn new(lines_with_rects: I,
+               font: &'a Font,
+               font_size: Scalar,
+               start: super::cursor::Index,
+               end: super::cursor::Index)
+               -> SelectedLineRects<'a, I> {
+        SelectedLineRects {
+            selected_glyph_rects_per_line: SelectedGlyphRectsPerLine::new(lines_with_rects,
+                                                                          font,
+                                                                          font_size,
+                                                                          start,
+                                                                          end),
+        }
+    }
+}
+impl<'a, I> Iterator for SelectedLineRects<'a, I>
+    where I: Iterator<Item = (&'a str, Rectangle)>
+{
+    type Item = Rectangle;
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(mut rects) = self.selected_glyph_rects_per_line.next() {
+            if let Some(first_rect) = rects.next() {
+                let total_selected_rect = rects.fold(first_rect, |mut total, next| {
+                    // TODO ?
+                    total.width = next.width;
+                    total
+                });
+                return Some(total_selected_rect);
+            }
+        }
+        None
     }
 }
 
@@ -155,7 +364,7 @@ fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char: char) -> 
 
 /// Returns the next index at which the text naturally breaks via a newline character,
 /// along with the width of the line.
-fn next_break(text: &str, font: &Font, font_size: FontSize) -> (Break, Scalar) {
+fn next_break(text: &str, font: &Font, font_size: Scalar) -> (Break, Scalar) {
     let scale = super::pt_to_scale(font_size);
     let mut width = 0.0;
     let mut char_i = 0;
@@ -185,7 +394,7 @@ fn next_break(text: &str, font: &Font, font_size: FontSize) -> (Break, Scalar) {
 /// Also returns the width of each line alongside the Break.
 fn next_break_by_character(text: &str,
                            font: &Font,
-                           font_size: FontSize,
+                           font_size: Scalar,
                            max_width: Scalar)
                            -> (Break, Scalar) {
     let scale = super::pt_to_scale(font_size);
@@ -230,7 +439,7 @@ fn next_break_by_character(text: &str,
 /// Also returns the width the line alongside the Break.
 fn next_break_by_whitespace(text: &str,
                             font: &Font,
-                            font_size: FontSize,
+                            font_size: Scalar,
                             max_width: Scalar)
                             -> (Break, Scalar) {
     struct Last {
@@ -289,9 +498,8 @@ fn next_break_by_whitespace(text: &str,
     (break_, width)
 }
 
-
 /// Produce the width of the given line of text including spaces (i.e. ' ').
-pub fn width(text: &str, font: &Font, font_size: FontSize) -> Scalar {
+pub fn width(text: &str, font: &Font, font_size: Scalar) -> Scalar {
     let scale = Scale::uniform(super::pt_to_px(font_size));
     let point = rusttype::Point { x: 0.0, y: 0.0 };
 
@@ -302,225 +510,5 @@ pub fn width(text: &str, font: &Font, font_size: FontSize) -> Scalar {
             None => total_w += g.unpositioned().h_metrics().advance_width,
         }
     }
-
     total_w as Scalar
-}
-
-
-/// Produce an `Infos` iterator.
-pub fn infos_wrapped_by<'a>(text: &'a str,
-                               font: &'a Font,
-                               font_size: FontSize,
-                               max_width: Scalar,
-                               line_wrap: Wrap)
-                               -> Infos<'a>
-{
-    Infos {
-        text: text,
-        font: font,
-        font_size: font_size,
-        max_width: max_width,
-        line_wrap: line_wrap,
-        start_byte: 0,
-        start_char: 0,
-        last_break: None,
-    }
-}
-/// Produce an `Infos` iterator that yields an `Info` for every line in the given text.
-///
-/// The produced `Infos` iterator will not wrap the text, and only break each line via newline
-/// characters within the text (either `\n` or `\r\n`).
-pub fn infos<'a>(text: &'a str, font: &'a Font, font_size: FontSize, line_wrap: Wrap, max_width: Scalar) -> Infos<'a> {
-    infos_wrapped_by(text, font, font_size, max_width, line_wrap)
-}
-
-/// Produce an iterator yielding the bounding `Rect` for each line in the text.
-///
-/// This function assumes that `font_size` is the same `FontSize` used to produce the `Info`s
-/// yielded by the `infos` Iterator.
-pub fn rects<I>(mut infos: I,
-                font_size: FontSize,
-                bounding_rect: Rectangle,
-                x_align: Align,
-                y_align: Align,
-                line_spacing: Scalar)
-                -> Rects<I>
-    where I: Iterator<Item = Info> + ExactSizeIterator
-{
-    let num_lines = infos.len();
-    let first_rect = infos.next().map(|first_info| {
-
-        let bounding_x = bounding_rect.x_range();
-        let bounding_y = bounding_rect.y_range();
-        // Calculate the `x` `Range` of the first line `Rect`.
-        let range = Range::new(0.0, first_info.width);
-        let x = match x_align {
-            Align::Start => range.align_start_of(bounding_x),
-            Align::Middle => range.align_middle_of(bounding_x),
-            Align::End => range.align_end_of(bounding_x),
-        };
-
-        // Calculate the `y` `Range` of the first line `Rect`.
-        let total_text_height = super::height(num_lines, font_size, line_spacing);
-        let total_text_y_range = Range::new(0.0, total_text_height);
-        let total_text_y = match y_align {
-            Align::Start => total_text_y_range.align_start_of(bounding_y),
-            Align::Middle => total_text_y_range.align_middle_of(bounding_y),
-            Align::End => total_text_y_range.align_end_of(bounding_y),
-        };
-        let range = Range::new(0.0, font_size as Scalar);
-        let y = range.align_end_of(total_text_y);
-
-        Rectangle::from_ranges(x, y)
-    });
-
-    Rects {
-        infos: infos,
-        next: first_rect,
-        x_align: x_align,
-        line_spacing: line_spacing,
-    }
-}
-
-/// Produces an iterator yielding a `Rect` for the selected range in each
-/// selected line in a block of text.
-///
-/// The yielded `Rect`s represent the selected range within each line of text.
-///
-/// Lines that do not contain any selected text will be skipped.
-pub fn selected_rects<'a, I>(lines_with_rects: I,
-                             font: &'a Font,
-                             font_size: FontSize,
-                             start: super::cursor::Index,
-                             end: super::cursor::Index)
-                             -> SelectedRects<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
-{
-    SelectedRects {
-        selected_glyph_rects_per_line: super::glyph::selected_rects_per_line(lines_with_rects,
-                                                                            font,
-                                                                            font_size,
-                                                                            start,
-                                                                            end),
-    }
-}
-
-
-impl<'a> Iterator for Infos<'a> {
-    type Item = Info;
-    fn next(&mut self) -> Option<Self::Item> {
-        let Infos { text,
-                    font,
-                    font_size,
-                    max_width,
-                    line_wrap,
-                    ref mut start_byte,
-                    ref mut start_char,
-                    ref mut last_break } = *self;
-
-        let text_line = &text[*start_byte..];
-        let (next, width) = match line_wrap {
-            Wrap::NoWrap => next_break(text_line, font, font_size),
-            Wrap::Character => next_break_by_character(text_line, font, font_size, max_width),
-            Wrap::Whitespace => next_break_by_whitespace(text_line, font, font_size, max_width),
-        };
-        match next.break_type {
-            BreakType::Newline {len_bytes} | BreakType::Wrap {len_bytes} => {
-                let next_break = Break::new(*start_byte + next.byte, *start_char + next.char, next.break_type);
-                let info = Info {
-                    start_byte: *start_byte,
-                    start_char: *start_char,
-                    end_break: next_break,
-                    width: width,
-                };
-                *start_byte = info.start_byte + next.byte + len_bytes;
-                *start_char = info.start_char + next.char + 1;
-                *last_break = Some(next_break);
-                Some(info)
-            },
-            BreakType::End => {
-                let char = next.char;
-                // if the last line ends in a new line, or the entire text is empty,
-                // return an empty line Info
-                let empty_line = {
-                    match *last_break {
-                        Some(last_break_) => {
-                            match last_break_.break_type {
-                                BreakType::Newline { .. } => true,
-                                _ => false,
-                            }
-                        }
-                        None => true,
-                    }
-                };
-                if *start_byte < text.len() || empty_line {
-                    let total_bytes = text.len();
-                    let total_chars = *start_char + char;
-                    let end_break = Break::new(total_bytes, total_chars, BreakType::End);
-                    let info = Info {
-                        start_byte: *start_byte,
-                        start_char: *start_char,
-                        end_break: end_break,
-                        width: width,
-                    };
-                    *start_byte = total_bytes;
-                    *start_char = total_chars;
-                    *last_break = Some(end_break);
-                    Some(info)
-                } else {
-                    None
-                }
-            }
-        }
-    }
-}
-
-impl<I> Iterator for Rects<I>
-    where I: Iterator<Item = Info>
-{
-    type Item = Rectangle;
-    fn next(&mut self) -> Option<Self::Item> {
-        let Rects { ref mut next, ref mut infos, x_align, line_spacing } = *self;
-        next.map(|line_rect| {
-            *next = infos.next().map(|info| {
-
-                let y = {
-                    let h = line_rect.height;
-                    let y = line_rect.top - h - line_spacing;
-                    Range::from_pos_and_len(y, h)
-                };
-
-                let x = {
-                    let range = Range::new(0.0, info.width);
-                    match x_align {
-                        Align::Start => range.align_start_of(line_rect.x_range()),
-                        Align::Middle => range.align_middle_of(line_rect.x_range()),
-                        Align::End => range.align_end_of(line_rect.x_range()),
-                    }
-                };
-                Rectangle::from_ranges(x, y)
-            });
-
-            line_rect
-        })
-    }
-}
-
-impl<'a, I> Iterator for SelectedRects<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
-{
-    type Item = Rectangle;
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(mut rects) = self.selected_glyph_rects_per_line.next() {
-            if let Some(first_rect) = rects.next() {
-                let total_selected_rect = rects.fold(first_rect, |mut total, next| {
-                    // TODO ?
-                    total.width = next.width;
-                    total
-                });
-                return Some(total_selected_rect);
-            }
-        }
-        None
-    }
 }

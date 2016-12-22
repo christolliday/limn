@@ -8,6 +8,7 @@ use super::FontSize;
 use super::font::Font;
 use rusttype;
 use rusttype::LayoutIter;
+use super::line::{LineRects, LineInfo};
 
 /// Every possible cursor position within each line of text yielded by the given iterator.
 ///
@@ -18,7 +19,7 @@ pub struct XysPerLine<'a, I> {
     lines_with_rects: I,
     font: &'a Font,
     text: &'a str,
-    font_size: FontSize,
+    font_size: Scalar,
 }
 
 /// Similarly to `XysPerLine`, yields every possible cursor position within each line of text
@@ -33,8 +34,8 @@ pub struct XysPerLine<'a, I> {
 #[derive(Clone)]
 pub struct XysPerLineFromText<'a> {
         xys_per_line: XysPerLine<'a,
-            std::iter::Zip<std::iter::Cloned<std::slice::Iter<'a, super::line::Info>>,
-            super::line::Rects<std::iter::Cloned<std::slice::Iter<'a, super::line::Info>>>>
+            std::iter::Zip<std::iter::Cloned<std::slice::Iter<'a, LineInfo>>,
+            LineRects<std::iter::Cloned<std::slice::Iter<'a, LineInfo>>>>
         >,
     }
 
@@ -70,7 +71,7 @@ impl Index {
     ///
     /// If `self` is in the middle or end of a word, return the index of the start of that word
     pub fn previous_word_start<I>(self, text: &str, mut line_infos: I) -> Option<Self>
-        where I: Iterator<Item = super::line::Info>
+        where I: Iterator<Item = LineInfo>
     {
         let Index { line, char } = self;
         if char > 0 {
@@ -114,7 +115,7 @@ impl Index {
     ///
     /// If `self` is in the middle or start of a word, return the index of the end of that word
     pub fn next_word_end<I>(self, text: &str, mut line_infos: I) -> Option<Self>
-        where I: Iterator<Item = super::line::Info>
+        where I: Iterator<Item = LineInfo>
     {
         let Index { line, char } = self;
         line_infos.nth(line)
@@ -162,7 +163,7 @@ impl Index {
     /// If `self` is a position other than the start of a line, it will return the position
     /// that is immediately to the left.
     pub fn previous<I>(self, mut line_infos: I) -> Option<Self>
-        where I: Iterator<Item = super::line::Info>
+        where I: Iterator<Item = LineInfo>
     {
         let Index { line, char } = self;
         if char > 0 {
@@ -201,7 +202,7 @@ impl Index {
     /// If `self` is a position other than the end of a line, it will return the position that
     /// is immediately to the right.
     pub fn next<I>(self, mut line_infos: I) -> Option<Self>
-        where I: Iterator<Item = super::line::Info>
+        where I: Iterator<Item = LineInfo>
     {
         let Index { line, char } = self;
         line_infos.nth(line)
@@ -229,7 +230,7 @@ impl Index {
     ///
     /// If `line_infos` is empty, returns cursor at line=0 char=0.
     pub fn clamp_to_lines<I>(self, line_infos: I) -> Self
-        where I: Iterator<Item = super::line::Info>
+        where I: Iterator<Item = LineInfo>
     {
         let mut last = None;
         for (i, info) in line_infos.enumerate() {
@@ -263,7 +264,7 @@ impl Index {
 pub fn xys_per_line<'a, I>(lines_with_rects: I,
                            font: &'a Font,
                            text: &'a str,
-                           font_size: FontSize)
+                           font_size: Scalar)
                            -> XysPerLine<'a, I> {
     XysPerLine {
         lines_with_rects: lines_with_rects,
@@ -283,21 +284,21 @@ pub fn xys_per_line<'a, I>(lines_with_rects: I,
 /// Yields `(xs, y_range)`, where `y_range` is the `Range` occupied by the line across the *y*
 /// axis and `xs` is every possible cursor position along the *x* axis.
 pub fn xys_per_line_from_text<'a>(text: &'a str,
-                                  line_infos: &'a [super::line::Info],
+                                  line_infos: &'a [LineInfo],
                                   font: &'a Font,
-                                  font_size: FontSize,
+                                  font_size: Scalar,
                                   x_align: Align,
                                   y_align: Align,
                                   line_spacing: Scalar,
                                   rect: Rectangle)
                                   -> XysPerLineFromText<'a> {
     let line_infos = line_infos.iter().cloned();
-    let line_rects = super::line::rects(line_infos.clone(),
-                                        font_size,
-                                        rect,
-                                        x_align,
-                                        y_align,
-                                        line_spacing);
+    let line_rects = LineRects::new(line_infos.clone(),
+                                    font_size,
+                                    rect,
+                                    x_align,
+                                    y_align,
+                                    line_spacing);
     let lines = line_infos.clone();
     let lines_with_rects = lines.zip(line_rects.clone());
     XysPerLineFromText {
@@ -307,7 +308,7 @@ pub fn xys_per_line_from_text<'a>(text: &'a str,
 
 /// Convert the given character index into a cursor `Index`.
 pub fn index_before_char<I>(line_infos: I, char_index: usize) -> Option<Index>
-    where I: Iterator<Item = super::line::Info>
+    where I: Iterator<Item = LineInfo>
 {
     for (i, line_info) in line_infos.enumerate() {
         let start_char = line_info.start_char;
@@ -413,7 +414,7 @@ pub fn closest_cursor_index_on_line<'a>(x_pos: Scalar, line_xs: Xs<'a, 'a>) -> (
 
 
 impl<'a, I> Iterator for XysPerLine<'a, I>
-    where I: Iterator<Item = (super::line::Info, Rectangle)>
+    where I: Iterator<Item = (LineInfo, Rectangle)>
 {
     // The `Range` occupied by the line across the *y* axis, along with an iterator yielding
     // each possible cursor position along the *x* axis.
