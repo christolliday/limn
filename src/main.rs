@@ -44,7 +44,7 @@ fn main() {
     let mut events = WindowEvents::new();
 
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/NotoSans/NotoSans-Regular.ttf");
+    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
 
 
 
@@ -69,9 +69,9 @@ fn main() {
 
     let ui = &mut Ui::new(&mut window, window_dim);
 
-    let font_id = ui.fonts.insert_from_file(font_path).unwrap();
+    let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
 
-    let text_drawable = TextDrawable { font_id: font_id };
+    let text_drawable = TextDrawable { text: "HELLO".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
     let mut text_widget = Widget::new(Some(Box::new(text_drawable)));
     let text_constraints = [text_widget.layout.top | EQ(REQUIRED) | 100.0,
                             text_widget.layout.left | EQ(REQUIRED) | 100.0];

@@ -17,6 +17,11 @@ use text::font;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
 
+pub struct Resources {
+    pub glyph_cache: GlyphCache,
+    pub fonts: font::Map,
+}
+
 pub struct Ui {
     graph: Graph<Widget, ()>,
     pub root: NodeIndex,
@@ -24,8 +29,7 @@ pub struct Ui {
     pub solver: Solver,
     pub window_width: Variable,
     pub window_height: Variable,
-    pub glyph_cache: GlyphCache,
-    pub fonts: font::Map,
+    pub resources: Resources,
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dim: Dimensions) -> Self {
@@ -46,6 +50,7 @@ impl Ui {
         let glyph_cache = GlyphCache::new(&mut window.context.factory,
                                           window_dim.width as u32,
                                           window_dim.height as u32);
+        let resources = Resources { fonts: fonts, glyph_cache: glyph_cache };
         Ui {
             graph: graph,
             root: root,
@@ -53,8 +58,7 @@ impl Ui {
             constraints: constraints,
             window_width: window_width,
             window_height: window_height,
-            glyph_cache: glyph_cache,
-            fonts: fonts,
+            resources: resources,
         }
     }
     pub fn resize_window(&mut self, window_dims: [u32; 2]) {
@@ -75,7 +79,7 @@ impl Ui {
         let mut dfs = Dfs::new(&self.graph, self.root);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
-            widget.draw(&self.fonts, &mut self.glyph_cache, &mut self.solver, c, g);
+            widget.draw(&mut self.resources, &mut self.solver, c, g);
         }
     }
     pub fn add_widget(&mut self, parent_index: NodeIndex, child: Widget) -> NodeIndex {

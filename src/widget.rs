@@ -17,6 +17,7 @@ use backend::gfx::ImageSize;
 use backend::glyph;
 use text::Wrap;
 use text::font;
+use super::ui::Resources;
 
 pub trait EventListener {
     fn handle_event(&self, event: &Event);
@@ -27,9 +28,8 @@ pub trait EventListener {
 
 pub trait WidgetDrawable {
     fn draw(&self,
-            fonts: &font::Map,
-            glyph_cache: &mut GlyphCache,
             bounds: Rectangle,
+            resources: &mut Resources,
             context: Context,
             graphics: &mut G2d);
     fn is_mouse_over(&self, mouse: Point, bounds: Rectangle) -> bool {
@@ -42,9 +42,8 @@ pub struct RectDrawable {
 }
 impl WidgetDrawable for RectDrawable {
     fn draw(&self,
-            fonts: &font::Map,
-            glyph_cache: &mut GlyphCache,
             bounds: Rectangle,
+            resources: &mut Resources,
             context: Context,
             graphics: &mut G2d) {
         graphics::Rectangle::new(self.background)
@@ -57,9 +56,8 @@ pub struct EllipseDrawable {
 }
 impl WidgetDrawable for EllipseDrawable {
     fn draw(&self,
-            fonts: &font::Map,
-            glyph_cache: &mut GlyphCache,
             bounds: Rectangle,
+            resources: &mut Resources,
             context: Context,
             graphics: &mut G2d) {
         graphics::Ellipse::new(self.background)
@@ -79,43 +77,40 @@ impl WidgetDrawable for EllipseDrawable {
 }
 
 pub struct TextDrawable {
+    pub text: String,
     pub font_id: font::Id,
+    pub font_size: Scalar,
+    pub text_color: Color,
+    pub background_color: Color,
 }
 impl WidgetDrawable for TextDrawable {
     fn draw(&self,
-            fonts: &font::Map,
-            glyph_cache: &mut GlyphCache,
             bounds: Rectangle,
+            resources: &mut Resources,
             context: Context,
             graphics: &mut G2d) {
 
-        graphics::Rectangle::new([1.0, 1.0, 1.0, 1.0])
+        graphics::Rectangle::new(self.background_color)
             .draw(bounds, &context.draw_state, context.transform, graphics);
 
         let GlyphCache { texture: ref mut text_texture_cache,
                          cache: ref mut glyph_cache,
-                         ref mut vertex_data } = *glyph_cache;
+                         ref mut vertex_data } = resources.glyph_cache;
 
-        let font_id = self.font_id;
-        let font = fonts.get(font_id).unwrap();
-        let color = [0.0, 0.0, 0.0, 1.0];
-        let font_size = 50;
-        let line_spacing = 1.0;
+        let font = resources.fonts.get(self.font_id).unwrap();
         let line_wrap = Wrap::Character;
-        let text_string = "Testing ︱︱︱\nWord";
 
-        let positioned_glyphs = &text::get_positioned_glyphs(text_string,
+        let positioned_glyphs = &text::get_positioned_glyphs(&self.text,
                                                              bounds,
                                                              font,
-                                                             font_size,
-                                                             line_spacing,
+                                                             self.font_size,
                                                              line_wrap,
                                                              Align::Start,
-                                                             Align::End);
+                                                             Align::Start);
 
         // Queue the glyphs to be cached.
         for glyph in positioned_glyphs.iter() {
-            glyph_cache.queue_glyph(font_id.index(), glyph.clone());
+            glyph_cache.queue_glyph(self.font_id.index(), glyph.clone());
         }
 
         // Cache the glyphs within the GPU cache.
@@ -133,7 +128,7 @@ impl WidgetDrawable for TextDrawable {
         };
 
         let rectangles = positioned_glyphs.into_iter()
-            .filter_map(|g| glyph_cache.rect_for(font_id.index(), g).ok().unwrap_or(None))
+            .filter_map(|g| glyph_cache.rect_for(self.font_id.index(), g).ok().unwrap_or(None))
             .map(|(uv_rect, screen_rect)| {
                 (map_rect_i32(screen_rect), map_rect_f32(uv_rect) * tex_dim)
             });
@@ -141,7 +136,7 @@ impl WidgetDrawable for TextDrawable {
         let mut glyph_rectangles = Vec::new();
         glyph_rectangles.extend(rectangles);
         graphics::image::draw_many(&glyph_rectangles,
-                                   color,
+                                   self.text_color,
                                    text_texture_cache,
                                    &context.draw_state,
                                    context.transform,
@@ -213,13 +208,12 @@ impl Widget {
         println!("{:?}", self.layout.bounds(solver));
     }
     pub fn draw(&self,
-                fonts: &font::Map,
-                glyph_cache: &mut GlyphCache,
+                resources: &mut Resources,
                 solver: &mut Solver,
                 c: Context,
                 g: &mut G2d) {
         if let Some(ref drawable) = self.drawable {
-            drawable.draw(fonts, glyph_cache, self.layout.bounds(solver), c, g);
+            drawable.draw(self.layout.bounds(solver), resources, c, g);
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
