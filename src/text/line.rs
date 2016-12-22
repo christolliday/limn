@@ -11,6 +11,7 @@ use std;
 use rusttype::GlyphId;
 use std::str::CharIndices;
 use std::iter::Peekable;
+use super::Wrap;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum BreakType {
@@ -72,12 +73,13 @@ pub struct Info {
 /// Construct an `Infos` iterator via the [infos function](./fn.infos.html) and its two builder
 /// methods, [wrap_by_character](./struct.Infos.html#method.wrap_by_character) and
 /// [wrap_by_whitespace](./struct.Infos.html#method.wrap_by_whitespace).
-pub struct Infos<'a, F> {
+#[derive(Copy, Clone)]
+pub struct Infos<'a> {
     text: &'a str,
     font: &'a Font,
     font_size: FontSize,
     max_width: Scalar,
-    next_break_fn: F,
+    line_wrap: Wrap,
     /// The index that indicates the start of the next line to be yielded.
     start_byte: usize,
     /// The character index that indicates the start of the next line to be yielded.
@@ -104,27 +106,6 @@ pub struct SelectedRects<'a, I> {
     selected_glyph_rects_per_line: super::glyph::SelectedGlyphRectsPerLine<'a, I>,
 }
 
-/// An alias for function pointers that are compatible with the `Block`'s required text
-/// wrapping function.
-pub type NextBreakFnPtr = fn(&str, &Font, FontSize, Scalar) -> (Break, Scalar);
-
-impl<'a, F> Clone for Infos<'a, F>
-    where F: Clone
-{
-    fn clone(&self) -> Self {
-        Infos {
-            text: self.text,
-            font: self.font,
-            font_size: self.font_size,
-            max_width: self.max_width,
-            next_break_fn: self.next_break_fn.clone(),
-            start_byte: self.start_byte,
-            start_char: self.start_char,
-            last_break: None,
-        }
-    }
-}
-
 impl Info {
     /// The end of the byte index range for indexing into the slice.
     pub fn end_byte(&self) -> usize {
@@ -146,25 +127,6 @@ impl Info {
         self.start_char..self.end_char()
     }
 }
-
-impl<'a> Infos<'a, NextBreakFnPtr> {
-    /// Converts `Self` into an `Infos` whose lines are wrapped at the character that first
-    /// causes the line width to exceed the given `max_width`.
-    pub fn wrap_by_character(mut self, max_width: Scalar) -> Self {
-        self.next_break_fn = next_break_by_character;
-        self.max_width = max_width;
-        self
-    }
-
-    /// Converts `Self` into an `Infos` whose lines are wrapped at the whitespace prior to the
-    /// character that causes the line width to exceed the given `max_width`.
-    pub fn wrap_by_whitespace(mut self, max_width: Scalar) -> Self {
-        self.next_break_fn = next_break_by_whitespace;
-        self.max_width = max_width;
-        self
-    }
-}
-
 
 /// A function for finding the advance width between the given character that also considers
 /// the kerning for some previous glyph.
@@ -345,41 +307,31 @@ pub fn width(text: &str, font: &Font, font_size: FontSize) -> Scalar {
 }
 
 
-/// Produce an `Infos` iterator wrapped by the given `next_break_fn`.
-pub fn infos_wrapped_by<'a, F>(text: &'a str,
+/// Produce an `Infos` iterator.
+pub fn infos_wrapped_by<'a>(text: &'a str,
                                font: &'a Font,
                                font_size: FontSize,
                                max_width: Scalar,
-                               next_break_fn: F)
-                               -> Infos<'a, F>
-    where F: for<'b> FnMut(&'b str, &'b Font, FontSize, Scalar) -> (Break, Scalar)
+                               line_wrap: Wrap)
+                               -> Infos<'a>
 {
     Infos {
         text: text,
         font: font,
         font_size: font_size,
         max_width: max_width,
-        next_break_fn: next_break_fn,
+        line_wrap: line_wrap,
         start_byte: 0,
         start_char: 0,
         last_break: None,
     }
 }
-
 /// Produce an `Infos` iterator that yields an `Info` for every line in the given text.
 ///
 /// The produced `Infos` iterator will not wrap the text, and only break each line via newline
 /// characters within the text (either `\n` or `\r\n`).
-pub fn infos<'a>(text: &'a str, font: &'a Font, font_size: FontSize) -> Infos<'a, NextBreakFnPtr> {
-    fn no_wrap(text: &str,
-               font: &Font,
-               font_size: FontSize,
-               _max_width: Scalar)
-               -> (Break, Scalar) {
-        next_break(text, font, font_size)
-    }
-
-    infos_wrapped_by(text, font, font_size, std::f64::MAX, no_wrap)
+pub fn infos<'a>(text: &'a str, font: &'a Font, font_size: FontSize, line_wrap: Wrap, max_width: Scalar) -> Infos<'a> {
+    infos_wrapped_by(text, font, font_size, max_width, line_wrap)
 }
 
 /// Produce an iterator yielding the bounding `Rect` for each line in the text.
@@ -454,21 +406,24 @@ pub fn selected_rects<'a, I>(lines_with_rects: I,
 }
 
 
-impl<'a, F> Iterator for Infos<'a, F>
-    where F: for<'b> FnMut(&'b str, &'b Font, FontSize, Scalar) -> (Break, Scalar)
-{
+impl<'a> Iterator for Infos<'a> {
     type Item = Info;
     fn next(&mut self) -> Option<Self::Item> {
         let Infos { text,
                     font,
                     font_size,
                     max_width,
-                    ref mut next_break_fn,
+                    line_wrap,
                     ref mut start_byte,
                     ref mut start_char,
                     ref mut last_break } = *self;
 
-        let (next, width) = next_break_fn(&text[*start_byte..], font, font_size, max_width);
+        let text_line = &text[*start_byte..];
+        let (next, width) = match line_wrap {
+            Wrap::NoWrap => next_break(text_line, font, font_size),
+            Wrap::Character => next_break_by_character(text_line, font, font_size, max_width),
+            Wrap::Whitespace => next_break_by_whitespace(text_line, font, font_size, max_width),
+        };
         match next.break_type {
             BreakType::Newline {len_bytes} | BreakType::Wrap {len_bytes} => {
                 let next_break = Break::new(*start_byte + next.byte, *start_char + next.char, next.break_type);

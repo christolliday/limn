@@ -34,12 +34,8 @@ pub fn get_positioned_glyphs(text: &str,
                              x_align: Align,
                              y_align: Align)
                              -> Vec<PositionedGlyph> {
-    let line_infos: Vec<line::Info> = match line_wrap {
-            Wrap::NoWrap => line::infos(text, font, font_size),
-            Wrap::Character => line::infos(text, font, font_size).wrap_by_character(rect.width),
-            Wrap::Whitespace => line::infos(text, font, font_size).wrap_by_whitespace(rect.width),
-        }
-        .collect();
+
+    let line_infos: Vec<line::Info> = line::infos(text, font, font_size, line_wrap, rect.width).collect();
     let line_infos = line_infos.iter().cloned();
     let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
     let line_rects = line::rects(line_infos, font_size, rect, x_align, y_align, line_spacing);
