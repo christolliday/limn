@@ -15,9 +15,13 @@ pub mod ui;
 pub mod util;
 pub mod text;
 
-use widget::*;
+//use widget::*;
 use ui::*;
 use util::*;
+use widget::text::*;
+
+use widget::{Widget, EventListener, WidgetDrawable};
+use widget::{RectDrawable, EllipseDrawable};
 
 use input::{ResizeEvent, MouseCursorEvent, Event, Input};
 use backend::{Window, WindowEvents, OpenGL};
