@@ -1,6 +1,5 @@
 //! Text layout logic.
 
-pub mod font;
 pub mod cursor;
 pub mod glyph;
 pub mod line;
@@ -10,7 +9,7 @@ use std::f64;
 use util::*;
 use rusttype;
 use rusttype::Scale;
-use self::font::Font;
+use super::resources::font::Font;
 use self::line::{LineRects, LineInfo, LineInfos};
 
 pub type FontSize = u32;

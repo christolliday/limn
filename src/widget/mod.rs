@@ -1,6 +1,7 @@
 pub mod layout;
-pub mod text;
 pub mod primitives;
+pub mod text;
+pub mod image;
 
 use backend::gfx::G2d;
 use graphics;

@@ -6,6 +6,8 @@ extern crate window;
 extern crate petgraph;
 extern crate find_folder;
 extern crate rusttype;
+extern crate gfx_device_gl;
+extern crate gfx_graphics;
 
 #[macro_use]
 extern crate matches;
@@ -14,12 +16,14 @@ pub mod widget;
 pub mod ui;
 pub mod util;
 pub mod text;
+pub mod resources;
 
 use ui::*;
 use util::*;
 use widget::text::*;
 
 use widget::{Widget, EventListener};
+use widget::image::ImageDrawable;
 use widget::primitives::{RectDrawable, EllipseDrawable};
 
 use input::{ResizeEvent, MouseCursorEvent, Event, Input};
@@ -46,11 +50,6 @@ fn main() {
     // Create the event loop.
     let mut events = WindowEvents::new();
 
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
-
-
-
     let circle2 = EllipseDrawable { background: [1.0, 1.0, 1.0, 1.0] };
     let box3 = Widget::new(Box::new(circle2));
     let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
@@ -72,14 +71,20 @@ fn main() {
 
     let ui = &mut Ui::new(&mut window, window_dim);
 
+    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
+    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
+    let image_path = assets.join("images/rust.png");
+
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
+    let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
 
     let text_drawable = TextDrawable { text: "HELLO".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
+    let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
     let mut text_widget = Widget::new(Box::new(text_drawable));
     let text_constraints = [text_widget.layout.top | EQ(REQUIRED) | 100.0,
                             text_widget.layout.left | EQ(REQUIRED) | 100.0];
-    text_widget.layout.width(300.0, WEAK);
-    text_widget.layout.height(50.0, WEAK);
+    text_widget.layout.width(text_dims.width, WEAK);
+    text_widget.layout.height(text_dims.height, WEAK);
     text_widget.layout.add_constraints(&text_constraints);
 
     let box1_constraints = [box1.layout.top | EQ(REQUIRED) | 0.0,
@@ -97,11 +102,18 @@ fn main() {
     box2.layout.height(100.0, WEAK);
     box2.layout.add_constraints(&box2_constraints);
 
+    let image_drawable = ImageDrawable { image_id: image_id };
+    let mut image_widget = Widget::new(Box::new(image_drawable));
+    image_widget.layout.width(200.0, WEAK);
+    image_widget.layout.height(200.0, WEAK);
+
+
     let root_index = ui.root;
     let box1_index = ui.add_widget(root_index, box1);
     ui.add_widget(root_index, box2);
     ui.add_widget(box1_index, box3);
     ui.add_widget(root_index, text_widget);
+    ui.add_widget(root_index, image_widget);
     ui.init();
 
     // Poll events from the window.

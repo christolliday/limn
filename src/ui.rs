@@ -13,13 +13,32 @@ use cassowary::strength::*;
 use graphics::Context;
 use super::widget::*;
 use super::util::*;
-use text::font;
+use resources;
+use resources::font::Font;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
+use gfx_device_gl::Factory;
+use gfx_graphics::{TextureSettings, Flip};
+
+use resources::{Map,Id};
+use resources::image::Texture;
+use std::path::Path;
 
 pub struct Resources {
     pub glyph_cache: GlyphCache,
-    pub fonts: font::Map,
+    pub fonts: resources::Map<Font>,
+    pub images: resources::Map<Texture>,
+}
+impl Resources {
+    fn new(glyph_cache: GlyphCache) -> Self {
+        let fonts = resources::Map::new();
+        let images = resources::Map::new();
+        Resources {
+            fonts: fonts,
+            images: images,
+            glyph_cache: glyph_cache,
+        }
+    }
 }
 
 pub struct Ui {
@@ -46,11 +65,11 @@ impl Ui {
         let mut graph = Graph::<Widget, ()>::new();
         let root = graph.add_node(root);
 
-        let fonts = font::Map::new();
         let glyph_cache = GlyphCache::new(&mut window.context.factory,
                                           window_dim.width as u32,
                                           window_dim.height as u32);
-        let resources = Resources { fonts: fonts, glyph_cache: glyph_cache };
+        
+        let resources = Resources::new(glyph_cache);
         Ui {
             graph: graph,
             root: root,

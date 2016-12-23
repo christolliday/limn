@@ -3,7 +3,7 @@
 ///
 /// This module is the core of multi-line text handling.
 use rusttype;
-use super::font::Font;
+use super::super::resources::font::Font;
 use super::FontSize;
 use rusttype::Scale;
 use util::{Rectangle, Scalar, Range, Align};

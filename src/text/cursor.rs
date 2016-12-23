@@ -5,7 +5,7 @@
 use std;
 use util::{Range, Align, Rectangle, Point, Scalar};
 use super::FontSize;
-use super::font::Font;
+use super::super::resources::font::Font;
 use rusttype;
 use rusttype::LayoutIter;
 use super::line::{LineRects, LineInfo};

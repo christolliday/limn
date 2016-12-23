@@ -2,7 +2,8 @@ use util::*;
 use graphics;
 use graphics::Context;
 use backend::glyph;
-use super::super::text::{self, Wrap, font};
+use super::super::text::{self, Wrap};
+use super::super::resources;
 use super::super::ui::Resources;
 use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
@@ -12,7 +13,7 @@ use graphics::types::Color;
 
 pub struct TextDrawable {
     pub text: String,
-    pub font_id: font::Id,
+    pub font_id: resources::Id,
     pub font_size: Scalar,
     pub text_color: Color,
     pub background_color: Color,
