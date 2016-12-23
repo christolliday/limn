@@ -87,7 +87,6 @@ impl Ui {
     pub fn init(&mut self) {
         let mut dfs = Dfs::new(&self.graph, self.root);
         while let Some(node_index) = dfs.next(&self.graph) {
-
             let ref mut node = self.graph[node_index];
             let constraints = &mut node.layout.constraints;
             self.constraints.append(constraints);

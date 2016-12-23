@@ -1,34 +1,24 @@
+extern crate limn;
 extern crate backend;
-extern crate graphics;
 extern crate cassowary;
+extern crate graphics;
 extern crate input;
 extern crate window;
-extern crate petgraph;
 extern crate find_folder;
-extern crate rusttype;
-extern crate gfx_device_gl;
-extern crate gfx_graphics;
 
 #[macro_use]
 extern crate matches;
 
-pub mod widget;
-pub mod ui;
-pub mod util;
-pub mod text;
-pub mod resources;
+use limn::ui::*;
+use limn::util::*;
+use limn::widget::text::*;
 
-use ui::*;
-use util::*;
-use widget::text::*;
+use limn::widget::{Widget, EventListener};
+use limn::widget::image::ImageDrawable;
+use limn::widget::primitives::{RectDrawable, EllipseDrawable};
 
-use widget::{Widget, EventListener};
-use widget::image::ImageDrawable;
-use widget::primitives::{RectDrawable, EllipseDrawable};
-
-use input::{ResizeEvent, MouseCursorEvent, Event, Input};
 use backend::{Window, WindowEvents, OpenGL};
-use graphics::clear;
+use input::{ResizeEvent, MouseCursorEvent, Event, Input};
 
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
@@ -50,10 +40,22 @@ fn main() {
     // Create the event loop.
     let mut events = WindowEvents::new();
 
+    let ui = &mut Ui::new(&mut window, window_dim);
+
+    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
+    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
+    let image_path = assets.join("images/rust.png");
+
+    let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
+    let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
+
+
     let circle2 = EllipseDrawable { background: [1.0, 1.0, 1.0, 1.0] };
     let box3 = Widget::new(Box::new(circle2));
+
     let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
     let mut box1 = Widget::new(Box::new(rect));
+
     let circle = EllipseDrawable { background: [1.0, 0.0, 1.0, 1.0] };
 
     struct ClickListener {}
@@ -68,15 +70,6 @@ fn main() {
     let listener = ClickListener {};
     let mut box2 = Widget::new(Box::new(circle));
     box2.listeners.push(Box::new(listener));
-
-    let ui = &mut Ui::new(&mut window, window_dim);
-
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
-    let image_path = assets.join("images/rust.png");
-
-    let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
-    let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
 
     let text_drawable = TextDrawable { text: "HELLO".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
     let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
@@ -125,9 +118,8 @@ fn main() {
         if let Some(_) = event.mouse_cursor_args() {
             ui.post_event(&event);
         }
-
         window.draw_2d(&event, |c, g| {
-            clear([0.8, 0.8, 0.8, 1.0], g);
+            graphics::clear([0.8, 0.8, 0.8, 1.0], g);
             ui.draw(c, g);
         });
     }

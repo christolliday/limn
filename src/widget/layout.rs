@@ -6,8 +6,8 @@ use super::super::util::*;
 
 pub struct WidgetLayout {
     pub left: Variable,
-    pub right: Variable,
     pub top: Variable,
+    pub right: Variable,
     pub bottom: Variable,
     pub constraints: Vec<Constraint>,
 }
@@ -15,8 +15,8 @@ impl WidgetLayout {
     pub fn new() -> Self {
         WidgetLayout {
             left: Variable::new(),
-            right: Variable::new(),
             top: Variable::new(),
+            right: Variable::new(),
             bottom: Variable::new(),
             constraints: Vec::new(),
         }
