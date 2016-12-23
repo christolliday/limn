@@ -1,5 +1,6 @@
 pub mod layout;
 pub mod text;
+pub mod primitives;
 
 use backend::gfx::G2d;
 use graphics;
@@ -9,7 +10,6 @@ use graphics::types::Color;
 use input::Event;
 use super::util::*;
 
-//use super::text;
 use backend::glyph;
 use super::ui::Resources;
 use self::layout::WidgetLayout;
@@ -33,45 +33,6 @@ pub trait WidgetDrawable {
             graphics: &mut G2d);
     fn is_mouse_over(&self, mouse: Point, bounds: Rectangle) -> bool {
         point_inside_rect(mouse, bounds)
-    }
-}
-
-pub struct RectDrawable {
-    pub background: Color,
-}
-impl WidgetDrawable for RectDrawable {
-    fn draw(&self,
-            bounds: Rectangle,
-            resources: &mut Resources,
-            context: Context,
-            graphics: &mut G2d) {
-        graphics::Rectangle::new(self.background)
-            .draw(bounds, &context.draw_state, context.transform, graphics);
-    }
-}
-
-pub struct EllipseDrawable {
-    pub background: Color,
-}
-impl WidgetDrawable for EllipseDrawable {
-    fn draw(&self,
-            bounds: Rectangle,
-            resources: &mut Resources,
-            context: Context,
-            graphics: &mut G2d) {
-        graphics::Ellipse::new(self.background)
-            .draw(bounds, &context.draw_state, context.transform, graphics);
-    }
-    fn is_mouse_over(&self, mouse: Point, bounds: Rectangle) -> bool {
-        let radius = Dimensions {
-            width: bounds.width / 2.0,
-            height: bounds.height / 2.0,
-        };
-        let center = Point {
-            x: bounds.left + radius.width,
-            y: bounds.top + radius.height,
-        };
-        point_inside_ellipse(mouse, center, radius)
     }
 }
 

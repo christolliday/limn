@@ -17,7 +17,16 @@ pub struct TextDrawable {
     pub text_color: Color,
     pub background_color: Color,
 }
-
+impl TextDrawable {
+    pub fn measure_dims_no_wrap(&self, resources: &Resources) -> Dimensions {
+        let font = resources.fonts.get(self.font_id).unwrap();
+        text::get_text_dimensions(&self.text, font, self.font_size, self.font_size * 1.25, Align::Start, Align::Start)
+    }
+    pub fn measure_height_wrapped(&self, resources: &Resources, width: Scalar) -> Scalar {
+        let font = resources.fonts.get(self.font_id).unwrap();
+        text::get_text_height(&self.text, font, self.font_size, self.font_size * 1.25, width, Wrap::Character, Align::Start, Align::Start)
+    }
+}
 impl WidgetDrawable for TextDrawable {
     fn draw(&self,
             bounds: Rectangle,
@@ -39,6 +48,7 @@ impl WidgetDrawable for TextDrawable {
                                                              bounds,
                                                              font,
                                                              self.font_size,
+                                                             self.font_size * 1.25,
                                                              line_wrap,
                                                              Align::Start,
                                                              Align::Start);

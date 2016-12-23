@@ -6,6 +6,7 @@ pub mod glyph;
 pub mod line;
 
 use std;
+use std::f64;
 use util::*;
 use rusttype;
 use rusttype::Scale;
@@ -26,16 +27,50 @@ pub enum Wrap {
     Whitespace,
 }
 
+pub fn get_text_height(text: &str,
+                       font: &Font,
+                       font_size: Scalar,
+                       line_height: Scalar,
+                       max_width: Scalar,
+                       line_wrap: Wrap,
+                       x_align: Align,
+                       y_align: Align) -> Scalar 
+{
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, max_width).collect();
+    line_infos.len() as f64 * line_height
+}
+
+
+pub fn get_text_dimensions(text: &str,
+                           font: &Font,
+                           font_size: Scalar,
+                           line_height: Scalar,
+                           x_align: Align,
+                           y_align: Align) -> Dimensions {
+
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, Wrap::NoWrap, f64::MAX).collect();
+    let line_infos = line_infos.iter().cloned();
+    let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
+
+    let rect = Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX };
+    let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
+
+    let mut max_width = 0.0;
+    for line_rect in line_rects.clone() {
+        max_width = f64::max(max_width, line_rect.width);
+    }
+    Dimensions { width: max_width, height: line_rects.count() as f64 * line_height }
+}
+
 pub fn get_positioned_glyphs(text: &str,
                              rect: Rectangle,
                              font: &Font,
                              font_size: Scalar,
+                             line_height: Scalar,
                              line_wrap: Wrap,
                              x_align: Align,
                              y_align: Align)
                              -> Vec<PositionedGlyph> {
-
-    let line_height = font_size * 1.25;
 
     let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width).collect();
     let line_infos = line_infos.iter().cloned();
