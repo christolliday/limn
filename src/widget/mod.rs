@@ -35,15 +35,23 @@ pub trait WidgetDrawable {
         point_inside_rect(mouse, bounds)
     }
 }
+pub struct EmptyDrawable {}
+impl WidgetDrawable for EmptyDrawable {
+    fn draw(&self,
+            bounds: Rectangle,
+            resources: &mut Resources,
+            context: Context,
+            graphics: &mut G2d) {}
+}
 
 pub struct Widget {
-    pub drawable: Option<Box<WidgetDrawable>>,
+    pub drawable: Box<WidgetDrawable>,
     pub layout: WidgetLayout,
     pub listeners: Vec<Box<EventListener>>,
 }
 
 impl Widget {
-    pub fn new(drawable: Option<Box<WidgetDrawable>>) -> Self {
+    pub fn new(drawable: Box<WidgetDrawable>) -> Self {
         Widget {
             drawable: drawable,
             layout: WidgetLayout::new(),
@@ -58,16 +66,10 @@ impl Widget {
                 solver: &mut Solver,
                 c: Context,
                 g: &mut G2d) {
-        if let Some(ref drawable) = self.drawable {
-            drawable.draw(self.layout.bounds(solver), resources, c, g);
-        }
+        self.drawable.draw(self.layout.bounds(solver), resources, c, g);
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
         let bounds = self.layout.bounds(solver);
-        if let Some(ref drawable) = self.drawable {
-            drawable.is_mouse_over(mouse, bounds)
-        } else {
-            point_inside_rect(mouse, bounds)
-        }
+        self.drawable.is_mouse_over(mouse, bounds)
     }
 }

@@ -52,9 +52,9 @@ fn main() {
 
 
     let circle2 = EllipseDrawable { background: [1.0, 1.0, 1.0, 1.0] };
-    let box3 = Widget::new(Some(Box::new(circle2)));
+    let box3 = Widget::new(Box::new(circle2));
     let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
-    let mut box1 = Widget::new(Some(Box::new(rect)));
+    let mut box1 = Widget::new(Box::new(rect));
     let circle = EllipseDrawable { background: [1.0, 0.0, 1.0, 1.0] };
 
     struct ClickListener {}
@@ -67,7 +67,7 @@ fn main() {
         }
     }
     let listener = ClickListener {};
-    let mut box2 = Widget::new(Some(Box::new(circle)));
+    let mut box2 = Widget::new(Box::new(circle));
     box2.listeners.push(Box::new(listener));
 
     let ui = &mut Ui::new(&mut window, window_dim);
@@ -75,7 +75,7 @@ fn main() {
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
 
     let text_drawable = TextDrawable { text: "HELLO".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
-    let mut text_widget = Widget::new(Some(Box::new(text_drawable)));
+    let mut text_widget = Widget::new(Box::new(text_drawable));
     let text_constraints = [text_widget.layout.top | EQ(REQUIRED) | 100.0,
                             text_widget.layout.left | EQ(REQUIRED) | 100.0];
     text_widget.layout.width(300.0, WEAK);

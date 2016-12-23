@@ -33,7 +33,7 @@ pub struct Ui {
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dim: Dimensions) -> Self {
-        let root = Widget::new(None);
+        let root = Widget::new(Box::new(EmptyDrawable{}));
         let window_width = Variable::new();
         let window_height = Variable::new();
         let constraints = Vec::new();
