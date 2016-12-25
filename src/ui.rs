@@ -8,6 +8,7 @@ use petgraph::visit::Dfs;
 use input::{Event, Input, Motion};
 
 use cassowary::{Solver, Variable, Constraint};
+use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
 use graphics::Context;
@@ -42,50 +43,47 @@ impl Resources {
 }
 
 pub struct Ui {
-    graph: Graph<Widget, ()>,
-    pub root: NodeIndex,
+    pub graph: Graph<Widget, ()>,
+    pub root_index: NodeIndex,
     constraints: Vec<Constraint>,
     pub solver: Solver,
-    pub window_width: Variable,
-    pub window_height: Variable,
     pub resources: Resources,
 }
 impl Ui {
-    pub fn new(window: &mut Window, window_dim: Dimensions) -> Self {
+    pub fn new(window: &mut Window, window_dims: Dimensions) -> Self {
         let root = Widget::new(Box::new(EmptyDrawable{}));
-        let window_width = Variable::new();
-        let window_height = Variable::new();
-        let constraints = Vec::new();
+        let mut constraints = Vec::new();
         let mut solver = Solver::new();
-        solver.add_edit_variable(window_width, STRONG).unwrap();
-        solver.add_edit_variable(window_height, STRONG).unwrap();
-        solver.suggest_value(window_width, window_dim.width).unwrap();
-        solver.suggest_value(window_height, window_dim.height).unwrap();
 
         let mut graph = Graph::<Widget, ()>::new();
-        let root = graph.add_node(root);
+        solver.add_edit_variable(root.layout.right, STRONG).unwrap();
+        solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
+        constraints.push(root.layout.left | EQ(STRONG) | 0.0);
+        constraints.push(root.layout.top | EQ(STRONG) | 0.0);
+        let root_index = graph.add_node(root);
 
         let glyph_cache = GlyphCache::new(&mut window.context.factory,
-                                          window_dim.width as u32,
-                                          window_dim.height as u32);
+                                          window_dims.width as u32,
+                                          window_dims.height as u32);
         
         let resources = Resources::new(glyph_cache);
-        Ui {
+        let mut ui = Ui {
             graph: graph,
-            root: root,
+            root_index: root_index,
             solver: solver,
             constraints: constraints,
-            window_width: window_width,
-            window_height: window_height,
             resources: resources,
-        }
+        };
+        ui.resize_window(window_dims);
+        ui
     }
-    pub fn resize_window(&mut self, window_dims: [u32; 2]) {
-        self.solver.suggest_value(self.window_width, window_dims[0] as f64).unwrap();
-        self.solver.suggest_value(self.window_height, window_dims[1] as f64).unwrap();
+    pub fn resize_window(&mut self, window_dims: Dimensions) {
+        let ref root = self.graph[self.root_index];
+        self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
+        self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
     }
     pub fn init(&mut self) {
-        let mut dfs = Dfs::new(&self.graph, self.root);
+        let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref mut node = self.graph[node_index];
             let constraints = &mut node.layout.constraints;
@@ -94,7 +92,7 @@ impl Ui {
         self.solver.add_constraints(&self.constraints).unwrap();
     }
     pub fn draw(&mut self, c: Context, g: &mut G2d) {
-        let mut dfs = Dfs::new(&self.graph, self.root);
+        let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
             widget.draw(&mut self.resources, &mut self.solver, c, g);
@@ -110,7 +108,7 @@ impl Ui {
         child_index
     }
     pub fn post_event(&mut self, event: &Event) {
-        let mut dfs = Dfs::new(&self.graph, self.root);
+        let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
             match event {

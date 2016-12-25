@@ -18,3 +18,4 @@ piston2d-gfx_graphics = "0.33.1"
 
 [replace]
 "cassowary:0.2.0" = { path = "../cassowary-rs" }
+"petgraph:0.4.1" = { path = "../petgraph" }

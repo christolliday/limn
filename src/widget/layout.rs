@@ -36,16 +36,23 @@ impl WidgetLayout {
         self.constraints.extend_from_slice(constraints);
     }
     pub fn width(&mut self, width: Scalar, strength: f64) {
-        self.constraints.push(self.right - self.left | EQ(strength) | width)
+        self.constraints.push(self.right - self.left | EQ(REQUIRED) | width)
     }
     pub fn height(&mut self, height: Scalar, strength: f64) {
-        self.constraints.push(self.bottom - self.top | EQ(strength) | height)
+        self.constraints.push(self.bottom - self.top | EQ(REQUIRED) | height)
+    }
+    pub fn center(&mut self, layout: &WidgetLayout) {
+        let constraints = [
+            self.left - layout.left | EQ(STRONG) | layout.right - self.right,
+            self.top - layout.top | EQ(STRONG) | layout.bottom - self.bottom];
+        self.add_constraints(&constraints);
     }
     pub fn bound_by(&mut self, layout: &WidgetLayout) {
-        let constraints = [layout.left | GE(REQUIRED) | self.left,
-                           layout.top | GE(REQUIRED) | self.top,
-                           layout.right | LE(REQUIRED) | self.right,
-                           layout.bottom | LE(REQUIRED) | self.bottom];
+        let constraints = [
+            self.left | GE(REQUIRED) | layout.left,
+            self.top | GE(REQUIRED) | layout.top,
+            self.right | LE(REQUIRED) | layout.right,
+            self.bottom | LE(REQUIRED) | layout.bottom];
         self.add_constraints(&constraints);
     }
 }
