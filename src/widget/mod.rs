@@ -38,7 +38,9 @@ pub struct Widget {
 
 use input::{Input, Motion};
 impl Widget {
-    pub fn new(draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) -> Self {
+    pub fn new(draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d),
+               drawable: Box<Any>)
+               -> Self {
         Widget {
             draw_fn: draw_fn,
             mouse_over_fn: point_inside_rect,
@@ -50,11 +52,7 @@ impl Widget {
     pub fn print(&self, solver: &mut Solver) {
         println!("{:?}", self.layout.bounds(solver));
     }
-    pub fn draw(&self,
-                resources: &mut Resources,
-                solver: &mut Solver,
-                c: Context,
-                g: &mut G2d) {
+    pub fn draw(&self, resources: &mut Resources, solver: &mut Solver, c: Context, g: &mut G2d) {
         let bounds = self.layout.bounds(solver);
         (self.draw_fn)(self.drawable.as_ref(), bounds, resources, c, g);
     }

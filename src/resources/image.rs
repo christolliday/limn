@@ -1,7 +1,7 @@
 
 use gfx_device_gl::Factory;
 use gfx_graphics::{TextureSettings, Flip};
-use resources::{Map,Id};
+use resources::{Map, Id};
 use std::path::Path;
 use backend::gfx::G2dTexture;
 

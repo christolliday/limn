@@ -23,7 +23,7 @@ use backend::window::Window;
 use gfx_device_gl::Factory;
 use gfx_graphics::{TextureSettings, Flip};
 
-use resources::{Map,Id};
+use resources::{Map, Id};
 use resources::image::Texture;
 use std::path::Path;
 use std::any::Any;
@@ -56,7 +56,7 @@ pub struct Ui {
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dims: Dimensions) -> Self {
-        let root = Widget::new(widget::primitives::draw_nothing, Box::new(EmptyDrawable{}));
+        let root = Widget::new(widget::primitives::draw_nothing, Box::new(EmptyDrawable {}));
         let mut constraints = Vec::new();
         let mut solver = Solver::new();
 
@@ -70,7 +70,7 @@ impl Ui {
         let glyph_cache = GlyphCache::new(&mut window.context.factory,
                                           window_dims.width as u32,
                                           window_dims.height as u32);
-        
+
         let resources = Resources::new(glyph_cache);
         let mut ui = Ui {
             graph: graph,
@@ -101,7 +101,10 @@ impl Ui {
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
             if DEBUG_BOUNDS {
-                draw_rect_outline(widget.layout.bounds(&mut self.solver), [0.0, 1.0, 1.0, 1.0], c, g);
+                draw_rect_outline(widget.layout.bounds(&mut self.solver),
+                                  [0.0, 1.0, 1.0, 1.0],
+                                  c,
+                                  g);
             }
             widget.draw(&mut self.resources, &mut self.solver, c, g);
         }

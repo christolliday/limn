@@ -14,14 +14,14 @@ pub struct ImageDrawable {
 }
 
 pub fn draw_image(state: &Any,
-            bounds: Rectangle,
-            resources: &mut Resources,
-            context: Context,
-            graphics: &mut G2d) {
+                  bounds: Rectangle,
+                  resources: &mut Resources,
+                  context: Context,
+                  graphics: &mut G2d) {
     let state: &ImageDrawable = state.downcast_ref().unwrap();
 
-        let img = resources.images.get(state.image_id).unwrap();
-        let mut image = graphics::image::Image::new();
-        image.rect(bounds);
-        image.draw(img, &context.draw_state, context.transform, graphics);
+    let img = resources.images.get(state.image_id).unwrap();
+    let mut image = graphics::image::Image::new();
+    image.rect(bounds);
+    image.draw(img, &context.draw_state, context.transform, graphics);
 }

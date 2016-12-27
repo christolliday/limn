@@ -129,7 +129,10 @@ impl Into<[f64; 2]> for Dimensions {
 }
 impl Into<Dimensions> for [u32; 2] {
     fn into(self) -> Dimensions {
-        Dimensions { width: self[0] as f64, height: self[1] as f64 }
+        Dimensions {
+            width: self[0] as f64,
+            height: self[1] as f64,
+        }
     }
 }
 impl Into<Point> for [f64; 2] {
@@ -150,7 +153,7 @@ pub fn point_inside_rect(point: Point, rect: Rectangle) -> bool {
     point.x > rect.left && point.y > rect.top && point.x < rect.left + rect.width &&
     point.y < rect.top + rect.height
 }
-        
+
 pub fn mouse_inside_ellipse(mouse: Point, bounds: Rectangle) -> bool {
     let radius = Dimensions {
         width: bounds.width / 2.0,
@@ -218,10 +221,11 @@ fn get_dpi(context: &Context) -> f32 {
 }
 
 pub fn draw_rect_outline(rect: Rectangle, color: Color, context: Context, graphics: &mut G2d) {
-    let points = [
-        [rect.left, rect.top], [rect.right(), rect.top],
-        [rect.right(), rect.bottom()], [rect.left, rect.bottom()],
-        [rect.left, rect.top]];
+    let points = [[rect.left, rect.top],
+                  [rect.right(), rect.top],
+                  [rect.right(), rect.bottom()],
+                  [rect.left, rect.bottom()],
+                  [rect.left, rect.top]];
     let mut points = points.iter();
     if let Some(first) = points.next() {
         let line = graphics::Line::new_round(color, 2.0);

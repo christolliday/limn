@@ -53,10 +53,7 @@ impl<'a, I> GlyphRectsPerLine<'a, I>
     ///
     /// This is useful when information about character positioning is needed when reasoning about
     /// text layout.
-    pub fn new(lines_with_rects: I,
-               font: &'a Font,
-               font_size: Scalar)
-               -> GlyphRectsPerLine<'a, I> {
+    pub fn new(lines_with_rects: I, font: &'a Font, font_size: Scalar) -> GlyphRectsPerLine<'a, I> {
         GlyphRectsPerLine {
             lines_with_rects: lines_with_rects,
             font: font,
@@ -130,7 +127,8 @@ impl<'a, I> SelectedGlyphRectsPerLine<'a, I>
                end: super::cursor::Index)
                -> SelectedGlyphRectsPerLine<'a, I> {
         SelectedGlyphRectsPerLine {
-            enumerated_rects_per_line: GlyphRectsPerLine::new(lines_with_rects, font, font_size).enumerate(),
+            enumerated_rects_per_line: GlyphRectsPerLine::new(lines_with_rects, font, font_size)
+                .enumerate(),
             start_cursor_idx: start,
             end_cursor_idx: end,
         }
@@ -142,8 +140,8 @@ impl<'a, I> Iterator for SelectedGlyphRectsPerLine<'a, I>
     type Item = SelectedGlyphRects<'a, 'a>;
     fn next(&mut self) -> Option<Self::Item> {
         let SelectedGlyphRectsPerLine { ref mut enumerated_rects_per_line,
-                                   start_cursor_idx,
-                                   end_cursor_idx } = *self;
+                                        start_cursor_idx,
+                                        end_cursor_idx } = *self;
 
         enumerated_rects_per_line.next().map(|(i, rects)| {
             let end_char_idx =

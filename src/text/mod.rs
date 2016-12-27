@@ -33,9 +33,10 @@ pub fn get_text_height(text: &str,
                        max_width: Scalar,
                        line_wrap: Wrap,
                        x_align: Align,
-                       y_align: Align) -> Scalar 
-{
-    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, max_width).collect();
+                       y_align: Align)
+                       -> Scalar {
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, max_width)
+        .collect();
     line_infos.len() as f64 * line_height
 }
 
@@ -45,20 +46,30 @@ pub fn get_text_dimensions(text: &str,
                            font_size: Scalar,
                            line_height: Scalar,
                            x_align: Align,
-                           y_align: Align) -> Dimensions {
+                           y_align: Align)
+                           -> Dimensions {
 
-    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, Wrap::NoWrap, f64::MAX).collect();
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, Wrap::NoWrap, f64::MAX)
+        .collect();
     let line_infos = line_infos.iter().cloned();
     let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
 
-    let rect = Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX };
+    let rect = Rectangle {
+        top: 0.0,
+        left: 0.0,
+        width: f64::MAX,
+        height: f64::MAX,
+    };
     let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
 
     let mut max_width = 0.0;
     for line_rect in line_rects.clone() {
         max_width = f64::max(max_width, line_rect.width);
     }
-    Dimensions { width: max_width, height: line_rects.count() as f64 * line_height }
+    Dimensions {
+        width: max_width,
+        height: line_rects.count() as f64 * line_height,
+    }
 }
 
 pub fn get_positioned_glyphs(text: &str,
@@ -71,7 +82,8 @@ pub fn get_positioned_glyphs(text: &str,
                              y_align: Align)
                              -> Vec<PositionedGlyph> {
 
-    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width).collect();
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width)
+        .collect();
     let line_infos = line_infos.iter().cloned();
     let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
     let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
@@ -104,7 +116,7 @@ pub struct Lines<'a, I>
 pub fn height(num_lines: usize, font_size: Scalar, line_height: Scalar) -> Scalar {
     if num_lines > 0 {
         num_lines as Scalar * line_height
-        //num_lines as Scalar * font_size as Scalar + (num_lines - 1) as Scalar * line_spacing
+        // num_lines as Scalar * font_size as Scalar + (num_lines - 1) as Scalar * line_spacing
     } else {
         0.0
     }
@@ -142,4 +154,3 @@ pub fn pt_to_px(font_size_in_points: Scalar) -> f32 {
 pub fn pt_to_scale(font_size_in_points: Scalar) -> Scale {
     Scale::uniform(pt_to_px(font_size_in_points))
 }
-

@@ -112,7 +112,12 @@ pub struct LineInfos<'a> {
 }
 
 impl<'a> LineInfos<'a> {
-    pub fn new(text: &'a str, font: &'a Font, font_size: Scalar, line_wrap: Wrap, max_width: Scalar) -> Self {
+    pub fn new(text: &'a str,
+               font: &'a Font,
+               font_size: Scalar,
+               line_wrap: Wrap,
+               max_width: Scalar)
+               -> Self {
         LineInfos {
             text: text,
             font: font,
@@ -145,8 +150,11 @@ impl<'a> Iterator for LineInfos<'a> {
             Wrap::Whitespace => next_break_by_whitespace(text_line, font, font_size, max_width),
         };
         match next.break_type {
-            BreakType::Newline {len_bytes} | BreakType::Wrap {len_bytes} => {
-                let next_break = Break::new(*start_byte + next.byte, *start_char + next.char, next.break_type);
+            BreakType::Newline { len_bytes } |
+            BreakType::Wrap { len_bytes } => {
+                let next_break = Break::new(*start_byte + next.byte,
+                                            *start_char + next.char,
+                                            next.break_type);
                 let info = LineInfo {
                     start_byte: *start_byte,
                     start_char: *start_char,
@@ -157,7 +165,7 @@ impl<'a> Iterator for LineInfos<'a> {
                 *start_char = info.start_char + next.char + 1;
                 *last_break = Some(next_break);
                 Some(info)
-            },
+            }
             BreakType::End => {
                 let char = next.char;
                 // if the last line ends in a new line, or the entire text is empty,
@@ -204,7 +212,7 @@ pub struct LineRects<I> {
     next: Option<Rectangle>,
 }
 
-impl<I> LineRects<I> 
+impl<I> LineRects<I>
     where I: Iterator<Item = LineInfo> + ExactSizeIterator
 {
     /// Produce an iterator yielding the bounding `Rect` for each line in the text.
@@ -217,8 +225,7 @@ impl<I> LineRects<I>
                x_align: Align,
                y_align: Align,
                line_height: Scalar)
-               -> Self
-    {
+               -> Self {
         let num_lines = infos.len();
         let first_rect = infos.next().map(|first_info| {
             let bounding_x = bounding_rect.x_range();
@@ -264,10 +271,10 @@ impl<I> Iterator for LineRects<I>
             *next = infos.next().map(|info| {
 
                 let y = {
-                    //let h = line_rect.height;
-                    //let y = line_rect.top + h + line_spacing;
+                    // let h = line_rect.height;
+                    // let y = line_rect.top + h + line_spacing;
                     Range::new(line_rect.bottom(), line_rect.bottom() + line_height)
-                    //Range::from_pos_and_len(y, h)
+                    // Range::from_pos_and_len(y, h)
                 };
 
                 let x = {
@@ -294,7 +301,7 @@ impl<I> Iterator for LineRects<I>
 pub struct SelectedLineRects<'a, I> {
     selected_glyph_rects_per_line: super::glyph::SelectedGlyphRectsPerLine<'a, I>,
 }
-impl<'a, I> SelectedLineRects<'a, I> 
+impl<'a, I> SelectedLineRects<'a, I>
     where I: Iterator<Item = (&'a str, Rectangle)>
 {
     /// Produces an iterator yielding a `Rect` for the selected range in each
@@ -373,10 +380,10 @@ fn next_break(text: &str, font: &Font, font_size: Scalar) -> (Break, Scalar) {
     while let Some((byte_i, ch)) = char_indices.next() {
         // Check for a newline.
         if ch == '\r' && peek_next_char(&mut char_indices, '\n') {
-            let break_ = Break::new(byte_i, char_i, BreakType::Newline{len_bytes: 2});
+            let break_ = Break::new(byte_i, char_i, BreakType::Newline { len_bytes: 2 });
             return (break_, width);
         } else if ch == '\n' {
-            let break_ = Break::new(byte_i, char_i, BreakType::Newline{len_bytes: 1});
+            let break_ = Break::new(byte_i, char_i, BreakType::Newline { len_bytes: 1 });
             return (break_, width);
         }
 
@@ -405,10 +412,10 @@ fn next_break_by_character(text: &str,
     while let Some((byte_i, ch)) = char_indices.next() {
         // Check for a newline.
         if ch == '\r' && peek_next_char(&mut char_indices, '\n') {
-            let break_ = Break::new(byte_i, char_i, BreakType::Newline{len_bytes: 2});
+            let break_ = Break::new(byte_i, char_i, BreakType::Newline { len_bytes: 2 });
             return (break_, width);
         } else if ch == '\n' {
-            let break_ = Break::new(byte_i, char_i, BreakType::Newline{len_bytes: 1});
+            let break_ = Break::new(byte_i, char_i, BreakType::Newline { len_bytes: 1 });
             return (break_, width);
         }
 
@@ -417,7 +424,7 @@ fn next_break_by_character(text: &str,
 
         // Check for a line wrap.
         if new_width > max_width {
-            let break_ = Break::new(byte_i, char_i, BreakType::Wrap{len_bytes: 0});
+            let break_ = Break::new(byte_i, char_i, BreakType::Wrap { len_bytes: 0 });
             return (break_, width);
         }
 
@@ -457,10 +464,10 @@ fn next_break_by_whitespace(text: &str,
 
         // Check for a newline.
         if ch == '\r' && peek_next_char(&mut char_indices, '\n') {
-            let break_ = Break::new(byte_i, char_i, BreakType::Newline{len_bytes: 2});
+            let break_ = Break::new(byte_i, char_i, BreakType::Newline { len_bytes: 2 });
             return (break_, width);
         } else if ch == '\n' {
-            let break_ = Break::new(byte_i, char_i, BreakType::Newline{len_bytes: 1});
+            let break_ = Break::new(byte_i, char_i, BreakType::Newline { len_bytes: 1 });
             return (break_, width);
         }
 
@@ -471,11 +478,11 @@ fn next_break_by_whitespace(text: &str,
         if width > max_width {
             match last_whitespace_start {
                 Some(Last { byte, char, width_before }) => {
-                    let break_ = Break::new(byte, char, BreakType::Wrap{len_bytes: 1});
+                    let break_ = Break::new(byte, char, BreakType::Wrap { len_bytes: 1 });
                     return (break_, width_before);
                 }
                 None => {
-                    let break_ = Break::new(byte_i, char_i, BreakType::Wrap{len_bytes: 0});
+                    let break_ = Break::new(byte_i, char_i, BreakType::Wrap { len_bytes: 0 });
                     return (break_, width);
                 }
             }
