@@ -13,6 +13,8 @@ use cassowary::strength::*;
 
 use graphics::Context;
 use super::widget::*;
+use super::widget::primitives::EmptyDrawable;
+use super::widget;
 use super::util::*;
 use resources;
 use resources::font::Font;
@@ -24,6 +26,7 @@ use gfx_graphics::{TextureSettings, Flip};
 use resources::{Map,Id};
 use resources::image::Texture;
 use std::path::Path;
+use std::any::Any;
 
 const DEBUG_BOUNDS: bool = true;
 
@@ -53,7 +56,7 @@ pub struct Ui {
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dims: Dimensions) -> Self {
-        let root = Widget::new(Box::new(EmptyDrawable{}));
+        let root = Widget::new(widget::primitives::draw_nothing, Box::new(EmptyDrawable{}));
         let mut constraints = Vec::new();
         let mut solver = Solver::new();
 
@@ -98,7 +101,7 @@ impl Ui {
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
             if DEBUG_BOUNDS {
-                draw_rect(widget.layout.bounds(&mut self.solver), [0.0, 1.0, 1.0, 1.0], c, g);
+                draw_rect_outline(widget.layout.bounds(&mut self.solver), [0.0, 1.0, 1.0, 1.0], c, g);
             }
             widget.draw(&mut self.resources, &mut self.solver, c, g);
         }
@@ -115,18 +118,8 @@ impl Ui {
     pub fn post_event(&mut self, event: &Event) {
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
-            let ref widget = self.graph[node_index];
-            match event {
-                &Event::Input(Input::Move(Motion::MouseCursor(x, y))) => {
-                    let pos = Point { x: x, y: y };
-                    for listener in &widget.listeners {
-                        if widget.is_mouse_over(&mut self.solver, pos) && listener.matches(event) {
-                            listener.handle_event(event);
-                        }
-                    }
-                }
-                _ => {}
-            }
+            let ref mut widget = self.graph[node_index];
+            widget.handle_event(&mut self.solver, event);
         }
     }
 }

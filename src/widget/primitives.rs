@@ -5,43 +5,40 @@ use super::super::ui::Resources;
 use backend::gfx::G2d;
 use graphics::Context;
 use graphics::types::Color;
-use super::WidgetDrawable;
+use std::any::Any;
+
+pub struct EmptyDrawable {}
+pub fn draw_nothing(state: &Any,
+            bounds: Rectangle,
+            resources: &mut Resources,
+            context: Context,
+            graphics: &mut G2d) {}
 
 pub struct RectDrawable {
     pub background: Color,
 }
-impl WidgetDrawable for RectDrawable {
-    fn draw(&self,
+pub fn draw_rect(state: &Any,
             bounds: Rectangle,
             resources: &mut Resources,
             context: Context,
-            graphics: &mut G2d) {
-        graphics::Rectangle::new(self.background)
+            graphics: &mut G2d)
+{
+    let state: &RectDrawable = state.downcast_ref().unwrap();
+    graphics::Rectangle::new(state.background)
             .draw(bounds, &context.draw_state, context.transform, graphics);
-    }
 }
 
 pub struct EllipseDrawable {
     pub background: Color,
 }
-impl WidgetDrawable for EllipseDrawable {
-    fn draw(&self,
+pub fn draw_ellipse(state: &Any,
             bounds: Rectangle,
             resources: &mut Resources,
             context: Context,
-            graphics: &mut G2d) {
-        graphics::Ellipse::new(self.background)
+            graphics: &mut G2d)
+{
+    let state: &EllipseDrawable = state.downcast_ref().unwrap();
+
+        graphics::Ellipse::new(state.background)
             .draw(bounds, &context.draw_state, context.transform, graphics);
-    }
-    fn is_mouse_over(&self, mouse: Point, bounds: Rectangle) -> bool {
-        let radius = Dimensions {
-            width: bounds.width / 2.0,
-            height: bounds.height / 2.0,
-        };
-        let center = Point {
-            x: bounds.left + radius.width,
-            y: bounds.top + radius.height,
-        };
-        point_inside_ellipse(mouse, center, radius)
-    }
 }

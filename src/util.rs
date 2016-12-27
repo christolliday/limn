@@ -150,6 +150,18 @@ pub fn point_inside_rect(point: Point, rect: Rectangle) -> bool {
     point.x > rect.left && point.y > rect.top && point.x < rect.left + rect.width &&
     point.y < rect.top + rect.height
 }
+        
+pub fn mouse_inside_ellipse(mouse: Point, bounds: Rectangle) -> bool {
+    let radius = Dimensions {
+        width: bounds.width / 2.0,
+        height: bounds.height / 2.0,
+    };
+    let center = Point {
+        x: bounds.left + radius.width,
+        y: bounds.top + radius.height,
+    };
+    point_inside_ellipse(mouse, center, radius)
+}
 pub fn point_inside_ellipse(point: Point, center: Point, radius: Dimensions) -> bool {
     (point.x - center.x).powi(2) / radius.width.powi(2) +
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
@@ -205,7 +217,7 @@ fn get_dpi(context: &Context) -> f32 {
         .unwrap_or(1.0)
 }
 
-pub fn draw_rect(rect: Rectangle, color: Color, context: Context, graphics: &mut G2d) {
+pub fn draw_rect_outline(rect: Rectangle, color: Color, context: Context, graphics: &mut G2d) {
     let points = [
         [rect.left, rect.top], [rect.right(), rect.top],
         [rect.right(), rect.bottom()], [rect.left, rect.bottom()],

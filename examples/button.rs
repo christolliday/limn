@@ -12,6 +12,7 @@ extern crate matches;
 use limn::ui::*;
 use limn::util::*;
 use limn::widget::text::*;
+use limn::widget;
 
 use limn::widget::{Widget, EventListener};
 use limn::widget::image::ImageDrawable;
@@ -22,6 +23,8 @@ use input::{ResizeEvent, MouseCursorEvent, Event, Input};
 
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
+
+use std::any::Any;
 
 fn main() {
     let window_dim = Dimensions {
@@ -48,31 +51,40 @@ fn main() {
 
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
     let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
-
+    
     let (button_widget, text_widget) = {
         let ref root = ui.graph[ui.root_index];
 
-        let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
-        let mut button_widget = Widget::new(Box::new(rect));
-
-        struct ClickListener {}
+        struct ClickListener {
+            on: bool,
+        }
+        impl ClickListener {
+            fn new() -> Self {
+                ClickListener { on: false }
+            }
+        }
         impl EventListener for ClickListener {
             fn matches(&self, event: &Event) -> bool {
                 matches!(event, &Event::Input(Input::Move(_)))
             }
-            fn handle_event(&self, event: &Event) {
-                println!("event {:?}", event);
+            fn handle_event(&mut self, state: &mut Any, event: &Event) {
+                self.on = !self.on;
+                let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
+                drawable.background = if self.on { [0.0, 0.0, 0.0, 1.0] } else { [1.0, 0.0, 0.0, 1.0] };
             }
         }
-        let listener = ClickListener {};
+
+        let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
+        let mut button_widget = Widget::new(widget::primitives::draw_rect, Box::new(rect));
+        let listener = ClickListener::new();
         button_widget.listeners.push(Box::new(listener));
         button_widget.layout.width(300.0, STRONG);
         button_widget.layout.height(100.0, STRONG);
         button_widget.layout.center(&root.layout);
 
-        let text_drawable = TextDrawable { text: "HELLO".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
+        let text_drawable = TextDrawable { text: "ON".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
         let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
-        let mut text_widget = Widget::new(Box::new(text_drawable));
+        let mut text_widget = Widget::new(widget::text::draw_text, Box::new(text_drawable));
         text_widget.layout.width(text_dims.width, STRONG);
         text_widget.layout.height(text_dims.height, STRONG);
         text_widget.layout.center(&button_widget.layout);

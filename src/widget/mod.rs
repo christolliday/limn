@@ -19,41 +19,29 @@ use cassowary::{Solver, Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
+use std::any::Any;
+
 pub trait EventListener {
-    fn handle_event(&self, event: &Event);
+    fn handle_event(&mut self, widget: &mut Any, event: &Event);
     fn matches(&self, event: &Event) -> bool {
         false
     }
 }
 
-pub trait WidgetDrawable {
-    fn draw(&self,
-            bounds: Rectangle,
-            resources: &mut Resources,
-            context: Context,
-            graphics: &mut G2d);
-    fn is_mouse_over(&self, mouse: Point, bounds: Rectangle) -> bool {
-        point_inside_rect(mouse, bounds)
-    }
-}
-pub struct EmptyDrawable {}
-impl WidgetDrawable for EmptyDrawable {
-    fn draw(&self,
-            bounds: Rectangle,
-            resources: &mut Resources,
-            context: Context,
-            graphics: &mut G2d) {}
-}
-
 pub struct Widget {
-    pub drawable: Box<WidgetDrawable>,
+    pub draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d),
+    pub mouse_over_fn: fn(Point, Rectangle) -> bool,
+    pub drawable: Box<Any>,
     pub layout: WidgetLayout,
     pub listeners: Vec<Box<EventListener>>,
 }
 
+use input::{Input, Motion};
 impl Widget {
-    pub fn new(drawable: Box<WidgetDrawable>) -> Self {
+    pub fn new(draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) -> Self {
         Widget {
+            draw_fn: draw_fn,
+            mouse_over_fn: point_inside_rect,
             drawable: drawable,
             layout: WidgetLayout::new(),
             listeners: Vec::new(),
@@ -67,10 +55,26 @@ impl Widget {
                 solver: &mut Solver,
                 c: Context,
                 g: &mut G2d) {
-        self.drawable.draw(self.layout.bounds(solver), resources, c, g);
+        let bounds = self.layout.bounds(solver);
+        (self.draw_fn)(self.drawable.as_ref(), bounds, resources, c, g);
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
         let bounds = self.layout.bounds(solver);
-        self.drawable.is_mouse_over(mouse, bounds)
+        (self.mouse_over_fn)(mouse, bounds)
+    }
+    pub fn handle_event(&mut self, solver: &mut Solver, event: &Event) {
+        match event {
+            &Event::Input(Input::Move(Motion::MouseCursor(x, y))) => {
+                let pos = Point { x: x, y: y };
+                let is_mouse_over = self.is_mouse_over(solver, pos);
+                for listener in &mut self.listeners {
+                    let matches = listener.matches(event);
+                    if is_mouse_over && matches {
+                        listener.handle_event(self.drawable.as_mut(), event);
+                    }
+                }
+            }
+            _ => {}
+        }
     }
 }

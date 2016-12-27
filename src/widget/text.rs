@@ -7,9 +7,9 @@ use super::super::resources;
 use super::super::ui::Resources;
 use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
-use super::WidgetDrawable;
 use backend::gfx::ImageSize;
 use graphics::types::Color;
+use std::any::Any;
 
 pub struct TextDrawable {
     pub text: String,
@@ -28,35 +28,37 @@ impl TextDrawable {
         text::get_text_height(&self.text, font, self.font_size, self.font_size * 1.25, width, Wrap::Character, Align::Start, Align::Start)
     }
 }
-impl WidgetDrawable for TextDrawable {
-    fn draw(&self,
+
+pub fn draw_text(state: &Any,
             bounds: Rectangle,
             resources: &mut Resources,
             context: Context,
-            graphics: &mut G2d) {
+            graphics: &mut G2d)
+{
+    let state: &TextDrawable = state.downcast_ref().unwrap();
 
-        graphics::Rectangle::new(self.background_color)
-            .draw(bounds, &context.draw_state, context.transform, graphics);
+    graphics::Rectangle::new(state.background_color)
+        .draw(bounds, &context.draw_state, context.transform, graphics);
 
-        let GlyphCache { texture: ref mut text_texture_cache,
-                         cache: ref mut glyph_cache,
-                         ref mut vertex_data } = resources.glyph_cache;
+    let GlyphCache { texture: ref mut text_texture_cache,
+                     cache: ref mut glyph_cache,
+                     ref mut vertex_data } = resources.glyph_cache;
 
-        let font = resources.fonts.get(self.font_id).unwrap();
+        let font = resources.fonts.get(state.font_id).unwrap();
         let line_wrap = Wrap::Character;
 
-        let positioned_glyphs = &text::get_positioned_glyphs(&self.text,
+        let positioned_glyphs = &text::get_positioned_glyphs(&state.text,
                                                              bounds,
                                                              font,
-                                                             self.font_size,
-                                                             self.font_size * 1.25,
+                                                             state.font_size,
+                                                             state.font_size * 1.25,
                                                              line_wrap,
                                                              Align::Start,
                                                              Align::Start);
 
         // Queue the glyphs to be cached.
         for glyph in positioned_glyphs.iter() {
-            glyph_cache.queue_glyph(self.font_id.index(), glyph.clone());
+            glyph_cache.queue_glyph(state.font_id.index(), glyph.clone());
         }
 
         // Cache the glyphs within the GPU cache.
@@ -74,7 +76,7 @@ impl WidgetDrawable for TextDrawable {
         };
 
         let rectangles = positioned_glyphs.into_iter()
-            .filter_map(|g| glyph_cache.rect_for(self.font_id.index(), g).ok().unwrap_or(None))
+            .filter_map(|g| glyph_cache.rect_for(state.font_id.index(), g).ok().unwrap_or(None))
             .map(|(uv_rect, screen_rect)| {
                 (map_rect_i32(screen_rect), map_rect_f32(uv_rect) * tex_dim)
             });
@@ -82,10 +84,9 @@ impl WidgetDrawable for TextDrawable {
         let mut glyph_rectangles = Vec::new();
         glyph_rectangles.extend(rectangles);
         graphics::image::draw_many(&glyph_rectangles,
-                                   self.text_color,
+                                   state.text_color,
                                    text_texture_cache,
                                    &context.draw_state,
                                    context.transform,
                                    graphics);
-    }
 }
