@@ -5,7 +5,7 @@ use petgraph::Graph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Dfs;
 
-use input::{Event, GenericEvent, MouseCursorEvent};
+use input::{Event, GenericEvent, MouseCursorEvent, UpdateArgs};
 
 use cassowary::{Solver, Constraint};
 use cassowary::WeightedRelation::*;
@@ -133,18 +133,31 @@ impl Ui {
         self.post_event(event);
     }
     pub fn post_event(&mut self, event: &Event) {
+        let mut new_events = Vec::new();
+        let id_registered = |widget: &Widget, id| { widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };
+        
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref mut widget = self.graph[node_index];
 
-            let id_registered = |widget: &Widget, id| { widget.registered.iter().any(|event_id| (*event_id).0 == id) };
             let is_mouse_over = widget.is_mouse_over(&mut self.solver, self.input_state.mouse);
             if is_mouse_over {
                 if event.event_id() == event::MOUSE_CURSOR && id_registered(widget, event::WIDGET_MOUSE_OVER) {
                     widget.trigger_event(event::WIDGET_MOUSE_OVER, event);
                 }
                 if event.event_id() == event::PRESS && id_registered(widget, event::WIDGET_PRESS) {
-                    widget.trigger_event(event::WIDGET_PRESS, event);
+                    if let Some(event_id) = widget.trigger_event(event::WIDGET_PRESS, event) {
+                        new_events.push((node_index, event_id));
+                    }
+                }
+            }
+        }
+        for (node_index, event_id) in new_events {
+            let mut dfs = Dfs::new(&self.graph, self.root_index);
+            while let Some(node_index) = dfs.next(&self.graph) {
+                let ref mut widget = self.graph[node_index];
+                if id_registered(widget, event_id) {
+                    widget.trigger_event(event_id, &Event::Update(UpdateArgs{dt:0.0}));
                 }
             }
         }

@@ -15,11 +15,12 @@ use limn::widget::text::*;
 use limn::widget;
 use limn::event;
 
-use limn::widget::{Widget};
+use limn::widget::{Widget, EventHandler};
 use limn::widget::primitives::{RectDrawable};
+use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 
 use backend::{Window, WindowEvents, OpenGL};
-use input::{ResizeEvent, MouseCursorEvent, PressEvent, ReleaseEvent, Event, Input};
+use input::{ResizeEvent, MouseCursorEvent, PressEvent, ReleaseEvent, Event, Input, EventId};
 
 use std::any::Any;
 
@@ -50,21 +51,11 @@ fn main() {
     let (button_widget, text_widget) = {
         let ref root = ui.graph[ui.root_index];
 
-        fn handle_mouse_over(state: &mut Any, event: &Event) {
-            let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
-            //drawable.background = [0.0, 0.0, 0.0, 1.0];
-            println!("what");
-        }
-        fn handle_press(state: &mut Any, event: &Event) {
-            let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
-            drawable.background = [0.0, 0.0, 0.0, 1.0];
-            println!("whjo");
-        }
-
         let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
         let mut button_widget = Widget::new(widget::primitives::draw_rect, Box::new(rect));
-        button_widget.registered.push((event::WIDGET_MOUSE_OVER, handle_mouse_over));
-        button_widget.registered.push((event::WIDGET_PRESS, handle_press));
+        button_widget.event_handlers.push(Box::new(ButtonEventHandler::new()));
+        button_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
+        button_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
         button_widget.layout.width(300.0);
         button_widget.layout.height(100.0);
         button_widget.layout.center(&root.layout);

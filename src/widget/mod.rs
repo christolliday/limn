@@ -2,6 +2,7 @@ pub mod layout;
 pub mod primitives;
 pub mod text;
 pub mod image;
+pub mod button;
 
 use backend::gfx::G2d;
 use graphics::Context;
@@ -17,12 +18,17 @@ use cassowary::Solver;
 
 use std::any::Any;
 
+pub trait EventHandler {
+    fn event_id(&self) -> EventId;
+    fn handle_event(&mut self, &Event, &mut Any) -> Option<EventId>;
+}
+
 pub struct Widget {
     pub draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d),
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub drawable: Box<Any>,
     pub layout: WidgetLayout,
-    pub registered: Vec<(EventId, fn(&mut Any, &Event))>,
+    pub event_handlers: Vec<Box<EventHandler>>,
 }
 
 use input::{Input, Motion};
@@ -35,7 +41,7 @@ impl Widget {
             mouse_over_fn: point_inside_rect,
             drawable: drawable,
             layout: WidgetLayout::new(),
-            registered: Vec::new(),
+            event_handlers: Vec::new(),
         }
     }
     pub fn print(&self, solver: &mut Solver) {
@@ -49,8 +55,8 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: &Event) {
-        let registered = self.registered.iter().find(|event_id| (*event_id).0 == id).unwrap();
-        (registered.1)(self.drawable.as_mut(), event);
+    pub fn trigger_event(&mut self, id: EventId, event: &Event) -> Option<EventId> {
+        let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
+        event_handler.handle_event(event, self.drawable.as_mut())
     }
 }

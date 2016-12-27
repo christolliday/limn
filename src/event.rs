@@ -23,6 +23,9 @@ pub const WIDGET_MOUSE_OVER: EventId = EventId("piston/limn/widget_mouse_over");
 pub const WIDGET_PRESS: EventId = EventId("piston/limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("piston/limn/widget_release");
 
+pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
+pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
+
 /// Events that apply to a specific widget.
 ///
 /// Rather than delivering entire `event::Event`s to the widget (with a lot of redundant
