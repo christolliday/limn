@@ -3,6 +3,7 @@ use super::super::event;
 use input::{Event, EventId};
 use std::any::Any;
 use super::primitives::RectDrawable;
+use super::text::TextDrawable;
 
 pub struct ButtonEventHandler {
     on: bool,
@@ -32,8 +33,12 @@ impl EventHandler for ButtonOnHandler {
         event::BUTTON_ENABLED
     }
     fn handle_event(&mut self, event: &Event, state: &mut Any) -> Option<EventId> {
-        let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
-        drawable.background = [0.0, 0.0, 0.0, 1.0];
+        if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
+            drawable.background = [0.0, 0.0, 0.0, 1.0];
+        }
+        if let Some(ref mut drawable) = state.downcast_mut::<TextDrawable>() {
+            drawable.text = "ON".to_owned();
+        }
         None
     }
 }
@@ -43,8 +48,12 @@ impl EventHandler for ButtonOffHandler {
         event::BUTTON_DISABLED
     }
     fn handle_event(&mut self, event: &Event, state: &mut Any) -> Option<EventId> {
-        let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
-        drawable.background = [1.0, 0.0, 0.0, 1.0];
+        if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
+            drawable.background = [1.0, 0.0, 0.0, 1.0];
+        }
+        if let Some(ref mut drawable) = state.downcast_mut::<TextDrawable>() {
+            drawable.text = "OFF".to_owned();
+        }
         None
     }
 }

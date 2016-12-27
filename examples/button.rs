@@ -60,9 +60,11 @@ fn main() {
         button_widget.layout.height(100.0);
         button_widget.layout.center(&root.layout);
 
-        let text_drawable = TextDrawable { text: "ON".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
+        let text_drawable = TextDrawable { text: "OFF".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
         let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
         let mut text_widget = Widget::new(widget::text::draw_text, Box::new(text_drawable));
+        text_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
+        text_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
         text_widget.layout.width(text_dims.width);
         text_widget.layout.height(text_dims.height);
         text_widget.layout.center(&button_widget.layout);
