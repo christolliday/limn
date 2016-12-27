@@ -25,6 +25,8 @@ use resources::{Map,Id};
 use resources::image::Texture;
 use std::path::Path;
 
+const DEBUG_BOUNDS: bool = true;
+
 pub struct Resources {
     pub glyph_cache: GlyphCache,
     pub fonts: resources::Map<Font>,
@@ -95,6 +97,9 @@ impl Ui {
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref widget = self.graph[node_index];
+            if DEBUG_BOUNDS {
+                draw_rect(widget.layout.bounds(&mut self.solver), [0.0, 1.0, 1.0, 1.0], c, g);
+            }
             widget.draw(&mut self.resources, &mut self.solver, c, g);
         }
     }

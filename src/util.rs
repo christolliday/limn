@@ -4,6 +4,9 @@ use graphics::types;
 pub use graphics::types::Scalar;
 use rusttype;
 use graphics::Context;
+use graphics;
+use backend::gfx::G2d;
+use graphics::types::Color;
 
 // #[derive(Copy, Clone, Debug, PartialEq)]
 // pub struct Px(pub f64);
@@ -200,4 +203,21 @@ fn get_dpi(context: &Context) -> f32 {
     context.viewport
         .map(|v| v.window_size[0] as f32 / view_size[0] as f32)
         .unwrap_or(1.0)
+}
+
+pub fn draw_rect(rect: Rectangle, color: Color, context: Context, graphics: &mut G2d) {
+    let points = [
+        [rect.left, rect.top], [rect.right(), rect.top],
+        [rect.right(), rect.bottom()], [rect.left, rect.bottom()],
+        [rect.left, rect.top]];
+    let mut points = points.iter();
+    if let Some(first) = points.next() {
+        let line = graphics::Line::new_round(color, 2.0);
+        let mut start = first;
+        for end in points {
+            let coords = [start[0], start[1], end[0], end[1]];
+            line.draw(coords, &context.draw_state, context.transform, graphics);
+            start = end;
+        }
+    }
 }
