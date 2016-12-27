@@ -35,10 +35,10 @@ impl WidgetLayout {
     pub fn add_constraints(&mut self, constraints: &[Constraint]) {
         self.constraints.extend_from_slice(constraints);
     }
-    pub fn width(&mut self, width: Scalar, strength: f64) {
+    pub fn width(&mut self, width: Scalar) {
         self.constraints.push(self.right - self.left | EQ(REQUIRED) | width)
     }
-    pub fn height(&mut self, height: Scalar, strength: f64) {
+    pub fn height(&mut self, height: Scalar) {
         self.constraints.push(self.bottom - self.top | EQ(REQUIRED) | height)
     }
     pub fn center(&mut self, layout: &WidgetLayout) {

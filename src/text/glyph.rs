@@ -1,6 +1,5 @@
 /// Logic and types specific to individual glyph layout.
 
-use super::FontSize;
 use super::super::resources::font::Font;
 use util::{Range, Rectangle, Scalar};
 use std;

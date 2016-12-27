@@ -4,20 +4,16 @@ pub mod text;
 pub mod image;
 
 use backend::gfx::G2d;
-use graphics;
 use graphics::Context;
-use graphics::types::Color;
 
 use input::Event;
+use input::EventId;
 use super::util::*;
 
-use backend::glyph;
 use super::ui::Resources;
 use self::layout::WidgetLayout;
 
-use cassowary::{Solver, Variable, Constraint};
-use cassowary::WeightedRelation::*;
-use cassowary::strength::*;
+use cassowary::Solver;
 
 use std::any::Any;
 
@@ -34,6 +30,7 @@ pub struct Widget {
     pub drawable: Box<Any>,
     pub layout: WidgetLayout,
     pub listeners: Vec<Box<EventListener>>,
+    pub registered: Vec<EventId>,
 }
 
 use input::{Input, Motion};
@@ -47,6 +44,7 @@ impl Widget {
             drawable: drawable,
             layout: WidgetLayout::new(),
             listeners: Vec::new(),
+            registered: Vec::new(),
         }
     }
     pub fn print(&self, solver: &mut Solver) {

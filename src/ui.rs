@@ -5,9 +5,9 @@ use petgraph::Graph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Dfs;
 
-use input::{Event, Input, Motion};
+use input::Event;
 
-use cassowary::{Solver, Variable, Constraint};
+use cassowary::{Solver, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
@@ -20,13 +20,8 @@ use resources;
 use resources::font::Font;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
-use gfx_device_gl::Factory;
-use gfx_graphics::{TextureSettings, Flip};
 
-use resources::{Map, Id};
 use resources::image::Texture;
-use std::path::Path;
-use std::any::Any;
 
 const DEBUG_BOUNDS: bool = true;
 
