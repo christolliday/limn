@@ -5,7 +5,7 @@ use petgraph::Graph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Dfs;
 
-use input::Event;
+use input::{Event, GenericEvent, MouseCursorEvent};
 
 use cassowary::{Solver, Constraint};
 use cassowary::WeightedRelation::*;
@@ -16,6 +16,7 @@ use super::widget::*;
 use super::widget::primitives::EmptyDrawable;
 use super::widget;
 use super::util::*;
+use super::event;
 use resources;
 use resources::font::Font;
 use backend::glyph::GlyphCache;
@@ -42,12 +43,22 @@ impl Resources {
     }
 }
 
+pub struct InputState {
+    pub mouse: Point,
+}
+impl InputState {
+    fn new() -> Self {
+        InputState { mouse: Point { x: 0.0, y: 0.0 }}
+    }
+}
+
 pub struct Ui {
     pub graph: Graph<Widget, ()>,
     pub root_index: NodeIndex,
     constraints: Vec<Constraint>,
     pub solver: Solver,
     pub resources: Resources,
+    pub input_state: InputState,
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dims: Dimensions) -> Self {
@@ -67,12 +78,14 @@ impl Ui {
                                           window_dims.height as u32);
 
         let resources = Resources::new(glyph_cache);
+        let input_state = InputState::new();
         let mut ui = Ui {
             graph: graph,
             root_index: root_index,
             solver: solver,
             constraints: constraints,
             resources: resources,
+            input_state: input_state,
         };
         ui.resize_window(window_dims);
         ui
@@ -113,11 +126,27 @@ impl Ui {
 
         child_index
     }
+    pub fn handle_event(&mut self, event: &Event) {
+        if let Some(mouse) = event.mouse_cursor_args() {
+            self.input_state.mouse = mouse.into();
+        }
+        self.post_event(event);
+    }
     pub fn post_event(&mut self, event: &Event) {
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref mut widget = self.graph[node_index];
-            widget.handle_event(&mut self.solver, event);
+
+            let id_registered = |widget: &Widget, id| { widget.registered.iter().any(|event_id| (*event_id).0 == id) };
+            let is_mouse_over = widget.is_mouse_over(&mut self.solver, self.input_state.mouse);
+            if is_mouse_over {
+                if event.event_id() == event::MOUSE_CURSOR && id_registered(widget, event::WIDGET_MOUSE_OVER) {
+                    widget.trigger_event(event::WIDGET_MOUSE_OVER, event);
+                }
+                if event.event_id() == event::PRESS && id_registered(widget, event::WIDGET_PRESS) {
+                    widget.trigger_event(event::WIDGET_PRESS, event);
+                }
+            }
         }
     }
 }

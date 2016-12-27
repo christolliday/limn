@@ -15,11 +15,11 @@ use limn::widget::text::*;
 use limn::widget;
 use limn::event;
 
-use limn::widget::{Widget, EventListener};
+use limn::widget::{Widget};
 use limn::widget::primitives::{RectDrawable};
 
 use backend::{Window, WindowEvents, OpenGL};
-use input::{ResizeEvent, MouseCursorEvent, Event, Input};
+use input::{ResizeEvent, MouseCursorEvent, PressEvent, ReleaseEvent, Event, Input};
 
 use std::any::Any;
 
@@ -50,30 +50,21 @@ fn main() {
     let (button_widget, text_widget) = {
         let ref root = ui.graph[ui.root_index];
 
-        struct ClickListener {
-            on: bool,
+        fn handle_mouse_over(state: &mut Any, event: &Event) {
+            let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
+            //drawable.background = [0.0, 0.0, 0.0, 1.0];
+            println!("what");
         }
-        impl ClickListener {
-            fn new() -> Self {
-                ClickListener { on: false }
-            }
-        }
-        impl EventListener for ClickListener {
-            fn matches(&self, event: &Event) -> bool {
-                matches!(event, &Event::Input(Input::Move(_)))
-            }
-            fn handle_event(&mut self, state: &mut Any, event: &Event) {
-                self.on = !self.on;
-                let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
-                drawable.background = if self.on { [0.0, 0.0, 0.0, 1.0] } else { [1.0, 0.0, 0.0, 1.0] };
-            }
+        fn handle_press(state: &mut Any, event: &Event) {
+            let drawable: &mut RectDrawable = state.downcast_mut().unwrap();
+            drawable.background = [0.0, 0.0, 0.0, 1.0];
+            println!("whjo");
         }
 
         let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
         let mut button_widget = Widget::new(widget::primitives::draw_rect, Box::new(rect));
-        let listener = ClickListener::new();
-        button_widget.listeners.push(Box::new(listener));
-        button_widget.registered.push(event::WIDGET_MOUSE_OVER);
+        button_widget.registered.push((event::WIDGET_MOUSE_OVER, handle_mouse_over));
+        button_widget.registered.push((event::WIDGET_PRESS, handle_press));
         button_widget.layout.width(300.0);
         button_widget.layout.height(100.0);
         button_widget.layout.center(&root.layout);
@@ -98,9 +89,7 @@ fn main() {
         if let Some(window_dims) = event.resize_args() {
             ui.resize_window(window_dims.into());
         }
-        if let Some(_) = event.mouse_cursor_args() {
-            ui.post_event(&event);
-        }
+        ui.handle_event(&event);
         window.draw_2d(&event, |c, g| {
             graphics::clear([0.8, 0.8, 0.8, 1.0], g);
             ui.draw(c, g);

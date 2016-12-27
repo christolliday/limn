@@ -17,20 +17,12 @@ use cassowary::Solver;
 
 use std::any::Any;
 
-pub trait EventListener {
-    fn handle_event(&mut self, widget: &mut Any, event: &Event);
-    fn matches(&self, event: &Event) -> bool {
-        false
-    }
-}
-
 pub struct Widget {
     pub draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d),
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub drawable: Box<Any>,
     pub layout: WidgetLayout,
-    pub listeners: Vec<Box<EventListener>>,
-    pub registered: Vec<EventId>,
+    pub registered: Vec<(EventId, fn(&mut Any, &Event))>,
 }
 
 use input::{Input, Motion};
@@ -43,7 +35,6 @@ impl Widget {
             mouse_over_fn: point_inside_rect,
             drawable: drawable,
             layout: WidgetLayout::new(),
-            listeners: Vec::new(),
             registered: Vec::new(),
         }
     }
@@ -58,19 +49,8 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn handle_event(&mut self, solver: &mut Solver, event: &Event) {
-        match event {
-            &Event::Input(Input::Move(Motion::MouseCursor(x, y))) => {
-                let pos = Point { x: x, y: y };
-                let is_mouse_over = self.is_mouse_over(solver, pos);
-                for listener in &mut self.listeners {
-                    let matches = listener.matches(event);
-                    if is_mouse_over && matches {
-                        listener.handle_event(self.drawable.as_mut(), event);
-                    }
-                }
-            }
-            _ => {}
-        }
+    pub fn trigger_event(&mut self, id: EventId, event: &Event) {
+        let registered = self.registered.iter().find(|event_id| (*event_id).0 == id).unwrap();
+        (registered.1)(self.drawable.as_mut(), event);
     }
 }
