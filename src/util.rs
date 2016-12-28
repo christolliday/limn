@@ -157,6 +157,11 @@ impl Into<types::Rectangle> for Rectangle {
         [self.left, self.top, self.width, self.height]
     }
 }
+impl Into<[u32; 4]> for Rectangle {
+    fn into(self) -> [u32; 4] {
+        [self.left as u32, self.top as u32, self.width as u32, self.height as u32]
+    }
+}
 
 pub fn point_inside_rect(point: Point, rect: Rectangle) -> bool {
     point.x > rect.left && point.y > rect.top && point.x < rect.left + rect.width &&

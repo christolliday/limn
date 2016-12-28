@@ -51,21 +51,28 @@ fn main() {
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
     let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
     
-    let image_widget = {
+    let (scroll_widget, image_widget) = {
         let ref root = ui.graph[ui.root_index];
 
-        let image_drawable = ImageDrawable { image_id: image_id };
+        let mut scroll_widget = Widget::new();
+        scroll_widget.layout.width(200.0);
+        scroll_widget.layout.height(200.0);
+        scroll_widget.layout.scrollable = true;
+
+        let mut image_drawable = ImageDrawable::new(image_id);
+
         let image_dims = image_drawable.measure_image(&ui.resources);
         let mut image_widget = Widget::new();
         image_widget.set_drawable(widget::image::draw_image, Box::new(image_drawable));
-        image_widget.layout.width(image_dims.width * 2.0);
-        image_widget.layout.height(image_dims.height * 2.0);
-        image_widget.layout.center(&root.layout);
-        image_widget
+        image_widget.layout.width(image_dims.width);
+        image_widget.layout.height(image_dims.height * 5.0);
+        //image_widget.layout.center(&scroll_widget.layout);
+        (scroll_widget, image_widget)
     };
 
     let root_index = ui.root_index;
-    ui.add_widget(root_index, image_widget);
+    let scroll_index = ui.add_widget(root_index, scroll_widget);
+    ui.add_widget(scroll_index, image_widget);
     ui.init();
 
     // Poll events from the window.

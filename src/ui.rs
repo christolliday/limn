@@ -104,17 +104,26 @@ impl Ui {
         }
         self.solver.add_constraints(&self.constraints).unwrap();
     }
+    pub fn parent_index(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
+        use petgraph::Direction;
+        let mut neighbors = self.graph.neighbors_directed(node_index, Direction::Incoming);
+        neighbors.next()
+    }
     pub fn draw(&mut self, c: Context, g: &mut G2d) {
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
-            let ref widget = self.graph[node_index];
-            if DEBUG_BOUNDS {
-                draw_rect_outline(widget.layout.bounds(&mut self.solver),
-                                  [0.0, 1.0, 1.0, 1.0],
-                                  c,
-                                  g);
+
+            if let Some(parent_index) = self.parent_index(node_index) {
+                let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
+
+                if DEBUG_BOUNDS {
+                    draw_rect_outline(widget.layout.bounds(&mut self.solver),
+                                    [0.0, 1.0, 1.0, 1.0],
+                                    c,
+                                    g);
+                }
+                widget.draw(&parent, &mut self.resources, &mut self.solver, c, g);
             }
-            widget.draw(&mut self.resources, &mut self.solver, c, g);
         }
     }
     pub fn add_widget(&mut self, parent_index: NodeIndex, child: Widget) -> NodeIndex {

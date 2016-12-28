@@ -24,7 +24,7 @@ pub trait EventHandler {
 }
 
 pub struct Widget {
-    pub draw_fn: Option<fn(&Any, Rectangle, &mut Resources, Context, &mut G2d)>,
+    pub draw_fn: Option<fn(&Any, Rectangle, Rectangle, &mut Resources, Context, &mut G2d)>,
     pub drawable: Option<Box<Any>>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
@@ -42,17 +42,18 @@ impl Widget {
             event_handlers: Vec::new(),
         }
     }
-    pub fn set_drawable(&mut self, draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) {
+    pub fn set_drawable(&mut self, draw_fn: fn(&Any, Rectangle, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) {
         self.draw_fn = Some(draw_fn);
         self.drawable = Some(drawable);
     }
     pub fn print(&self, solver: &mut Solver) {
         println!("{:?}", self.layout.bounds(solver));
     }
-    pub fn draw(&self, resources: &mut Resources, solver: &mut Solver, c: Context, g: &mut G2d) {
+    pub fn draw(&self, parent: &Widget, resources: &mut Resources, solver: &mut Solver, c: Context, g: &mut G2d) {
         if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
+            let parent_bounds = parent.layout.bounds(solver);
             let bounds = self.layout.bounds(solver);
-            draw_fn(drawable.as_ref(), bounds, resources, c, g);
+            draw_fn(drawable.as_ref(), parent_bounds, bounds, resources, c, g);
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {

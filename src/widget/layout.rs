@@ -9,6 +9,7 @@ pub struct WidgetLayout {
     pub top: Variable,
     pub right: Variable,
     pub bottom: Variable,
+    pub scrollable: bool,
     pub constraints: Vec<Constraint>,
 }
 impl WidgetLayout {
@@ -18,6 +19,7 @@ impl WidgetLayout {
             top: Variable::new(),
             right: Variable::new(),
             bottom: Variable::new(),
+            scrollable: false,
             constraints: Vec::new(),
         }
     }
@@ -47,10 +49,18 @@ impl WidgetLayout {
         self.add_constraints(&constraints);
     }
     pub fn bound_by(&mut self, layout: &WidgetLayout) {
-        let constraints = [self.left | GE(REQUIRED) | layout.left,
-                           self.top | GE(REQUIRED) | layout.top,
-                           self.right | LE(REQUIRED) | layout.right,
-                           self.bottom | LE(REQUIRED) | layout.bottom];
-        self.add_constraints(&constraints);
+        if !layout.scrollable { 
+            let constraints = [self.left | GE(REQUIRED) | layout.left,
+                            self.top | GE(REQUIRED) | layout.top,
+                            self.right | LE(REQUIRED) | layout.right,
+                            self.bottom | LE(REQUIRED) | layout.bottom];
+            self.add_constraints(&constraints);
+        } else {
+            let constraints = [self.left | LE(STRONG) | layout.left,
+                            self.top | LE(STRONG) | layout.top,
+                            self.right | GE(STRONG) | layout.right,
+                            self.bottom | GE(STRONG) | layout.bottom];
+            self.add_constraints(&constraints);
+        }
     }
 }

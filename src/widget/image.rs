@@ -10,27 +10,47 @@ use std::any::Any;
 
 pub struct ImageDrawable {
     pub image_id: Id,
+    pub scale: Dimensions,
 }
 impl ImageDrawable {
+    pub fn new(image_id: Id) -> Self {
+        ImageDrawable { image_id: image_id, scale: Dimensions { width: 1.0, height: 1.0 } }
+    }
     pub fn measure_image(&self, resources: &Resources) -> Dimensions {
         let img = resources.images.get(self.image_id).unwrap();
         img.get_size().into()
     }
+    pub fn scale(&mut self, scale: Dimensions) {
+        self.scale = scale;
+    }
+}
+pub fn crop_context(context: Context, rect: Rectangle) -> Context {
+    let view_size = context.get_view_size();
+    // convert from left, top, width, height to left, bottom, width, height
+    let scissor_bounds = [
+        rect.left as u32,
+        (view_size[1] - rect.top - rect.height) as u32,
+        rect.width as u32,
+        rect.height as u32,
+    ];
+    Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
 }
 
 pub fn draw_image(state: &Any,
+                  parent_bounds: Rectangle,
                   bounds: Rectangle,
                   resources: &mut Resources,
                   context: Context,
                   graphics: &mut G2d) {
     let state: &ImageDrawable = state.downcast_ref().unwrap();
+    let context = crop_context(context, parent_bounds);
 
     let img = resources.images.get(state.image_id).unwrap();
     let dims: Dimensions = img.get_size().into();
-    //let scale = bounds.dims() / dims;
-    let scale = Dimensions { width: 2.0, height: 2.0 };
+    let scale = bounds.dims() / dims;
     let image = graphics::image::Image::new();
     image.rect(bounds);
-    let context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
+    let mut context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
+
     image.draw(img, &context.draw_state, context.transform, graphics);
 }
