@@ -135,6 +135,14 @@ impl Into<Dimensions> for [u32; 2] {
         }
     }
 }
+impl Into<Dimensions> for (u32, u32) {
+    fn into(self) -> Dimensions {
+        Dimensions {
+            width: self.0 as f64,
+            height: self.1 as f64,
+        }
+    }
+}
 impl Into<Point> for [f64; 2] {
     fn into(self) -> Point {
         Point {
