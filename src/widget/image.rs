@@ -26,8 +26,11 @@ pub fn draw_image(state: &Any,
     let state: &ImageDrawable = state.downcast_ref().unwrap();
 
     let img = resources.images.get(state.image_id).unwrap();
+    let dims: Dimensions = img.get_size().into();
+    //let scale = bounds.dims() / dims;
+    let scale = Dimensions { width: 2.0, height: 2.0 };
     let image = graphics::image::Image::new();
     image.rect(bounds);
-    let context = context.trans(bounds.left, bounds.top);
+    let context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
     image.draw(img, &context.draw_state, context.transform, graphics);
 }

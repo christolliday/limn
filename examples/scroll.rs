@@ -17,6 +17,7 @@ use limn::event;
 
 use limn::widget::{Widget, EventHandler};
 use limn::widget::primitives::{RectDrawable};
+use limn::widget::image::ImageDrawable;
 use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 
 use backend::{Window, WindowEvents, OpenGL};
@@ -31,7 +32,7 @@ fn main() {
     };
 
     // Construct the window.
-    let mut window: Window = backend::window::WindowSettings::new("Limn Button Demo", window_dim)
+    let mut window: Window = backend::window::WindowSettings::new("Limn Scroll Demo", window_dim)
         .opengl(OpenGL::V3_2)
         .samples(4)
         .exit_on_esc(true)
@@ -45,35 +46,26 @@ fn main() {
 
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
     let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
+    let image_path = assets.join("images/rust.png");
 
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
+    let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
     
-    let (button_widget, text_widget) = {
+    let image_widget = {
         let ref root = ui.graph[ui.root_index];
 
-        let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
-        let mut button_widget = Widget::new(widget::primitives::draw_rect, Box::new(rect));
-        button_widget.event_handlers.push(Box::new(ButtonEventHandler::new()));
-        button_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
-        button_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
-        button_widget.layout.width(300.0);
-        button_widget.layout.height(100.0);
-        button_widget.layout.center(&root.layout);
-
-        let text_drawable = TextDrawable { text: "OFF".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
-        let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
-        let mut text_widget = Widget::new(widget::text::draw_text, Box::new(text_drawable));
-        text_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
-        text_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
-        text_widget.layout.width(text_dims.width);
-        text_widget.layout.height(text_dims.height);
-        text_widget.layout.center(&button_widget.layout);
-        (button_widget, text_widget)
+        let image_drawable = ImageDrawable { image_id: image_id };
+        let image_dims = image_drawable.measure_image(&ui.resources);
+        let mut image_widget = Widget::new();
+        image_widget.set_drawable(widget::image::draw_image, Box::new(image_drawable));
+        image_widget.layout.width(image_dims.width * 2.0);
+        image_widget.layout.height(image_dims.height * 2.0);
+        image_widget.layout.center(&root.layout);
+        image_widget
     };
 
     let root_index = ui.root_index;
-    let button_index = ui.add_widget(root_index, button_widget);
-    ui.add_widget(button_index, text_widget);
+    ui.add_widget(root_index, image_widget);
     ui.init();
 
     // Poll events from the window.

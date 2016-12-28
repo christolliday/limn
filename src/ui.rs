@@ -62,7 +62,7 @@ pub struct Ui {
 }
 impl Ui {
     pub fn new(window: &mut Window, window_dims: Dimensions) -> Self {
-        let root = Widget::new(widget::primitives::draw_nothing, Box::new(EmptyDrawable {}));
+        let root = Widget::new();
         let mut constraints = Vec::new();
         let mut solver = Solver::new();
 

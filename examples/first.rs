@@ -30,7 +30,7 @@ fn main() {
     };
 
     // Construct the window.
-    let mut window: Window = backend::window::WindowSettings::new("Grafiki Demo", window_dim)
+    let mut window: Window = backend::window::WindowSettings::new("Limn Demo", window_dim)
         .opengl(OpenGL::V3_2)
         .samples(4)
         .exit_on_esc(true)

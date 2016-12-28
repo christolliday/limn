@@ -7,6 +7,7 @@ use graphics::Context;
 use graphics;
 use backend::gfx::G2d;
 use graphics::types::Color;
+use std::ops::{Mul, Div};
 
 // #[derive(Copy, Clone, Debug, PartialEq)]
 // pub struct Px(pub f64);
@@ -199,6 +200,15 @@ impl Rectangle {
     pub fn bottom(&self) -> Scalar {
         self.top + self.height
     }
+    pub fn dims(&self) -> Dimensions {
+        Dimensions { width: self.width, height: self.height }
+    }
+}
+impl Div<Dimensions> for Dimensions {
+    type Output = Self;
+    fn div(self, rhs: Dimensions) -> Self {
+        Dimensions { width: self.width / rhs.width, height: self.height / rhs.height }
+    }
 }
 pub fn map_rect_i32(rect: rusttype::Rect<i32>) -> types::Rectangle {
     [rect.min.x as f64,
@@ -212,7 +222,6 @@ pub fn map_rect_f32(rect: rusttype::Rect<f32>) -> types::Rectangle {
      (rect.max.x - rect.min.x) as f64,
      (rect.max.y - rect.min.y) as f64]
 }
-use std::ops::Mul;
 impl Mul<Dimensions> for types::Rectangle {
     type Output = Self;
     fn mul(self, rhs: Dimensions) -> Self {

@@ -24,32 +24,36 @@ pub trait EventHandler {
 }
 
 pub struct Widget {
-    pub draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d),
+    pub draw_fn: Option<fn(&Any, Rectangle, &mut Resources, Context, &mut G2d)>,
+    pub drawable: Option<Box<Any>>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
-    pub drawable: Box<Any>,
     pub layout: WidgetLayout,
     pub event_handlers: Vec<Box<EventHandler>>,
 }
 
 use input::{Input, Motion};
 impl Widget {
-    pub fn new(draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d),
-               drawable: Box<Any>)
-               -> Self {
+    pub fn new() -> Self {
         Widget {
-            draw_fn: draw_fn,
+            draw_fn: None,
+            drawable: None,
             mouse_over_fn: point_inside_rect,
-            drawable: drawable,
             layout: WidgetLayout::new(),
             event_handlers: Vec::new(),
         }
+    }
+    pub fn set_drawable(&mut self, draw_fn: fn(&Any, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) {
+        self.draw_fn = Some(draw_fn);
+        self.drawable = Some(drawable);
     }
     pub fn print(&self, solver: &mut Solver) {
         println!("{:?}", self.layout.bounds(solver));
     }
     pub fn draw(&self, resources: &mut Resources, solver: &mut Solver, c: Context, g: &mut G2d) {
-        let bounds = self.layout.bounds(solver);
-        (self.draw_fn)(self.drawable.as_ref(), bounds, resources, c, g);
+        if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
+            let bounds = self.layout.bounds(solver);
+            draw_fn(drawable.as_ref(), bounds, resources, c, g);
+        }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
         let bounds = self.layout.bounds(solver);
@@ -57,6 +61,7 @@ impl Widget {
     }
     pub fn trigger_event(&mut self, id: EventId, event: &Event) -> Option<EventId> {
         let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
-        event_handler.handle_event(event, self.drawable.as_mut())
+        let ref mut drawable = self.drawable.as_mut().unwrap();
+        event_handler.handle_event(event, drawable.as_mut())
     }
 }
