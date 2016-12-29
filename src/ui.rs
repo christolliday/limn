@@ -4,8 +4,10 @@ use backend::gfx::G2d;
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Dfs;
+use petgraph::Direction;
 
-use input::{Event, GenericEvent, MouseCursorEvent, UpdateArgs};
+use input;
+use input::{GenericEvent, MouseCursorEvent, UpdateArgs};
 
 use cassowary::{Solver, Constraint};
 use cassowary::WeightedRelation::*;
@@ -17,6 +19,7 @@ use super::widget::primitives::EmptyDrawable;
 use super::widget;
 use super::util::*;
 use super::event;
+use event::Event;
 use resources;
 use resources::font::Font;
 use backend::glyph::GlyphCache;
@@ -105,8 +108,11 @@ impl Ui {
         self.solver.add_constraints(&self.constraints).unwrap();*/
     }
     pub fn parent_index(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
-        use petgraph::Direction;
         let mut neighbors = self.graph.neighbors_directed(node_index, Direction::Incoming);
+        neighbors.next()
+    }
+    pub fn child_index(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
+        let mut neighbors = self.graph.neighbors_directed(node_index, Direction::Outgoing);
         neighbors.next()
     }
     pub fn draw(&mut self, c: Context, g: &mut G2d) {
@@ -159,46 +165,53 @@ impl Ui {
 
         child_index
     }
-    pub fn handle_event(&mut self, event: &Event) {
+    pub fn handle_event(&mut self, event: input::Event) {
         if let Some(mouse) = event.mouse_cursor_args() {
             self.input_state.mouse = mouse.into();
         }
         self.post_event(event);
     }
-    pub fn post_event(&mut self, event: &Event) {
+    pub fn post_event(&mut self, event: input::Event) {
+        let event = Event::Input(event);
+
+        //println!("{:?}");
+
         let mut new_events = Vec::new();
+        /*let id_registered = |graph: &mut Graph<Widget, ()>, node_index: NodeIndex, id| { 
+                    let ref widget = graph[node_index];
+            widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };*/
         let id_registered = |widget: &Widget, id| { widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };
         
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             if let Some(parent_index) = self.parent_index(node_index) {
                 let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
-
                 let is_mouse_over = widget.is_mouse_over(&mut self.solver, self.input_state.mouse);
                 if is_mouse_over {
                     if event.event_id() == event::MOUSE_CURSOR && id_registered(widget, event::WIDGET_MOUSE_OVER) {
-                        widget.trigger_event(event::WIDGET_MOUSE_OVER, event, &parent.layout, &mut self.solver);
+                        widget.trigger_event(event::WIDGET_MOUSE_OVER, event.clone(), &parent.layout, &mut self.solver);
                     }
                     if event.event_id() == event::PRESS && id_registered(widget, event::WIDGET_PRESS) {
-                        if let Some(event_id) = widget.trigger_event(event::WIDGET_PRESS, event, &parent.layout, &mut self.solver) {
-                            new_events.push((node_index, event_id));
+                        if let Some(event) = widget.trigger_event(event::WIDGET_PRESS, event.clone(), &parent.layout, &mut self.solver) {
+                            new_events.push((node_index, event));
                         }
                     }
                     if event.event_id() == event::MOUSE_SCROLL && id_registered(widget, event::MOUSE_SCROLL) {
-
-                        // TODO trigger on mouse over parent, not child
-                        widget.trigger_event(event::MOUSE_SCROLL, event, &parent.layout, &mut self.solver);
+                        if let Some(event) = widget.trigger_event(event::MOUSE_SCROLL, event.clone(), &parent.layout, &mut self.solver) {
+                            new_events.push((node_index, event));
+                        }
                     }
                 }
             }
         }
-        for (node_index, event_id) in new_events {
+        for (node_index, event) in new_events {
             let mut dfs = Dfs::new(&self.graph, self.root_index);
             while let Some(node_index) = dfs.next(&self.graph) {
                 if let Some(parent_index) = self.parent_index(node_index) {
                     let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
+                    let event_id = event.event_id();
                     if id_registered(widget, event_id) {
-                        widget.trigger_event(event_id, &Event::Update(UpdateArgs{dt:0.0}), &parent.layout, &mut self.solver);
+                        widget.trigger_event(event_id, event.clone(), &parent.layout, &mut self.solver);
                     }
                 }
             }

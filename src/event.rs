@@ -1,5 +1,7 @@
-use input::{Motion, Button};
+use input;
+use input::{Input, Motion, Button};
 use input::EventId;
+use input::GenericEvent;
 
 // from piston input
 pub const AFTER_RENDER: EventId = EventId("piston/after_render");
@@ -22,6 +24,7 @@ pub const UPDATE: EventId = EventId("piston/update");
 pub const WIDGET_MOUSE_OVER: EventId = EventId("piston/limn/widget_mouse_over");
 pub const WIDGET_PRESS: EventId = EventId("piston/limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("piston/limn/widget_release");
+pub const WIDGET_SCROLL: EventId = EventId("piston/limn/widget_scroll");
 
 pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
 pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
@@ -35,9 +38,35 @@ pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
 /// are delivered.
 #[derive(Clone, PartialEq, Debug)]
 pub enum Widget {
-    MouseOver(Motion),
+    MouseOver(input::Event),
+    Scroll(input::Event),
     /// Some button was pressed.
-    Press(Button),
+    Press(input::Event),
     /// Some button was released.
-    Release(Button),
+    Release(input::Event),
+    Enabled(input::Event),
+    Disabled(input::Event),
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum Event {
+    Input(input::Event),
+    Widget(Widget),
+}
+impl Event {
+    pub fn event_id(&self) -> EventId {
+        match *self {
+            Event::Input(ref event) => event.event_id(),
+            Event::Widget(ref event) => {
+                match *event {
+                    Widget::MouseOver(_) => WIDGET_MOUSE_OVER,
+                    Widget::Scroll(_) => WIDGET_SCROLL,
+                    Widget::Press(_) => WIDGET_PRESS,
+                    Widget::Release(_) => WIDGET_RELEASE,
+                    Widget::Enabled(_) => BUTTON_ENABLED,
+                    Widget::Disabled(_) => BUTTON_DISABLED,
+                }
+            },
+        }
+    }
 }

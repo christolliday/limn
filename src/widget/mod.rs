@@ -8,7 +8,7 @@ pub mod scroll;
 use backend::gfx::G2d;
 use graphics::Context;
 
-use input::Event;
+use event::Event;
 use input::EventId;
 use super::util::*;
 
@@ -21,7 +21,7 @@ use std::any::Any;
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, &Event, &mut Any, &mut WidgetLayout, &WidgetLayout, &mut Solver) -> Option<EventId>;
+    fn handle_event(&mut self, Event, &mut Any, &mut WidgetLayout, &WidgetLayout, &mut Solver) -> Option<Event>;
 }
 
 pub struct Widget {
@@ -61,9 +61,17 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: &Event, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<EventId> {
+    pub fn trigger_event(&mut self, id: EventId, event: Event, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
         let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
-        let ref mut drawable = self.drawable.as_mut().unwrap();
-        event_handler.handle_event(event, drawable.as_mut(), &mut self.layout, parent_layout, solver)
+
+        let any = &mut "Any";
+        let drawable = {
+            if let Some(ref mut drawable) = self.drawable {
+                drawable.as_mut()
+            } else {
+                any
+            }
+        };
+        event_handler.handle_event(event, drawable, &mut self.layout, parent_layout, solver)
     }
 }

@@ -18,7 +18,7 @@ use limn::event;
 use limn::widget::{Widget, EventHandler};
 use limn::widget::primitives::{RectDrawable};
 use limn::widget::image::ImageDrawable;
-use limn::widget::scroll::ScrollHandler;
+use limn::widget::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 
 use backend::{Window, WindowEvents, OpenGL};
@@ -67,12 +67,13 @@ fn main() {
         scroll_widget.layout.width(200.0);
         scroll_widget.layout.height(200.0);
         scroll_widget.layout.scrollable = true;
+        scroll_widget.event_handlers.push(Box::new(ScrollHandler::new()));
 
         let mut image_drawable = ImageDrawable::new(image_id);
 
         let image_dims = image_drawable.measure_image(&ui.resources);
         let mut image_widget = Widget::new();
-        image_widget.event_handlers.push(Box::new(ScrollHandler::new()));
+        image_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));
         image_widget.set_drawable(widget::image::draw_image, Box::new(image_drawable));
         image_widget.layout.width(image_dims.width * 2.0);
         image_widget.layout.height(image_dims.height * 5.0);
@@ -90,7 +91,7 @@ fn main() {
         if let Some(window_dims) = event.resize_args() {
             ui.resize_window(window_dims.into());
         }
-        ui.handle_event(&event);
+        ui.handle_event(event.clone());
         window.draw_2d(&event, |c, g| {
             graphics::clear([0.8, 0.8, 0.8, 1.0], g);
             ui.draw(c, g);
