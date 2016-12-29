@@ -49,18 +49,10 @@ impl WidgetLayout {
         self.add_constraints(&constraints);
     }
     pub fn bound_by(&mut self, layout: &WidgetLayout) {
-        if !layout.scrollable { 
-            let constraints = [self.left | GE(REQUIRED) | layout.left,
-                            self.top | GE(REQUIRED) | layout.top,
-                            self.right | LE(REQUIRED) | layout.right,
-                            self.bottom | LE(REQUIRED) | layout.bottom];
-            self.add_constraints(&constraints);
-        } else {
-            let constraints = [self.left | LE(STRONG) | layout.left,
-                            self.top | LE(STRONG) | layout.top,
-                            self.right | GE(STRONG) | layout.right,
-                            self.bottom | GE(STRONG) | layout.bottom];
-            self.add_constraints(&constraints);
-        }
+        let constraints = [self.left | GE(REQUIRED) | layout.left,
+                           self.top | GE(REQUIRED) | layout.top,
+                           self.right | LE(REQUIRED) | layout.right,
+                           self.bottom | LE(REQUIRED) | layout.bottom];
+        self.add_constraints(&constraints);
     }
 }

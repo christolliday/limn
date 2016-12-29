@@ -96,13 +96,13 @@ impl Ui {
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
     }
     pub fn init(&mut self) {
-        let mut dfs = Dfs::new(&self.graph, self.root_index);
+        /*let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref mut node = self.graph[node_index];
             let constraints = &mut node.layout.constraints;
             self.constraints.append(constraints);
         }
-        self.solver.add_constraints(&self.constraints).unwrap();
+        self.solver.add_constraints(&self.constraints).unwrap();*/
     }
     pub fn parent_index(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
         use petgraph::Direction;
@@ -131,7 +131,39 @@ impl Ui {
         self.graph.add_edge(parent_index, child_index, ());
 
         let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
-        child.layout.bound_by(&parent.layout);
+
+        self.solver.add_constraints(&child.layout.constraints).unwrap();
+
+        if parent.layout.scrollable {
+            let child_bounds = child.layout.bounds(&mut self.solver);
+            let parent_bounds = parent.layout.bounds(&mut self.solver);
+
+            println!("{:?} {:?}", child_bounds, parent_bounds);
+
+            let mut constraints = Vec::new();
+            if child_bounds.width <= parent_bounds.width {
+                constraints.push(child.layout.left | EQ(REQUIRED) | parent.layout.left);
+            } else {
+                self.solver.add_edit_variable(child.layout.left, STRONG).unwrap();
+                self.solver.suggest_value(child.layout.left, parent_bounds.left);
+                constraints.push(child.layout.left | LE(REQUIRED) | parent.layout.left);
+                constraints.push(child.layout.right | GE(REQUIRED) | parent.layout.right);
+            }
+            if child_bounds.height <= parent_bounds.height {
+                constraints.push(child.layout.top | EQ(REQUIRED) | parent.layout.top);
+            } else {
+                self.solver.add_edit_variable(child.layout.top, STRONG).unwrap();
+                self.solver.suggest_value(child.layout.top, parent_bounds.top);
+                constraints.push(child.layout.top | LE(REQUIRED) | parent.layout.top);
+                constraints.push(child.layout.bottom | GE(REQUIRED) | parent.layout.bottom);
+            }
+            self.solver.add_constraints(&constraints).unwrap();
+
+        } else {
+            // TODO set these constraints
+            child.layout.bound_by(&parent.layout);
+            
+        }
 
         child_index
     }
@@ -147,16 +179,23 @@ impl Ui {
         
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
-            let ref mut widget = self.graph[node_index];
+            if let Some(parent_index) = self.parent_index(node_index) {
+                let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
 
-            let is_mouse_over = widget.is_mouse_over(&mut self.solver, self.input_state.mouse);
-            if is_mouse_over {
-                if event.event_id() == event::MOUSE_CURSOR && id_registered(widget, event::WIDGET_MOUSE_OVER) {
-                    widget.trigger_event(event::WIDGET_MOUSE_OVER, event);
-                }
-                if event.event_id() == event::PRESS && id_registered(widget, event::WIDGET_PRESS) {
-                    if let Some(event_id) = widget.trigger_event(event::WIDGET_PRESS, event) {
-                        new_events.push((node_index, event_id));
+                let is_mouse_over = widget.is_mouse_over(&mut self.solver, self.input_state.mouse);
+                if is_mouse_over {
+                    if event.event_id() == event::MOUSE_CURSOR && id_registered(widget, event::WIDGET_MOUSE_OVER) {
+                        widget.trigger_event(event::WIDGET_MOUSE_OVER, event, &parent.layout, &mut self.solver);
+                    }
+                    if event.event_id() == event::PRESS && id_registered(widget, event::WIDGET_PRESS) {
+                        if let Some(event_id) = widget.trigger_event(event::WIDGET_PRESS, event, &parent.layout, &mut self.solver) {
+                            new_events.push((node_index, event_id));
+                        }
+                    }
+                    if event.event_id() == event::MOUSE_SCROLL && id_registered(widget, event::MOUSE_SCROLL) {
+
+                        // TODO trigger on mouse over parent, not child
+                        widget.trigger_event(event::MOUSE_SCROLL, event, &parent.layout, &mut self.solver);
                     }
                 }
             }
@@ -164,9 +203,11 @@ impl Ui {
         for (node_index, event_id) in new_events {
             let mut dfs = Dfs::new(&self.graph, self.root_index);
             while let Some(node_index) = dfs.next(&self.graph) {
-                let ref mut widget = self.graph[node_index];
-                if id_registered(widget, event_id) {
-                    widget.trigger_event(event_id, &Event::Update(UpdateArgs{dt:0.0}));
+                if let Some(parent_index) = self.parent_index(node_index) {
+                    let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
+                    if id_registered(widget, event_id) {
+                        widget.trigger_event(event_id, &Event::Update(UpdateArgs{dt:0.0}), &parent.layout, &mut self.solver);
+                    }
                 }
             }
         }

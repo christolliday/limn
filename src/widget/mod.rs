@@ -3,6 +3,7 @@ pub mod primitives;
 pub mod text;
 pub mod image;
 pub mod button;
+pub mod scroll;
 
 use backend::gfx::G2d;
 use graphics::Context;
@@ -20,7 +21,7 @@ use std::any::Any;
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, &Event, &mut Any) -> Option<EventId>;
+    fn handle_event(&mut self, &Event, &mut Any, &mut WidgetLayout, &WidgetLayout, &mut Solver) -> Option<EventId>;
 }
 
 pub struct Widget {
@@ -60,9 +61,9 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: &Event) -> Option<EventId> {
+    pub fn trigger_event(&mut self, id: EventId, event: &Event, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<EventId> {
         let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
         let ref mut drawable = self.drawable.as_mut().unwrap();
-        event_handler.handle_event(event, drawable.as_mut())
+        event_handler.handle_event(event, drawable.as_mut(), &mut self.layout, parent_layout, solver)
     }
 }

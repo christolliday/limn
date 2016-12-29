@@ -7,7 +7,7 @@ use graphics::Context;
 use graphics;
 use backend::gfx::G2d;
 use graphics::types::Color;
-use std::ops::{Mul, Div};
+use std::ops::{Mul, Div, Add};
 
 // #[derive(Copy, Clone, Debug, PartialEq)]
 // pub struct Px(pub f64);
@@ -231,6 +231,18 @@ impl Mul<Dimensions> for types::Rectangle {
     type Output = Self;
     fn mul(self, rhs: Dimensions) -> Self {
         [self[0] * rhs.width, self[1] * rhs.height, self[2] * rhs.width, self[3] * rhs.height]
+    }
+}
+impl Add<Point> for Point {
+    type Output = Self;
+    fn add(self, rhs: Point) -> Self {
+        Point { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+impl Mul<Scalar> for Point {
+    type Output = Self;
+    fn mul(self, rhs: Scalar) -> Self {
+        Point { x: self.x * rhs, y: self.y * rhs }
     }
 }
 
