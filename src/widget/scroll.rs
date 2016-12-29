@@ -24,16 +24,12 @@ impl EventHandler for ScrollHandler {
             let scroll: Point = scroll.into();
             let widget_bounds = layout.bounds(solver);
             let parent_bounds = parent_layout.bounds(solver);
-            if solver.has_edit_variable(&layout.left) {
-                self.offset.x += scroll.x * 13.0;
-                self.offset.x = f64::min(0.0, f64::max(parent_bounds.width - widget_bounds.width, self.offset.x));
-                solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
-            }
-            if solver.has_edit_variable(&layout.top) {
-                self.offset.y += scroll.y * 13.0;
-                self.offset.y = f64::min(0.0, f64::max(parent_bounds.height - widget_bounds.height, self.offset.y));
-                solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
-            }
+
+            self.offset = self.offset + scroll * 13.0;
+            self.offset.x = f64::min(0.0, f64::max(parent_bounds.width - widget_bounds.width, self.offset.x));
+            self.offset.y = f64::min(0.0, f64::max(parent_bounds.height - widget_bounds.height, self.offset.y));
+            solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
+            solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
         }
         None
     }

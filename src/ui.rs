@@ -138,25 +138,17 @@ impl Ui {
             let child_bounds = child.layout.bounds(&mut self.solver);
             let parent_bounds = parent.layout.bounds(&mut self.solver);
 
-            println!("{:?} {:?}", child_bounds, parent_bounds);
-
             let mut constraints = Vec::new();
-            if child_bounds.width <= parent_bounds.width {
-                constraints.push(child.layout.left | EQ(REQUIRED) | parent.layout.left);
-            } else {
-                self.solver.add_edit_variable(child.layout.left, STRONG).unwrap();
-                self.solver.suggest_value(child.layout.left, parent_bounds.left);
-                constraints.push(child.layout.left | LE(REQUIRED) | parent.layout.left);
-                constraints.push(child.layout.right | GE(REQUIRED) | parent.layout.right);
-            }
-            if child_bounds.height <= parent_bounds.height {
-                constraints.push(child.layout.top | EQ(REQUIRED) | parent.layout.top);
-            } else {
-                self.solver.add_edit_variable(child.layout.top, STRONG).unwrap();
-                self.solver.suggest_value(child.layout.top, parent_bounds.top);
-                constraints.push(child.layout.top | LE(REQUIRED) | parent.layout.top);
-                constraints.push(child.layout.bottom | GE(REQUIRED) | parent.layout.bottom);
-            }
+            self.solver.add_edit_variable(child.layout.left, STRONG).unwrap();
+            self.solver.suggest_value(child.layout.left, parent_bounds.left);
+            constraints.push(child.layout.left | LE(REQUIRED) | parent.layout.left);
+            constraints.push(child.layout.right | GE(STRONG + 1.0) | parent.layout.right);
+                
+            self.solver.add_edit_variable(child.layout.top, STRONG).unwrap();
+            self.solver.suggest_value(child.layout.top, parent_bounds.top);
+            constraints.push(child.layout.top | LE(REQUIRED) | parent.layout.top);
+            constraints.push(child.layout.bottom | GE(STRONG + 1.0) | parent.layout.bottom);
+
             self.solver.add_constraints(&constraints).unwrap();
 
         } else {
