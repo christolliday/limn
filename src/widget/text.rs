@@ -19,6 +19,15 @@ pub struct TextDrawable {
     pub background_color: Color,
 }
 impl TextDrawable {
+    pub fn new(text: String, font_id: resources::Id) -> Self {
+        TextDrawable {
+            text: text,
+            font_id: font_id,
+            font_size: 24.0,
+            text_color: [0.0, 0.0, 0.0, 1.0],
+            background_color: [1.0, 1.0, 1.0, 1.0],
+        }
+    }
     pub fn measure_dims_no_wrap(&self, resources: &Resources) -> Dimensions {
         let font = resources.fonts.get(self.font_id).unwrap();
         text::get_text_dimensions(&self.text,

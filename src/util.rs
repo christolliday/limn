@@ -271,3 +271,15 @@ pub fn draw_rect_outline(rect: Rectangle, color: Color, context: Context, graphi
         }
     }
 }
+
+pub fn crop_context(context: Context, rect: Rectangle) -> Context {
+    let view_size = context.get_view_size();
+    // convert from left, top, width, height to left, bottom, width, height
+    let scissor_bounds = [
+        rect.left as u32,
+        (view_size[1] - rect.top - rect.height) as u32,
+        rect.width as u32,
+        rect.height as u32,
+    ];
+    Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
+}

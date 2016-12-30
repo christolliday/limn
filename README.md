@@ -1,9 +1,10 @@
 todo:
 
-styles/themes, cascading?
-animation, event handler?
-scrolling
+compound widgets
 lists
+animation, event handler?
+styles/themes, cascading?
+scroll bars
 dragging
 resizing
 high level events, eg. double click

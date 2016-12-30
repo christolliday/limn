@@ -24,17 +24,6 @@ impl ImageDrawable {
         self.scale = scale;
     }
 }
-pub fn crop_context(context: Context, rect: Rectangle) -> Context {
-    let view_size = context.get_view_size();
-    // convert from left, top, width, height to left, bottom, width, height
-    let scissor_bounds = [
-        rect.left as u32,
-        (view_size[1] - rect.top - rect.height) as u32,
-        rect.width as u32,
-        rect.height as u32,
-    ];
-    Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
-}
 
 pub fn draw_image(state: &Any,
                   parent_bounds: Rectangle,
@@ -43,7 +32,7 @@ pub fn draw_image(state: &Any,
                   context: Context,
                   graphics: &mut G2d) {
     let state: &ImageDrawable = state.downcast_ref().unwrap();
-    let context = crop_context(context, parent_bounds);
+    //let context = crop_context(context, parent_bounds);
 
     let img = resources.images.get(state.image_id).unwrap();
     let dims: Dimensions = img.get_size().into();

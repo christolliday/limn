@@ -113,14 +113,19 @@ impl Ui {
 
             if let Some(parent_index) = self.parent_index(node_index) {
                 let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
-
-                if DEBUG_BOUNDS {
-                    draw_rect_outline(widget.layout.bounds(&mut self.solver),
-                                    [0.0, 1.0, 1.0, 1.0],
-                                    c,
-                                    g);
-                }
+                let bounds = widget.layout.bounds(&mut self.solver);
                 widget.draw(&parent, &mut self.resources, &mut self.solver, c, g);
+            }
+        }
+
+        if DEBUG_BOUNDS {
+            let mut dfs = Dfs::new(&self.graph, self.root_index);
+            while let Some(node_index) = dfs.next(&self.graph) {
+                let ref widget = self.graph[node_index];
+                draw_rect_outline(widget.layout.bounds(&mut self.solver),
+                                  [0.0, 1.0, 0.0, 1.0],
+                                  c,
+                                  g);
             }
         }
     }
@@ -130,18 +135,8 @@ impl Ui {
 
         let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
 
-        if parent.layout.scrollable {
-            child.layout.update_solver(&mut self.solver);
-            let child_bounds = child.layout.bounds(&mut self.solver);
-            let parent_bounds = parent.layout.bounds(&mut self.solver);
-            self.solver.add_edit_variable(child.layout.left, STRONG).unwrap();
-            self.solver.add_edit_variable(child.layout.top, STRONG).unwrap();
-            self.solver.suggest_value(child.layout.left, parent_bounds.left);
-            self.solver.suggest_value(child.layout.top, parent_bounds.top);
-            child.layout.scroll_inside(&parent.layout);
-        } else {
-            child.layout.bound_by(&parent.layout);
-        }
+        child.layout.update_solver(&mut self.solver);
+        parent.add_widget(child, &mut self.solver);
         child.layout.update_solver(&mut self.solver);
 
         child_index

@@ -11,11 +11,13 @@ use graphics::Context;
 use event::Event;
 use input::EventId;
 use super::util::*;
+use super::util;
 
 use super::ui::Resources;
 use self::layout::WidgetLayout;
 
 use cassowary::Solver;
+use cassowary::strength::*;
 
 use std::any::Any;
 
@@ -50,11 +52,13 @@ impl Widget {
     pub fn print(&self, solver: &mut Solver) {
         println!("{:?}", self.layout.bounds(solver));
     }
-    pub fn draw(&self, parent: &Widget, resources: &mut Resources, solver: &mut Solver, c: Context, g: &mut G2d) {
+    pub fn draw(&self, parent: &Widget, resources: &mut Resources, solver: &mut Solver, context: Context, graphics: &mut G2d) {
         if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
             let parent_bounds = parent.layout.bounds(solver);
             let bounds = self.layout.bounds(solver);
-            draw_fn(drawable.as_ref(), parent_bounds, bounds, resources, c, g);
+
+            let context = util::crop_context(context, parent_bounds);
+            draw_fn(drawable.as_ref(), parent_bounds, bounds, resources, context, graphics);
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
@@ -73,5 +77,18 @@ impl Widget {
             }
         };
         event_handler.handle_event(event, drawable, &mut self.layout, parent_layout, solver)
+    }
+    pub fn add_widget(&self, widget: &mut Widget, solver: &mut Solver) {
+        if self.layout.scrollable {
+            let child_bounds = widget.layout.bounds(solver);
+            let parent_bounds = self.layout.bounds(solver);
+            solver.add_edit_variable(widget.layout.left, STRONG).unwrap();
+            solver.add_edit_variable(widget.layout.top, STRONG).unwrap();
+            solver.suggest_value(widget.layout.left, parent_bounds.left);
+            solver.suggest_value(widget.layout.top, parent_bounds.top);
+            widget.layout.scroll_inside(&self.layout);
+        } else {
+            widget.layout.bound_by(&self.layout);
+        }
     }
 }
