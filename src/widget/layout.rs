@@ -31,6 +31,14 @@ impl WidgetLayout {
             height: solver.get_value(self.bottom) - solver.get_value(self.top),
         }
     }
+    pub fn update_solver(&self, solver: &mut Solver) {
+        let constraints = self.constraints.clone();
+        for constraint in constraints {
+            if !solver.has_constraint(&constraint) {
+                solver.add_constraint(constraint.clone());
+            }
+        }
+    }
     pub fn add_constraint(&mut self, constraint: Constraint) {
         self.constraints.push(constraint);
     }
@@ -53,6 +61,14 @@ impl WidgetLayout {
                            self.top | GE(REQUIRED) | layout.top,
                            self.right | LE(REQUIRED) | layout.right,
                            self.bottom | LE(REQUIRED) | layout.bottom];
+        self.add_constraints(&constraints);
+    }
+    pub fn scroll_inside(&mut self, layout: &WidgetLayout) {
+        let constraints = [self.left | LE(REQUIRED) | layout.left,
+                           self.top | LE(REQUIRED) | layout.top,
+                           // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
+                           self.right | GE(STRONG) | layout.right,
+                           self.bottom | GE(STRONG) | layout.bottom];
         self.add_constraints(&constraints);
     }
 }

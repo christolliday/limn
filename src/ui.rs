@@ -74,6 +74,7 @@ impl Ui {
         solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
         constraints.push(root.layout.left | EQ(STRONG) | 0.0);
         constraints.push(root.layout.top | EQ(STRONG) | 0.0);
+        solver.add_constraints(&constraints);
         let root_index = graph.add_node(root);
 
         let glyph_cache = GlyphCache::new(&mut window.context.factory,
@@ -97,15 +98,6 @@ impl Ui {
         let ref root = self.graph[self.root_index];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
-    }
-    pub fn init(&mut self) {
-        /*let mut dfs = Dfs::new(&self.graph, self.root_index);
-        while let Some(node_index) = dfs.next(&self.graph) {
-            let ref mut node = self.graph[node_index];
-            let constraints = &mut node.layout.constraints;
-            self.constraints.append(constraints);
-        }
-        self.solver.add_constraints(&self.constraints).unwrap();*/
     }
     pub fn parent_index(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
         let mut neighbors = self.graph.neighbors_directed(node_index, Direction::Incoming);
@@ -138,30 +130,19 @@ impl Ui {
 
         let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
 
-        self.solver.add_constraints(&child.layout.constraints).unwrap();
-
         if parent.layout.scrollable {
+            child.layout.update_solver(&mut self.solver);
             let child_bounds = child.layout.bounds(&mut self.solver);
             let parent_bounds = parent.layout.bounds(&mut self.solver);
-
-            let mut constraints = Vec::new();
             self.solver.add_edit_variable(child.layout.left, STRONG).unwrap();
-            self.solver.suggest_value(child.layout.left, parent_bounds.left);
-            constraints.push(child.layout.left | LE(REQUIRED) | parent.layout.left);
-            constraints.push(child.layout.right | GE(STRONG + 1.0) | parent.layout.right);
-                
             self.solver.add_edit_variable(child.layout.top, STRONG).unwrap();
+            self.solver.suggest_value(child.layout.left, parent_bounds.left);
             self.solver.suggest_value(child.layout.top, parent_bounds.top);
-            constraints.push(child.layout.top | LE(REQUIRED) | parent.layout.top);
-            constraints.push(child.layout.bottom | GE(STRONG + 1.0) | parent.layout.bottom);
-
-            self.solver.add_constraints(&constraints).unwrap();
-
+            child.layout.scroll_inside(&parent.layout);
         } else {
-            // TODO set these constraints
             child.layout.bound_by(&parent.layout);
-            
         }
+        child.layout.update_solver(&mut self.solver);
 
         child_index
     }
@@ -174,31 +155,19 @@ impl Ui {
     pub fn post_event(&mut self, event: input::Event) {
         let event = Event::Input(event);
 
-        //println!("{:?}");
-
         let mut new_events = Vec::new();
-        /*let id_registered = |graph: &mut Graph<Widget, ()>, node_index: NodeIndex, id| { 
-                    let ref widget = graph[node_index];
-            widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };*/
         let id_registered = |widget: &Widget, id| { widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };
         
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
             if let Some(parent_index) = self.parent_index(node_index) {
                 let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
-                let is_mouse_over = widget.is_mouse_over(&mut self.solver, self.input_state.mouse);
-                if is_mouse_over {
-                    if event.event_id() == event::MOUSE_CURSOR && id_registered(widget, event::WIDGET_MOUSE_OVER) {
-                        widget.trigger_event(event::WIDGET_MOUSE_OVER, event.clone(), &parent.layout, &mut self.solver);
-                    }
-                    if event.event_id() == event::PRESS && id_registered(widget, event::WIDGET_PRESS) {
-                        if let Some(event) = widget.trigger_event(event::WIDGET_PRESS, event.clone(), &parent.layout, &mut self.solver) {
-                            new_events.push((node_index, event));
-                        }
-                    }
-                    if event.event_id() == event::MOUSE_SCROLL && id_registered(widget, event::MOUSE_SCROLL) {
-                        if let Some(event) = widget.trigger_event(event::MOUSE_SCROLL, event.clone(), &parent.layout, &mut self.solver) {
-                            new_events.push((node_index, event));
+                if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
+                    if let Some(widget_event) = event::widget_event(&event) {
+                        if id_registered(widget, widget_event) {
+                            if let Some(event) = widget.trigger_event(widget_event, event.clone(), &parent.layout, &mut self.solver) {
+                                new_events.push((node_index, event));
+                            }
                         }
                     }
                 }

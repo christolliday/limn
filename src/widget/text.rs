@@ -42,6 +42,7 @@ impl TextDrawable {
 }
 
 pub fn draw_text(state: &Any,
+                 parent_bounds: Rectangle,
                  bounds: Rectangle,
                  resources: &mut Resources,
                  context: Context,

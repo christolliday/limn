@@ -52,7 +52,8 @@ fn main() {
         let ref root = ui.graph[ui.root_index];
 
         let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
-        let mut button_widget = Widget::new(widget::primitives::draw_rect, Box::new(rect));
+        let mut button_widget = Widget::new();
+        button_widget.set_drawable(widget::primitives::draw_rect, Box::new(rect));
         button_widget.event_handlers.push(Box::new(ButtonEventHandler::new()));
         button_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
         button_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
@@ -62,7 +63,8 @@ fn main() {
 
         let text_drawable = TextDrawable { text: "OFF".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
         let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
-        let mut text_widget = Widget::new(widget::text::draw_text, Box::new(text_drawable));
+        let mut text_widget = Widget::new();
+        text_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
         text_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
         text_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
         text_widget.layout.width(text_dims.width);
@@ -74,7 +76,6 @@ fn main() {
     let root_index = ui.root_index;
     let button_index = ui.add_widget(root_index, button_widget);
     ui.add_widget(button_index, text_widget);
-    ui.init();
 
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
@@ -82,7 +83,7 @@ fn main() {
         if let Some(window_dims) = event.resize_args() {
             ui.resize_window(window_dims.into());
         }
-        ui.handle_event(&event);
+        ui.handle_event(event.clone());
         window.draw_2d(&event, |c, g| {
             graphics::clear([0.8, 0.8, 0.8, 1.0], g);
             ui.draw(c, g);

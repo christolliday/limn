@@ -83,7 +83,6 @@ fn main() {
     let root_index = ui.root_index;
     let scroll_index = ui.add_widget(root_index, scroll_widget);
     ui.add_widget(scroll_index, image_widget);
-    ui.init();
 
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {

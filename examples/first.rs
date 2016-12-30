@@ -54,17 +54,21 @@ fn main() {
         let ref root = ui.graph[ui.root_index];
 
         let circle2 = EllipseDrawable { background: [1.0, 1.0, 1.0, 1.0] };
-        let box3 = Widget::new(widget::primitives::draw_ellipse, Box::new(circle2));
+        let mut box3 = Widget::new();
+        box3.set_drawable(widget::primitives::draw_ellipse, Box::new(circle2));
 
         let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
-        let mut box1 = Widget::new(widget::primitives::draw_rect, Box::new(rect));
+        let mut box1 = Widget::new();
+        box1.set_drawable(widget::primitives::draw_rect, Box::new(rect));
 
         let circle = EllipseDrawable { background: [1.0, 0.0, 1.0, 1.0] };
-        let mut box2 = Widget::new(widget::primitives::draw_ellipse, Box::new(circle));
+        let mut box2 = Widget::new();
+        box2.set_drawable(widget::primitives::draw_ellipse, Box::new(circle));
 
         let text_drawable = TextDrawable { text: "HELLO".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
         let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
-        let mut text_widget = Widget::new(widget::text::draw_text, Box::new(text_drawable));
+        let mut text_widget = Widget::new();
+        text_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
         let text_constraints = [text_widget.layout.top | EQ(REQUIRED) | 100.0,
                                 text_widget.layout.left | EQ(REQUIRED) | 100.0];
         text_widget.layout.width(text_dims.width);
@@ -86,9 +90,10 @@ fn main() {
         box2.layout.height(100.0);
         box2.layout.add_constraints(&box2_constraints);
 
-        let image_drawable = ImageDrawable { image_id: image_id };
+        let image_drawable = ImageDrawable::new(image_id);
         let image_dims = image_drawable.measure_image(&ui.resources);
-        let mut image_widget = Widget::new(widget::image::draw_image, Box::new(image_drawable));
+        let mut image_widget = Widget::new();
+        image_widget.set_drawable(widget::image::draw_image, Box::new(image_drawable));
         image_widget.layout.width(image_dims.width);
         image_widget.layout.height(image_dims.height);
         image_widget.layout.center(&root.layout);
@@ -102,7 +107,6 @@ fn main() {
     ui.add_widget(box1_index, box3);
     ui.add_widget(root_index, text_widget);
     ui.add_widget(root_index, image_widget);
-    ui.init();
 
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
@@ -110,9 +114,7 @@ fn main() {
         if let Some(window_dims) = event.resize_args() {
             ui.resize_window(window_dims.into());
         }
-        if let Some(_) = event.mouse_cursor_args() {
-            ui.post_event(&event);
-        }
+        ui.handle_event(event.clone());
         window.draw_2d(&event, |c, g| {
             graphics::clear([0.8, 0.8, 0.8, 1.0], g);
             ui.draw(c, g);

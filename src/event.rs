@@ -22,30 +22,36 @@ pub const TOUCH: EventId = EventId("piston/touch");
 pub const UPDATE: EventId = EventId("piston/update");
 
 pub const WIDGET_MOUSE_OVER: EventId = EventId("piston/limn/widget_mouse_over");
+pub const WIDGET_SCROLL: EventId = EventId("piston/limn/widget_scroll");
 pub const WIDGET_PRESS: EventId = EventId("piston/limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("piston/limn/widget_release");
-pub const WIDGET_SCROLL: EventId = EventId("piston/limn/widget_scroll");
 
+pub const SCROLL_SCROLLED: EventId = EventId("piston/limn/scroll_scrolled");
 pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
 pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
 
-/// Events that apply to a specific widget.
-///
-/// Rather than delivering entire `event::Event`s to the widget (with a lot of redundant
-/// information), this `event::Widget` is used as a refined, widget-specific event.
-///
-/// All `Widget` event co-ordinates will be relative to the centre of the `Widget` to which they
-/// are delivered.
+// get the widget event that is received if the event occurs while mouse is over widget
+pub fn widget_event(event: &Event) -> Option<EventId> {
+    match event.event_id() {
+        MOUSE_CURSOR => Some(WIDGET_MOUSE_OVER),
+        MOUSE_SCROLL => Some(WIDGET_SCROLL),
+        PRESS => Some(WIDGET_PRESS),
+        _ => None
+    }
+}
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum Widget {
+    // widget general, received when mouse over widget
     MouseOver(input::Event),
     Scroll(input::Event),
-    /// Some button was pressed.
     Press(input::Event),
-    /// Some button was released.
     Release(input::Event),
-    Enabled(input::Event),
-    Disabled(input::Event),
+
+    // specific widgets
+    ScrollScrolled(input::Event),
+    ButtonEnabled(input::Event),
+    ButtonDisabled(input::Event),
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -63,8 +69,10 @@ impl Event {
                     Widget::Scroll(_) => WIDGET_SCROLL,
                     Widget::Press(_) => WIDGET_PRESS,
                     Widget::Release(_) => WIDGET_RELEASE,
-                    Widget::Enabled(_) => BUTTON_ENABLED,
-                    Widget::Disabled(_) => BUTTON_DISABLED,
+                    
+                    Widget::ScrollScrolled(_) => SCROLL_SCROLLED,
+                    Widget::ButtonEnabled(_) => BUTTON_ENABLED,
+                    Widget::ButtonDisabled(_) => BUTTON_DISABLED,
                 }
             },
         }

@@ -18,6 +18,7 @@ pub struct RectDrawable {
     pub background: Color,
 }
 pub fn draw_rect(state: &Any,
+                 parent_bounds: Rectangle,
                  bounds: Rectangle,
                  resources: &mut Resources,
                  context: Context,
@@ -31,6 +32,7 @@ pub struct EllipseDrawable {
     pub background: Color,
 }
 pub fn draw_ellipse(state: &Any,
+                    parent_bounds: Rectangle,
                     bounds: Rectangle,
                     resources: &mut Resources,
                     context: Context,

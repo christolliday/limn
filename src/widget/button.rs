@@ -25,9 +25,9 @@ impl EventHandler for ButtonEventHandler {
         if let Event::Input(event) = event {
             self.on = !self.on;
             if self.on {
-                Some(Event::Widget(event::Widget::Enabled(event)))
+                Some(Event::Widget(event::Widget::ButtonEnabled(event)))
             } else {
-                Some(Event::Widget(event::Widget::Disabled(event)))
+                Some(Event::Widget(event::Widget::ButtonDisabled(event)))
             }
         } else {
             None
