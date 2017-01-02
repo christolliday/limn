@@ -101,6 +101,10 @@ impl WidgetLayout {
     pub fn height(&mut self, height: Scalar) {
         self.constraints.push(self.bottom - self.top | EQ(REQUIRED) | height)
     }
+    pub fn dimensions(&mut self, dimensions: Dimensions) {
+        self.width(dimensions.width);
+        self.height(dimensions.height);
+    }
     pub fn width_strength(&mut self, width: Scalar, strength: f64) {
         self.constraints.push(self.right - self.left | EQ(strength) | width)
     }
@@ -111,6 +115,18 @@ impl WidgetLayout {
         let constraints = [self.left - layout.left | EQ(STRONG) | layout.right - self.right,
                            self.top - layout.top | EQ(STRONG) | layout.bottom - self.bottom];
         self.add_constraints(&constraints);
+    }
+    pub fn align_top(&mut self, layout: &WidgetLayout) {
+        self.constraints.push(self.top | EQ(STRONG) | layout.top);
+    }
+    pub fn align_bottom(&mut self, layout: &WidgetLayout) {
+        self.constraints.push(self.bottom | EQ(STRONG) | layout.bottom);
+    }
+    pub fn align_left(&mut self, layout: &WidgetLayout) {
+        self.constraints.push(self.left | EQ(STRONG) | layout.left);
+    }
+    pub fn align_right(&mut self, layout: &WidgetLayout) {
+        self.constraints.push(self.right | EQ(STRONG) | layout.right);
     }
     pub fn bound_by(&mut self, layout: &WidgetLayout) {
         let constraints = [self.left | GE(REQUIRED) | layout.left,

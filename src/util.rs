@@ -283,3 +283,13 @@ pub fn crop_context(context: Context, rect: Rectangle) -> Context {
     ];
     Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
 }
+
+// get smallest shared region
+pub fn crop_rect(outer: Rectangle, inner: Rectangle) -> Rectangle {
+    Rectangle {
+        top: f64::max(outer.top, inner.top),
+        left: f64::max(outer.left, inner.left),
+        width: f64::min(outer.width, inner.width),
+        height: f64::min(outer.height, inner.height),
+    }
+}

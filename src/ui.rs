@@ -5,6 +5,7 @@ use petgraph::Graph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Dfs;
 use petgraph::Direction;
+use petgraph::graph::Neighbors;
 
 use input;
 use input::{GenericEvent, MouseCursorEvent, UpdateArgs};
@@ -18,6 +19,7 @@ use super::widget::*;
 use super::widget::primitives::EmptyDrawable;
 use super::widget;
 use super::util::*;
+use super::util;
 use super::event;
 use event::Event;
 use resources;
@@ -26,6 +28,8 @@ use backend::glyph::GlyphCache;
 use backend::window::Window;
 
 use resources::image::Texture;
+
+use std::f64;
 
 const DEBUG_BOUNDS: bool = true;
 
@@ -99,24 +103,31 @@ impl Ui {
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
     }
-    pub fn parent_index(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
-        let mut neighbors = self.graph.neighbors_directed(node_index, Direction::Incoming);
-        neighbors.next()
+    pub fn parents(&mut self, node_index: NodeIndex) -> Neighbors<()> {
+        self.graph.neighbors_directed(node_index, Direction::Incoming)
     }
-    pub fn child_index(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
-        let mut neighbors = self.graph.neighbors_directed(node_index, Direction::Outgoing);
-        neighbors.next()
+    pub fn children(&mut self, node_index: NodeIndex) -> Neighbors<()> {
+        self.graph.neighbors_directed(node_index, Direction::Outgoing)
+    }
+
+    pub fn draw_node(&mut self, c: Context, g: &mut G2d, node_index: NodeIndex, crop_to: Rectangle) {
+
+        let crop_to = {
+            let ref widget = self.graph[node_index];
+            widget.draw(crop_to, &mut self.resources, &mut self.solver, c, g);
+
+            util::crop_rect(crop_to, widget.layout.bounds(&mut self.solver))
+        };
+
+        let children: Vec<NodeIndex> = self.children(node_index).collect();
+        for child_index in children {
+            self.draw_node(c, g, child_index, crop_to);
+        }
     }
     pub fn draw(&mut self, c: Context, g: &mut G2d) {
-        let mut dfs = Dfs::new(&self.graph, self.root_index);
-        while let Some(node_index) = dfs.next(&self.graph) {
 
-            if let Some(parent_index) = self.parent_index(node_index) {
-                let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
-                let bounds = widget.layout.bounds(&mut self.solver);
-                widget.draw(&parent, &mut self.resources, &mut self.solver, c, g);
-            }
-        }
+        let index = self.root_index.clone();
+        self.draw_node(c, g, index, Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX });
 
         if DEBUG_BOUNDS {
             let mut dfs = Dfs::new(&self.graph, self.root_index);
@@ -155,7 +166,7 @@ impl Ui {
         
         let mut dfs = Dfs::new(&self.graph, self.root_index);
         while let Some(node_index) = dfs.next(&self.graph) {
-            if let Some(parent_index) = self.parent_index(node_index) {
+            if let Some(parent_index) = self.parents(node_index).next() {
                 let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
                 if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
                     if let Some(widget_event) = event::widget_event(&event) {
@@ -171,7 +182,7 @@ impl Ui {
         for (node_index, event) in new_events {
             let mut dfs = Dfs::new(&self.graph, self.root_index);
             while let Some(node_index) = dfs.next(&self.graph) {
-                if let Some(parent_index) = self.parent_index(node_index) {
+                if let Some(parent_index) = self.parents(node_index).next() {
                     let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
                     let event_id = event.event_id();
                     if id_registered(widget, event_id) {

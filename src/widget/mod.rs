@@ -52,13 +52,11 @@ impl Widget {
     pub fn print(&self, solver: &mut Solver) {
         println!("{:?}", self.layout.bounds(solver));
     }
-    pub fn draw(&self, parent: &Widget, resources: &mut Resources, solver: &mut Solver, context: Context, graphics: &mut G2d) {
+    pub fn draw(&self, crop_to: Rectangle, resources: &mut Resources, solver: &mut Solver, context: Context, graphics: &mut G2d) {
         if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
-            let parent_bounds = parent.layout.bounds(solver);
             let bounds = self.layout.bounds(solver);
-
-            let context = util::crop_context(context, parent_bounds);
-            draw_fn(drawable.as_ref(), parent_bounds, bounds, resources, context, graphics);
+            let context = util::crop_context(context, crop_to);
+            draw_fn(drawable.as_ref(), crop_to, bounds, resources, context, graphics);
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {

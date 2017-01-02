@@ -55,7 +55,7 @@ fn main() {
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
     let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
     
-    let (scroll_widget, image_widget) = {
+    let (scroll_widget, rect_container_widget, rect_tl_widget, rect_tr_widget, rect_bl_widget, rect_br_widget) = {
         let ref root = ui.graph[ui.root_index];
 
         let mut scroll_widget = Widget::new();
@@ -69,20 +69,45 @@ fn main() {
         scroll_widget.layout.scrollable = true;
         scroll_widget.event_handlers.push(Box::new(ScrollHandler::new()));
 
-        let mut image_drawable = ImageDrawable::new(image_id);
+        let mut rect_container_widget = Widget::new();
+        rect_container_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));
+        rect_container_widget.layout.dimensions(Dimensions { width: 400.0, height: 400.0});
 
-        let image_dims = image_drawable.measure_image(&ui.resources);
-        let mut image_widget = Widget::new();
-        image_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));
-        image_widget.set_drawable(widget::image::draw_image, Box::new(image_drawable));
-        image_widget.layout.width(image_dims.width * 2.0);
-        image_widget.layout.height(image_dims.height * 5.0);
-        (scroll_widget, image_widget)
+        let mut rect_tl_widget = Widget::new();
+        rect_tl_widget.set_drawable(widget::primitives::draw_rect, Box::new(RectDrawable { background: [1.0, 0.0, 0.0, 1.0]}));
+        rect_tl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+        rect_tl_widget.layout.align_top(&rect_container_widget.layout);
+        rect_tl_widget.layout.align_left(&rect_container_widget.layout);
+
+        let mut rect_tr_widget = Widget::new();
+        rect_tr_widget.set_drawable(widget::primitives::draw_rect, Box::new(RectDrawable { background: [0.0, 1.0, 0.0, 1.0]}));
+        rect_tr_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+        rect_tr_widget.layout.align_top(&rect_container_widget.layout);
+        rect_tr_widget.layout.align_right(&rect_container_widget.layout);
+
+        let mut rect_bl_widget = Widget::new();
+        rect_bl_widget.set_drawable(widget::primitives::draw_rect, Box::new(RectDrawable { background: [0.0, 0.0, 1.0, 1.0]}));
+        rect_bl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+        rect_bl_widget.layout.align_bottom(&rect_container_widget.layout);
+        rect_bl_widget.layout.align_left(&rect_container_widget.layout);
+
+        let mut rect_br_widget = Widget::new();
+        rect_br_widget.set_drawable(widget::primitives::draw_rect, Box::new(RectDrawable { background: [1.0, 0.0, 1.0, 1.0]}));
+        rect_br_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+        rect_br_widget.layout.align_bottom(&rect_container_widget.layout);
+        rect_br_widget.layout.align_right(&rect_container_widget.layout);
+
+
+        (scroll_widget, rect_container_widget, rect_tl_widget, rect_tr_widget, rect_bl_widget, rect_br_widget)
     };
 
     let root_index = ui.root_index;
     let scroll_index = ui.add_widget(root_index, scroll_widget);
-    ui.add_widget(scroll_index, image_widget);
+    let rect_container_index = ui.add_widget(scroll_index, rect_container_widget);
+    ui.add_widget(rect_container_index, rect_tl_widget);
+    ui.add_widget(rect_container_index, rect_tr_widget);
+    ui.add_widget(rect_container_index, rect_bl_widget);
+    ui.add_widget(rect_container_index, rect_br_widget);
 
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
