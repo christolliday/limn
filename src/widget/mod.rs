@@ -49,6 +49,9 @@ impl Widget {
         self.draw_fn = Some(draw_fn);
         self.drawable = Some(drawable);
     }
+    pub fn set_mouse_over_fn(&mut self, mouse_over_fn: fn(Point, Rectangle) -> bool) {
+        self.mouse_over_fn = mouse_over_fn;
+    }
     pub fn print(&self, solver: &mut Solver) {
         println!("{:?}", self.layout.bounds(solver));
     }

@@ -11,11 +11,13 @@ extern crate matches;
 
 use limn::ui::*;
 use limn::util::*;
+use limn::util;
 use limn::widget::text::*;
 
 use limn::widget::{self, Widget, EventHandler};
 use limn::widget::image::ImageDrawable;
 use limn::widget::primitives::{RectDrawable, EllipseDrawable};
+use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 
 use backend::{Window, WindowEvents, OpenGL};
 use input::{ResizeEvent, MouseCursorEvent, Event, Input};
@@ -49,21 +51,24 @@ fn main() {
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
     let image_id = ui.resources.images.insert_from_file(&mut window.context.factory, image_path);
 
-    let (box1, box2, box3, text_widget, image_widget) = {
+    let (box_widget, ellipse_widget, inner_ellipse_widget, text_widget, image_widget) = {
         
         let ref root = ui.graph[ui.root_index];
 
-        let circle2 = EllipseDrawable { background: [1.0, 1.0, 1.0, 1.0] };
-        let mut box3 = Widget::new();
-        box3.set_drawable(widget::primitives::draw_ellipse, Box::new(circle2));
+        let mut inner_ellipse_widget = Widget::new();
+        inner_ellipse_widget.set_drawable(widget::primitives::draw_ellipse, Box::new(EllipseDrawable { background: [1.0, 1.0, 1.0, 1.0] }));
 
         let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
-        let mut box1 = Widget::new();
-        box1.set_drawable(widget::primitives::draw_rect, Box::new(rect));
+        let mut box_widget = Widget::new();
+        box_widget.set_drawable(widget::primitives::draw_rect, Box::new(rect));
 
         let circle = EllipseDrawable { background: [1.0, 0.0, 1.0, 1.0] };
-        let mut box2 = Widget::new();
-        box2.set_drawable(widget::primitives::draw_ellipse, Box::new(circle));
+        let mut ellipse_widget = Widget::new();
+        ellipse_widget.set_drawable(widget::primitives::draw_ellipse, Box::new(circle));
+        ellipse_widget.set_mouse_over_fn(util::mouse_inside_ellipse);
+        ellipse_widget.event_handlers.push(Box::new(ButtonEventHandler::new()));
+        ellipse_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
+        ellipse_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
 
         let text_drawable = TextDrawable { text: "HELLO".to_owned(), font_id: font_id, font_size: 40.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
         let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
@@ -71,24 +76,21 @@ fn main() {
         text_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
         let text_constraints = [text_widget.layout.top | EQ(REQUIRED) | 100.0,
                                 text_widget.layout.left | EQ(REQUIRED) | 100.0];
-        text_widget.layout.width(text_dims.width);
-        text_widget.layout.height(text_dims.height);
+        text_widget.layout.dimensions(text_dims);
         text_widget.layout.add_constraints(&text_constraints);
 
-        let box1_constraints = [box1.layout.top | EQ(REQUIRED) | 0.0,
-                                box1.layout.left | EQ(REQUIRED) | 0.0,
-                                box1.layout.left | LE(REQUIRED) | box1.layout.right];
-        box1.layout.width(50.0);
-        box1.layout.height(100.0);
-        box1.layout.add_constraints(&box1_constraints);
+        let box_constraints = [box_widget.layout.top | EQ(REQUIRED) | 0.0,
+                               box_widget.layout.left | EQ(REQUIRED) | 0.0,
+                               box_widget.layout.left | LE(REQUIRED) | box_widget.layout.right];
+        box_widget.layout.dimensions(Dimensions { width: 50.0, height: 100.0 });
+        box_widget.layout.add_constraints(&box_constraints);
 
-        let box2_constraints = [box2.layout.bottom | EQ(REQUIRED) | root.layout.bottom, // bottom align
-                                box2.layout.right | EQ(REQUIRED) | root.layout.right, // right align
-                                box2.layout.left | GE(REQUIRED) | box1.layout.right, // no overlap
-                                box2.layout.left | LE(REQUIRED) | box2.layout.right];
-        box2.layout.width(100.0);
-        box2.layout.height(100.0);
-        box2.layout.add_constraints(&box2_constraints);
+        let ellipse_constraints = [ellipse_widget.layout.bottom | EQ(REQUIRED) | root.layout.bottom, // bottom align
+                                   ellipse_widget.layout.right | EQ(REQUIRED) | root.layout.right, // right align
+                                   ellipse_widget.layout.left | GE(REQUIRED) | box_widget.layout.right,]; // no overlap
+
+        ellipse_widget.layout.dimensions(Dimensions { width: 100.0, height: 100.0 });
+        ellipse_widget.layout.add_constraints(&ellipse_constraints);
 
         let image_drawable = ImageDrawable::new(image_id);
         let image_dims = image_drawable.measure_image(&ui.resources);
@@ -98,13 +100,13 @@ fn main() {
         image_widget.layout.height(image_dims.height);
         image_widget.layout.center(&root.layout);
 
-        (box1, box2, box3, text_widget, image_widget)
+        (box_widget, ellipse_widget, inner_ellipse_widget, text_widget, image_widget)
     };
 
     let root_index = ui.root_index;
-    let box1_index = ui.add_widget(root_index, box1);
-    ui.add_widget(root_index, box2);
-    ui.add_widget(box1_index, box3);
+    let box_index = ui.add_widget(root_index, box_widget);
+    ui.add_widget(root_index, ellipse_widget);
+    ui.add_widget(box_index, inner_ellipse_widget);
     ui.add_widget(root_index, text_widget);
     ui.add_widget(root_index, image_widget);
 

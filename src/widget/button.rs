@@ -3,7 +3,7 @@ use super::super::event;
 use event::Event;
 use input::{EventId};
 use std::any::Any;
-use super::primitives::RectDrawable;
+use super::primitives::{RectDrawable, EllipseDrawable};
 use super::text::TextDrawable;
 use super::layout::WidgetLayout;
 
@@ -44,6 +44,9 @@ impl EventHandler for ButtonOnHandler {
         if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
             drawable.background = [0.0, 0.0, 0.0, 1.0];
         }
+        if let Some(ref mut drawable) = state.downcast_mut::<EllipseDrawable>() {
+            drawable.background = [0.0, 0.0, 0.0, 1.0];
+        }
         if let Some(ref mut drawable) = state.downcast_mut::<TextDrawable>() {
             drawable.text = "ON".to_owned();
         }
@@ -57,6 +60,9 @@ impl EventHandler for ButtonOffHandler {
     }
     fn handle_event(&mut self, event: Event, state: &mut Any, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
         if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
+            drawable.background = [1.0, 0.0, 0.0, 1.0];
+        }
+        if let Some(ref mut drawable) = state.downcast_mut::<EllipseDrawable>() {
             drawable.background = [1.0, 0.0, 0.0, 1.0];
         }
         if let Some(ref mut drawable) = state.downcast_mut::<TextDrawable>() {
