@@ -73,20 +73,12 @@ impl WidgetLayout {
             }
         }
     }
-    pub fn add_child(&self, child_layout: &mut WidgetLayout, solver: &mut Solver) {
-        child_layout.update_solver(solver);
+    pub fn add_child(&self, child_layout: &mut WidgetLayout) {
         if self.scrollable {
-            let child_bounds = child_layout.bounds(solver);
-            let parent_bounds = self.bounds(solver);
-            solver.add_edit_variable(child_layout.left, STRONG).unwrap();
-            solver.add_edit_variable(child_layout.top, STRONG).unwrap();
-            solver.suggest_value(child_layout.left, parent_bounds.left);
-            solver.suggest_value(child_layout.top, parent_bounds.top);
             child_layout.scroll_inside(self);
         } else {
             child_layout.bound_by(self);
         }
-        child_layout.update_solver(solver);
     }
     pub fn add_constraint(&mut self, constraint: Constraint) {
         self.constraints.push(constraint);

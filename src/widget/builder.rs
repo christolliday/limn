@@ -51,7 +51,12 @@ impl WidgetBuilder {
     pub fn debug_color(&mut self, color: Color) {
         self.debug_color = color;
     }
-    pub fn create(self, ui: &mut Ui, parent_index: NodeIndex) -> NodeIndex {
+    pub fn add_child(&mut self, mut widget: Box<WidgetBuilder>) {
+        self.layout.add_child(&mut widget.layout);
+        self.children.push(widget);
+    }
+
+    pub fn create(self, ui: &mut Ui, parent_index: Option<NodeIndex>) -> NodeIndex {
         let mut widget = Widget::new();
 
         if let (Some(draw_fn), Some(drawable)) = (self.draw_fn, self.drawable) {
@@ -60,10 +65,11 @@ impl WidgetBuilder {
         widget.set_mouse_over_fn(self.mouse_over_fn);
         widget.event_handlers = self.event_handlers;
         widget.layout = self.layout;
+        widget.layout.update_solver(&mut ui.solver);
 
         let widget_index = ui.add_widget(parent_index, widget);
         for child in self.children {
-            let child_index = child.create(ui, widget_index);
+            child.create(ui, Some(widget_index));
         }
         widget_index
     }

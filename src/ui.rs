@@ -31,7 +31,7 @@ use resources::image::Texture;
 
 use std::f64;
 
-const DEBUG_BOUNDS: bool = true;
+const DEBUG_BOUNDS: bool = false;
 
 pub struct Resources {
     pub glyph_cache: GlyphCache,
@@ -62,7 +62,6 @@ impl InputState {
 pub struct Ui {
     pub graph: Graph<Widget, ()>,
     pub root_index: NodeIndex,
-    constraints: Vec<Constraint>,
     pub solver: Solver,
     pub resources: Resources,
     pub input_state: InputState,
@@ -70,20 +69,18 @@ pub struct Ui {
 impl Ui {
     pub fn new(window: &mut Window, window_dims: Dimensions) -> Self {
         let root = Widget::new();
-        let mut constraints = Vec::new();
         let mut solver = Solver::new();
 
         let mut graph = Graph::<Widget, ()>::new();
         solver.add_edit_variable(root.layout.right, STRONG).unwrap();
         solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
+        let mut constraints = Vec::new();
         constraints.push(root.layout.left | EQ(STRONG) | 0.0);
         constraints.push(root.layout.top | EQ(STRONG) | 0.0);
         solver.add_constraints(&constraints);
         let root_index = graph.add_node(root);
 
-        let glyph_cache = GlyphCache::new(&mut window.context.factory,
-                                          window_dims.width as u32,
-                                          window_dims.height as u32);
+        let glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
 
         let resources = Resources::new(glyph_cache);
         let input_state = InputState::new();
@@ -91,7 +88,6 @@ impl Ui {
             graph: graph,
             root_index: root_index,
             solver: solver,
-            constraints: constraints,
             resources: resources,
             input_state: input_state,
         };
@@ -133,21 +129,15 @@ impl Ui {
             let mut dfs = Dfs::new(&self.graph, self.root_index);
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
-                draw_rect_outline(widget.layout.bounds(&mut self.solver),
-                                  widget.debug_color,
-                                  c,
-                                  g);
+                draw_rect_outline(widget.layout.bounds(&mut self.solver), widget.debug_color, c, g);
             }
         }
     }
-    pub fn add_widget(&mut self, parent_index: NodeIndex, child: Widget) -> NodeIndex {
+    pub fn add_widget(&mut self, parent_index: Option<NodeIndex>, child: Widget) -> NodeIndex {
         let child_index = self.graph.add_node(child);
-        self.graph.add_edge(parent_index, child_index, ());
-
-        let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
-
-        parent.layout.add_child(&mut child.layout, &mut self.solver);
-
+        if let Some(parent_index) = parent_index {
+            self.graph.add_edge(parent_index, child_index, ());
+        }
         child_index
     }
     pub fn handle_event(&mut self, event: input::Event) {

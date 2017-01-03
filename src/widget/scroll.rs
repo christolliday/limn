@@ -6,6 +6,7 @@ use input::{EventId, MouseScrollEvent};
 use std::any::Any;
 use super::super::event;
 use cassowary::{Solver, Constraint};
+use cassowary::strength::*;
 use util::*;
 
 pub struct ScrollHandler {
@@ -52,6 +53,12 @@ impl EventHandler for WidgetScrollHandler {
                     self.offset = self.offset + scroll * 13.0;
                     self.offset.x = f64::min(0.0, f64::max(parent_bounds.width - widget_bounds.width, self.offset.x));
                     self.offset.y = f64::min(0.0, f64::max(parent_bounds.height - widget_bounds.height, self.offset.y));
+                    if !solver.has_edit_variable(&layout.left) {
+                        solver.add_edit_variable(layout.left, STRONG);
+                    }
+                    if !solver.has_edit_variable(&layout.top) {
+                        solver.add_edit_variable(layout.top, STRONG);
+                    }
                     solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
                     solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
                 }
