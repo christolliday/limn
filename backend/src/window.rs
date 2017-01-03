@@ -71,10 +71,9 @@
 //! https://github.com/PistonDevelopers/piston/issues/1014
 
 extern crate window as pistoncore_window;
-extern crate glutin_window;
 
 use input::{Event, GenericEvent, AfterRenderEvent};
-use self::glutin_window::GlutinWindow;
+use super::glutin_window::GlutinWindow;
 use self::pistoncore_window::Window as BasicWindow;
 use std::time::Duration;
 use super::gfx::{GfxContext, G2d};
@@ -83,7 +82,6 @@ use super::shader_version::OpenGL;
 pub use super::events::WindowEvents;
 pub use self::pistoncore_window::{AdvancedWindow, Position, Size, OpenGLWindow, 
                                   WindowSettings, BuildFromWindowSettings};
-//pub use super::gfx::draw;
 use graphics::Viewport;
 
 pub use super::graphics::Context;
