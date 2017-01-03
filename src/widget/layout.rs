@@ -114,6 +114,12 @@ impl WidgetLayout {
     pub fn height_strength(&mut self, height: Scalar, strength: f64) {
         self.constraints.push(self.bottom - self.top | EQ(strength) | height)
     }
+    pub fn pad(&mut self, distance: Scalar, outer_layout: &WidgetLayout) {
+        self.constraints.push(self.left - outer_layout.left | GE(STRONG) | distance);
+        self.constraints.push(self.top - outer_layout.top | GE(STRONG) | distance);
+        self.constraints.push(outer_layout.right - self.right | GE(STRONG) | distance);
+        self.constraints.push(outer_layout.bottom - self.bottom | GE(STRONG) | distance);
+    }
     pub fn center(&mut self, layout: &WidgetLayout) {
         self.center_horizontal(layout);
         self.center_vertical(layout);

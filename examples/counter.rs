@@ -51,11 +51,12 @@ fn main() {
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
     
     let mut root_widget = WidgetBuilder::new();
-    {
-        let ref root = ui.graph[ui.root_index];
-        root_widget.layout.match_layout(&root.layout);
-    }
+    root_widget.layout.match_layout(&ui.get_root().layout);
     let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget.layout);
+    let mut left_spacer = WidgetBuilder::new();
+    left_spacer.layout.width(50.0);
+    linear_layout.add_widget(&mut left_spacer.layout);
+    root_widget.add_child(Box::new(left_spacer));
 
     let text_drawable = TextDrawable { text: "0".to_owned(), font_id: font_id, font_size: 20.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
     let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
@@ -79,6 +80,7 @@ fn main() {
     button_widget.debug_color([1.0, 1.0, 0.0, 1.0]);
     button_widget.layout.dimensions(Dimensions { width: 100.0, height: 50.0 });
     button_widget.layout.center(&button_container.layout);
+    button_widget.layout.pad(50.0, &button_container.layout);
 
     let button_text_drawable = TextDrawable { text: "Count".to_owned(), font_id: font_id, font_size: 20.0, text_color: [0.0,0.0,0.0,1.0], background_color: [0.0, 0.0, 0.0, 0.0] };
     let button_text_dims = button_text_drawable.measure_dims_no_wrap(&ui.resources);
@@ -96,12 +98,11 @@ fn main() {
     let root_index = ui.root_index;
     root_widget.create(ui, Some(root_index));
 
-
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
         window.handle_event(&event);
         if let Some(window_dims) = event.resize_args() {
-            ui.resize_window(window_dims.into());
+            ui.window_resized(window_dims.into());
         }
         ui.handle_event(event.clone());
         window.draw_2d(&event, |c, g| {

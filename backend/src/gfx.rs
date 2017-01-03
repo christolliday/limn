@@ -6,6 +6,7 @@ use shader_version::OpenGL;
 use gfx_graphics::{Gfx2d, GfxGraphics};
 use gfx_core::factory::Typed;
 use self::gfx::Device;
+use self::gfx::format::{DepthStencil, Format, Formatted, Srgba8};
 
 use pistoncore_window::{OpenGLWindow, Size};
 
@@ -46,15 +47,10 @@ fn create_main_targets(dim: gfx::tex::Dimensions) ->
     (gfx::handle::RenderTargetView<gfx_device_gl::Resources, gfx::format::Srgba8>,
      gfx::handle::DepthStencilView<gfx_device_gl::Resources, gfx::format::DepthStencil>)
  {
-    use gfx_core::factory::Typed;
-    use self::gfx::format::{DepthStencil, Format, Formatted, Srgba8};
-
     let color_format: Format = <Srgba8 as Formatted>::get_format();
     let depth_format: Format = <DepthStencil as Formatted>::get_format();
     let (output_color, output_stencil) =
-        gfx_device_gl::create_main_targets_raw(dim,
-                                               color_format.0,
-                                               depth_format.0);
+        gfx_device_gl::create_main_targets_raw(dim, color_format.0, depth_format.0);
     let output_color = Typed::new(output_color);
     let output_stencil = Typed::new(output_stencil);
     (output_color, output_stencil)
@@ -69,8 +65,7 @@ impl GfxContext {
         let draw_size = window.draw_size();
         let (output_color, output_stencil) = {
             let aa = samples as gfx::tex::NumSamples;
-            let dim = (draw_size.width as u16, draw_size.height as u16,
-                       1, aa.into());
+            let dim = (draw_size.width as u16, draw_size.height as u16, 1, aa.into());
             create_main_targets(dim)
         };
 

@@ -91,10 +91,13 @@ impl Ui {
             resources: resources,
             input_state: input_state,
         };
-        ui.resize_window(window_dims);
+        ui.window_resized(window_dims);
         ui
     }
-    pub fn resize_window(&mut self, window_dims: Dimensions) {
+    pub fn get_root(&mut self) -> &Widget {
+        &self.graph[self.root_index]
+    }
+    pub fn window_resized(&mut self, window_dims: Dimensions) {
         let ref root = self.graph[self.root_index];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
