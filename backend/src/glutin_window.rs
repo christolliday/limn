@@ -58,6 +58,7 @@ fn builder_from_settings(settings: &WindowSettings) -> glutin::WindowBuilder {
     let (major, minor) = opengl.get_major_minor();
     let size = settings.get_size();
     let mut builder = glutin::WindowBuilder::new()
+        .with_min_dimensions(size.width, size.height)
         .with_dimensions(size.width, size.height)
         .with_decorations(settings.get_decorated())
         .with_multitouch()
