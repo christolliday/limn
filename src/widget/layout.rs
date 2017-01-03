@@ -35,10 +35,6 @@ impl<'a> LinearLayout<'a> {
         let constraint = LinearLayout::beginning(self.orientation, &widget.layout) | GE(STRONG) | self.end;
         self.end = LinearLayout::ending(self.orientation, &widget.layout);
         widget.layout.add_constraint(constraint);
-        match self.orientation {
-            Orientation::Horizontal => widget.layout.match_height(self.parent),
-            Orientation::Vertical => widget.layout.match_width(self.parent),
-        }
     }
 }
 
@@ -112,9 +108,14 @@ impl WidgetLayout {
         self.constraints.push(self.bottom - self.top | EQ(strength) | height)
     }
     pub fn center(&mut self, layout: &WidgetLayout) {
-        let constraints = [self.left - layout.left | EQ(STRONG) | layout.right - self.right,
-                           self.top - layout.top | EQ(STRONG) | layout.bottom - self.bottom];
-        self.add_constraints(&constraints);
+        self.center_horizontal(layout);
+        self.center_vertical(layout);
+    }
+    pub fn center_horizontal(&mut self, layout: &WidgetLayout) {
+        self.constraints.push(self.left - layout.left | EQ(STRONG) | layout.right - self.right);
+    }
+    pub fn center_vertical(&mut self, layout: &WidgetLayout) {
+        self.constraints.push(self.top - layout.top | EQ(STRONG) | layout.bottom - self.bottom);
     }
     pub fn align_top(&mut self, layout: &WidgetLayout) {
         self.constraints.push(self.top | EQ(STRONG) | layout.top);

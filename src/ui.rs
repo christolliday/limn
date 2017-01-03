@@ -134,7 +134,7 @@ impl Ui {
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
                 draw_rect_outline(widget.layout.bounds(&mut self.solver),
-                                  [0.0, 1.0, 0.0, 1.0],
+                                  widget.debug_color,
                                   c,
                                   g);
             }

@@ -21,7 +21,8 @@ impl EventHandler for ButtonEventHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_PRESS
     }
-    fn handle_event(&mut self, event: Event, state: &mut Any, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+        let state = state.unwrap();
         if let Event::Input(event) = event {
             self.on = !self.on;
             if self.on {
@@ -40,7 +41,8 @@ impl EventHandler for ButtonOnHandler {
     fn event_id(&self) -> EventId {
         event::BUTTON_ENABLED
     }
-    fn handle_event(&mut self, event: Event, state: &mut Any, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+        let state = state.unwrap();
         if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
             drawable.background = [0.0, 0.0, 0.0, 1.0];
         }
@@ -58,7 +60,8 @@ impl EventHandler for ButtonOffHandler {
     fn event_id(&self) -> EventId {
         event::BUTTON_DISABLED
     }
-    fn handle_event(&mut self, event: Event, state: &mut Any, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+        let state = state.unwrap();
         if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
             drawable.background = [1.0, 0.0, 0.0, 1.0];
         }

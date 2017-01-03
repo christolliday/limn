@@ -7,6 +7,7 @@ pub mod scroll;
 
 use backend::gfx::G2d;
 use graphics::Context;
+use graphics::types::Color;
 
 use event::Event;
 use input::EventId;
@@ -23,7 +24,7 @@ use std::any::Any;
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, Event, &mut Any, &mut WidgetLayout, &WidgetLayout, &mut Solver) -> Option<Event>;
+    fn handle_event(&mut self, Event, Option<&mut Any>, &mut WidgetLayout, &WidgetLayout, &mut Solver) -> Option<Event>;
 }
 
 pub struct Widget {
@@ -32,6 +33,7 @@ pub struct Widget {
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
     pub event_handlers: Vec<Box<EventHandler>>,
+    pub debug_color: Color,
 }
 
 use input::{Input, Motion};
@@ -43,6 +45,7 @@ impl Widget {
             mouse_over_fn: point_inside_rect,
             layout: WidgetLayout::new(),
             event_handlers: Vec::new(),
+            debug_color: [0.0, 1.0, 0.0, 1.0],
         }
     }
     pub fn set_drawable(&mut self, draw_fn: fn(&Any, Rectangle, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) {
@@ -52,8 +55,8 @@ impl Widget {
     pub fn set_mouse_over_fn(&mut self, mouse_over_fn: fn(Point, Rectangle) -> bool) {
         self.mouse_over_fn = mouse_over_fn;
     }
-    pub fn print(&self, solver: &mut Solver) {
-        println!("{:?}", self.layout.bounds(solver));
+    pub fn debug_color(&mut self, color: Color) {
+        self.debug_color = color;
     }
     pub fn draw(&self, crop_to: Rectangle, resources: &mut Resources, solver: &mut Solver, context: Context, graphics: &mut G2d) {
         if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
@@ -69,14 +72,7 @@ impl Widget {
     pub fn trigger_event(&mut self, id: EventId, event: Event, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
         let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
 
-        let any = &mut "Any";
-        let drawable = {
-            if let Some(ref mut drawable) = self.drawable {
-                drawable.as_mut()
-            } else {
-                any
-            }
-        };
+        let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
         event_handler.handle_event(event, drawable, &mut self.layout, parent_layout, solver)
     }
     pub fn add_widget(&self, widget: &mut Widget, solver: &mut Solver) {
