@@ -17,6 +17,7 @@ use cassowary::strength::*;
 use graphics::Context;
 use super::widget::*;
 use super::widget;
+use widget::builder::WidgetBuilder;
 use super::util::*;
 use super::util;
 use super::event;
@@ -38,7 +39,7 @@ pub struct Resources {
     pub images: resources::Map<Texture>,
 }
 impl Resources {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let fonts = resources::Map::new();
         let images = resources::Map::new();
         Resources {
@@ -59,42 +60,40 @@ impl InputState {
 
 pub struct Ui {
     pub graph: Graph<Widget, ()>,
-    pub root_index: NodeIndex,
+    pub root_index: Option<NodeIndex>,
     pub solver: Solver,
-    pub resources: Resources,
     pub input_state: InputState,
 }
 impl Ui {
-    pub fn new(window: &mut Window, window_dims: Dimensions) -> Self {
-        let root = Widget::new();
+    pub fn new() -> Self {
         let mut solver = Solver::new();
-
         let mut graph = Graph::<Widget, ()>::new();
-        solver.add_edit_variable(root.layout.right, STRONG).unwrap();
-        solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
-        let mut constraints = Vec::new();
-        constraints.push(root.layout.left | EQ(REQUIRED) | 0.0);
-        constraints.push(root.layout.top | EQ(REQUIRED) | 0.0);
-        solver.add_constraints(&constraints);
-        let root_index = graph.add_node(root);
-
-        let resources = Resources::new();
         let input_state = InputState::new();
         let mut ui = Ui {
             graph: graph,
-            root_index: root_index,
+            root_index: None,
             solver: solver,
-            resources: resources,
             input_state: input_state,
         };
-        ui.window_resized(window, window_dims);
         ui
     }
+    pub fn set_root(&mut self, root_widget: WidgetBuilder) {
+        self.root_index = Some(root_widget.create(self, None));
+        let ref mut root = &mut self.graph[self.root_index.unwrap()];
+        self.solver.add_edit_variable(root.layout.right, STRONG).unwrap();
+        self.solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
+        root.layout.top_left(Point { x: 0.0, y: 0.0 });
+        root.layout.update_solver(&mut self.solver);
+    }
     pub fn get_root(&mut self) -> &Widget {
-        &self.graph[self.root_index]
+        &self.graph[self.root_index.unwrap()]
+    }
+    pub fn get_root_dims(&mut self) -> Dimensions {
+        let ref mut root = &mut self.graph[self.root_index.unwrap()];
+        root.layout.get_dims(&mut self.solver)
     }
     pub fn window_resized(&mut self, window: &mut Window, window_dims: Dimensions) {
-        let ref root = self.graph[self.root_index];
+        let ref root = self.graph[self.root_index.unwrap()];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
 
@@ -113,27 +112,27 @@ impl Ui {
         self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
-    pub fn draw_node(&mut self, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d, node_index: NodeIndex, crop_to: Rectangle) {
+    pub fn draw_node(&mut self, resources: &Resources, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d, node_index: NodeIndex, crop_to: Rectangle) {
 
         let crop_to = {
             let ref widget = self.graph[node_index];
-            widget.draw(crop_to, &self.resources, &mut self.solver, glyph_cache, context, graphics);
+            widget.draw(crop_to, resources, &mut self.solver, glyph_cache, context, graphics);
 
             util::crop_rect(crop_to, widget.layout.bounds(&mut self.solver))
         };
 
         let children: Vec<NodeIndex> = self.children(node_index).collect();
         for child_index in children {
-            self.draw_node(glyph_cache, context, graphics, child_index, crop_to);
+            self.draw_node(resources, glyph_cache, context, graphics, child_index, crop_to);
         }
     }
-    pub fn draw(&mut self, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    pub fn draw(&mut self, resources: &Resources, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
 
-        let index = self.root_index.clone();
-        self.draw_node(glyph_cache, context, graphics, index, Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX });
+        let index = self.root_index.unwrap().clone();
+        self.draw_node(resources, glyph_cache, context, graphics, index, Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX });
 
         if DEBUG_BOUNDS {
-            let mut dfs = Dfs::new(&self.graph, self.root_index);
+            let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
                 draw_rect_outline(widget.layout.bounds(&mut self.solver), widget.debug_color, context, graphics);
@@ -159,7 +158,7 @@ impl Ui {
         let mut new_events = Vec::new();
         let id_registered = |widget: &Widget, id| { widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };
         
-        let mut dfs = Dfs::new(&self.graph, self.root_index);
+        let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
         while let Some(node_index) = dfs.next(&self.graph) {
             if let Some(parent_index) = self.parents(node_index).next() {
                 let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
@@ -175,7 +174,7 @@ impl Ui {
             }
         }
         for (node_index, event) in new_events {
-            let mut dfs = Dfs::new(&self.graph, self.root_index);
+            let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
             while let Some(node_index) = dfs.next(&self.graph) {
                 if let Some(parent_index) = self.parents(node_index).next() {
                     let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);

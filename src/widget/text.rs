@@ -59,7 +59,7 @@ pub fn draw_text(draw_args: DrawArgs) {
     graphics::Rectangle::new(state.background_color)
         .draw(bounds, &context.draw_state, context.transform, graphics);
 
-    let GlyphCache { texture: ref mut text_texture_cache,
+    let &mut GlyphCache { texture: ref mut text_texture_cache,
                      cache: ref mut glyph_cache,
                      ref mut vertex_data } = glyph_cache;
 

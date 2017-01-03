@@ -64,6 +64,10 @@ impl WidgetLayout {
             height: solver.get_value(self.bottom) - solver.get_value(self.top),
         }
     }
+    pub fn get_dims(&self, solver: &mut Solver) -> Dimensions {
+        let bounds = self.bounds(solver);
+        Dimensions { width: bounds.width, height: bounds.height }
+    }
     pub fn update_solver(&self, solver: &mut Solver) {
         let constraints = self.constraints.clone();
         for constraint in constraints {
@@ -112,6 +116,10 @@ impl WidgetLayout {
     }
     pub fn height_strength(&mut self, height: Scalar, strength: f64) {
         self.constraints.push(self.bottom - self.top | EQ(strength) | height)
+    }
+    pub fn top_left(&mut self, point: Point) {
+        self.constraints.push(self.top | EQ(REQUIRED) | point.x);
+        self.constraints.push(self.left | EQ(REQUIRED) | point.y);
     }
     pub fn pad(&mut self, distance: Scalar, outer_layout: &WidgetLayout) {
         self.constraints.push(self.left - outer_layout.left | GE(REQUIRED) | distance);
