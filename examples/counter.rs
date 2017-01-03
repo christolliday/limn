@@ -23,6 +23,8 @@ use limn::widget::layout::{LinearLayout, Orientation};
 
 use backend::{Window, WindowEvents, OpenGL};
 use input::{ResizeEvent, MouseCursorEvent, PressEvent, ReleaseEvent, Event, Input, EventId};
+use window::Window as PistonWindow;
+use backend::events::WindowEvent;
 
 use std::any::Any;
 
@@ -100,14 +102,24 @@ fn main() {
 
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
-        window.handle_event(&event);
-        if let Some(window_dims) = event.resize_args() {
-            ui.window_resized(window_dims.into());
+        match event {
+            WindowEvent::Input(event) => {
+                window.handle_event(&event);
+                if let Some(window_dims) = event.resize_args() {
+                    ui.window_resized(&mut window, window_dims.into());
+                }
+                ui.handle_event(event.clone());
+            },
+            WindowEvent::Render => {
+                window.draw_2d(|c, g| {
+                    graphics::clear([0.8, 0.8, 0.8, 1.0], g);
+                    ui.draw(c, g);
+                });
+                window.swap_buffers();
+                window.context.after_render();
+                let draw_size = window.draw_size();
+                window.context.check_resize(draw_size);
+            }
         }
-        ui.handle_event(event.clone());
-        window.draw_2d(&event, |c, g| {
-            graphics::clear([0.8, 0.8, 0.8, 1.0], g);
-            ui.draw(c, g);
-        });
     }
 }

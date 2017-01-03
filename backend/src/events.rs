@@ -10,8 +10,8 @@
 //! user input.
 
 
-#![deny(missing_docs)]
-#![deny(missing_copy_implementations)]
+//#![deny(missing_docs)]
+//#![deny(missing_copy_implementations)]
 
 extern crate window as pistoncore_window;
 
@@ -22,10 +22,9 @@ use input::{Event, Input, UpdateArgs, RenderArgs, AfterRenderArgs, IdleArgs};
 
 //use super::window::Window;
 
-enum State {
-    Rendered,
-    Updated,
-    Waiting,
+pub enum WindowEvent {
+    Render,
+    Input(Event),
 }
 
 /// An event loop iterator
@@ -35,8 +34,7 @@ enum State {
 /// unless the window back-end supports multi-thread event polling.*
 //#[derive(Copy, Clone)]
 pub struct WindowEvents {
-    state: State,
-    /// if true, an update should be triggered in time for the next frame,
+    /// if false, an update should be triggered in time for the next frame,
     /// either because an input event happened, or the UI is animating
     idle: bool,
     /// set externally to prevent the event loop from setting `idle` to
@@ -66,16 +64,6 @@ impl UpdateDuration for Duration {
 /// The default maximum frames per second.
 pub const DEFAULT_MAX_FPS: u64 = 60;
 
-fn render_args(window: &BasicWindow<Event=Input>, duration: f64) -> RenderArgs {
-    RenderArgs {
-        ext_dt: duration,
-        width: window.size().width,
-        height: window.size().height,
-        draw_width: window.draw_size().width,
-        draw_height: window.draw_size().height,
-    }
-}
-
 impl WindowEvents
 {
     /// Creates a new event iterator
@@ -83,7 +71,6 @@ impl WindowEvents
         let start = Instant::now();
         let frame_length = Duration::from_freq(max_fps);
         WindowEvents {
-            state: State::Waiting,
             idle: false,
             updating: false,
             last_frame_time: start,
@@ -106,57 +93,36 @@ impl WindowEvents
     ///
     /// While in the `Waiting` state, returns `Input` events up until `dt_frame` has passed, or if idle, waits indefinitely.
     /// Once `dt_frame` has elapsed, or no longer idle, returns in order, `Update`, `Render` and `AfterRender` then resumes `Waiting` state.
-    pub fn next(&mut self, window: &mut BasicWindow<Event=Input>) -> Option<Event>
+    pub fn next(&mut self, window: &mut BasicWindow<Event=Input>) -> Option<WindowEvent>
     {
         if window.should_close() { return None; }
 
-        match self.state {
-            State::Waiting => {
-                if self.idle {
-                    // Block and wait until an event is received.
-                    let event = window.wait_event();
-                    self.idle = false;
-                    Some(Event::Input(event))
-                } else {
-                    let current_time = Instant::now();
-                    if current_time < self.next_frame_time {
-                        // Wait for events until ready for next frame.
-                        let event = window.wait_event_timeout(self.next_frame_time - current_time);
-                        if let Some(e) = event {
-                            return Some(Event::Input(e));
-                        }
-                    }
-                    // Handle any pending input before updating.
-                    if let Some(e) = window.poll_event() {
-                        return Some(Event::Input(e));
-                    }
-                    self.state = State::Updated;
-                    let duration = (current_time - self.last_frame_time).as_secs_f64();
-                    Some(Event::Update(UpdateArgs{ dt: duration }))
+        if self.idle {
+            // Block and wait until an event is received.
+            let event = window.wait_event();
+            self.idle = false;
+            Some(WindowEvent::Input(Event::Input(event)))
+        } else {
+            let current_time = Instant::now();
+            if current_time < self.next_frame_time {
+                // Wait for events until ready for next frame.
+                let event = window.wait_event_timeout(self.next_frame_time - current_time);
+                if let Some(event) = event {
+                    return Some(WindowEvent::Input(Event::Input(event)));
                 }
-            },
-            State::Updated => {
-                // Update event just posted, send `Render` event (if window can be drawn to).
-                let size = window.size();
-                let duration = (Instant::now() - self.last_frame_time).as_secs_f64();
-                if size.width != 0 && size.height != 0 {
-                    self.state = State::Rendered;
-                    Some(Event::Render(render_args(window, duration)))
-                } else {
-                    self.state = State::Waiting;
-                    Some(Event::Idle(IdleArgs{ dt: duration }))
-                }
-            },
-            State::Rendered => {
-                // Just rendered, send `AfterRender`, initialize for next frame
-                // and resume `Waiting`
-                self.last_frame_time = Instant::now();
-                self.next_frame_time = self.last_frame_time + self.dt_frame;
-                self.state = State::Waiting;
-                self.idle = !self.updating;
-                self.updating = false;
-                Some(Event::AfterRender(AfterRenderArgs))
-            },
+            }
+            // Handle any pending input before updating.
+            if let Some(event) = window.poll_event() {
+                return Some(WindowEvent::Input(Event::Input(event)));
+            }
+
+            // Just rendered, send `AfterRender`, initialize for next frame
+            // and resume `Waiting`
+            self.last_frame_time = Instant::now();
+            self.next_frame_time = self.last_frame_time + self.dt_frame;
+            self.idle = !self.updating;
+            self.updating = false;
+            return Some(WindowEvent::Render);
         }
     }
 }

@@ -13,7 +13,6 @@ pub enum Orientation {
 pub struct LinearLayout {
     pub orientation: Orientation,
     pub end: Variable,
-    //pub parent: &'a WidgetLayout,
 }
 impl LinearLayout {
     pub fn new(orientation: Orientation, parent: &WidgetLayout) -> Self {
@@ -32,7 +31,7 @@ impl LinearLayout {
         }
     }
     pub fn add_widget(&mut self, widget_layout: &mut WidgetLayout) {
-        let constraint = LinearLayout::beginning(self.orientation, &widget_layout) | GE(STRONG) | self.end;
+        let constraint = LinearLayout::beginning(self.orientation, &widget_layout) | GE(REQUIRED) | self.end;
         self.end = LinearLayout::ending(self.orientation, &widget_layout);
         widget_layout.add_constraint(constraint);
     }
@@ -115,32 +114,32 @@ impl WidgetLayout {
         self.constraints.push(self.bottom - self.top | EQ(strength) | height)
     }
     pub fn pad(&mut self, distance: Scalar, outer_layout: &WidgetLayout) {
-        self.constraints.push(self.left - outer_layout.left | GE(STRONG) | distance);
-        self.constraints.push(self.top - outer_layout.top | GE(STRONG) | distance);
-        self.constraints.push(outer_layout.right - self.right | GE(STRONG) | distance);
-        self.constraints.push(outer_layout.bottom - self.bottom | GE(STRONG) | distance);
+        self.constraints.push(self.left - outer_layout.left | GE(REQUIRED) | distance);
+        self.constraints.push(self.top - outer_layout.top | GE(REQUIRED) | distance);
+        self.constraints.push(outer_layout.right - self.right | GE(REQUIRED) | distance);
+        self.constraints.push(outer_layout.bottom - self.bottom | GE(REQUIRED) | distance);
     }
     pub fn center(&mut self, layout: &WidgetLayout) {
         self.center_horizontal(layout);
         self.center_vertical(layout);
     }
     pub fn center_horizontal(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.left - layout.left | EQ(STRONG) | layout.right - self.right);
+        self.constraints.push(self.left - layout.left | EQ(REQUIRED) | layout.right - self.right);
     }
     pub fn center_vertical(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.top - layout.top | EQ(STRONG) | layout.bottom - self.bottom);
+        self.constraints.push(self.top - layout.top | EQ(REQUIRED) | layout.bottom - self.bottom);
     }
     pub fn align_top(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.top | EQ(STRONG) | layout.top);
+        self.constraints.push(self.top | EQ(REQUIRED) | layout.top);
     }
     pub fn align_bottom(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.bottom | EQ(STRONG) | layout.bottom);
+        self.constraints.push(self.bottom | EQ(REQUIRED) | layout.bottom);
     }
     pub fn align_left(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.left | EQ(STRONG) | layout.left);
+        self.constraints.push(self.left | EQ(REQUIRED) | layout.left);
     }
     pub fn align_right(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.right | EQ(STRONG) | layout.right);
+        self.constraints.push(self.right | EQ(REQUIRED) | layout.right);
     }
     pub fn bound_by(&mut self, layout: &WidgetLayout) {
         let constraints = [self.left | GE(REQUIRED) | layout.left,

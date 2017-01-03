@@ -14,6 +14,7 @@ use texture;
 use gfx_device_gl;
 use input::RenderArgs;
 use super::glyph::GlyphCache;
+use graphics::Viewport;
 
 pub use graphics::{Context, DrawState, Graphics, ImageSize, Transformed};
 pub use gfx_graphics::{GlyphError, Texture, TextureSettings, Flip};
@@ -83,14 +84,14 @@ impl GfxContext {
     }
 
     /// Renders 2D graphics.
-    pub fn draw_2d<F, U>(&mut self, f: F, args: RenderArgs) -> U where
+    pub fn draw_2d<F, U>(&mut self, f: F, viewport: Viewport) -> U where
         F: FnOnce(Context, &mut G2d) -> U
     {
         let res = self.g2d.draw(
             &mut self.encoder,
             &self.output_color,
             &self.output_stencil,
-            args.viewport(),
+            viewport,
             f
         );
         self.encoder.flush(&mut self.device);

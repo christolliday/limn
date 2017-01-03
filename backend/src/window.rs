@@ -84,6 +84,7 @@ pub use super::events::WindowEvents;
 pub use self::pistoncore_window::{AdvancedWindow, Position, Size, OpenGLWindow, 
                                   WindowSettings, BuildFromWindowSettings};
 //pub use super::gfx::draw;
+use graphics::Viewport;
 
 pub use super::graphics::Context;
 
@@ -124,20 +125,23 @@ impl<W> Window<W>
             context: context,
         }
     }
+    pub fn viewport(&self) -> Viewport {
+        Viewport {
+            rect: [0, 0, self.window.draw_size().width as i32, self.window.draw_size().height as i32],
+            window_size: [self.window.size().width, self.window.size().height],
+            draw_size: [self.window.draw_size().width, self.window.draw_size().height],
+        }
+    }
 
     /// Renders 2D graphics.
-    pub fn draw_2d<E, F, U>(&mut self, e: &E, f: F) -> Option<U> where
+    pub fn draw_2d<F, U>(&mut self, f: F) -> U where
         W: OpenGLWindow,
-        E: GenericEvent,
         F: FnOnce(Context, &mut G2d) -> U
     {
         self.window.make_current();
-        if let Some(args) = e.render_args() {
-            Some(self.context.draw_2d(f, args))
-        } else {
-            None
-        }
-    }
+        let viewport = self.viewport();
+        self.context.draw_2d(f, viewport)
+    }    
 
     /// Let window handle new event.
     pub fn handle_event(&mut self, event: &Event<W::Event>) {

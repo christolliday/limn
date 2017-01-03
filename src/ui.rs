@@ -30,6 +30,7 @@ use backend::window::Window;
 use resources::image::Texture;
 
 use std::f64;
+use std::cmp::max;
 
 const DEBUG_BOUNDS: bool = false;
 
@@ -75,8 +76,8 @@ impl Ui {
         solver.add_edit_variable(root.layout.right, STRONG).unwrap();
         solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
         let mut constraints = Vec::new();
-        constraints.push(root.layout.left | EQ(STRONG) | 0.0);
-        constraints.push(root.layout.top | EQ(STRONG) | 0.0);
+        constraints.push(root.layout.left | EQ(REQUIRED) | 0.0);
+        constraints.push(root.layout.top | EQ(REQUIRED) | 0.0);
         solver.add_constraints(&constraints);
         let root_index = graph.add_node(root);
 
@@ -91,16 +92,24 @@ impl Ui {
             resources: resources,
             input_state: input_state,
         };
-        ui.window_resized(window_dims);
+        ui.window_resized(window, window_dims);
         ui
     }
     pub fn get_root(&mut self) -> &Widget {
         &self.graph[self.root_index]
     }
-    pub fn window_resized(&mut self, window_dims: Dimensions) {
+    pub fn window_resized(&mut self, window: &mut Window, window_dims: Dimensions) {
         let ref root = self.graph[self.root_index];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
+
+        let root_bounds = root.layout.bounds(&mut self.solver);
+        //window.window.window.set_inner_size(f64::max(root_bounds.width, window_dims.width) as u32, f64::max(root_bounds.height, window_dims.height) as u32);
+        /*if root_bounds.width > window_dims.width {
+        }
+        if root_bounds.height > window_dims.height {
+        }*/
+        println!("{:?}", root.layout.bounds(&mut self.solver));
     }
     pub fn parents(&mut self, node_index: NodeIndex) -> Neighbors<()> {
         self.graph.neighbors_directed(node_index, Direction::Incoming)
