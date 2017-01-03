@@ -16,6 +16,7 @@ use limn::widget;
 use limn::event;
 
 use limn::widget::{Widget, EventHandler};
+use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
 use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 use limn::widget::layout::{LinearLayout, Orientation};
@@ -49,26 +50,29 @@ fn main() {
 
     let font_id = ui.resources.fonts.insert_from_file(font_path).unwrap();
     
-    let (text_widget, button_container, button_widget, button_text_widget) = {
+    let root_widget = {
         let ref root = ui.graph[ui.root_index];
+        let mut root_widget = WidgetBuilder::new();
+        root_widget.layout.match_layout(&root.layout);
 
-        let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root.layout);
+        let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget.layout);
 
         let text_drawable = TextDrawable { text: "0".to_owned(), font_id: font_id, font_size: 20.0, text_color: [0.0,0.0,0.0,1.0], background_color: [1.0,1.0,1.0,1.0] };
         let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
-        let mut text_widget = Widget::new();
+        let mut text_widget = WidgetBuilder::new();
         text_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
         //text_widget.layout.dimensions(text_dims);
         text_widget.layout.width(80.0);
         text_widget.layout.height(text_dims.height);
-        text_widget.layout.center_vertical(&root.layout);
-        linear_layout.add_widget(&mut text_widget);
+        text_widget.layout.center_vertical(&root_widget.layout);
+        linear_layout.add_widget(&mut text_widget.layout);
+        root_widget.children.push(Box::new(text_widget));
 
-        let mut button_container = Widget::new();
-        linear_layout.add_widget(&mut button_container);
+        let mut button_container = WidgetBuilder::new();
+        linear_layout.add_widget(&mut button_container.layout);
     
         let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
-        let mut button_widget = Widget::new();
+        let mut button_widget = WidgetBuilder::new();
         button_widget.set_drawable(widget::primitives::draw_rect, Box::new(rect));
         button_widget.event_handlers.push(Box::new(ButtonEventHandler::new()));
         button_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
@@ -79,20 +83,26 @@ fn main() {
 
         let button_text_drawable = TextDrawable { text: "Count".to_owned(), font_id: font_id, font_size: 20.0, text_color: [0.0,0.0,0.0,1.0], background_color: [0.0, 0.0, 0.0, 0.0] };
         let button_text_dims = button_text_drawable.measure_dims_no_wrap(&ui.resources);
-        let mut button_text_widget = Widget::new();
+        let mut button_text_widget = WidgetBuilder::new();
         button_text_widget.set_drawable(widget::text::draw_text, Box::new(button_text_drawable));
         button_text_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
         button_text_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&button_widget.layout);
-        (text_widget, button_container, button_widget, button_text_widget)
+
+        button_widget.children.push(Box::new(button_text_widget));
+        button_container.children.push(Box::new(button_widget));
+        root_widget.children.push(Box::new(button_container));
+        root_widget
     };
 
     let root_index = ui.root_index;
-    ui.add_widget(root_index, text_widget);
-    let button_container_index = ui.add_widget(root_index, button_container);
-    let button_index = ui.add_widget(button_container_index, button_widget);
-    ui.add_widget(button_index, button_text_widget);
+    //ui.add_widget(root_index, root_widget.create());
+    root_widget.create(ui, root_index);
+    //ui.graph.add_edge(root_index, root_widget.create(), ());
+    //let button_container_index = ui.add_widget(root_index, button_container);
+    //let button_index = ui.add_widget(button_container_index, button_widget);
+    //ui.add_widget(button_index, button_text_widget);
 
     //let ref root = ui.graph[ui.root_index];
 

@@ -10,14 +10,14 @@ pub enum Orientation {
     Horizontal,
     Vertical
 }
-pub struct LinearLayout<'a> {
+pub struct LinearLayout {
     pub orientation: Orientation,
     pub end: Variable,
-    pub parent: &'a WidgetLayout,
+    //pub parent: &'a WidgetLayout,
 }
-impl<'a> LinearLayout<'a> {
-    pub fn new(orientation: Orientation, parent: &'a WidgetLayout) -> Self {
-        LinearLayout { orientation: orientation, end: LinearLayout::beginning(orientation, parent), parent: parent }
+impl LinearLayout {
+    pub fn new(orientation: Orientation, parent: &WidgetLayout) -> Self {
+        LinearLayout { orientation: orientation, end: LinearLayout::beginning(orientation, parent) }//, parent: parent }
     }
     pub fn beginning(orientation: Orientation, layout: &WidgetLayout) -> Variable {
         match orientation {
@@ -31,10 +31,10 @@ impl<'a> LinearLayout<'a> {
             Orientation::Vertical => layout.bottom,
         }
     }
-    pub fn add_widget(&mut self, widget: &mut Widget) {
-        let constraint = LinearLayout::beginning(self.orientation, &widget.layout) | GE(STRONG) | self.end;
-        self.end = LinearLayout::ending(self.orientation, &widget.layout);
-        widget.layout.add_constraint(constraint);
+    pub fn add_widget(&mut self, widget_layout: &mut WidgetLayout) {
+        let constraint = LinearLayout::beginning(self.orientation, &widget_layout) | GE(STRONG) | self.end;
+        self.end = LinearLayout::ending(self.orientation, &widget_layout);
+        widget_layout.add_constraint(constraint);
     }
 }
 
@@ -72,6 +72,21 @@ impl WidgetLayout {
                 solver.add_constraint(constraint.clone());
             }
         }
+    }
+    pub fn add_child(&self, child_layout: &mut WidgetLayout, solver: &mut Solver) {
+        child_layout.update_solver(solver);
+        if self.scrollable {
+            let child_bounds = child_layout.bounds(solver);
+            let parent_bounds = self.bounds(solver);
+            solver.add_edit_variable(child_layout.left, STRONG).unwrap();
+            solver.add_edit_variable(child_layout.top, STRONG).unwrap();
+            solver.suggest_value(child_layout.left, parent_bounds.left);
+            solver.suggest_value(child_layout.top, parent_bounds.top);
+            child_layout.scroll_inside(self);
+        } else {
+            child_layout.bound_by(self);
+        }
+        child_layout.update_solver(solver);
     }
     pub fn add_constraint(&mut self, constraint: Constraint) {
         self.constraints.push(constraint);

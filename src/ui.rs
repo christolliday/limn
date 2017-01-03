@@ -146,9 +146,7 @@ impl Ui {
 
         let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
 
-        child.layout.update_solver(&mut self.solver);
-        parent.add_widget(child, &mut self.solver);
-        child.layout.update_solver(&mut self.solver);
+        parent.layout.add_child(&mut child.layout, &mut self.solver);
 
         child_index
     }

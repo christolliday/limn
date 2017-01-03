@@ -4,6 +4,7 @@ pub mod text;
 pub mod image;
 pub mod button;
 pub mod scroll;
+pub mod builder;
 
 use backend::gfx::G2d;
 use graphics::Context;
@@ -74,18 +75,5 @@ impl Widget {
 
         let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
         event_handler.handle_event(event, drawable, &mut self.layout, parent_layout, solver)
-    }
-    pub fn add_widget(&self, widget: &mut Widget, solver: &mut Solver) {
-        if self.layout.scrollable {
-            let child_bounds = widget.layout.bounds(solver);
-            let parent_bounds = self.layout.bounds(solver);
-            solver.add_edit_variable(widget.layout.left, STRONG).unwrap();
-            solver.add_edit_variable(widget.layout.top, STRONG).unwrap();
-            solver.suggest_value(widget.layout.left, parent_bounds.left);
-            solver.suggest_value(widget.layout.top, parent_bounds.top);
-            widget.layout.scroll_inside(&self.layout);
-        } else {
-            widget.layout.bound_by(&self.layout);
-        }
     }
 }
