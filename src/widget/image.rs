@@ -1,12 +1,13 @@
 use graphics;
-use super::super::util::*;
-use super::super::ui::Resources;
+use util::*;
+use ui::Resources;
 use backend::gfx::G2d;
 use backend::gfx::ImageSize;
 use graphics::Context;
 use graphics::Transformed;
 use resources::Id;
 use std::any::Any;
+use widget::DrawArgs;
 
 pub struct ImageDrawable {
     pub image_id: Id,
@@ -25,14 +26,9 @@ impl ImageDrawable {
     }
 }
 
-pub fn draw_image(state: &Any,
-                  parent_bounds: Rectangle,
-                  bounds: Rectangle,
-                  resources: &mut Resources,
-                  context: Context,
-                  graphics: &mut G2d) {
+pub fn draw_image(draw_args: DrawArgs) {
+    let ( state, bounds, parent_bounds, resources, glyph_cache, context, graphics ) = draw_args;
     let state: &ImageDrawable = state.downcast_ref().unwrap();
-    //let context = crop_context(context, parent_bounds);
 
     let img = resources.images.get(state.image_id).unwrap();
     let dims: Dimensions = img.get_size().into();

@@ -16,7 +16,6 @@ use cassowary::strength::*;
 
 use graphics::Context;
 use super::widget::*;
-use super::widget::primitives::EmptyDrawable;
 use super::widget;
 use super::util::*;
 use super::util;
@@ -35,18 +34,16 @@ use std::cmp::max;
 const DEBUG_BOUNDS: bool = false;
 
 pub struct Resources {
-    pub glyph_cache: GlyphCache,
     pub fonts: resources::Map<Font>,
     pub images: resources::Map<Texture>,
 }
 impl Resources {
-    fn new(glyph_cache: GlyphCache) -> Self {
+    fn new() -> Self {
         let fonts = resources::Map::new();
         let images = resources::Map::new();
         Resources {
             fonts: fonts,
             images: images,
-            glyph_cache: glyph_cache,
         }
     }
 }
@@ -81,9 +78,7 @@ impl Ui {
         solver.add_constraints(&constraints);
         let root_index = graph.add_node(root);
 
-        let glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
-
-        let resources = Resources::new(glyph_cache);
+        let resources = Resources::new();
         let input_state = InputState::new();
         let mut ui = Ui {
             graph: graph,
@@ -118,30 +113,30 @@ impl Ui {
         self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
-    pub fn draw_node(&mut self, c: Context, g: &mut G2d, node_index: NodeIndex, crop_to: Rectangle) {
+    pub fn draw_node(&mut self, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d, node_index: NodeIndex, crop_to: Rectangle) {
 
         let crop_to = {
             let ref widget = self.graph[node_index];
-            widget.draw(crop_to, &mut self.resources, &mut self.solver, c, g);
+            widget.draw(crop_to, &self.resources, &mut self.solver, glyph_cache, context, graphics);
 
             util::crop_rect(crop_to, widget.layout.bounds(&mut self.solver))
         };
 
         let children: Vec<NodeIndex> = self.children(node_index).collect();
         for child_index in children {
-            self.draw_node(c, g, child_index, crop_to);
+            self.draw_node(glyph_cache, context, graphics, child_index, crop_to);
         }
     }
-    pub fn draw(&mut self, c: Context, g: &mut G2d) {
+    pub fn draw(&mut self, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
 
         let index = self.root_index.clone();
-        self.draw_node(c, g, index, Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX });
+        self.draw_node(glyph_cache, context, graphics, index, Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX });
 
         if DEBUG_BOUNDS {
             let mut dfs = Dfs::new(&self.graph, self.root_index);
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
-                draw_rect_outline(widget.layout.bounds(&mut self.solver), widget.debug_color, c, g);
+                draw_rect_outline(widget.layout.bounds(&mut self.solver), widget.debug_color, context, graphics);
             }
         }
     }

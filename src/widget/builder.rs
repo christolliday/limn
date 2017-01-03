@@ -12,6 +12,7 @@ use petgraph::graph::NodeIndex;
 use ui::{Ui, Resources};
 use widget::layout::WidgetLayout;
 use widget::EventHandler;
+use widget::DrawArgs;
 
 use cassowary::Solver;
 use cassowary::strength::*;
@@ -19,7 +20,7 @@ use cassowary::strength::*;
 use std::any::Any;
 
 pub struct WidgetBuilder {
-    pub draw_fn: Option<fn(&Any, Rectangle, Rectangle, &mut Resources, Context, &mut G2d)>,
+    pub draw_fn: Option<fn(DrawArgs)>,
     pub drawable: Option<Box<Any>>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
@@ -41,7 +42,7 @@ impl WidgetBuilder {
             children: Vec::new(),
         }
     }
-    pub fn set_drawable(&mut self, draw_fn: fn(&Any, Rectangle, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) {
+    pub fn set_drawable(&mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) {
         self.draw_fn = Some(draw_fn);
         self.drawable = Some(drawable);
     }

@@ -2,9 +2,10 @@ use util::*;
 use graphics;
 use graphics::Context;
 use backend::glyph;
-use super::super::text::{self, Wrap};
-use super::super::resources;
-use super::super::ui::Resources;
+use text::{self, Wrap};
+use resources;
+use ui::Resources;
+use widget::DrawArgs;
 use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
 use backend::gfx::ImageSize;
@@ -50,12 +51,9 @@ impl TextDrawable {
     }
 }
 
-pub fn draw_text(state: &Any,
-                 parent_bounds: Rectangle,
-                 bounds: Rectangle,
-                 resources: &mut Resources,
-                 context: Context,
-                 graphics: &mut G2d) {
+pub fn draw_text(draw_args: DrawArgs) {
+
+    let ( state, bounds, parent_bounds, resources, glyph_cache, context, graphics ) = draw_args;
     let state: &TextDrawable = state.downcast_ref().unwrap();
 
     graphics::Rectangle::new(state.background_color)
@@ -63,7 +61,7 @@ pub fn draw_text(state: &Any,
 
     let GlyphCache { texture: ref mut text_texture_cache,
                      cache: ref mut glyph_cache,
-                     ref mut vertex_data } = resources.glyph_cache;
+                     ref mut vertex_data } = glyph_cache;
 
     let font = resources.fonts.get(state.font_id).unwrap();
     let line_wrap = Wrap::Character;

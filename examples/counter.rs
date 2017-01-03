@@ -21,6 +21,7 @@ use limn::widget::primitives::{RectDrawable};
 use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 use limn::widget::layout::{LinearLayout, Orientation};
 
+use backend::glyph::GlyphCache;
 use backend::{Window, WindowEvents, OpenGL};
 use input::{ResizeEvent, MouseCursorEvent, PressEvent, ReleaseEvent, Event, Input, EventId};
 use window::Window as PistonWindow;
@@ -100,6 +101,7 @@ fn main() {
     let root_index = ui.root_index;
     root_widget.create(ui, Some(root_index));
 
+    let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
         match event {
@@ -111,9 +113,9 @@ fn main() {
                 ui.handle_event(event.clone());
             },
             WindowEvent::Render => {
-                window.draw_2d(|c, g| {
-                    graphics::clear([0.8, 0.8, 0.8, 1.0], g);
-                    ui.draw(c, g);
+                window.draw_2d(|context, graphics| {
+                    graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
+                    ui.draw(&mut glyph_cache, context, graphics);
                 });
                 window.swap_buffers();
                 window.context.after_render();

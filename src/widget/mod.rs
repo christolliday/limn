@@ -7,6 +7,7 @@ pub mod scroll;
 pub mod builder;
 
 use backend::gfx::G2d;
+use backend::glyph::GlyphCache;
 use graphics::Context;
 use graphics::types::Color;
 
@@ -23,13 +24,15 @@ use cassowary::strength::*;
 
 use std::any::Any;
 
+pub type DrawArgs<'a, 'b> = (&'a Any, Rectangle, Rectangle, &'a Resources, &'a mut GlyphCache, Context, &'a mut G2d<'b>);
+
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
     fn handle_event(&mut self, Event, Option<&mut Any>, &mut WidgetLayout, &WidgetLayout, &mut Solver) -> Option<Event>;
 }
 
 pub struct Widget {
-    pub draw_fn: Option<fn(&Any, Rectangle, Rectangle, &mut Resources, Context, &mut G2d)>,
+    pub draw_fn: Option<fn(DrawArgs)>,
     pub drawable: Option<Box<Any>>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
@@ -49,7 +52,7 @@ impl Widget {
             debug_color: [0.0, 1.0, 0.0, 1.0],
         }
     }
-    pub fn set_drawable(&mut self, draw_fn: fn(&Any, Rectangle, Rectangle, &mut Resources, Context, &mut G2d), drawable: Box<Any>) {
+    pub fn set_drawable(&mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) {
         self.draw_fn = Some(draw_fn);
         self.drawable = Some(drawable);
     }
@@ -59,11 +62,11 @@ impl Widget {
     pub fn debug_color(&mut self, color: Color) {
         self.debug_color = color;
     }
-    pub fn draw(&self, crop_to: Rectangle, resources: &mut Resources, solver: &mut Solver, context: Context, graphics: &mut G2d) {
+    pub fn draw(&self, crop_to: Rectangle, resources: &Resources, solver: &mut Solver, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);
-            draw_fn(drawable.as_ref(), crop_to, bounds, resources, context, graphics);
+            draw_fn((drawable.as_ref(), bounds, crop_to, resources, glyph_cache, context, graphics));
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
