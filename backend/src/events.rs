@@ -18,7 +18,7 @@ extern crate window as pistoncore_window;
 use std::time::{Duration, Instant};
 
 use self::pistoncore_window::Window as BasicWindow;
-use input::{Event, Input, UpdateArgs, RenderArgs, AfterRenderArgs, IdleArgs};
+use input::{Event, Input};
 
 //use super::window::Window;
 

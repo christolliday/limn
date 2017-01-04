@@ -96,14 +96,6 @@ impl Ui {
         let ref root = self.graph[self.root_index.unwrap()];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
-
-        let root_bounds = root.layout.bounds(&mut self.solver);
-        //window.window.window.set_inner_size(f64::max(root_bounds.width, window_dims.width) as u32, f64::max(root_bounds.height, window_dims.height) as u32);
-        /*if root_bounds.width > window_dims.width {
-        }
-        if root_bounds.height > window_dims.height {
-        }*/
-        println!("{:?}", root.layout.bounds(&mut self.solver));
     }
     pub fn parents(&mut self, node_index: NodeIndex) -> Neighbors<()> {
         self.graph.neighbors_directed(node_index, Direction::Incoming)

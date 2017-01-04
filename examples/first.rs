@@ -117,9 +117,9 @@ fn main() {
             ui.resize_window(window_dims.into());
         }
         ui.handle_event(event.clone());
-        window.draw_2d(&event, |c, g| {
-            graphics::clear([0.8, 0.8, 0.8, 1.0], g);
-            ui.draw(c, g);
+        window.draw_2d(&event, |context, graphics| {
+            graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
+            ui.draw(context, graphics);
         });
     }
 }

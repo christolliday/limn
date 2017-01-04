@@ -1,5 +1,4 @@
 use input;
-use input::{Input, Motion, Button};
 use input::EventId;
 use input::GenericEvent;
 

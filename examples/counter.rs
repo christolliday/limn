@@ -13,27 +13,18 @@ use limn::ui::*;
 use limn::util::*;
 use limn::widget::text::*;
 use limn::widget;
-use limn::event;
 
-use limn::widget::{Widget, EventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
 use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 use limn::widget::layout::{LinearLayout, Orientation};
 
 use backend::glyph::GlyphCache;
-use backend::{Window, WindowEvents, OpenGL};
-use input::{ResizeEvent, MouseCursorEvent, PressEvent, ReleaseEvent, Event, Input, EventId};
-use window::Window as PistonWindow;
+use backend::{Window, WindowEvents};
+use input::ResizeEvent;
 use backend::events::WindowEvent;
 
-use std::any::Any;
-
 fn main() {
-
-    // Create the event loop.
-    let mut events = WindowEvents::new();
-
     let mut resources = Resources::new();
 
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
@@ -89,22 +80,20 @@ fn main() {
     let ui = &mut Ui::new();
     ui.set_root(root_widget);
 
-    let window_dim = ui.get_root_dims();
+    let window_dims = ui.get_root_dims();
     // Construct the window.
-    let mut window: Window = backend::window::WindowSettings::new("Limn Button Demo", window_dim)
-        .opengl(OpenGL::V3_2)
-        .samples(4)
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
-
+    let mut window = Window::new("Limn counter demo", window_dims);
     let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
+
+    // Create the event loop.
+    let mut events = WindowEvents::new();
+
     // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
         match event {
             WindowEvent::Input(event) => {
-                window.handle_event(&event);
                 if let Some(window_dims) = event.resize_args() {
+                    window.window_resized();
                     ui.window_resized(&mut window, window_dims.into());
                 }
                 ui.handle_event(event.clone());
@@ -114,10 +103,6 @@ fn main() {
                     graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
                     ui.draw(&resources, &mut glyph_cache, context, graphics);
                 });
-                window.swap_buffers();
-                window.context.after_render();
-                let draw_size = window.draw_size();
-                window.context.check_resize(draw_size);
             }
         }
     }
