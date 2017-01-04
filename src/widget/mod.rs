@@ -34,9 +34,17 @@ pub struct DrawArgs<'a, 'b: 'a> {
     graphics: &'a mut G2d<'b>,
 }
 
+pub struct EventArgs<'a> {
+    event: Event,
+    state: Option<&'a mut Any>,
+    layout: &'a mut WidgetLayout,
+    parent_layout: &'a WidgetLayout,
+    solver: &'a mut Solver,
+}
+
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, Event, Option<&mut Any>, &mut WidgetLayout, &WidgetLayout, &mut Solver) -> Option<Event>;
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event>;
 }
 
 pub struct Widget {
@@ -93,6 +101,39 @@ impl Widget {
         let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
 
         let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
-        event_handler.handle_event(event, drawable, &mut self.layout, parent_layout, solver)
+        event_handler.handle_event(EventArgs {
+            event: event,
+            state: drawable,
+            layout: &mut self.layout,
+            parent_layout: parent_layout,
+            solver: solver,
+        })
+    }
+}
+
+
+
+pub struct DrawableEventHandler<D> {
+    event_id: EventId,
+    drawable_callback: fn(&mut D)
+}
+impl<D> DrawableEventHandler<D> {
+    pub fn new(event_id: EventId, drawable_callback: fn(&mut D)) -> Self {
+        DrawableEventHandler {
+            event_id: event_id,
+            drawable_callback: drawable_callback,
+        }
+    }
+}
+impl<D: 'static> EventHandler for DrawableEventHandler<D> {
+    fn event_id(&self) -> EventId {
+        self.event_id
+    }
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+        let EventArgs { state, .. } = event_args;
+        let state = state.unwrap();
+        let state = state.downcast_mut::<D>().unwrap();
+        (self.drawable_callback)(state);
+        None
     }
 }

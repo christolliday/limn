@@ -6,23 +6,24 @@ use std::any::Any;
 use super::primitives::{RectDrawable, EllipseDrawable};
 use super::text::TextDrawable;
 use super::layout::WidgetLayout;
+use widget::EventArgs;
 
 use cassowary::Solver;
 
-pub struct ButtonEventHandler {
+pub struct ToggleEventHandler {
     on: bool,
 }
-impl ButtonEventHandler {
-    pub fn new() -> ButtonEventHandler {
-        ButtonEventHandler { on: false }
+impl ToggleEventHandler {
+    pub fn new() -> ToggleEventHandler {
+        ToggleEventHandler { on: false }
     }
 }
-impl EventHandler for ButtonEventHandler {
+impl EventHandler for ToggleEventHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_PRESS
     }
-    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
-        let state = state.unwrap();
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+        let EventArgs { event, .. } = event_args;
         if let Event::Input(event) = event {
             self.on = !self.on;
             if self.on {
@@ -33,44 +34,5 @@ impl EventHandler for ButtonEventHandler {
         } else {
             None
         }
-    }
-}
-
-pub struct ButtonOnHandler {}
-impl EventHandler for ButtonOnHandler {
-    fn event_id(&self) -> EventId {
-        event::BUTTON_ENABLED
-    }
-    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
-        let state = state.unwrap();
-        if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
-            drawable.background = [0.0, 0.0, 0.0, 1.0];
-        }
-        if let Some(ref mut drawable) = state.downcast_mut::<EllipseDrawable>() {
-            drawable.background = [0.0, 0.0, 0.0, 1.0];
-        }
-        if let Some(ref mut drawable) = state.downcast_mut::<TextDrawable>() {
-            drawable.text = "ON".to_owned();
-        }
-        None
-    }
-}
-pub struct ButtonOffHandler {}
-impl EventHandler for ButtonOffHandler {
-    fn event_id(&self) -> EventId {
-        event::BUTTON_DISABLED
-    }
-    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
-        let state = state.unwrap();
-        if let Some(ref mut drawable) = state.downcast_mut::<RectDrawable>() {
-            drawable.background = [1.0, 0.0, 0.0, 1.0];
-        }
-        if let Some(ref mut drawable) = state.downcast_mut::<EllipseDrawable>() {
-            drawable.background = [1.0, 0.0, 0.0, 1.0];
-        }
-        if let Some(ref mut drawable) = state.downcast_mut::<TextDrawable>() {
-            drawable.text = "OFF".to_owned();
-        }
-        None
     }
 }

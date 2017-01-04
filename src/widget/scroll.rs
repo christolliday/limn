@@ -8,6 +8,7 @@ use super::super::event;
 use cassowary::{Solver, Constraint};
 use cassowary::strength::*;
 use util::*;
+use widget::EventArgs;
 
 pub struct ScrollHandler {
     offset: Point,
@@ -21,7 +22,8 @@ impl EventHandler for ScrollHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_SCROLL
     }
-    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+        let EventArgs { event, .. } = event_args;
         if let Event::Input(event) = event {
             Some(Event::Widget(event::Widget::ScrollScrolled(event)))
         } else {
@@ -42,7 +44,8 @@ impl EventHandler for WidgetScrollHandler {
     fn event_id(&self) -> EventId {
         event::SCROLL_SCROLLED
     }
-    fn handle_event(&mut self, event: Event, state: Option<&mut Any>, layout: &mut WidgetLayout, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+        let EventArgs { event, layout, parent_layout, solver, .. } = event_args;
         if let Event::Widget(event) = event {
             if let event::Widget::ScrollScrolled(event) = event {
                 if let Some(scroll) = event.mouse_scroll_args() {
