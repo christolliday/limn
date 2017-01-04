@@ -12,6 +12,8 @@ pub use self::pistoncore_window::{AdvancedWindow, Position, Size, OpenGLWindow,
                                   WindowSettings, BuildFromWindowSettings};
 use graphics::Viewport;
 
+use glutin;
+
 pub use super::graphics::Context;
 
 /// Contains everything required for controlling window, graphics, event loop.
@@ -22,35 +24,35 @@ pub struct Window {
     pub context: GfxContext,
 }
 
-impl BuildFromWindowSettings for Window {
-    fn build_from_window_settings(settings: &WindowSettings) -> Result<Window, String> {
-        // Turn on sRGB.
-        let settings = settings.clone().srgb(true);
-
-        let mut glutin_window: GlutinWindow = try!(settings.build());
-        // Use OpenGL 3.2 by default, because this is what window backends usually do.
-        let opengl = settings.get_maybe_opengl().unwrap_or(OpenGL::V3_2);
-        let samples = settings.get_samples();
-        let context = GfxContext::new(&mut glutin_window, opengl, samples);
-
-        let window = Window {
-            window: glutin_window,
-            context: context,
-        };
-        Ok(window)
-    }
-}
 impl Window {
-    pub fn new<T, S>(title: T, size: S) -> Self 
+    pub fn new<T, S>(title: T, size: S, min_size: Option<S>) -> Self 
     where T: Into<String>,
           S: Into<Size>,
     {
-        WindowSettings::new(title, size)
-            .opengl(OpenGL::V3_2)
-            .samples(4)
-            .exit_on_esc(true)
-            .build()
-            .unwrap()
+        let size: Size = size.into();
+        
+        let builder = glutin::WindowBuilder::new()
+            .with_title(title)
+            .with_dimensions(size.width, size.height);
+        
+        let builder = {
+            if let Some(min_size) = min_size {
+                let min_size: Size = min_size.into();
+                builder.with_min_dimensions(min_size.width, min_size.height)
+            } else {
+                builder
+            }
+        };
+        let mut glutin_window = GlutinWindow::new(builder).unwrap();
+
+        let opengl = OpenGL::V3_2;
+        let samples = 4;
+        let context = GfxContext::new(&mut glutin_window, opengl, samples);
+
+        Window {
+            window: glutin_window,
+            context: context,
+        }
     }
     pub fn viewport(&self) -> Viewport {
         Viewport {

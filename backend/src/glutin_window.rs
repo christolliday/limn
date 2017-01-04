@@ -13,12 +13,10 @@ use super::input::{
     Input,
 };
 use super::pistoncore_window::{
-    BuildFromWindowSettings,
     OpenGLWindow,
     Window,
     AdvancedWindow,
     ProcAddress,
-    WindowSettings,
     Size,
     Position,
 };
@@ -32,8 +30,6 @@ pub use shader_version::OpenGL;
 pub struct GlutinWindow {
     /// The window.
     pub window: glutin::Window,
-    // The back-end does not remember the title.
-    title: String,
     exit_on_esc: bool,
     should_close: bool,
     // Used to detect enter/leave cursor events.
@@ -53,49 +49,14 @@ pub struct GlutinWindow {
     last_resize_emitted_pixels: (u32, u32),
 }
 
-fn builder_from_settings(settings: &WindowSettings) -> glutin::WindowBuilder {
-    let opengl = settings.get_maybe_opengl().unwrap_or(OpenGL::V3_2);
-    let (major, minor) = opengl.get_major_minor();
-    let size = settings.get_size();
-    let mut builder = glutin::WindowBuilder::new()
-        .with_min_dimensions(size.width, size.height)
-        .with_dimensions(size.width, size.height)
-        .with_decorations(settings.get_decorated())
-        .with_multitouch()
-        .with_gl(GlRequest::Specific(Api::OpenGl, (major as u8, minor as u8)))
-        .with_title(settings.get_title())
-        .with_srgb(Some(settings.get_srgb()));
-    let samples = settings.get_samples();
-    if settings.get_fullscreen() {
-        builder = builder.with_fullscreen(glutin::get_primary_monitor());
-    }
-    if settings.get_vsync() {
-        builder = builder.with_vsync();
-    }
-    if samples != 0 {
-        builder = builder.with_multisampling(samples as u16);
-    }
-    builder
-}
-
 impl GlutinWindow {
 
     /// Creates a new game window for Glutin.
-    pub fn new(settings: &WindowSettings) -> Result<Self, String> {
+    pub fn new(builder: glutin::WindowBuilder) -> Result<Self, String> {
         use std::error::Error;
         use glutin::ContextError;
 
-        let title = settings.get_title();
-        let exit_on_esc = settings.get_exit_on_esc();
-        let window = builder_from_settings(&settings).build();
-        let window = match window {
-                Ok(window) => window,
-                Err(_) => {
-                    try!(builder_from_settings(&settings.clone().samples(0)).build()
-                        .map_err(|e| String::from(e.description()))
-                    )
-                }
-            };
+        let window = builder.build().unwrap();
         unsafe { try!(window.make_current().map_err(|e|
                 // This can be simplified in next version of Glutin.
                 match e {
@@ -115,8 +76,7 @@ impl GlutinWindow {
 
         Ok(GlutinWindow {
             window: window,
-            title: title,
-            exit_on_esc: exit_on_esc,
+            exit_on_esc: true,
             should_close: false,
             has_cursor: true,
             cursor_pos: None,
@@ -351,50 +311,6 @@ impl Window for GlutinWindow {
     fn wait_event(&mut self) -> Input { self.wait_event() }
     fn wait_event_timeout(&mut self, timeout: Duration) -> Option<Input> { self.wait_event_timeout(timeout) }
     fn poll_event(&mut self) -> Option<Input> { self.poll_event() }
-}
-
-impl BuildFromWindowSettings for GlutinWindow {
-    fn build_from_window_settings(settings: &WindowSettings)
-    -> Result<Self, String> {
-        GlutinWindow::new(settings)
-    }
-}
-
-impl AdvancedWindow for GlutinWindow {
-    fn get_title(&self) -> String { self.title.clone() }
-    fn set_title(&mut self, value: String) {
-        self.title = value;
-        self.window.set_title(&self.title);
-    }
-    fn get_exit_on_esc(&self) -> bool { self.exit_on_esc }
-    fn set_exit_on_esc(&mut self, value: bool) { self.exit_on_esc = value; }
-    fn set_capture_cursor(&mut self, value: bool) {
-        use glutin::CursorState;
-
-        // Normally we would call `.set_cursor_state(CursorState::Grab)`
-        // but since relative mouse events does not work,
-        // the capturing of cursor is faked by hiding the cursor
-        // and setting the position to the center of window.
-        self.is_capturing_cursor = value;
-        if value {
-            let _ = self.window.set_cursor_state(CursorState::Hide);
-        } else {
-            let _ = self.window.set_cursor_state(CursorState::Normal);
-        }
-        if value {
-            self.fake_capture();
-        }
-    }
-    fn show(&mut self) { self.window.show(); }
-    fn hide(&mut self) { self.window.hide(); }
-    fn get_position(&self) -> Option<Position> {
-        self.window.get_position().map(|(x, y)|
-            Position { x: x, y: y })
-    }
-    fn set_position<P: Into<Position>>(&mut self, pos: P) {
-        let pos: Position = pos.into();
-        self.window.set_position(pos.x, pos.y);
-    }
 }
 
 impl OpenGLWindow for GlutinWindow {
