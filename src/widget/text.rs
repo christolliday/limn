@@ -53,7 +53,7 @@ impl TextDrawable {
 
 pub fn draw_text(draw_args: DrawArgs) {
 
-    let ( state, bounds, parent_bounds, resources, glyph_cache, context, graphics ) = draw_args;
+    let DrawArgs { state, bounds, resources, glyph_cache, context, graphics, .. } = draw_args;
     let state: &TextDrawable = state.downcast_ref().unwrap();
 
     graphics::Rectangle::new(state.background_color)

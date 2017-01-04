@@ -27,7 +27,7 @@ impl ImageDrawable {
 }
 
 pub fn draw_image(draw_args: DrawArgs) {
-    let ( state, bounds, parent_bounds, resources, glyph_cache, context, graphics ) = draw_args;
+    let DrawArgs { state, bounds, resources, context, graphics, .. } = draw_args;
     let state: &ImageDrawable = state.downcast_ref().unwrap();
 
     let img = resources.images.get(state.image_id).unwrap();

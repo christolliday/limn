@@ -24,7 +24,15 @@ use cassowary::strength::*;
 
 use std::any::Any;
 
-pub type DrawArgs<'a, 'b> = (&'a Any, Rectangle, Rectangle, &'a Resources, &'a mut GlyphCache, Context, &'a mut G2d<'b>);
+pub struct DrawArgs<'a, 'b: 'a> {
+    state: &'a Any,
+    bounds: Rectangle,
+    parent_bounds: Rectangle,
+    resources: &'a Resources,
+    glyph_cache: &'a mut GlyphCache,
+    context: Context,
+    graphics: &'a mut G2d<'b>,
+}
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
@@ -66,7 +74,15 @@ impl Widget {
         if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);
-            draw_fn((drawable.as_ref(), bounds, crop_to, resources, glyph_cache, context, graphics));
+            draw_fn(DrawArgs {
+                state: drawable.as_ref(),
+                bounds: bounds,
+                parent_bounds: crop_to,
+                resources: resources,
+                glyph_cache: glyph_cache,
+                context: context,
+                graphics: graphics,
+            });
         }
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
