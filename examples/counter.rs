@@ -82,13 +82,10 @@ fn main() {
 
     let window_dims = ui.get_root_dims();
     // Construct the window.
-    let mut window = Window::new("Limn counter demo", window_dims);
+    let mut window = Window::new("Limn counter demo", window_dims, Some(window_dims));
     let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
 
-    // Create the event loop.
     let mut events = WindowEvents::new();
-
-    // Poll events from the window.
     while let Some(event) = events.next(&mut window) {
         match event {
             WindowEvent::Input(event) => {
