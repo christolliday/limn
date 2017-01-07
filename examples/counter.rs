@@ -16,7 +16,7 @@ use limn::widget;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
-use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
+use limn::widget::button::ToggleEventHandler;
 use limn::widget::layout::{LinearLayout, Orientation};
 
 use backend::glyph::GlyphCache;
@@ -56,9 +56,26 @@ fn main() {
     let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
     let mut button_widget = WidgetBuilder::new();
     button_widget.set_drawable(widget::primitives::draw_rect, Box::new(rect));
-    button_widget.event_handlers.push(Box::new(ButtonEventHandler::new()));
-    button_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
-    button_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
+    button_widget.event_handlers.push(Box::new(ToggleEventHandler::new()));
+
+    struct CounterHandler {
+        count: usize,
+    }
+    impl CounterHandler {
+        fn new() -> Self {
+            CounterHandler { count: 0 }
+        }
+    }
+    impl EventHandler for CounterHandler {
+        fn event_id(&self) -> EventId {
+            event::WIDGET_PRESS
+        }
+        fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+            self.count += 1;
+        }
+    }
+    //button_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
+    //button_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
     button_widget.debug_color([1.0, 1.0, 0.0, 1.0]);
     button_widget.layout.dimensions(Dimensions { width: 100.0, height: 50.0 });
     button_widget.layout.center(&button_container.layout);
@@ -68,8 +85,8 @@ fn main() {
     let button_text_dims = button_text_drawable.measure_dims_no_wrap(&resources);
     let mut button_text_widget = WidgetBuilder::new();
     button_text_widget.set_drawable(widget::text::draw_text, Box::new(button_text_drawable));
-    button_text_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
-    button_text_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
+    //button_text_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
+    //button_text_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
     button_text_widget.layout.dimensions(button_text_dims);
     button_text_widget.layout.center(&button_widget.layout);
 

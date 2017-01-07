@@ -11,7 +11,7 @@ use backend::glyph::GlyphCache;
 use graphics::Context;
 use graphics::types::Color;
 
-use event::Event;
+use event::{Event, LimnEvent};
 use input::EventId;
 use super::util::*;
 use super::util;
@@ -35,7 +35,7 @@ pub struct DrawArgs<'a, 'b: 'a> {
 }
 
 pub struct EventArgs<'a> {
-    event: Event,
+    event: &'a LimnEvent,
     state: Option<&'a mut Any>,
     layout: &'a mut WidgetLayout,
     parent_layout: &'a WidgetLayout,
@@ -44,7 +44,7 @@ pub struct EventArgs<'a> {
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event>;
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<LimnEvent>>;
 }
 
 pub struct Widget {
@@ -97,7 +97,7 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: Event, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Event> {
+    pub fn trigger_event(&mut self, id: EventId, event: &LimnEvent, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Box<LimnEvent>> {
         let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
 
         let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
@@ -129,7 +129,7 @@ impl<D: 'static> EventHandler for DrawableEventHandler<D> {
     fn event_id(&self) -> EventId {
         self.event_id
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<LimnEvent>> {
         let EventArgs { state, .. } = event_args;
         let state = state.unwrap();
         let state = state.downcast_mut::<D>().unwrap();

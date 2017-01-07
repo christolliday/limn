@@ -1,7 +1,8 @@
 use super::EventHandler;
 use super::super::event;
-use event::Event;
+use event::{Event, LimnEvent};
 use input::{EventId};
+use input;
 use std::any::Any;
 use super::primitives::{RectDrawable, EllipseDrawable};
 use super::text::TextDrawable;
@@ -22,17 +23,16 @@ impl EventHandler for ToggleEventHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_PRESS
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<LimnEvent>> {
         let EventArgs { event, .. } = event_args;
-        if let Event::Input(event) = event {
-            self.on = !self.on;
-            if self.on {
-                Some(Event::Widget(event::Widget::ButtonEnabled(event)))
-            } else {
-                Some(Event::Widget(event::Widget::ButtonDisabled(event)))
-            }
+        let event: &input::Event = event.event_data().downcast_ref().unwrap();
+        
+        self.on = !self.on;
+        let event = if self.on {
+            event::EventEvent { event: Event::Widget(event::Widget::ButtonEnabled(event.clone())) }
         } else {
-            None
-        }
+            event::EventEvent { event: Event::Widget(event::Widget::ButtonDisabled(event.clone())) }
+        };
+        Some(Box::new(event))
     }
 }

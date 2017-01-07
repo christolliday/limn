@@ -20,7 +20,6 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
 use limn::widget::image::ImageDrawable;
 use limn::widget::scroll::{ScrollHandler, WidgetScrollHandler};
-use limn::widget::button::{ButtonEventHandler, ButtonOnHandler, ButtonOffHandler};
 
 use backend::{Window, WindowEvents, OpenGL};
 use backend::events::WindowEvent;

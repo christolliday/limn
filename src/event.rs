@@ -2,6 +2,8 @@ use input;
 use input::EventId;
 use input::GenericEvent;
 
+use std::any::Any;
+
 // from piston input
 pub const AFTER_RENDER: EventId = EventId("piston/after_render");
 pub const CONTROLLER_AXIS: EventId = EventId("piston/controller_axis");
@@ -30,7 +32,7 @@ pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
 pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
 
 // get the widget event that is received if the event occurs while mouse is over widget
-pub fn widget_event(event: &Event) -> Option<EventId> {
+pub fn widget_event<E: LimnEvent>(event: &E) -> Option<EventId> {
     match event.event_id() {
         MOUSE_CURSOR => Some(WIDGET_MOUSE_OVER),
         MOUSE_SCROLL => Some(WIDGET_SCROLL),
@@ -75,5 +77,32 @@ impl Event {
                 }
             },
         }
+    }
+}
+
+pub trait LimnEvent {
+    fn event_id(&self) -> EventId;
+    fn event_data(&self) -> &Any;
+}
+pub struct InputEvent {
+    pub event: input::Event,
+}
+impl LimnEvent for InputEvent {
+    fn event_id(&self) -> EventId {
+        self.event.event_id()
+    }
+    fn event_data(&self) -> &Any {
+        &self.event
+    }
+}
+pub struct EventEvent {
+    pub event: Event,
+}
+impl LimnEvent for EventEvent {
+    fn event_id(&self) -> EventId {
+        self.event.event_id()
+    }
+    fn event_data(&self) -> &Any {
+        &self.event
     }
 }

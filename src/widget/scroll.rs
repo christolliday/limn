@@ -1,6 +1,6 @@
 use super::EventHandler;
 use super::layout::WidgetLayout;
-use event::Event;
+use event::{Event, LimnEvent};
 use input;
 use input::{EventId, MouseScrollEvent};
 use std::any::Any;
@@ -22,13 +22,11 @@ impl EventHandler for ScrollHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_SCROLL
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<LimnEvent>> {
         let EventArgs { event, .. } = event_args;
-        if let Event::Input(event) = event {
-            Some(Event::Widget(event::Widget::ScrollScrolled(event)))
-        } else {
-            None
-        }
+        let event: &input::Event = event.event_data().downcast_ref().unwrap();
+        let event = event::EventEvent { event: Event::Widget(event::Widget::ScrollScrolled(event.clone())) };
+        Some(Box::new(event))
     }
 }
 
@@ -44,10 +42,12 @@ impl EventHandler for WidgetScrollHandler {
     fn event_id(&self) -> EventId {
         event::SCROLL_SCROLLED
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<LimnEvent>> {
         let EventArgs { event, layout, parent_layout, solver, .. } = event_args;
-        if let Event::Widget(event) = event {
-            if let event::Widget::ScrollScrolled(event) = event {
+        let event: &Event = event.event_data().downcast_ref().unwrap();
+
+        if let &Event::Widget(ref event) = event {
+            if let &event::Widget::ScrollScrolled(ref event) = event {
                 if let Some(scroll) = event.mouse_scroll_args() {
                     let scroll: Point = scroll.into();
                     let widget_bounds = layout.bounds(solver);

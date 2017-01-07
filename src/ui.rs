@@ -21,7 +21,7 @@ use widget::builder::WidgetBuilder;
 use super::util::*;
 use super::util;
 use super::event;
-use event::Event;
+use event::{Event, LimnEvent, InputEvent};
 use resources;
 use resources::font::Font;
 use backend::glyph::GlyphCache;
@@ -142,10 +142,10 @@ impl Ui {
         if let Some(mouse) = event.mouse_cursor_args() {
             self.input_state.mouse = mouse.into();
         }
+        let event = InputEvent { event: event };
         self.post_event(event);
     }
-    pub fn post_event(&mut self, event: input::Event) {
-        let event = Event::Input(event);
+    pub fn post_event<E: LimnEvent>(&mut self, event: E) {
 
         let mut new_events = Vec::new();
         let id_registered = |widget: &Widget, id| { widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };
@@ -155,9 +155,10 @@ impl Ui {
             if let Some(parent_index) = self.parents(node_index).next() {
                 let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
                 if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                    if let Some(widget_event) = event::widget_event(&event) {
-                        if id_registered(widget, widget_event) {
-                            if let Some(event) = widget.trigger_event(widget_event, event.clone(), &parent.layout, &mut self.solver) {
+                    let widget_event_id = event::widget_event(&event);
+                    if let Some(event_id) = widget_event_id {
+                        if id_registered(widget, event_id) {
+                            if let Some(event) = widget.trigger_event(event_id, &event, &parent.layout, &mut self.solver) {
                                 new_events.push((node_index, event));
                             }
                         }
@@ -172,7 +173,7 @@ impl Ui {
                     let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
                     let event_id = event.event_id();
                     if id_registered(widget, event_id) {
-                        widget.trigger_event(event_id, event.clone(), &parent.layout, &mut self.solver);
+                        widget.trigger_event(event_id, event.as_ref(), &parent.layout, &mut self.solver);
                     }
                 }
             }
