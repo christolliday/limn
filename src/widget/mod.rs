@@ -25,13 +25,13 @@ use cassowary::strength::*;
 use std::any::Any;
 
 pub struct DrawArgs<'a, 'b: 'a> {
-    state: &'a Any,
-    bounds: Rectangle,
-    parent_bounds: Rectangle,
-    resources: &'a Resources,
-    glyph_cache: &'a mut GlyphCache,
-    context: Context,
-    graphics: &'a mut G2d<'b>,
+    pub state: &'a Any,
+    pub bounds: Rectangle,
+    pub parent_bounds: Rectangle,
+    pub resources: &'a Resources,
+    pub glyph_cache: &'a mut GlyphCache,
+    pub context: Context,
+    pub graphics: &'a mut G2d<'b>,
 }
 
 pub struct EventArgs<'a> {

@@ -7,7 +7,7 @@ use graphics::Context;
 use graphics;
 use backend::gfx::G2d;
 use graphics::types::Color;
-use std::ops::{Mul, Div, Add};
+use std::ops::{Mul, Div, Add, Sub};
 
 // #[derive(Copy, Clone, Debug, PartialEq)]
 // pub struct Px(pub f64);
@@ -208,6 +208,9 @@ impl Rectangle {
     pub fn dims(&self) -> Dimensions {
         Dimensions { width: self.width, height: self.height }
     }
+    pub fn center(&self) -> Point {
+        Point { x: self.left + self.width / 2.0, y: self.top + self.height / 2.0 }
+    }
 }
 impl Div<Dimensions> for Dimensions {
     type Output = Self;
@@ -237,6 +240,12 @@ impl Add<Point> for Point {
     type Output = Self;
     fn add(self, rhs: Point) -> Self {
         Point { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+impl Sub<Point> for Point {
+    type Output = Self;
+    fn sub(self, rhs: Point) -> Self {
+        Point { x: self.x - rhs.x, y: self.y - rhs.y }
     }
 }
 impl Mul<Scalar> for Point {
