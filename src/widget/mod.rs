@@ -113,26 +113,29 @@ impl Widget {
 
 
 
-pub struct DrawableEventHandler<D> {
+pub struct DrawableEventHandler<T>
+{
     event_id: EventId,
-    drawable_callback: fn(&mut D)
+    drawable_callback: Box<Fn(&mut T)>
 }
-impl<D> DrawableEventHandler<D> {
-    pub fn new(event_id: EventId, drawable_callback: fn(&mut D)) -> Self {
+impl<T: 'static> DrawableEventHandler<T>
+{
+    pub fn new<H: Fn(&mut T) + 'static>(event_id: EventId, drawable_callback: H) -> Self {
         DrawableEventHandler {
             event_id: event_id,
-            drawable_callback: drawable_callback,
+            drawable_callback: Box::new(drawable_callback),
         }
     }
 }
-impl<D: 'static> EventHandler for DrawableEventHandler<D> {
+impl<T: 'static> EventHandler for DrawableEventHandler<T>
+{
     fn event_id(&self) -> EventId {
         self.event_id
     }
     fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<LimnEvent>> {
         let EventArgs { state, .. } = event_args;
         let state = state.unwrap();
-        let state = state.downcast_mut::<D>().unwrap();
+        let state = state.downcast_mut::<T>().unwrap();
         (self.drawable_callback)(state);
         None
     }
