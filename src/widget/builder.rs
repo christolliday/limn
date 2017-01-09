@@ -2,7 +2,6 @@ use backend::gfx::G2d;
 use graphics::Context;
 use graphics::types::Color;
 
-use event::Event;
 use input::EventId;
 use util::*;
 use util;

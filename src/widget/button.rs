@@ -1,6 +1,6 @@
 use super::EventHandler;
 use super::super::event;
-use event::{Event, LimnEvent};
+use event::Event;
 use input::{EventId};
 use input;
 use std::any::Any;
@@ -30,15 +30,15 @@ impl EventHandler for ToggleEventHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_PRESS
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<LimnEvent>> {
+    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
         let EventArgs { event, .. } = event_args;
         let event: &input::Event = event.event_data().downcast_ref().unwrap();
         
         self.on = !self.on;
         let event = if self.on {
-            event::EventEvent { event: Event::Widget(event::Widget::ButtonEnabled(event.clone())) }
+            event::InputEvent::new(event::BUTTON_ENABLED, event.clone())
         } else {
-            event::EventEvent { event: Event::Widget(event::Widget::ButtonDisabled(event.clone())) }
+            event::InputEvent::new(event::BUTTON_DISABLED, event.clone())
         };
         Some(Box::new(event))
     }

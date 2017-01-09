@@ -21,7 +21,7 @@ use widget::builder::WidgetBuilder;
 use super::util::*;
 use super::util;
 use super::event;
-use event::{Event, LimnEvent, InputEvent};
+use event::{Event, InputEvent};
 use resources;
 use resources::font::Font;
 use backend::glyph::GlyphCache;
@@ -142,10 +142,10 @@ impl Ui {
         if let Some(mouse) = event.mouse_cursor_args() {
             self.input_state.mouse = mouse.into();
         }
-        let event = InputEvent { event: event };
+        let event = InputEvent::new(event.event_id(), event);
         self.post_event(event);
     }
-    pub fn post_event<E: LimnEvent>(&mut self, event: E) {
+    pub fn post_event<E: Event>(&mut self, event: E) {
 
         let mut new_events = Vec::new();
         let id_registered = |widget: &Widget, id| { widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };

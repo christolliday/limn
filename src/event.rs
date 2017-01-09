@@ -32,7 +32,7 @@ pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
 pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
 
 // get the widget event that is received if the event occurs while mouse is over widget
-pub fn widget_event<E: LimnEvent>(event: &E) -> Option<EventId> {
+pub fn widget_event<E: Event>(event: &E) -> Option<EventId> {
     match event.event_id() {
         MOUSE_CURSOR => Some(WIDGET_MOUSE_OVER),
         MOUSE_SCROLL => Some(WIDGET_SCROLL),
@@ -41,68 +41,31 @@ pub fn widget_event<E: LimnEvent>(event: &E) -> Option<EventId> {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum Widget {
-    // widget general, received when mouse over widget
-    MouseOver(input::Event),
-    Scroll(input::Event),
-    Press(input::Event),
-    Release(input::Event),
-
-    // specific widgets
-    ScrollScrolled(input::Event),
-    ButtonEnabled(input::Event),
-    ButtonDisabled(input::Event),
-}
-
-#[derive(Clone, PartialEq, Debug)]
-pub enum Event {
-    Input(input::Event),
-    Widget(Widget),
-}
-impl Event {
-    pub fn event_id(&self) -> EventId {
-        match *self {
-            Event::Input(ref event) => event.event_id(),
-            Event::Widget(ref event) => {
-                match *event {
-                    Widget::MouseOver(_) => WIDGET_MOUSE_OVER,
-                    Widget::Scroll(_) => WIDGET_SCROLL,
-                    Widget::Press(_) => WIDGET_PRESS,
-                    Widget::Release(_) => WIDGET_RELEASE,
-                    
-                    Widget::ScrollScrolled(_) => SCROLL_SCROLLED,
-                    Widget::ButtonEnabled(_) => BUTTON_ENABLED,
-                    Widget::ButtonDisabled(_) => BUTTON_DISABLED,
-                }
-            },
-        }
-    }
-}
-
-pub trait LimnEvent {
+pub trait Event {
     fn event_id(&self) -> EventId;
     fn event_data(&self) -> &Any;
 }
-pub struct InputEvent {
-    pub event: input::Event,
+
+macro_rules! event {
+    ( $name:ident, $data_type:path ) => {
+        pub struct $name {
+            event_id: EventId,
+            data: $data_type,
+        }
+        impl $name {
+            pub fn new(event_id: EventId, data: $data_type) -> Self {
+                $name { event_id: event_id, data: data }
+            }
+        }
+        impl Event for $name {
+            fn event_id(&self) -> EventId {
+                self.event_id
+            }
+            fn event_data(&self) -> &Any {
+                &self.data
+            }
+        }
+    };
 }
-impl LimnEvent for InputEvent {
-    fn event_id(&self) -> EventId {
-        self.event.event_id()
-    }
-    fn event_data(&self) -> &Any {
-        &self.event
-    }
-}
-pub struct EventEvent {
-    pub event: Event,
-}
-impl LimnEvent for EventEvent {
-    fn event_id(&self) -> EventId {
-        self.event.event_id()
-    }
-    fn event_data(&self) -> &Any {
-        &self.event
-    }
-}
+
+event!(InputEvent, input::Event);
