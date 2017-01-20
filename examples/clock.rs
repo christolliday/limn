@@ -7,6 +7,8 @@ extern crate input;
 extern crate window;
 extern crate find_folder;
 
+extern crate chrono;
+
 #[macro_use]
 extern crate matches;
 
@@ -36,10 +38,14 @@ use backend::events::WindowEvent;
 use graphics::types::Color;
 
 use std::thread;
-use std::time::Duration;
+use std::time;
 use std::any::Any;
+use std::f64;
 
+use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{self, channel, Sender, Receiver};
+
+use chrono::*;
 
 use input::EventId;
 const WIDGET_EVENT: usize = 0;
@@ -48,6 +54,8 @@ const CLOCK_TICK: EventId = EventId("CLOCK_TICK");
 struct ClockBuilder {
     widget: WidgetBuilder,
     hour_id: Id,
+    minute_id: Id,
+    second_id: Id,
 }
 impl ClockBuilder {
     fn new(resources: &mut Resources, event_bus: &EventBus, sender: Sender<i32>) -> Self {
@@ -59,7 +67,7 @@ impl ClockBuilder {
 
         struct HandDrawable {
             background: Color,
-            angle: Scalar,
+            angle: Scalar, // radians
         }
         pub fn draw_clock_hand(draw_args: DrawArgs) {
             let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
@@ -67,8 +75,8 @@ impl ClockBuilder {
 
             let cos = state.angle.cos();
             let sin = state.angle.sin();
-            let point = Point { x: - sin * 1.0, y: cos * 1.0};
-            let par = Point { x: cos * 1.0, y: sin * 1.0};
+            let point = Point { x: sin * 1.0, y: -cos * 1.0};
+            let par = Point { x: -cos * 1.0, y: -sin * 1.0};
             let width = 10.0;
             let length = 100.0;
             let center = bounds.center();
@@ -85,44 +93,52 @@ impl ClockBuilder {
         let hour_drawable = HandDrawable { background: [1.0, 1.0, 0.0, 1.0], angle: 0.0 };
         let mut hour_widget = WidgetBuilder::new();
         hour_widget.set_drawable(draw_clock_hand, Box::new(hour_drawable));
-        let minute_drawable = HandDrawable { background: [1.0, 0.0, 1.0, 1.0], angle: 0.0 };
+        let minute_drawable = HandDrawable { background: [1.0, 1.0, 0.0, 1.0], angle: 0.0 };
         let mut minute_widget = WidgetBuilder::new();
         minute_widget.set_drawable(draw_clock_hand, Box::new(minute_drawable));
+        let second_drawable = HandDrawable { background: [1.0, 1.0, 0.0, 1.0], angle: 0.0 };
+        let mut second_widget = WidgetBuilder::new();
+        second_widget.set_drawable(draw_clock_hand, Box::new(second_drawable));
 
         let hour_id = resources.widget_id();
         hour_widget.set_id(hour_id);
+        let minute_id = resources.widget_id();
+        minute_widget.set_id(minute_id);
+        let second_id = resources.widget_id();
+        second_widget.set_id(second_id);
 
-        fn update_hand(state: &mut HandDrawable) {
-            state.angle = 30.0;
+        fn update_hour_hand(state: &mut HandDrawable) {
+            let local: DateTime<Local> = Local::now();
+            let hour = (local.hour() % 12);
+            state.angle = 2.0 * f64::consts::PI * hour as f64 / 12.0;
+        };
+        fn update_minute_hand(state: &mut HandDrawable) {
+            let local: DateTime<Local> = Local::now();
+            let minute = local.minute();
+            state.angle = 2.0 * f64::consts::PI * minute as f64 / 60.0;
+        };
+        fn update_second_hand(state: &mut HandDrawable) {
+            let local: DateTime<Local> = Local::now();
+            let second = local.second();
+            state.angle = 2.0 * f64::consts::PI * second as f64 / 60.0;
         };
 
-        //event_bus.register_address(EventAddress::Id(hour_id.0), update_hand);
-        hour_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hand)));
+        hour_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand)));
+        minute_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand)));
+        second_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_second_hand)));
 
         widget.add_child(Box::new(hour_widget));
         widget.add_child(Box::new(minute_widget));
-
-
-        /*fn set_rect_off(angle: Scalar, state: &mut HandDrawable) {
-            state.background = [1.0, 0.0, 0.0, 1.0];
-        };
-        hour_widget.event_handlers.push(Box::new(DrawableEventHandler::new(ANGLE_CHANGED, set_rect_on)));
-
-        let event_bus.register();*/
+        widget.add_child(Box::new(second_widget));
 
         thread::spawn(move || {
-            let sec = 0;
             loop {
-                thread::sleep(Duration::from_millis(1000));
-                //event_bus.post_id(WIDGET_EVENT, sec);
-                sender.send(sec);
-                //event_bus.post_id(WIDGET_EVENT, (hour_id, sec));
-                //sec += 1;
-                //let state: &HandDrawable = widget.drawable.unwrap().downcast_ref().unwrap();
+                thread::sleep(time::Duration::from_millis(1000));
+                sender.send(0);
             }
         });
 
-        ClockBuilder { widget: widget, hour_id: hour_id }
+        ClockBuilder { widget: widget, hour_id: hour_id, minute_id: minute_id, second_id: second_id }
     }
     pub fn builder(self) -> WidgetBuilder {
         self.widget
@@ -150,6 +166,8 @@ fn main() {
     clock.widget.layout.pad(50.0, &root_widget.layout);
 
     let hour_id = clock.hour_id;
+    let minute_id = clock.minute_id;
+    let second_id = clock.second_id;
 
     root_widget.add_child(Box::new(clock.builder()));
 
@@ -166,6 +184,21 @@ fn main() {
     let mut window = Window::new("Limn clock demo", window_dims, Some(window_dims));
     let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
 
+
+    let window_proxy = window.window.window.create_window_proxy();
+    let event_queue = Arc::new(Mutex::new(Vec::new()));
+    {
+        let event_queue = event_queue.clone();
+        thread::spawn(move || {
+            loop {
+                rx.recv();
+                let mut queue = event_queue.lock().unwrap();
+                queue.push(1);
+                window_proxy.wakeup_event_loop();
+            }
+        });
+    }
+
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window) {
         match event {
@@ -177,10 +210,15 @@ fn main() {
                 ui.handle_event(event.clone());
             },
             WindowEvent::Render => {
-                let res = rx.try_recv();
-                if res.is_ok() {
+                let mut queue = event_queue.lock().unwrap();
+                while queue.len() > 0 {
+                    queue.pop();
                     let event = ClockEvent::new(CLOCK_TICK, 20);
                     ui.send_event(hour_id, event);
+                    let event = ClockEvent::new(CLOCK_TICK, 20);
+                    ui.send_event(minute_id, event);
+                    let event = ClockEvent::new(CLOCK_TICK, 20);
+                    ui.send_event(second_id, event);
                 }
                 window.draw_2d(|context, graphics| {
                     graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);

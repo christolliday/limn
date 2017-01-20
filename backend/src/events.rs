@@ -99,9 +99,13 @@ impl WindowEvents
 
         if self.idle {
             // Block and wait until an event is received.
-            let event = window.wait_event();
+            let event = window.wait_event_timeout(Duration::new(u64::max_value(), 0));
             self.idle = false;
-            Some(WindowEvent::Input(Event::Input(event)))
+            if let Some(event) = event {
+                Some(WindowEvent::Input(Event::Input(event)))
+            } else {
+                Some(WindowEvent::Render)
+            }
         } else {
             let current_time = Instant::now();
             if current_time < self.next_frame_time {

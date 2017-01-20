@@ -16,6 +16,10 @@ find_folder = "0.3.0"
 gfx_device_gl = "0.11.0"
 piston2d-gfx_graphics = "0.33.1"
 
+
+[dev-dependencies]
+chrono = "0.2.25"
+
 [replace]
 "cassowary:0.2.0" = { path = "../cassowary-rs" }
 "petgraph:0.4.1" = { path = "../petgraph" }

@@ -274,7 +274,7 @@ impl GlutinWindow {
             Some(E::Closed) => {
                 self.should_close = true;
                 Some(Input::Close)
-            }
+            },
             _ => None,
         }
     }
