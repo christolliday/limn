@@ -45,7 +45,25 @@ pub fn widget_event<E: Event>(event: &E) -> Option<EventId> {
 
 pub trait Event {
     fn event_id(&self) -> EventId;
-    fn event_data(&self) -> &Any;
+    fn event_data(&self) -> Option<&Any>;
+}
+
+// event with an id but no associated data
+pub struct Signal {
+    event_id: EventId,
+}
+impl Signal {
+    pub fn new(event_id: EventId) -> Self {
+        Signal { event_id: event_id }
+    }
+}
+impl Event for Signal {
+    fn event_id(&self) -> EventId {
+        self.event_id
+    }
+    fn event_data(&self) -> Option<&Any> {
+        None
+    }
 }
 
 #[macro_export]
@@ -64,8 +82,8 @@ macro_rules! event {
             fn event_id(&self) -> EventId {
                 self.event_id
             }
-            fn event_data(&self) -> &Any {
-                &self.data
+            fn event_data(&self) -> Option<&Any> {
+                Some(&self.data)
             }
         }
     };

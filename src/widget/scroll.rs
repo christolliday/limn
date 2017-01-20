@@ -24,7 +24,7 @@ impl EventHandler for ScrollHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
         let EventArgs { event, .. } = event_args;
-        let event: &input::Event = event.event_data().downcast_ref().unwrap();
+        let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
         let event = event::InputEvent::new(event::SCROLL_SCROLLED, event.clone());
         Some(Box::new(event))
     }
@@ -44,7 +44,7 @@ impl EventHandler for WidgetScrollHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
         let EventArgs { event, layout, parent_layout, solver, .. } = event_args;
-        let event: &input::Event = event.event_data().downcast_ref().unwrap();
+        let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
 
         if let Some(scroll) = event.mouse_scroll_args() {
             let scroll: Point = scroll.into();

@@ -19,7 +19,7 @@ use limn::widget;
 use limn::event;
 use limn::resources::Id;
 
-use limn::event::Event;
+use limn::event::{Event, Signal};
 
 use limn::widget::DrawArgs;
 use limn::widget::builder::WidgetBuilder;
@@ -36,6 +36,8 @@ use input::ResizeEvent;
 use backend::events::WindowEvent;
 
 use graphics::types::Color;
+use graphics::color::*;
+use limn::color::*;
 
 use std::thread;
 use std::time;
@@ -50,6 +52,15 @@ use chrono::*;
 use input::EventId;
 const WIDGET_EVENT: usize = 0;
 
+fn hour_angle() -> f64 {
+    2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0
+}
+fn minute_angle() -> f64 {
+    2.0 * f64::consts::PI * Local::now().minute() as f64 / 60.0
+}
+fn second_angle() -> f64 {
+    2.0 * f64::consts::PI * Local::now().second() as f64 / 60.0
+}
 const CLOCK_TICK: EventId = EventId("CLOCK_TICK");
 struct ClockBuilder {
     widget: WidgetBuilder,
@@ -60,13 +71,15 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new(resources: &mut Resources, event_bus: &EventBus, sender: Sender<i32>) -> Self {
 
-        let circle = EllipseDrawable { background: [1.0, 0.0, 1.0, 1.0] };
+        let circle = EllipseDrawable { background: WHITE, border: Some(graphics::ellipse::Border { color: BLACK, radius: 2.0 }) };
         let mut widget = WidgetBuilder::new();
         widget.set_drawable(widget::primitives::draw_ellipse, Box::new(circle));
         widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0 });
 
         struct HandDrawable {
             background: Color,
+            width: Scalar,
+            length: Scalar,
             angle: Scalar, // radians
         }
         pub fn draw_clock_hand(draw_args: DrawArgs) {
@@ -77,8 +90,8 @@ impl ClockBuilder {
             let sin = state.angle.sin();
             let point = Point { x: sin * 1.0, y: -cos * 1.0};
             let par = Point { x: -cos * 1.0, y: -sin * 1.0};
-            let width = 10.0;
-            let length = 100.0;
+            let width = state.width;
+            let length = state.length;
             let center = bounds.center();
             let points: Vec<[f64; 2]> = [
                 center + (par * width),
@@ -90,13 +103,13 @@ impl ClockBuilder {
             graphics::Polygon::new(state.background)
                 .draw(&points, &context.draw_state, context.transform, graphics);
         }
-        let hour_drawable = HandDrawable { background: [1.0, 1.0, 0.0, 1.0], angle: 0.0 };
+        let hour_drawable = HandDrawable { background: BLACK, width: 4.0, length: 60.0, angle: hour_angle() };
         let mut hour_widget = WidgetBuilder::new();
         hour_widget.set_drawable(draw_clock_hand, Box::new(hour_drawable));
-        let minute_drawable = HandDrawable { background: [1.0, 1.0, 0.0, 1.0], angle: 0.0 };
+        let minute_drawable = HandDrawable { background: BLACK, width: 3.0, length: 90.0, angle: minute_angle() };
         let mut minute_widget = WidgetBuilder::new();
         minute_widget.set_drawable(draw_clock_hand, Box::new(minute_drawable));
-        let second_drawable = HandDrawable { background: [1.0, 1.0, 0.0, 1.0], angle: 0.0 };
+        let second_drawable = HandDrawable { background: RED, width: 2.0, length: 80.0, angle: second_angle() };
         let mut second_widget = WidgetBuilder::new();
         second_widget.set_drawable(draw_clock_hand, Box::new(second_drawable));
 
@@ -108,19 +121,13 @@ impl ClockBuilder {
         second_widget.set_id(second_id);
 
         fn update_hour_hand(state: &mut HandDrawable) {
-            let local: DateTime<Local> = Local::now();
-            let hour = (local.hour() % 12);
-            state.angle = 2.0 * f64::consts::PI * hour as f64 / 12.0;
+            state.angle = hour_angle();
         };
         fn update_minute_hand(state: &mut HandDrawable) {
-            let local: DateTime<Local> = Local::now();
-            let minute = local.minute();
-            state.angle = 2.0 * f64::consts::PI * minute as f64 / 60.0;
+            state.angle = minute_angle();
         };
         fn update_second_hand(state: &mut HandDrawable) {
-            let local: DateTime<Local> = Local::now();
-            let second = local.second();
-            state.angle = 2.0 * f64::consts::PI * second as f64 / 60.0;
+            state.angle = second_angle();
         };
 
         hour_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand)));
@@ -144,8 +151,6 @@ impl ClockBuilder {
         self.widget
     }
 }
-
-event!(ClockEvent, i32);
 
 fn main() {
     let mut resources = Resources::new();
@@ -173,11 +178,6 @@ fn main() {
 
     let ui = &mut Ui::new();
     ui.set_root(root_widget);
-
-    event_bus.register_address(EventAddress::Id(0), |droog: (Id, usize)| {
-        println!("{:?}", droog);
-    });
-
 
     let window_dims = ui.get_root_dims();
     // Construct the window.
@@ -213,12 +213,9 @@ fn main() {
                 let mut queue = event_queue.lock().unwrap();
                 while queue.len() > 0 {
                     queue.pop();
-                    let event = ClockEvent::new(CLOCK_TICK, 20);
-                    ui.send_event(hour_id, event);
-                    let event = ClockEvent::new(CLOCK_TICK, 20);
-                    ui.send_event(minute_id, event);
-                    let event = ClockEvent::new(CLOCK_TICK, 20);
-                    ui.send_event(second_id, event);
+                    ui.send_event(hour_id, Signal::new(CLOCK_TICK));
+                    ui.send_event(minute_id, Signal::new(CLOCK_TICK));
+                    ui.send_event(second_id, Signal::new(CLOCK_TICK));
                 }
                 window.draw_2d(|context, graphics| {
                     graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);

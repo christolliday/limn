@@ -32,7 +32,7 @@ impl EventHandler for ToggleEventHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
         let EventArgs { event, .. } = event_args;
-        let event: &input::Event = event.event_data().downcast_ref().unwrap();
+        let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
         
         self.on = !self.on;
         let event = if self.on {
