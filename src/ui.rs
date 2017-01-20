@@ -17,6 +17,7 @@ use cassowary::strength::*;
 use graphics::Context;
 use super::widget::*;
 use super::widget;
+use widget::layout::WidgetLayout;
 use widget::builder::WidgetBuilder;
 use super::util::*;
 use super::util;
@@ -28,7 +29,9 @@ use backend::glyph::GlyphCache;
 use backend::window::Window;
 
 use resources::image::Texture;
+use resources::Id;
 
+use std::collections::HashMap;
 use std::f64;
 use std::cmp::max;
 
@@ -37,6 +40,7 @@ const DEBUG_BOUNDS: bool = false;
 pub struct Resources {
     pub fonts: resources::Map<Font>,
     pub images: resources::Map<Texture>,
+    pub next_widget_id: usize,
 }
 impl Resources {
     pub fn new() -> Self {
@@ -45,7 +49,13 @@ impl Resources {
         Resources {
             fonts: fonts,
             images: images,
+            next_widget_id: 0,
         }
+    }
+    pub fn widget_id(&mut self) -> Id {
+        let id = self.next_widget_id;
+        self.next_widget_id = id.wrapping_add(1);
+        Id(id)
     }
 }
 
@@ -63,6 +73,7 @@ pub struct Ui {
     pub root_index: Option<NodeIndex>,
     pub solver: Solver,
     pub input_state: InputState,
+    pub widget_map: HashMap<Id, NodeIndex>,
 }
 impl Ui {
     pub fn new() -> Self {
@@ -74,6 +85,7 @@ impl Ui {
             root_index: None,
             solver: solver,
             input_state: input_state,
+            widget_map: HashMap::new(),
         };
         ui
     }
@@ -131,12 +143,35 @@ impl Ui {
             }
         }
     }
-    pub fn add_widget(&mut self, parent_index: Option<NodeIndex>, child: Widget) -> NodeIndex {
+    pub fn add_widget(&mut self, parent_index: Option<NodeIndex>, child: Widget, id: Option<Id>) -> NodeIndex {
         let child_index = self.graph.add_node(child);
         if let Some(parent_index) = parent_index {
             self.graph.add_edge(parent_index, child_index, ());
         }
+        if let Some(id) = id {
+            self.widget_map.insert(id, child_index);
+        }
         child_index
+    }
+    pub fn get_widget(&self, widget_id: Id) -> Option<&Widget> {
+        self.widget_map.get(&widget_id).and_then(|node_index| {
+            let ref widget = self.graph[NodeIndex::new(node_index.index())];
+            return Some(widget);
+        });
+        None
+    }
+    pub fn send_event<E: Event>(&mut self, widget_id: Id, event: E) {
+
+        let node_index = self.widget_map.get(&widget_id).unwrap();
+        //and_then(|node_index| {
+        let ref mut widget = self.graph[NodeIndex::new(node_index.index())];
+
+        let fake = WidgetLayout::new();
+        widget.trigger_event(event.event_id(), &event, &fake, &mut self.solver);
+        /*
+        let widget = self.get_widget(widget_id).unwrap();
+        //let event = ClockEvent::new(CLOCK_TICK, 0);
+        widget.trigger_event(event.event_id(), &event, &widget.layout, &mut self.solver);*/
     }
     pub fn handle_event(&mut self, event: input::Event) {
         if let Some(mouse) = event.mouse_cursor_args() {

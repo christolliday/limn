@@ -12,6 +12,7 @@ use ui::{Ui, Resources};
 use widget::layout::WidgetLayout;
 use widget::EventHandler;
 use widget::DrawArgs;
+use resources::Id;
 
 use cassowary::Solver;
 use cassowary::strength::*;
@@ -26,6 +27,7 @@ pub struct WidgetBuilder {
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_color: Color,
     pub children: Vec<Box<WidgetBuilder>>,
+    pub id: Option<Id>,
 }
 
 impl WidgetBuilder {
@@ -39,6 +41,7 @@ impl WidgetBuilder {
             event_handlers: Vec::new(),
             debug_color: [0.0, 1.0, 0.0, 1.0],
             children: Vec::new(),
+            id: None,
         }
     }
     pub fn set_drawable(&mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) {
@@ -55,6 +58,9 @@ impl WidgetBuilder {
         self.layout.add_child(&mut widget.layout);
         self.children.push(widget);
     }
+    pub fn set_id(&mut self, id: Id) {
+        self.id = Some(id);
+    }
 
     pub fn create(self, ui: &mut Ui, parent_index: Option<NodeIndex>) -> NodeIndex {
         let mut widget = Widget::new();
@@ -67,7 +73,7 @@ impl WidgetBuilder {
         widget.layout = self.layout;
         widget.layout.update_solver(&mut ui.solver);
 
-        let widget_index = ui.add_widget(parent_index, widget);
+        let widget_index = ui.add_widget(parent_index, widget, self.id);
         for child in self.children {
             child.create(ui, Some(widget_index));
         }

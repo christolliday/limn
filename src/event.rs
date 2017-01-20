@@ -1,3 +1,5 @@
+#[macro_use]
+
 use input;
 use input::EventId;
 use input::GenericEvent;
@@ -46,6 +48,7 @@ pub trait Event {
     fn event_data(&self) -> &Any;
 }
 
+#[macro_export]
 macro_rules! event {
     ( $name:ident, $data_type:path ) => {
         pub struct $name {

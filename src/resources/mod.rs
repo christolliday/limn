@@ -11,7 +11,7 @@ use std;
 /// - The key for the `font::Map`'s inner `HashMap`.
 /// - The `font_id` field for the rusttype::gpu_cache::Cache.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Id(usize);
+pub struct Id(pub usize);
 
 /// A collection of mappings from `font::Id`s to `rusttype::Font`s.
 pub struct Map<T> {

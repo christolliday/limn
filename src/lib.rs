@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate backend;
 extern crate graphics;
 extern crate cassowary;
@@ -14,3 +15,4 @@ pub mod util;
 pub mod text;
 pub mod resources;
 pub mod event;
+pub mod eventbus;
