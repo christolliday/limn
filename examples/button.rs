@@ -39,15 +39,17 @@ fn main() {
     
     let mut root_widget = WidgetBuilder::new();
     
-    let mut button = ButtonBuilder::new(&resources);
-    button.set_text("ON", "OFF", font_id, 20.0, [0.0, 0.0, 0.0, 1.0]);
-    button.widget.layout.center(&root_widget.layout);
-    button.widget.layout.pad(50.0, &root_widget.layout);
+    {
+        let mut button = ButtonBuilder::new(&mut resources);
+        button.set_text("ON", "OFF", font_id, 20.0, [0.0, 0.0, 0.0, 1.0]);
+        button.widget.layout.center(&root_widget.layout);
+        button.widget.layout.pad(50.0, &root_widget.layout);
 
-    root_widget.add_child(Box::new(button.builder()));
+        root_widget.add_child(Box::new(button.builder()));
+    }
 
     let ui = &mut Ui::new();
-    ui.set_root(root_widget);
+    ui.set_root(root_widget, &mut resources);
 
     let window_dims = ui.get_root_dims();
     // Construct the window.

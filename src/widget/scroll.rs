@@ -9,6 +9,7 @@ use cassowary::{Solver, Constraint};
 use cassowary::strength::*;
 use util::*;
 use widget::EventArgs;
+use eventbus::EventAddress;
 
 pub struct ScrollHandler {
     offset: Point,
@@ -22,11 +23,12 @@ impl EventHandler for ScrollHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_SCROLL
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
-        let EventArgs { event, .. } = event_args;
+    fn handle_event(&mut self, event_args: EventArgs) {
+        let EventArgs { event, widget_id, event_queue, .. } = event_args;
         let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
         let event = event::InputEvent::new(event::SCROLL_SCROLLED, event.clone());
-        Some(Box::new(event))
+
+        event_queue.push((EventAddress::IdAddress("CHILD".to_owned(), widget_id.0), Box::new(event)));
     }
 }
 
@@ -42,7 +44,7 @@ impl EventHandler for WidgetScrollHandler {
     fn event_id(&self) -> EventId {
         event::SCROLL_SCROLLED
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
+    fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { event, layout, parent_layout, solver, .. } = event_args;
         let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
 
@@ -63,6 +65,5 @@ impl EventHandler for WidgetScrollHandler {
             solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
             solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
         }
-        None
     }
 }

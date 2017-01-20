@@ -20,6 +20,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
 use limn::widget::image::ImageDrawable;
 use limn::widget::scroll::{ScrollHandler, WidgetScrollHandler};
+use limn::eventbus::EventBus;
 
 use backend::{Window, WindowEvents, OpenGL};
 use backend::events::WindowEvent;
@@ -88,7 +89,7 @@ fn main() {
     root_widget.add_child(Box::new(scroll_widget));
 
     let ui = &mut Ui::new();
-    ui.set_root(root_widget);
+    ui.set_root(root_widget, &mut resources);
 
     let window_dims = ui.get_root_dims();
     window.window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);

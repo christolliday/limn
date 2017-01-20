@@ -27,6 +27,7 @@ use limn::widget::primitives::{RectDrawable, EllipseDrawable};
 use limn::widget::button::ButtonBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::DrawableEventHandler;
+use limn::widget::{EventHandler, EventArgs};
 
 use limn::eventbus::{EventBus, EventAddress};
 
@@ -130,6 +131,16 @@ impl ClockBuilder {
             state.angle = second_angle();
         };
 
+        struct ClockEventHandler {}
+        impl EventHandler for ClockEventHandler {
+            fn event_id(&self) -> EventId {
+                CLOCK_TICK
+            }
+            fn handle_event(&mut self, event_args: EventArgs) {
+
+            }
+        }
+
         hour_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand)));
         minute_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand)));
         second_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_second_hand)));
@@ -177,7 +188,7 @@ fn main() {
     root_widget.add_child(Box::new(clock.builder()));
 
     let ui = &mut Ui::new();
-    ui.set_root(root_widget);
+    ui.set_root(root_widget, &mut resources);
 
     let window_dims = ui.get_root_dims();
     // Construct the window.

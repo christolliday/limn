@@ -62,8 +62,9 @@ impl WidgetBuilder {
         self.id = Some(id);
     }
 
-    pub fn create(self, ui: &mut Ui, parent_index: Option<NodeIndex>) -> NodeIndex {
-        let mut widget = Widget::new();
+    pub fn create(self, ui: &mut Ui, resources: &mut Resources, parent_index: Option<NodeIndex>) -> NodeIndex {
+        let id = self.id.unwrap_or(resources.widget_id());
+        let mut widget = Widget::new(id);
 
         if let (Some(draw_fn), Some(drawable)) = (self.draw_fn, self.drawable) {
             widget.set_drawable(draw_fn, drawable);
@@ -73,9 +74,9 @@ impl WidgetBuilder {
         widget.layout = self.layout;
         widget.layout.update_solver(&mut ui.solver);
 
-        let widget_index = ui.add_widget(parent_index, widget, self.id);
+        let widget_index = ui.add_widget(parent_index, widget);
         for child in self.children {
-            child.create(ui, Some(widget_index));
+            child.create(ui, resources, Some(widget_index));
         }
         widget_index
     }

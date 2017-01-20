@@ -15,6 +15,7 @@ use graphics::types::Color;
 use util::{Scalar, Dimensions};
 use resources::Id;
 use ui::Resources;
+use eventbus::EventAddress;
 
 use cassowary::Solver;
 
@@ -30,17 +31,17 @@ impl EventHandler for ToggleEventHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_PRESS
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
-        let EventArgs { event, .. } = event_args;
+    fn handle_event(&mut self, event_args: EventArgs) {
+        let EventArgs { event, widget_id, event_queue, .. } = event_args;
         let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
-        
+
         self.on = !self.on;
         let event = if self.on {
             event::InputEvent::new(event::BUTTON_ENABLED, event.clone())
         } else {
             event::InputEvent::new(event::BUTTON_DISABLED, event.clone())
         };
-        Some(Box::new(event))
+        event_queue.push((EventAddress::IdAddress("CHILDREN".to_owned(), widget_id.0), Box::new(event)));
     }
 }
 

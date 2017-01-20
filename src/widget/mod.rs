@@ -12,10 +12,13 @@ use graphics::Context;
 use graphics::types::Color;
 
 use event::Event;
+use eventbus::{EventBus, EventAddress};
 use input::EventId;
 use super::util::*;
 use super::util;
+use super::resources::Id;
 
+use ui::Ui;
 use super::ui::Resources;
 use self::layout::WidgetLayout;
 
@@ -36,18 +39,21 @@ pub struct DrawArgs<'a, 'b: 'a> {
 
 pub struct EventArgs<'a> {
     event: &'a Event,
+    widget_id: Id,
     state: Option<&'a mut Any>,
     layout: &'a mut WidgetLayout,
     parent_layout: &'a WidgetLayout,
+    event_queue: &'a mut Vec<(EventAddress, Box<Event>)>,
     solver: &'a mut Solver,
 }
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>>;
+    fn handle_event(&mut self, event_args: EventArgs);
 }
 
 pub struct Widget {
+    pub id: Id,
     pub draw_fn: Option<fn(DrawArgs)>,
     pub drawable: Option<Box<Any>>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
@@ -58,8 +64,9 @@ pub struct Widget {
 
 use input::{Input, Motion};
 impl Widget {
-    pub fn new() -> Self {
+    pub fn new(id: Id) -> Self {
         Widget {
+            id: id,
             draw_fn: None,
             drawable: None,
             mouse_over_fn: point_inside_rect,
@@ -97,17 +104,19 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: &Event, parent_layout: &WidgetLayout, solver: &mut Solver) -> Option<Box<Event>> {
+    pub fn trigger_event(&mut self, id: EventId, event: &Event, event_queue: &mut Vec<(EventAddress, Box<Event>)>, parent_layout: &WidgetLayout, solver: &mut Solver) {
         let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
 
         let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
         event_handler.handle_event(EventArgs {
             event: event,
+            widget_id: self.id,
             state: drawable,
             layout: &mut self.layout,
             parent_layout: parent_layout,
+            event_queue: event_queue,
             solver: solver,
-        })
+        });
     }
 }
 
@@ -132,11 +141,10 @@ impl<T: 'static> EventHandler for DrawableEventHandler<T>
     fn event_id(&self) -> EventId {
         self.event_id
     }
-    fn handle_event(&mut self, event_args: EventArgs) -> Option<Box<Event>> {
+    fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { state, .. } = event_args;
         let state = state.unwrap();
         let state = state.downcast_mut::<T>().unwrap();
         (self.drawable_callback)(state);
-        None
     }
 }

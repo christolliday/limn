@@ -18,7 +18,10 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
 use limn::widget::button::ToggleEventHandler;
 use limn::widget::layout::{LinearLayout, Orientation};
+use limn::event;
+use limn::widget::{EventHandler, EventArgs};
 
+use input::EventId;
 use backend::glyph::GlyphCache;
 use backend::{Window, WindowEvents};
 use input::ResizeEvent;
@@ -70,12 +73,10 @@ fn main() {
         fn event_id(&self) -> EventId {
             event::WIDGET_PRESS
         }
-        fn handle_event(&mut self, event_args: EventArgs) -> Option<Event> {
+        fn handle_event(&mut self, event_args: EventArgs) {
             self.count += 1;
         }
     }
-    //button_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
-    //button_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
     button_widget.debug_color([1.0, 1.0, 0.0, 1.0]);
     button_widget.layout.dimensions(Dimensions { width: 100.0, height: 50.0 });
     button_widget.layout.center(&button_container.layout);
@@ -85,8 +86,6 @@ fn main() {
     let button_text_dims = button_text_drawable.measure_dims_no_wrap(&resources);
     let mut button_text_widget = WidgetBuilder::new();
     button_text_widget.set_drawable(widget::text::draw_text, Box::new(button_text_drawable));
-    //button_text_widget.event_handlers.push(Box::new(ButtonOnHandler{}));
-    //button_text_widget.event_handlers.push(Box::new(ButtonOffHandler{}));
     button_text_widget.layout.dimensions(button_text_dims);
     button_text_widget.layout.center(&button_widget.layout);
 
@@ -95,7 +94,7 @@ fn main() {
     root_widget.add_child(Box::new(button_container));
 
     let ui = &mut Ui::new();
-    ui.set_root(root_widget);
+    ui.set_root(root_widget, &mut resources);
 
     let window_dims = ui.get_root_dims();
     let mut window = Window::new("Limn counter demo", window_dims, Some(window_dims));

@@ -12,7 +12,7 @@ pub struct EventBus {
     handlers: HashMap<EventAddress, Box<Any + 'static>>,
 }
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {
     Id(usize),
     Address(String),
@@ -34,7 +34,7 @@ impl EventBus {
         EventBus{next_id: 0, handlers: HashMap::new()}
     }
 
-    pub fn register<T: Any, H: Fn(T) + 'static + Sync>(&mut self, handler: H) -> Id {
+    pub fn register<T: Any, H: Fn(T) + 'static>(&mut self, handler: H) -> Id {
         let id = self.next_id;
         self.next_id = id.wrapping_add(1);
 
@@ -42,7 +42,7 @@ impl EventBus {
         id
     }
 
-    pub fn register_address<T: Any, H: Fn(T) + 'static + Sync>(&mut self, event_address: EventAddress, handler: H) {
+    pub fn register_address<T: Any, H: Fn(T) + 'static>(&mut self, event_address: EventAddress, handler: H) {
         let handler_ptr = HandlerPtr::new(Box::new(handler));
         self.handlers.insert(event_address, Box::new(handler_ptr));
     }
@@ -61,9 +61,10 @@ impl EventBus {
 
     pub fn post_address<T: Any>(&self, event_address: EventAddress, arg: T) -> bool {
         if let Some(handler) = self.handlers.get(&event_address) {
-
             if let Some(handler) = handler.downcast_ref::<HandlerPtr<T>>() {
                 (handler.handler)(arg);
+            } else {
+                println!("Error, wrong event type posted for address {:?}", event_address);
             }
             true
         } else {
