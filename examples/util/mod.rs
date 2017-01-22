@@ -19,6 +19,7 @@ pub fn init_default(title: &str) -> (Window, Ui) {
     (window, ui)
 }
 
+#[allow(dead_code)]
 pub fn load_default_font() -> Id {
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
     let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
@@ -26,6 +27,7 @@ pub fn load_default_font() -> Id {
     res.fonts.insert_from_file(font_path).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn load_default_image(window: &mut Window) -> Id {
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
     let image_path = assets.join("images/rust.png");

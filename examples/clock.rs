@@ -16,10 +16,9 @@ use graphics::types::Color;
 use input::EventId;
 
 use limn::event::Signal;
-use limn::widget::{self, DrawArgs, DrawableEventHandler};
+use limn::widget::{DrawArgs, EventHandler, EventArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
-use limn::widget::primitives::EllipseDrawable;
-use limn::widget::{EventHandler, EventArgs};
+use limn::widgets::primitives::{self, EllipseDrawable};
 use limn::event::{EventAddress, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Dimensions, Scalar};
@@ -42,7 +41,7 @@ impl ClockBuilder {
 
         let circle = EllipseDrawable { background: WHITE, border: Some(graphics::ellipse::Border { color: BLACK, radius: 2.0 }) };
         let mut widget = WidgetBuilder::new();
-        widget.set_drawable(widget::primitives::draw_ellipse, Box::new(circle));
+        widget.set_drawable(primitives::draw_ellipse, Box::new(circle));
         widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0 });
 
         struct HandDrawable {

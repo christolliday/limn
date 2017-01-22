@@ -3,7 +3,7 @@ extern crate limn;
 mod util;
 
 use limn::widget::builder::WidgetBuilder;
-use limn::widget::button::ToggleButtonBuilder;
+use limn::widgets::button::ToggleButtonBuilder;
 
 fn main() {
     let (window, ui) = util::init_default("Limn button demo");

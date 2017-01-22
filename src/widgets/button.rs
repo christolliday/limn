@@ -2,8 +2,8 @@ use input::{self, EventId};
 
 use widget::{self, EventHandler, DrawableEventHandler, EventArgs};
 use event::{self, EventAddress};
-use widget::primitives::RectDrawable;
-use widget::text::TextDrawable;
+use widgets::primitives::{self, RectDrawable};
+use widgets::text::{self, TextDrawable};
 use widget::builder::WidgetBuilder;
 use util::Dimensions;
 use resources::Id;
@@ -44,7 +44,7 @@ impl ToggleButtonBuilder {
     pub fn new() -> Self {
         let rect = RectDrawable { background: RED };
         let mut widget = WidgetBuilder::new();
-        widget.set_drawable(widget::primitives::draw_rect, Box::new(rect));
+        widget.set_drawable(primitives::draw_rect, Box::new(rect));
         widget.event_handlers.push(Box::new(ToggleEventHandler::new()));
 
         fn set_rect_on(state: &mut RectDrawable) {
@@ -84,7 +84,7 @@ impl ToggleButtonBuilder {
         };
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new();
-        button_text_widget.set_drawable(widget::text::draw_text, Box::new(button_text_drawable));
+        button_text_widget.set_drawable(text::draw_text, Box::new(button_text_drawable));
         button_text_widget.event_handlers
             .push(Box::new(DrawableEventHandler::new(event::BUTTON_ENABLED, set_text_on)));
         button_text_widget.event_handlers
@@ -106,7 +106,7 @@ impl PushButtonBuilder {
     pub fn new() -> Self {
         let rect = RectDrawable { background: RED };
         let mut widget = WidgetBuilder::new();
-        widget.set_drawable(widget::primitives::draw_rect, Box::new(rect));
+        widget.set_drawable(primitives::draw_rect, Box::new(rect));
 
         widget.layout.dimensions(Dimensions {
             width: 100.0,
@@ -125,7 +125,7 @@ impl PushButtonBuilder {
         };
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new();
-        button_text_widget.set_drawable(widget::text::draw_text, Box::new(button_text_drawable));
+        button_text_widget.set_drawable(text::draw_text, Box::new(button_text_drawable));
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
 

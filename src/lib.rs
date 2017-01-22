@@ -13,6 +13,7 @@ extern crate glutin;
 extern crate lazy_static;
 
 pub mod widget;
+pub mod widgets;
 pub mod ui;
 pub mod util;
 pub mod text;

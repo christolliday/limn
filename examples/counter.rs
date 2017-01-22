@@ -8,13 +8,12 @@ use std::any::Any;
 
 use input::EventId;
 
-use limn::widget;
-use limn::widget::text::TextDrawable;
-use limn::widget::builder::WidgetBuilder;
-use limn::widget::button::PushButtonBuilder;
-use limn::widget::layout::{LinearLayout, Orientation};
-use limn::event::{self, Event, Signal, EventAddress};
 use limn::widget::{EventHandler, EventArgs};
+use limn::widget::builder::WidgetBuilder;
+use limn::widget::layout::{LinearLayout, Orientation};
+use limn::widgets::text::{self, TextDrawable};
+use limn::widgets::button::PushButtonBuilder;
+use limn::event::{self, Event, Signal, EventAddress};
 use limn::resources::Id;
 use limn::color::*;
 
@@ -42,7 +41,7 @@ fn main() {
     };
     let text_dims = text_drawable.measure_dims_no_wrap();
     let mut text_widget = WidgetBuilder::new();
-    text_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
+    text_widget.set_drawable(text::draw_text, Box::new(text_drawable));
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);
     text_widget.layout.center_vertical(&root_widget.layout);

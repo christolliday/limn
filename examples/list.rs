@@ -2,11 +2,10 @@ extern crate limn;
 
 mod util;
 
-use limn::widget;
-use limn::widget::text::TextDrawable;
 use limn::widget::builder::WidgetBuilder;
-use limn::widget::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widget::layout::{LinearLayout, Orientation};
+use limn::widgets::text::{self, TextDrawable};
+use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::util::Dimensions;
 
 fn main() {
@@ -32,7 +31,7 @@ fn main() {
             let mut list_item_widget = WidgetBuilder::new();
             let text_drawable = TextDrawable::new("hello".to_owned(), font_id);
             let text_dims = text_drawable.measure_dims_no_wrap();
-            list_item_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
+            list_item_widget.set_drawable(text::draw_text, Box::new(text_drawable));
             list_item_widget.layout.match_width(&list_widget.layout);
             list_item_widget.layout.height(text_dims.height);
             linear_layout.add_widget(&mut list_item_widget.layout);
