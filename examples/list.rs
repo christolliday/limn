@@ -10,8 +10,8 @@ use limn::widget::layout::{LinearLayout, Orientation};
 use limn::util::Dimensions;
 
 fn main() {
-    let (window, mut ui) = util::init_default("Limn list demo");
-    let font_id = util::load_default_font(&mut ui);
+    let (window, ui) = util::init_default("Limn list demo");
+    let font_id = util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
     
@@ -31,7 +31,7 @@ fn main() {
         for i in 1..15 {
             let mut list_item_widget = WidgetBuilder::new();
             let text_drawable = TextDrawable::new("hello".to_owned(), font_id);
-            let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
+            let text_dims = text_drawable.measure_dims_no_wrap();
             list_item_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
             list_item_widget.layout.match_width(&list_widget.layout);
             list_item_widget.layout.height(text_dims.height);

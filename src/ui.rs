@@ -22,35 +22,10 @@ use backend::window::Window;
 use widget::Widget;
 use widget::builder::WidgetBuilder;
 use event::{self, Event, InputEvent, EventQueue, EventAddress};
-use resources;
-use resources::font::Font;
-use resources::image::Texture;
-use resources::Id;
 use util::{self, Point, Rectangle, Dimensions};
+use resources::Id;
 
 const DEBUG_BOUNDS: bool = false;
-
-pub struct Resources {
-    pub fonts: resources::Map<Font>,
-    pub images: resources::Map<Texture>,
-    pub next_widget_id: usize,
-}
-impl Resources {
-    pub fn new() -> Self {
-        let fonts = resources::Map::new();
-        let images = resources::Map::new();
-        Resources {
-            fonts: fonts,
-            images: images,
-            next_widget_id: 0,
-        }
-    }
-    pub fn widget_id(&mut self) -> Id {
-        let id = self.next_widget_id;
-        self.next_widget_id = id.wrapping_add(1);
-        Id(id)
-    }
-}
 
 pub struct InputState {
     pub mouse: Point,
@@ -69,7 +44,6 @@ pub struct Ui {
     pub widget_map: HashMap<Id, NodeIndex>,
     pub event_queue: EventQueue,
     pub glyph_cache: GlyphCache,
-    pub resources: Resources,
 }
 impl Ui {
     pub fn new(window: &mut Window) -> Self {
@@ -81,7 +55,6 @@ impl Ui {
             widget_map: HashMap::new(),
             event_queue: EventQueue::new(window),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
-            resources: Resources::new(),
         }
     }
     pub fn resize_window_to_fit(&mut self, window: &Window) {
@@ -124,7 +97,7 @@ impl Ui {
         let crop_to = {
             let ref widget = self.graph[node_index];
             widget.draw(crop_to,
-                        &self.resources,
+                        //&RES,
                         &mut self.solver,
                         &mut self.glyph_cache,
                         context,

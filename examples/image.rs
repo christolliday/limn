@@ -8,12 +8,12 @@ use limn::widget;
 
 fn main() {
     let (mut window, mut ui) = util::init_default("Limn button demo");
-    let image_id = util::load_default_image(&mut ui, &mut window);
+    let image_id = util::load_default_image(&mut window);
 
     let mut root_widget = WidgetBuilder::new();
     let mut image_widget = WidgetBuilder::new();
     let image_drawable = ImageDrawable::new(image_id);
-    let image_dims = image_drawable.measure_image(&ui.resources);
+    let image_dims = image_drawable.measure_image();
     image_widget.set_drawable(widget::image::draw_image, Box::new(image_drawable));
     image_widget.layout.dimensions(image_dims);
     image_widget.layout.center(&root_widget.layout);

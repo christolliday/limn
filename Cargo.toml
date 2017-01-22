@@ -14,6 +14,7 @@ rusttype = "0.2.0"
 gfx_device_gl = "0.11.0"
 piston2d-gfx_graphics = "0.33.1"
 glutin = "0.7.0"
+lazy_static = "0.2.2"
 
 [dev-dependencies]
 find_folder = "0.3.0"

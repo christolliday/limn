@@ -20,7 +20,6 @@ use limn::widget::{self, DrawArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::EllipseDrawable;
 use limn::widget::{EventHandler, EventArgs};
-use limn::ui::Resources;
 use limn::event::{EventAddress, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Dimensions, Scalar};
@@ -39,7 +38,7 @@ struct ClockBuilder {
     widget: WidgetBuilder,
 }
 impl ClockBuilder {
-    fn new(resources: &mut Resources, mut event_queue: EventQueue) -> Self {
+    fn new(mut event_queue: EventQueue) -> Self {
 
         let circle = EllipseDrawable { background: WHITE, border: Some(graphics::ellipse::Border { color: BLACK, radius: 2.0 }) };
         let mut widget = WidgetBuilder::new();
@@ -81,9 +80,6 @@ impl ClockBuilder {
         let mut second_widget = WidgetBuilder::new();
         second_widget.set_drawable(draw_clock_hand, Box::new(second_drawable));
 
-        let clock_id = resources.widget_id();
-        widget.set_id(clock_id);
-
         fn update_hour_hand(state: &mut HandDrawable) {
             state.angle = hour_angle();
         };
@@ -114,6 +110,7 @@ impl ClockBuilder {
         widget.add_child(Box::new(minute_widget));
         widget.add_child(Box::new(second_widget));
 
+        let clock_id = widget.id;
         thread::spawn(move || {
             loop {
                 thread::sleep(time::Duration::from_millis(1000));
@@ -129,10 +126,10 @@ impl ClockBuilder {
 }
 
 fn main() {
-    let (window, mut ui) = util::init_default("Limn clock demo");
+    let (window, ui) = util::init_default("Limn clock demo");
 
     let mut root_widget = WidgetBuilder::new();
-    let mut clock = ClockBuilder::new(&mut ui.resources, ui.event_queue.clone());
+    let mut clock = ClockBuilder::new(ui.event_queue.clone());
     clock.widget.layout.center(&root_widget.layout);
     clock.widget.layout.pad(50.0, &root_widget.layout);
     root_widget.add_child(Box::new(clock.builder()));

@@ -7,7 +7,6 @@ use widget::text::TextDrawable;
 use widget::builder::WidgetBuilder;
 use util::Dimensions;
 use resources::Id;
-use ui::Resources;
 use color::*;
 
 pub struct ToggleEventHandler {
@@ -68,8 +67,7 @@ impl ToggleButtonBuilder {
     pub fn set_text(&mut self,
                     on_text: &'static str,
                     off_text: &'static str,
-                    font_id: Id,
-                    resources: &Resources) {
+                    font_id: Id) {
 
         let set_text_on = move |state: &mut TextDrawable| {
             state.text = on_text.to_owned();
@@ -84,7 +82,7 @@ impl ToggleButtonBuilder {
             text_color: BLACK,
             background_color: TRANSPARENT,
         };
-        let button_text_dims = button_text_drawable.measure_dims_no_wrap(resources);
+        let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget.set_drawable(widget::text::draw_text, Box::new(button_text_drawable));
         button_text_widget.event_handlers
@@ -117,7 +115,7 @@ impl PushButtonBuilder {
 
         PushButtonBuilder { widget: widget }
     }
-    pub fn set_text(&mut self, text: &'static str, font_id: Id, resources: &Resources) {
+    pub fn set_text(&mut self, text: &'static str, font_id: Id) {
         let button_text_drawable = TextDrawable {
             text: text.to_owned(),
             font_id: font_id,
@@ -125,7 +123,7 @@ impl PushButtonBuilder {
             text_color: BLACK,
             background_color: TRANSPARENT,
         };
-        let button_text_dims = button_text_drawable.measure_dims_no_wrap(resources);
+        let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget.set_drawable(widget::text::draw_text, Box::new(button_text_drawable));
         button_text_widget.layout.dimensions(button_text_dims);

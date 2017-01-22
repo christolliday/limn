@@ -3,10 +3,10 @@ use std::any::Any;
 use graphics::types::Color;
 use petgraph::graph::NodeIndex;
 
-use ui::Ui;
+use ui::{self, Ui};
 use widget::{Widget, EventHandler, DrawArgs};
 use widget::layout::WidgetLayout;
-use resources::Id;
+use resources::{resources, Id};
 use util::{self, Point, Rectangle};
 
 pub struct WidgetBuilder {
@@ -17,7 +17,7 @@ pub struct WidgetBuilder {
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_color: Color,
     pub children: Vec<Box<WidgetBuilder>>,
-    pub id: Option<Id>,
+    pub id: Id,
 }
 
 impl WidgetBuilder {
@@ -30,7 +30,7 @@ impl WidgetBuilder {
             event_handlers: Vec::new(),
             debug_color: [0.0, 1.0, 0.0, 1.0],
             children: Vec::new(),
-            id: None,
+            id: resources().widget_id(),
         }
     }
     pub fn set_drawable(&mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) {
@@ -47,16 +47,12 @@ impl WidgetBuilder {
         self.layout.add_child(&mut widget.layout);
         self.children.push(widget);
     }
-    pub fn set_id(&mut self, id: Id) {
-        self.id = Some(id);
-    }
 
     pub fn create(self,
                   ui: &mut Ui,
                   parent_index: Option<NodeIndex>)
                   -> NodeIndex {
-        let id = self.id.unwrap_or(ui.resources.widget_id());
-        let mut widget = Widget::new(id);
+        let mut widget = Widget::new(self.id);
 
         if let (Some(draw_fn), Some(drawable)) = (self.draw_fn, self.drawable) {
             widget.set_drawable(draw_fn, drawable);

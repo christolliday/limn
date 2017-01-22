@@ -15,19 +15,17 @@ use limn::widget::button::PushButtonBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::event::{self, Event, Signal, EventAddress};
 use limn::widget::{EventHandler, EventArgs};
-use limn::resources::Id;
+use limn::resources::{Id, resources};
 use limn::color::*;
 
 const COUNTER: EventId = EventId("COUNTER");
 const COUNT: EventId = EventId("COUNT");
 
 fn main() {
-    let (window, mut ui) = util::init_default("Limn counter demo");
-    let font_id = util::load_default_font(&mut ui);
+    let (window, ui) = util::init_default("Limn counter demo");
+    let font_id = util::load_default_font();
     
     let mut root_widget = WidgetBuilder::new();
-    let root_id = ui.resources.widget_id();
-    root_widget.set_id(root_id);
 
     let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget.layout);
     let mut left_spacer = WidgetBuilder::new();
@@ -42,7 +40,7 @@ fn main() {
         text_color: BLACK,
         background_color: WHITE,
     };
-    let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
+    let text_dims = text_drawable.measure_dims_no_wrap();
     let mut text_widget = WidgetBuilder::new();
     text_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
     text_widget.layout.width(80.0);
@@ -82,10 +80,10 @@ fn main() {
         }
     }
     let mut button_widget = PushButtonBuilder::new();
-    button_widget.set_text("Count", font_id, &ui.resources);
+    button_widget.set_text("Count", font_id);
     button_widget.widget.layout.center(&button_container.layout);
     button_widget.widget.layout.pad(50.0, &button_container.layout);
-    button_widget.widget.event_handlers.push(Box::new(PushButtonHandler { receiver_id: root_id }));
+    button_widget.widget.event_handlers.push(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
     button_container.add_child(Box::new(button_widget.builder()));
     root_widget.add_child(Box::new(text_widget));
     root_widget.add_child(Box::new(button_container));

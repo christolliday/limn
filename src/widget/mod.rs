@@ -18,7 +18,6 @@ use backend::glyph::GlyphCache;
 use event::{Event, EventQueue};
 use input::EventId;
 use resources::Id;
-use ui::Resources;
 use util::{self, Point, Rectangle};
 
 use self::layout::WidgetLayout;
@@ -27,7 +26,6 @@ pub struct DrawArgs<'a, 'b: 'a> {
     pub state: &'a Any,
     pub bounds: Rectangle,
     pub parent_bounds: Rectangle,
-    pub resources: &'a Resources,
     pub glyph_cache: &'a mut GlyphCache,
     pub context: Context,
     pub graphics: &'a mut G2d<'b>,
@@ -81,7 +79,6 @@ impl Widget {
     }
     pub fn draw(&self,
                 crop_to: Rectangle,
-                resources: &Resources,
                 solver: &mut Solver,
                 glyph_cache: &mut GlyphCache,
                 context: Context,
@@ -93,7 +90,6 @@ impl Widget {
                 state: drawable.as_ref(),
                 bounds: bounds,
                 parent_bounds: crop_to,
-                resources: resources,
                 glyph_cache: glyph_cache,
                 context: context,
                 graphics: graphics,

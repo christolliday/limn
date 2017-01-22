@@ -5,20 +5,19 @@ use backend::glyph::{self, GlyphCache};
 use backend::gfx::ImageSize;
 
 use text::{self, Wrap};
-use resources;
-use ui::Resources;
+use resources::{Id, resources};
 use widget::DrawArgs;
 use util::{self, Dimensions, Align, Scalar};
 
 pub struct TextDrawable {
     pub text: String,
-    pub font_id: resources::Id,
+    pub font_id: Id,
     pub font_size: Scalar,
     pub text_color: Color,
     pub background_color: Color,
 }
 impl TextDrawable {
-    pub fn new(text: String, font_id: resources::Id) -> Self {
+    pub fn new(text: String, font_id: Id) -> Self {
         TextDrawable {
             text: text,
             font_id: font_id,
@@ -27,8 +26,9 @@ impl TextDrawable {
             background_color: [1.0, 1.0, 1.0, 1.0],
         }
     }
-    pub fn measure_dims_no_wrap(&self, resources: &Resources) -> Dimensions {
-        let font = resources.fonts.get(self.font_id).unwrap();
+    pub fn measure_dims_no_wrap(&self) -> Dimensions {
+        let res = resources();
+        let font = res.fonts.get(self.font_id).unwrap();
         text::get_text_dimensions(&self.text,
                                   font,
                                   self.font_size,
@@ -36,8 +36,9 @@ impl TextDrawable {
                                   Align::Start,
                                   Align::Start)
     }
-    pub fn measure_height_wrapped(&self, resources: &Resources, width: Scalar) -> Scalar {
-        let font = resources.fonts.get(self.font_id).unwrap();
+    pub fn measure_height_wrapped(&self, width: Scalar) -> Scalar {
+        let res = resources();
+        let font = res.fonts.get(self.font_id).unwrap();
         text::get_text_height(&self.text,
                               font,
                               self.font_size,
@@ -51,7 +52,7 @@ impl TextDrawable {
 
 pub fn draw_text(draw_args: DrawArgs) {
 
-    let DrawArgs { state, bounds, resources, glyph_cache, context, graphics, .. } = draw_args;
+    let DrawArgs { state, bounds, glyph_cache, context, graphics, .. } = draw_args;
     let state: &TextDrawable = state.downcast_ref().unwrap();
 
     graphics::Rectangle::new(state.background_color)
@@ -61,7 +62,8 @@ pub fn draw_text(draw_args: DrawArgs) {
                           cache: ref mut glyph_cache,
                           ref mut vertex_data } = glyph_cache;
 
-    let font = resources.fonts.get(state.font_id).unwrap();
+    let res = resources();
+    let font = res.fonts.get(state.font_id).unwrap();
     let line_wrap = Wrap::Character;
 
     let positioned_glyphs = &text::get_positioned_glyphs(&state.text,
