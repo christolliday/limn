@@ -15,7 +15,7 @@ use graphics::types::Color;
 use util::{Scalar, Dimensions};
 use resources::Id;
 use ui::Resources;
-use eventbus::EventAddress;
+use event::EventAddress;
 use color::*;
 
 use cassowary::Solver;

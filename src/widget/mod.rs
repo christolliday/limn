@@ -11,15 +11,13 @@ use backend::glyph::GlyphCache;
 use graphics::Context;
 use graphics::types::Color;
 
-use event::Event;
-use eventbus::{EventBus, EventAddress};
+use event::{Event, EventAddress, EventQueue};
 use input::EventId;
 use super::util::*;
 use super::util;
 use super::resources::Id;
 
 use ui::Ui;
-use ui::EventQueue;
 use super::ui::Resources;
 use self::layout::WidgetLayout;
 

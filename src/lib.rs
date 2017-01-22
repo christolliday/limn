@@ -17,5 +17,4 @@ pub mod util;
 pub mod text;
 pub mod resources;
 pub mod event;
-pub mod eventbus;
 pub mod color;

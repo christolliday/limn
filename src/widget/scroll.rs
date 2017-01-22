@@ -9,7 +9,7 @@ use cassowary::{Solver, Constraint};
 use cassowary::strength::*;
 use util::*;
 use widget::EventArgs;
-use eventbus::EventAddress;
+use event::EventAddress;
 
 pub struct ScrollEvent {
     pub data: (input::Event, Rectangle),

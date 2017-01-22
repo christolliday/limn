@@ -19,16 +19,16 @@ use super::widget::*;
 use super::widget;
 use widget::layout::WidgetLayout;
 use widget::builder::WidgetBuilder;
-use eventbus::{EventBus, EventAddress};
 use super::util::*;
 use super::util;
-use super::event;
+use super::event::{self, EventAddress};
 use event::{Event, InputEvent};
 use resources;
 use resources::font::Font;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
 use input::EventId;
+use event::EventQueue;
 
 use resources::image::Texture;
 use resources::Id;
@@ -37,9 +37,6 @@ use std::collections::HashMap;
 use std::f64;
 use std::cmp::max;
 use std::any::Any;
-use std::sync::{Arc, Mutex};
-
-use glutin::WindowProxy;
 
 const DEBUG_BOUNDS: bool = false;
 
@@ -62,37 +59,6 @@ impl Resources {
         let id = self.next_widget_id;
         self.next_widget_id = id.wrapping_add(1);
         Id(id)
-    }
-}
-#[derive(Clone)]
-pub struct EventQueue {
-    queue: Arc<Mutex<Vec<(EventAddress, Box<Event + Send>)>>>,
-    window_proxy: Option<WindowProxy>,
-}
-impl EventQueue {
-    fn new() -> Self {
-        EventQueue {
-            queue: Arc::new(Mutex::new(Vec::new())),
-            window_proxy: None,
-        }
-    }
-    pub fn set_window(&mut self, window: &Window) {
-        self.window_proxy = Some(window.window.window.create_window_proxy());
-    }
-    pub fn push(&mut self, address: EventAddress, event: Box<Event + Send>) {
-        let mut queue = self.queue.lock().unwrap();
-        queue.push((address, event));
-        if let Some(ref window_proxy) = self.window_proxy {
-            window_proxy.wakeup_event_loop();
-        }
-    }
-    pub fn is_empty(&mut self) -> bool {
-        let queue = self.queue.lock().unwrap();
-        queue.len() == 0
-    }
-    pub fn next(&mut self) -> (EventAddress, Box<Event + Send>) {
-        let mut queue = self.queue.lock().unwrap();
-        queue.pop().unwrap()
     }
 }
 
