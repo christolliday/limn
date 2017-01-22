@@ -117,7 +117,7 @@ impl Widget {
             });
         } else {
             // no event handler for id
-            println!("widget {:?} has no handler for {:?}", self.id, id);
+            //println!("widget {:?} has no handler for {:?}", self.id, id);
         }
     }
 }

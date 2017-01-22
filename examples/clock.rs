@@ -86,16 +86,14 @@ impl ClockBuilder {
 
             let cos = state.angle.cos();
             let sin = state.angle.sin();
-            let point = Point { x: sin * 1.0, y: -cos * 1.0};
-            let par = Point { x: -cos * 1.0, y: -sin * 1.0};
-            let width = state.width;
-            let length = state.length;
+            let hand_dir = Point { x: sin * 1.0, y: -cos * 1.0} * state.length;
+            let hand_norm = Point { x: -cos * 1.0, y: -sin * 1.0} * state.width;
             let center = bounds.center();
             let points: Vec<[f64; 2]> = [
-                center + (par * width),
-                center + (par * width) + (point * length),
-                center - (par * width) + (point * length),
-                center - (par * width),
+                center + hand_norm,
+                center + hand_norm + hand_dir,
+                center - hand_norm + hand_dir,
+                center - hand_norm,
             ].iter().map(|point| { [point.x, point.y]}).collect();
 
             graphics::Polygon::new(state.background)
@@ -159,7 +157,7 @@ impl ClockBuilder {
 }
 
 fn main() {
-    let window_dims = Dimensions { width: 600.0, height: 400.0 };
+    let window_dims = Dimensions { width: 100.0, height: 100.0 };
     let mut window = Window::new("Limn clock demo", window_dims, Some(window_dims));
     let ui = &mut Ui::new();
     ui.event_queue.set_window(&window);
@@ -192,7 +190,6 @@ fn main() {
                 ui.handle_event(event.clone());
             },
             WindowEvent::Render => {
-                ui.handle_event_queue();
                 window.draw_2d(|context, graphics| {
                     graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
                     ui.draw(&resources, &mut glyph_cache, context, graphics);

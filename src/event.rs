@@ -34,8 +34,8 @@ pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
 pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
 
 // get the widget event that is received if the event occurs while mouse is over widget
-pub fn widget_event<E: Event>(event: &E) -> Option<EventId> {
-    match event.event_id() {
+pub fn widget_event(event_id: EventId) -> Option<EventId> {
+    match event_id {
         MOUSE_CURSOR => Some(WIDGET_MOUSE_OVER),
         MOUSE_SCROLL => Some(WIDGET_SCROLL),
         PRESS => Some(WIDGET_PRESS),

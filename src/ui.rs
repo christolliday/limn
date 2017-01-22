@@ -108,7 +108,6 @@ pub struct Ui {
     pub solver: Solver,
     pub input_state: InputState,
     pub widget_map: HashMap<Id, NodeIndex>,
-    pub event_bus: EventBus,
     pub event_queue: EventQueue,
 }
 impl Ui {
@@ -116,14 +115,12 @@ impl Ui {
         let mut solver = Solver::new();
         let mut graph = Graph::<Widget, ()>::new();
         let input_state = InputState::new();
-        let mut event_bus = EventBus::new();
         let mut ui = Ui {
             graph: graph,
             root_index: None,
             solver: solver,
             input_state: input_state,
             widget_map: HashMap::new(),
-            event_bus: event_bus,
             event_queue: EventQueue::new(),
         };
         ui
@@ -147,7 +144,7 @@ impl Ui {
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
         root.layout.get_dims(&mut self.solver)
     }
-    pub fn window_resized(&mut self, window: &mut Window, window_dims: Dimensions) {
+    pub fn window_resized(&mut self, window: &Window, window_dims: Dimensions) {
         let ref root = self.graph[self.root_index.unwrap()];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
@@ -174,6 +171,8 @@ impl Ui {
         }
     }
     pub fn draw(&mut self, resources: &Resources, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+
+        self.handle_event_queue();
 
         let index = self.root_index.unwrap().clone();
         self.draw_node(resources, glyph_cache, context, graphics, index, Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX });
@@ -211,41 +210,37 @@ impl Ui {
         if let Some(mouse) = event.mouse_cursor_args() {
             self.input_state.mouse = mouse.into();
         }
-        let event = InputEvent::new(event.event_id(), event);
-        self.post_event(event);
-    }
-    pub fn post_event<E: Event>(&mut self, event: E) {
-        let id_registered = |widget: &Widget, id| { widget.event_handlers.iter().any(|event_handler| event_handler.event_id() == id) };
-        
-        let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
-        while let Some(node_index) = dfs.next(&self.graph) {
-            if let Some(parent_index) = self.parents(node_index).next() {
-                let ref mut widget = self.graph[node_index];
-                if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                    let widget_event_id = event::widget_event(&event);
-                    if let Some(event_id) = widget_event_id {
-                        if id_registered(widget, event_id) {
-                            widget.trigger_event(event_id, &event, &mut self.event_queue, &mut self.solver);
-                        }
-                    }
-                }
-            }
+        if let Some(event_id) = event::widget_event(event.event_id()) {
+            let event = InputEvent::new(event_id, event);
+            self.event_queue.push(EventAddress::Address("UNDER_MOUSE".to_owned()), Box::new(event));
         }
-        self.handle_event_queue();
     }
     pub fn handle_event_queue(&mut self) {
         while !self.event_queue.is_empty() {
             let (event_address, event) = self.event_queue.next();
+            let event = &*event;
             match event_address {
                 EventAddress::IdAddress(address, id) => {
                     if address == "CHILD" {
-                        self.update_child(Id(id), &*event);
+                        self.update_child(Id(id), event);
                     } else if address == "CHILDREN" {
-                        self.update_children(Id(id), &*event);
+                        self.update_children(Id(id), event);
                     } else if address == "SELF" {
-                        self.update(Id(id), &*event);
+                        self.update(Id(id), event);
                     }
-                }, _ => {}
+                },
+                EventAddress::Address(address) => {
+                    if address == "UNDER_MOUSE" {
+                        let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
+                        while let Some(node_index) = dfs.next(&self.graph) {
+                            let ref mut widget = self.graph[node_index];
+                            if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
+                                widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+                            }
+                        }
+                    }
+                }
+                _ => {}
             }
         }
     }
