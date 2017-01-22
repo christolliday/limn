@@ -7,7 +7,7 @@ use limn::widget::image::ImageDrawable;
 use limn::widget;
 
 fn main() {
-    let (mut window, mut ui) = util::init_default("Limn button demo");
+    let (mut window, ui) = util::init_default("Limn button demo");
     let image_id = util::load_default_image(&mut window);
 
     let mut root_widget = WidgetBuilder::new();

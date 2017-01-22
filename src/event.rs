@@ -7,6 +7,8 @@ use glutin::WindowProxy;
 
 use backend::Window;
 
+use resources::Id;
+
 // from piston input
 pub const AFTER_RENDER: EventId = EventId("piston/after_render");
 pub const CONTROLLER_AXIS: EventId = EventId("piston/controller_axis");
@@ -94,9 +96,9 @@ event!(InputEvent, input::Event);
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {
-    Id(usize),
+    Id(Id),
     Address(String),
-    IdAddress(String, usize),
+    IdAddress(String, Id),
 }
 
 #[derive(Clone)]

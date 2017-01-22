@@ -29,7 +29,7 @@ impl EventHandler for ScrollHandler {
         let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
         let widget_bounds = layout.bounds(solver);
         let event = ScrollEvent { data: (event.clone(), widget_bounds) };
-        event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id.0),
+        event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id),
                          Box::new(event));
     }
 }

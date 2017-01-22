@@ -183,11 +183,11 @@ impl Ui {
             match event_address {
                 EventAddress::IdAddress(address, id) => {
                     if address == "CHILD" {
-                        self.update_child(Id(id), event);
+                        self.update_child(id, event);
                     } else if address == "CHILDREN" {
-                        self.update_children(Id(id), event);
+                        self.update_children(id, event);
                     } else if address == "SELF" {
-                        self.update(Id(id), event);
+                        self.update(id, event);
                     }
                 }
                 EventAddress::Address(address) => {

@@ -15,7 +15,7 @@ use limn::widget::button::PushButtonBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::event::{self, Event, Signal, EventAddress};
 use limn::widget::{EventHandler, EventArgs};
-use limn::resources::{Id, resources};
+use limn::resources::Id;
 use limn::color::*;
 
 const COUNTER: EventId = EventId("COUNTER");
@@ -75,7 +75,7 @@ fn main() {
         fn handle_event(&mut self, event_args: EventArgs) {
             let EventArgs { event_queue, .. } = event_args;
             let event = Signal::new(COUNTER);
-            event_queue.push(EventAddress::IdAddress("SELF".to_owned(), self.receiver_id.0),
+            event_queue.push(EventAddress::IdAddress("SELF".to_owned(), self.receiver_id),
                              Box::new(event));
         }
     }
@@ -106,7 +106,7 @@ fn main() {
             let EventArgs { widget_id, event_queue, .. } = event_args;
             self.count += 1;
             let event = CountEvent::new(COUNT, self.count);
-            event_queue.push(EventAddress::IdAddress("CHILDREN".to_owned(), widget_id.0),
+            event_queue.push(EventAddress::IdAddress("CHILDREN".to_owned(), widget_id),
                              Box::new(event));
         }
     }

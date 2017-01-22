@@ -31,7 +31,7 @@ impl EventHandler for ToggleEventHandler {
         } else {
             event::InputEvent::new(event::BUTTON_DISABLED, event.clone())
         };
-        event_queue.push(EventAddress::IdAddress("CHILDREN".to_owned(), widget_id.0),
+        event_queue.push(EventAddress::IdAddress("CHILDREN".to_owned(), widget_id),
                          Box::new(event));
     }
 }

@@ -97,7 +97,7 @@ impl ClockBuilder {
             }
             fn handle_event(&mut self, event_args: EventArgs) {
                 let EventArgs { widget_id, event_queue, .. } = event_args;
-                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id.0), Box::new(Signal::new(CLOCK_TICK)));
+                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id), Box::new(Signal::new(CLOCK_TICK)));
             }
         }
         widget.event_handlers.push(Box::new(ClockEventHandler {}));
@@ -114,7 +114,7 @@ impl ClockBuilder {
         thread::spawn(move || {
             loop {
                 thread::sleep(time::Duration::from_millis(1000));
-                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), clock_id.0), Box::new(Signal::new(CLOCK_TICK)));
+                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), clock_id), Box::new(Signal::new(CLOCK_TICK)));
             }
         });
 
