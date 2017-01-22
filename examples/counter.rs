@@ -10,6 +10,8 @@ extern crate find_folder;
 #[macro_use]
 extern crate matches;
 
+mod util;
+
 use limn::ui::*;
 use limn::util::*;
 use limn::widget::text::*;
@@ -17,13 +19,12 @@ use limn::widget;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::RectDrawable;
-use limn::widget::button::PushEventHandler;
+use limn::widget::button::{PushButtonBuilder};
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::event::{self, Event, Signal};
+use limn::event::{self, Event, Signal, EventAddress};
 use limn::widget::{EventHandler, EventArgs};
 use limn::resources::Id;
 use limn::color::*;
-use limn::eventbus::EventAddress;
 
 use input::EventId;
 use backend::glyph::GlyphCache;
@@ -37,15 +38,13 @@ const COUNTER: EventId = EventId("COUNTER");
 const COUNT: EventId = EventId("COUNT");
 
 fn main() {
-    let mut resources = Resources::new();
-
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
-
-    let font_id = resources.fonts.insert_from_file(font_path).unwrap();
+    let (window, mut ui) = util::init_default("Limn counter demo");
+    let font_id = util::load_default_font(&mut ui);
 
     let mut root_widget = WidgetBuilder::new();
-    let root_id = resources.widget_id();
+    
+    let mut root_widget = WidgetBuilder::new();
+    let root_id = ui.resources.widget_id();
     root_widget.set_id(root_id);
 
     let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget.layout);
@@ -61,7 +60,7 @@ fn main() {
         text_color: BLACK,
         background_color: WHITE,
     };
-    let text_dims = text_drawable.measure_dims_no_wrap(&resources);
+    let text_dims = text_drawable.measure_dims_no_wrap(&ui.resources);
     let mut text_widget = WidgetBuilder::new();
     text_widget.set_drawable(widget::text::draw_text, Box::new(text_drawable));
     text_widget.layout.width(80.0);
@@ -101,7 +100,7 @@ fn main() {
         }
     }
     let mut button_widget = PushButtonBuilder::new();
-    button_widget.set_text("Count", font_id, &resources);
+    button_widget.set_text("Count", font_id, &ui.resources);
     button_widget.widget.layout.center(&button_container.layout);
     button_widget.widget.layout.pad(50.0, &button_container.layout);
     button_widget.widget.event_handlers.push(Box::new(PushButtonHandler { receiver_id: root_id }));
@@ -133,30 +132,5 @@ fn main() {
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));
 
-
-    let ui = &mut Ui::new();
-    ui.set_root(root_widget, &mut resources);
-
-    let window_dims = ui.get_root_dims();
-    let mut window = Window::new("Limn counter demo", window_dims, Some(window_dims));
-    let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
-
-    let mut events = WindowEvents::new();
-    while let Some(event) = events.next(&mut window) {
-        match event {
-            WindowEvent::Input(event) => {
-                if let Some(window_dims) = event.resize_args() {
-                    window.window_resized();
-                    ui.window_resized(&mut window, window_dims.into());
-                }
-                ui.handle_event(event.clone());
-            }
-            WindowEvent::Render => {
-                window.draw_2d(|context, graphics| {
-                    graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                    ui.draw(&resources, &mut glyph_cache, context, graphics);
-                });
-            }
-        }
-    }
+    util::set_root_and_loop(window, ui, root_widget);
 }

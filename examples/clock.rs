@@ -12,6 +12,8 @@ extern crate chrono;
 #[macro_use]
 extern crate matches;
 
+mod util;
+
 use limn::ui::*;
 use limn::util::*;
 use limn::widget::text::*;
@@ -24,12 +26,11 @@ use limn::event::{Event, Signal};
 use limn::widget::DrawArgs;
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable, EllipseDrawable};
-use limn::widget::button::ButtonBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::DrawableEventHandler;
 use limn::widget::{EventHandler, EventArgs};
 
-use limn::eventbus::{EventBus, EventAddress};
+use limn::event::{EventAddress, EventQueue};
 
 use backend::glyph::GlyphCache;
 use backend::{Window, WindowEvents};
@@ -37,7 +38,6 @@ use input::ResizeEvent;
 use backend::events::WindowEvent;
 
 use graphics::types::Color;
-use graphics::color::*;
 use limn::color::*;
 
 use std::thread;
@@ -157,44 +157,13 @@ impl ClockBuilder {
 }
 
 fn main() {
-    let window_dims = Dimensions { width: 100.0, height: 100.0 };
-    let mut window = Window::new("Limn clock demo", window_dims, Some(window_dims));
-    let ui = &mut Ui::new();
-    ui.event_queue.set_window(&window);
-    let mut resources = Resources::new();
-
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
-
-    let font_id = resources.fonts.insert_from_file(font_path).unwrap();
+    let (window, mut ui) = util::init_default("Limn clock demo");
 
     let mut root_widget = WidgetBuilder::new();
-    
-    let mut clock = ClockBuilder::new(&mut resources, ui.event_queue.clone());
+    let mut clock = ClockBuilder::new(&mut ui.resources, ui.event_queue.clone());
     clock.widget.layout.center(&root_widget.layout);
     clock.widget.layout.pad(50.0, &root_widget.layout);
-
     root_widget.add_child(Box::new(clock.builder()));
-    ui.set_root(root_widget, &mut resources);
-    ui.resize_window_to_fit(&window);
-    let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
 
-    let mut events = WindowEvents::new();
-    while let Some(event) = events.next(&mut window) {
-        match event {
-            WindowEvent::Input(event) => {
-                if let Some(window_dims) = event.resize_args() {
-                    window.window_resized();
-                    ui.window_resized(&mut window, window_dims.into());
-                }
-                ui.handle_event(event.clone());
-            },
-            WindowEvent::Render => {
-                window.draw_2d(|context, graphics| {
-                    graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                    ui.draw(&resources, &mut glyph_cache, context, graphics);
-                });
-            }
-        }
-    }
+    util::set_root_and_loop(window, ui, root_widget);
 }

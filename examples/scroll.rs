@@ -9,6 +9,8 @@ extern crate find_folder;
 #[macro_use]
 extern crate matches;
 
+mod util;
+
 use limn::ui::*;
 use limn::util::*;
 use limn::widget::text::*;
@@ -20,7 +22,6 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
 use limn::widget::image::ImageDrawable;
 use limn::widget::scroll::{ScrollHandler, WidgetScrollHandler};
-use limn::eventbus::EventBus;
 use limn::color::*;
 
 use backend::{Window, WindowEvents, OpenGL};
@@ -34,17 +35,7 @@ use cassowary::strength::*;
 use std::any::Any;
 
 fn main() {
-    let window_dims = Dimensions { width: 100.0, height: 100.0 };
-
-    let mut window = Window::new("Limn scroll demo", window_dims, None);
-    let mut resources = Resources::new();
-
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
-    let image_path = assets.join("images/rust.png");
-
-    let font_id = resources.fonts.insert_from_file(font_path).unwrap();
-    let image_id = resources.images.insert_from_file(&mut window.context.factory, image_path);
+    let (window, mut ui) = util::init_default("Limn scroll demo");
     
     let mut root_widget = WidgetBuilder::new();
 
@@ -89,27 +80,5 @@ fn main() {
     scroll_widget.add_child(Box::new(rect_container_widget));
     root_widget.add_child(Box::new(scroll_widget));
 
-    let ui = &mut Ui::new();
-    ui.set_root(root_widget, &mut resources);
-    ui.resize_window_to_fit(&window);
-
-    let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
-    let mut events = WindowEvents::new();
-    while let Some(event) = events.next(&mut window) {
-        match event {
-            WindowEvent::Input(event) => {
-                if let Some(window_dims) = event.resize_args() {
-                    window.window_resized();
-                    ui.window_resized(&mut window, window_dims.into());
-                }
-                ui.handle_event(event.clone());
-            },
-            WindowEvent::Render => {
-                window.draw_2d(|context, graphics| {
-                    graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                    ui.draw(&resources, &mut glyph_cache, context, graphics);
-                });
-            }
-        }
-    }
+    util::set_root_and_loop(window, ui, root_widget);
 }

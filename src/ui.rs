@@ -78,9 +78,11 @@ pub struct Ui {
     pub input_state: InputState,
     pub widget_map: HashMap<Id, NodeIndex>,
     pub event_queue: EventQueue,
+    pub glyph_cache: GlyphCache,
+    pub resources: Resources,
 }
 impl Ui {
-    pub fn new() -> Self {
+    pub fn new(window: &mut Window) -> Self {
         let mut solver = Solver::new();
         let mut graph = Graph::<Widget, ()>::new();
         let input_state = InputState::new();
@@ -90,7 +92,9 @@ impl Ui {
             solver: solver,
             input_state: input_state,
             widget_map: HashMap::new(),
-            event_queue: EventQueue::new(),
+            event_queue: EventQueue::new(window),
+            glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
+            resources: Resources::new(),
         };
         ui
     }
@@ -98,8 +102,8 @@ impl Ui {
         let window_dims = self.get_root_dims();
         window.window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
-    pub fn set_root(&mut self, root_widget: WidgetBuilder, resources: &mut Resources) {
-        self.root_index = Some(root_widget.create(self, resources, None));
+    pub fn set_root(&mut self, root_widget: WidgetBuilder) {
+        self.root_index = Some(root_widget.create(self, None));
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
         self.solver.add_edit_variable(root.layout.right, STRONG).unwrap();
         self.solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
@@ -126,8 +130,6 @@ impl Ui {
     }
 
     pub fn draw_node(&mut self,
-                     resources: &Resources,
-                     glyph_cache: &mut GlyphCache,
                      context: Context,
                      graphics: &mut G2d,
                      node_index: NodeIndex,
@@ -136,9 +138,9 @@ impl Ui {
         let crop_to = {
             let ref widget = self.graph[node_index];
             widget.draw(crop_to,
-                        resources,
+                        &self.resources,
                         &mut self.solver,
-                        glyph_cache,
+                        &mut self.glyph_cache,
                         context,
                         graphics);
 
@@ -147,26 +149,20 @@ impl Ui {
 
         let children: Vec<NodeIndex> = self.children(node_index).collect();
         for child_index in children {
-            self.draw_node(resources,
-                           glyph_cache,
-                           context,
+            self.draw_node(context,
                            graphics,
                            child_index,
                            crop_to);
         }
     }
     pub fn draw(&mut self,
-                resources: &Resources,
-                glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {
 
         self.handle_event_queue();
 
         let index = self.root_index.unwrap().clone();
-        self.draw_node(resources,
-                       glyph_cache,
-                       context,
+        self.draw_node(context,
                        graphics,
                        index,
                        Rectangle {
