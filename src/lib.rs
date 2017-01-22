@@ -1,3 +1,4 @@
+#![feature(get_type_id)]
 #[macro_use]
 extern crate backend;
 extern crate graphics;

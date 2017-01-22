@@ -43,7 +43,6 @@ pub struct EventArgs<'a> {
     pub widget_id: Id,
     pub state: Option<&'a mut Any>,
     pub layout: &'a mut WidgetLayout,
-    pub parent_layout: &'a WidgetLayout,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
 }
@@ -105,7 +104,7 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: &Event, event_queue: &mut EventQueue, parent_layout: &WidgetLayout, solver: &mut Solver) {
+    pub fn trigger_event(&mut self, id: EventId, event: &Event, event_queue: &mut EventQueue, solver: &mut Solver) {
         if let Some(event_handler) = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id) {
             let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
             event_handler.handle_event(EventArgs {
@@ -113,7 +112,6 @@ impl Widget {
                 widget_id: self.id,
                 state: drawable,
                 layout: &mut self.layout,
-                parent_layout: parent_layout,
                 event_queue: event_queue,
                 solver: solver,
             });

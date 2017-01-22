@@ -132,55 +132,6 @@ impl Ui {
         let window_dims = self.get_root_dims();
         window.window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
-    fn update_child(&mut self, widget_id: Id, event: &Event) {
-        if self.widget_map.contains_key(&widget_id) {
-            let node_index = *self.widget_map.get(&widget_id).unwrap();
-            self.update_child_widget(node_index, event);
-        } else {
-            println!("widget id {:?} not in widget_map", widget_id);
-        }
-    }
-    fn update_child_widget(&mut self, node_index: NodeIndex, event: &Event) {
-        let children: Vec<NodeIndex> = self.children(node_index).collect();
-        for child_index in children {
-            let (parent, child) = self.graph.index_twice_mut(node_index, child_index);
-            child.trigger_event(event.event_id(), event, &mut self.event_queue, &parent.layout, &mut self.solver);
-        }
-    }
-    fn update_children(&mut self, widget_id: Id, event: &Event) {
-        if self.widget_map.contains_key(&widget_id) {
-            let node_index = *self.widget_map.get(&widget_id).unwrap();
-            self.update_widget(node_index, event);
-            self.update_children_widget(node_index, event);
-        } else {
-            println!("widget id {:?} not in widget_map", widget_id);
-        }
-    }
-    fn update_children_widget(&mut self, node_index: NodeIndex, event: &Event) {
-        let children: Vec<NodeIndex> = self.children(node_index).collect();
-        for child_index in children {
-            {
-                let (parent, child) = self.graph.index_twice_mut(node_index, child_index);
-                child.trigger_event(event.event_id(), event, &mut self.event_queue, &parent.layout, &mut self.solver);
-            }
-            self.update_children_widget(child_index, event);
-        }
-    }
-    fn update(&mut self, widget_id: Id, event: &Event) {
-        if self.widget_map.contains_key(&widget_id) {
-            let node_index = *self.widget_map.get(&widget_id).unwrap();
-            let ref mut widget = self.graph[node_index];
-            let fake = WidgetLayout::new();
-            widget.trigger_event(event.event_id(), event, &mut self.event_queue, &fake, &mut self.solver);
-        } else {
-            println!("widget id {:?} not in widget_map", widget_id);
-        }
-    }
-    fn update_widget(&mut self, node_index: NodeIndex, event: &Event) {
-        let ref mut widget = self.graph[node_index];
-        let fake = WidgetLayout::new();
-        widget.trigger_event(event.event_id(), event, &mut self.event_queue, &fake, &mut self.solver);
-    }
     pub fn set_root(&mut self, root_widget: WidgetBuilder, resources: &mut Resources) {
         self.root_index = Some(root_widget.create(self, resources, None));
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
@@ -254,8 +205,7 @@ impl Ui {
     pub fn send_event<E: Event>(&mut self, widget_id: Id, event: E) {
         let node_index = self.widget_map.get(&widget_id).unwrap();
         let ref mut widget = self.graph[NodeIndex::new(node_index.index())];
-        let fake = WidgetLayout::new();
-        widget.trigger_event(event.event_id(), &event, &mut self.event_queue, &fake, &mut self.solver);
+        widget.trigger_event(event.event_id(), &event, &mut self.event_queue, &mut self.solver);
     }
     pub fn handle_event(&mut self, event: input::Event) {
         if let Some(mouse) = event.mouse_cursor_args() {
@@ -270,12 +220,12 @@ impl Ui {
         let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
         while let Some(node_index) = dfs.next(&self.graph) {
             if let Some(parent_index) = self.parents(node_index).next() {
-                let (parent, widget) = self.graph.index_twice_mut(parent_index, node_index);
+                let ref mut widget = self.graph[node_index];
                 if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
                     let widget_event_id = event::widget_event(&event);
                     if let Some(event_id) = widget_event_id {
                         if id_registered(widget, event_id) {
-                            widget.trigger_event(event_id, &event, &mut self.event_queue, &parent.layout, &mut self.solver);
+                            widget.trigger_event(event_id, &event, &mut self.event_queue, &mut self.solver);
                         }
                     }
                 }
@@ -297,6 +247,53 @@ impl Ui {
                     }
                 }, _ => {}
             }
+        }
+    }
+    fn find_widget(&mut self, widget_id: Id) -> Option<NodeIndex> {
+        self.widget_map.get(&widget_id).map(|index| *index)
+    }
+
+    fn update(&mut self, widget_id: Id, event: &Event) {
+        if let Some(node_index) = self.find_widget(widget_id) {
+            self.update_widget(node_index, event);
+        } else {
+            println!("widget id {:?} not in widget_map", widget_id);
+        }
+    }
+    fn update_widget(&mut self, node_index: NodeIndex, event: &Event) {
+        let ref mut widget = self.graph[node_index];
+        widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+    }
+    fn update_child(&mut self, widget_id: Id, event: &Event) {
+        if let Some(node_index) = self.find_widget(widget_id) {
+            self.update_child_widget(node_index, event);
+        } else {
+            println!("widget id {:?} not in widget_map", widget_id);
+        }
+    }
+    fn update_child_widget(&mut self, node_index: NodeIndex, event: &Event) {
+        let children: Vec<NodeIndex> = self.children(node_index).collect();
+        for child_index in children {
+            let ref mut widget = self.graph[child_index];
+            widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+        }
+    }
+    fn update_children(&mut self, widget_id: Id, event: &Event) {
+        if let Some(node_index) = self.find_widget(widget_id) {
+            self.update_widget(node_index, event);
+            self.update_children_widget(node_index, event);
+        } else {
+            println!("widget id {:?} not in widget_map", widget_id);
+        }
+    }
+    fn update_children_widget(&mut self, node_index: NodeIndex, event: &Event) {
+        let children: Vec<NodeIndex> = self.children(node_index).collect();
+        for child_index in children {
+            {
+                let ref mut widget = self.graph[child_index];
+                widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+            }
+            self.update_children_widget(child_index, event);
         }
     }
 }

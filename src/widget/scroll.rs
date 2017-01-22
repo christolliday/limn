@@ -11,6 +11,18 @@ use util::*;
 use widget::EventArgs;
 use eventbus::EventAddress;
 
+pub struct ScrollEvent {
+    pub data: (input::Event, Rectangle),
+}
+impl Event for ScrollEvent {
+    fn event_id(&self) -> EventId {
+        event::SCROLL_SCROLLED
+    }
+    fn event_data(&self) -> Option<&Any> {
+        Some(&self.data)
+    }
+}
+
 pub struct ScrollHandler {
     offset: Point,
 }
@@ -24,10 +36,10 @@ impl EventHandler for ScrollHandler {
         event::WIDGET_SCROLL
     }
     fn handle_event(&mut self, event_args: EventArgs) {
-        let EventArgs { event, widget_id, event_queue, .. } = event_args;
+        let EventArgs { event, widget_id, layout, event_queue, solver, .. } = event_args;
         let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
-        let event = event::InputEvent::new(event::SCROLL_SCROLLED, event.clone());
-
+        let widget_bounds = layout.bounds(solver);
+        let event = ScrollEvent { data: (event.clone(), widget_bounds) };
         event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id.0), Box::new(event));
     }
 }
@@ -45,13 +57,13 @@ impl EventHandler for WidgetScrollHandler {
         event::SCROLL_SCROLLED
     }
     fn handle_event(&mut self, event_args: EventArgs) {
-        let EventArgs { event, layout, parent_layout, solver, .. } = event_args;
-        let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
+        let EventArgs { event, layout, solver, .. } = event_args;
+        let event_data = event.event_data().unwrap();
+        let &(ref event, parent_bounds) = event_data.downcast_ref::<(input::Event, Rectangle)>().unwrap();
 
         if let Some(scroll) = event.mouse_scroll_args() {
             let scroll: Point = scroll.into();
             let widget_bounds = layout.bounds(solver);
-            let parent_bounds = parent_layout.bounds(solver);
 
             self.offset = self.offset + scroll * 13.0;
             self.offset.x = f64::min(0.0, f64::max(parent_bounds.width - widget_bounds.width, self.offset.x));
