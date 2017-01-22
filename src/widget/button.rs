@@ -46,11 +46,11 @@ impl EventHandler for ToggleEventHandler {
 }
 
 
-pub struct ButtonBuilder<'a> {
+pub struct ToggleButtonBuilder<'a> {
     pub widget: WidgetBuilder,
     resources: &'a Resources,
 }
-impl<'a> ButtonBuilder<'a> {
+impl<'a> ToggleButtonBuilder<'a> {
     pub fn new(resources: &'a Resources) -> Self {
         let rect = RectDrawable { background: [1.0, 0.0, 0.0, 1.0] };
         let mut widget = WidgetBuilder::new();
@@ -68,7 +68,7 @@ impl<'a> ButtonBuilder<'a> {
         widget.debug_color([1.0, 1.0, 0.0, 1.0]);
         widget.layout.dimensions(Dimensions { width: 100.0, height: 50.0 });
         
-        ButtonBuilder { widget: widget, resources: resources }
+        ToggleButtonBuilder { widget: widget, resources: resources }
     }
     pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str, font_id: Id, font_size: Scalar, text_color: Color) {
 

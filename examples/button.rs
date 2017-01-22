@@ -18,7 +18,7 @@ use limn::resources::Id;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::primitives::{RectDrawable};
-use limn::widget::button::ButtonBuilder;
+use limn::widget::button::ToggleButtonBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::DrawableEventHandler;
 
@@ -40,7 +40,7 @@ fn main() {
     let mut root_widget = WidgetBuilder::new();
     
     {
-        let mut button = ButtonBuilder::new(&mut resources);
+        let mut button = ToggleButtonBuilder::new(&mut resources);
         button.set_text("ON", "OFF", font_id, 20.0, [0.0, 0.0, 0.0, 1.0]);
         button.widget.layout.center(&root_widget.layout);
         button.widget.layout.pad(50.0, &root_widget.layout);
