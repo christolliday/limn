@@ -15,7 +15,13 @@ pub struct ImageDrawable {
 }
 impl ImageDrawable {
     pub fn new(image_id: Id) -> Self {
-        ImageDrawable { image_id: image_id, scale: Dimensions { width: 1.0, height: 1.0 } }
+        ImageDrawable {
+            image_id: image_id,
+            scale: Dimensions {
+                width: 1.0,
+                height: 1.0,
+            },
+        }
     }
     pub fn measure_image(&self, resources: &Resources) -> Dimensions {
         let img = resources.images.get(self.image_id).unwrap();

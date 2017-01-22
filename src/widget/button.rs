@@ -73,9 +73,7 @@ impl ToggleButtonBuilder {
             height: 50.0,
         });
 
-        ToggleButtonBuilder {
-            widget: widget,
-        }
+        ToggleButtonBuilder { widget: widget }
     }
     pub fn set_text(&mut self,
                     on_text: &'static str,

@@ -31,7 +31,6 @@ pub struct WidgetBuilder {
 }
 
 impl WidgetBuilder {
-    
     pub fn new() -> Self {
         WidgetBuilder {
             draw_fn: None,
@@ -62,7 +61,11 @@ impl WidgetBuilder {
         self.id = Some(id);
     }
 
-    pub fn create(self, ui: &mut Ui, resources: &mut Resources, parent_index: Option<NodeIndex>) -> NodeIndex {
+    pub fn create(self,
+                  ui: &mut Ui,
+                  resources: &mut Resources,
+                  parent_index: Option<NodeIndex>)
+                  -> NodeIndex {
         let id = self.id.unwrap_or(resources.widget_id());
         let mut widget = Widget::new(id);
 

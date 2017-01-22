@@ -71,7 +71,10 @@ pub struct EventQueue {
 }
 impl EventQueue {
     fn new() -> Self {
-        EventQueue { queue: Arc::new(Mutex::new(Vec::new())), window_proxy: None }
+        EventQueue {
+            queue: Arc::new(Mutex::new(Vec::new())),
+            window_proxy: None,
+        }
     }
     pub fn set_window(&mut self, window: &Window) {
         self.window_proxy = Some(window.window.window.create_window_proxy());
@@ -98,7 +101,7 @@ pub struct InputState {
 }
 impl InputState {
     fn new() -> Self {
-        InputState { mouse: Point { x: 0.0, y: 0.0 }}
+        InputState { mouse: Point { x: 0.0, y: 0.0 } }
     }
 }
 
@@ -156,32 +159,65 @@ impl Ui {
         self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
-    pub fn draw_node(&mut self, resources: &Resources, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d, node_index: NodeIndex, crop_to: Rectangle) {
+    pub fn draw_node(&mut self,
+                     resources: &Resources,
+                     glyph_cache: &mut GlyphCache,
+                     context: Context,
+                     graphics: &mut G2d,
+                     node_index: NodeIndex,
+                     crop_to: Rectangle) {
 
         let crop_to = {
             let ref widget = self.graph[node_index];
-            widget.draw(crop_to, resources, &mut self.solver, glyph_cache, context, graphics);
+            widget.draw(crop_to,
+                        resources,
+                        &mut self.solver,
+                        glyph_cache,
+                        context,
+                        graphics);
 
             util::crop_rect(crop_to, widget.layout.bounds(&mut self.solver))
         };
 
         let children: Vec<NodeIndex> = self.children(node_index).collect();
         for child_index in children {
-            self.draw_node(resources, glyph_cache, context, graphics, child_index, crop_to);
+            self.draw_node(resources,
+                           glyph_cache,
+                           context,
+                           graphics,
+                           child_index,
+                           crop_to);
         }
     }
-    pub fn draw(&mut self, resources: &Resources, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    pub fn draw(&mut self,
+                resources: &Resources,
+                glyph_cache: &mut GlyphCache,
+                context: Context,
+                graphics: &mut G2d) {
 
         self.handle_event_queue();
 
         let index = self.root_index.unwrap().clone();
-        self.draw_node(resources, glyph_cache, context, graphics, index, Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX });
+        self.draw_node(resources,
+                       glyph_cache,
+                       context,
+                       graphics,
+                       index,
+                       Rectangle {
+                           top: 0.0,
+                           left: 0.0,
+                           width: f64::MAX,
+                           height: f64::MAX,
+                       });
 
         if DEBUG_BOUNDS {
             let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
-                draw_rect_outline(widget.layout.bounds(&mut self.solver), widget.debug_color, context, graphics);
+                draw_rect_outline(widget.layout.bounds(&mut self.solver),
+                                  widget.debug_color,
+                                  context,
+                                  graphics);
             }
         }
     }
@@ -204,7 +240,10 @@ impl Ui {
     pub fn send_event<E: Event>(&mut self, widget_id: Id, event: E) {
         let node_index = self.widget_map.get(&widget_id).unwrap();
         let ref mut widget = self.graph[NodeIndex::new(node_index.index())];
-        widget.trigger_event(event.event_id(), &event, &mut self.event_queue, &mut self.solver);
+        widget.trigger_event(event.event_id(),
+                             &event,
+                             &mut self.event_queue,
+                             &mut self.solver);
     }
     pub fn handle_event(&mut self, event: input::Event) {
         if let Some(mouse) = event.mouse_cursor_args() {
@@ -212,7 +251,8 @@ impl Ui {
         }
         if let Some(event_id) = event::widget_event(event.event_id()) {
             let event = InputEvent::new(event_id, event);
-            self.event_queue.push(EventAddress::Address("UNDER_MOUSE".to_owned()), Box::new(event));
+            self.event_queue.push(EventAddress::Address("UNDER_MOUSE".to_owned()),
+                                  Box::new(event));
         }
     }
     pub fn handle_event_queue(&mut self) {
@@ -228,14 +268,17 @@ impl Ui {
                     } else if address == "SELF" {
                         self.update(Id(id), event);
                     }
-                },
+                }
                 EventAddress::Address(address) => {
                     if address == "UNDER_MOUSE" {
                         let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
                         while let Some(node_index) = dfs.next(&self.graph) {
                             let ref mut widget = self.graph[node_index];
                             if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                                widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+                                widget.trigger_event(event.event_id(),
+                                                     event,
+                                                     &mut self.event_queue,
+                                                     &mut self.solver);
                             }
                         }
                     }
@@ -257,7 +300,10 @@ impl Ui {
     }
     fn update_widget(&mut self, node_index: NodeIndex, event: &Event) {
         let ref mut widget = self.graph[node_index];
-        widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+        widget.trigger_event(event.event_id(),
+                             event,
+                             &mut self.event_queue,
+                             &mut self.solver);
     }
     fn update_child(&mut self, widget_id: Id, event: &Event) {
         if let Some(node_index) = self.find_widget(widget_id) {
@@ -270,7 +316,10 @@ impl Ui {
         let children: Vec<NodeIndex> = self.children(node_index).collect();
         for child_index in children {
             let ref mut widget = self.graph[child_index];
-            widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+            widget.trigger_event(event.event_id(),
+                                 event,
+                                 &mut self.event_queue,
+                                 &mut self.solver);
         }
     }
     fn update_children(&mut self, widget_id: Id, event: &Event) {
@@ -286,7 +335,10 @@ impl Ui {
         for child_index in children {
             {
                 let ref mut widget = self.graph[child_index];
-                widget.trigger_event(event.event_id(), event, &mut self.event_queue, &mut self.solver);
+                widget.trigger_event(event.event_id(),
+                                     event,
+                                     &mut self.event_queue,
+                                     &mut self.solver);
             }
             self.update_children_widget(child_index, event);
         }

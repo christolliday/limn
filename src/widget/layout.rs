@@ -8,7 +8,7 @@ use super::Widget;
 #[derive(Copy, Clone)]
 pub enum Orientation {
     Horizontal,
-    Vertical
+    Vertical,
 }
 pub struct LinearLayout {
     pub orientation: Orientation,
@@ -16,7 +16,10 @@ pub struct LinearLayout {
 }
 impl LinearLayout {
     pub fn new(orientation: Orientation, parent: &WidgetLayout) -> Self {
-        LinearLayout { orientation: orientation, end: LinearLayout::beginning(orientation, parent) }//, parent: parent }
+        LinearLayout {
+            orientation: orientation,
+            end: LinearLayout::beginning(orientation, parent),
+        }
     }
     pub fn beginning(orientation: Orientation, layout: &WidgetLayout) -> Variable {
         match orientation {
@@ -31,7 +34,8 @@ impl LinearLayout {
         }
     }
     pub fn add_widget(&mut self, widget_layout: &mut WidgetLayout) {
-        let constraint = LinearLayout::beginning(self.orientation, &widget_layout) | GE(REQUIRED) | self.end;
+        let constraint = LinearLayout::beginning(self.orientation, &widget_layout) | GE(REQUIRED) |
+                         self.end;
         self.end = LinearLayout::ending(self.orientation, &widget_layout);
         widget_layout.add_constraint(constraint);
     }
@@ -66,7 +70,10 @@ impl WidgetLayout {
     }
     pub fn get_dims(&self, solver: &mut Solver) -> Dimensions {
         let bounds = self.bounds(solver);
-        Dimensions { width: bounds.width, height: bounds.height }
+        Dimensions {
+            width: bounds.width,
+            height: bounds.height,
+        }
     }
     pub fn update_solver(&self, solver: &mut Solver) {
         let constraints = self.constraints.clone();

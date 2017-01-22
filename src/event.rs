@@ -39,7 +39,7 @@ pub fn widget_event(event_id: EventId) -> Option<EventId> {
         MOUSE_CURSOR => Some(WIDGET_MOUSE_OVER),
         MOUSE_SCROLL => Some(WIDGET_SCROLL),
         PRESS => Some(WIDGET_PRESS),
-        _ => None
+        _ => None,
     }
 }
 

@@ -25,6 +25,7 @@ pub fn draw_ellipse(draw_args: DrawArgs) {
     let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
     let state: &EllipseDrawable = state.downcast_ref().unwrap();
 
-    graphics::Ellipse::new(state.background).maybe_border(state.border)
+    graphics::Ellipse::new(state.background)
+        .maybe_border(state.border)
         .draw(bounds, &context.draw_state, context.transform, graphics);
 }

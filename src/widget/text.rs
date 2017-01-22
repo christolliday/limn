@@ -60,8 +60,8 @@ pub fn draw_text(draw_args: DrawArgs) {
         .draw(bounds, &context.draw_state, context.transform, graphics);
 
     let &mut GlyphCache { texture: ref mut text_texture_cache,
-                     cache: ref mut glyph_cache,
-                     ref mut vertex_data } = glyph_cache;
+                          cache: ref mut glyph_cache,
+                          ref mut vertex_data } = glyph_cache;
 
     let font = resources.fonts.get(state.font_id).unwrap();
     let line_wrap = Wrap::Character;

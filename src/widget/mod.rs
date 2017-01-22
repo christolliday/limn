@@ -85,7 +85,13 @@ impl Widget {
     pub fn debug_color(&mut self, color: Color) {
         self.debug_color = color;
     }
-    pub fn draw(&self, crop_to: Rectangle, resources: &Resources, solver: &mut Solver, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    pub fn draw(&self,
+                crop_to: Rectangle,
+                resources: &Resources,
+                solver: &mut Solver,
+                glyph_cache: &mut GlyphCache,
+                context: Context,
+                graphics: &mut G2d) {
         if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);
@@ -104,8 +110,14 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: &Event, event_queue: &mut EventQueue, solver: &mut Solver) {
-        if let Some(event_handler) = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id) {
+    pub fn trigger_event(&mut self,
+                         id: EventId,
+                         event: &Event,
+                         event_queue: &mut EventQueue,
+                         solver: &mut Solver) {
+        if let Some(event_handler) = self.event_handlers
+            .iter_mut()
+            .find(|event_handler| event_handler.event_id() == id) {
             let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
             event_handler.handle_event(EventArgs {
                 event: event,
@@ -117,20 +129,18 @@ impl Widget {
             });
         } else {
             // no event handler for id
-            //println!("widget {:?} has no handler for {:?}", self.id, id);
+            // println!("widget {:?} has no handler for {:?}", self.id, id);
         }
     }
 }
 
 
 
-pub struct DrawableEventHandler<T>
-{
+pub struct DrawableEventHandler<T> {
     event_id: EventId,
-    drawable_callback: Box<Fn(&mut T)>
+    drawable_callback: Box<Fn(&mut T)>,
 }
-impl<T: 'static> DrawableEventHandler<T>
-{
+impl<T: 'static> DrawableEventHandler<T> {
     pub fn new<H: Fn(&mut T) + 'static>(event_id: EventId, drawable_callback: H) -> Self {
         DrawableEventHandler {
             event_id: event_id,
@@ -138,8 +148,7 @@ impl<T: 'static> DrawableEventHandler<T>
         }
     }
 }
-impl<T: 'static> EventHandler for DrawableEventHandler<T>
-{
+impl<T: 'static> EventHandler for DrawableEventHandler<T> {
     fn event_id(&self) -> EventId {
         self.event_id
     }

@@ -206,16 +206,25 @@ impl Rectangle {
         self.top + self.height
     }
     pub fn dims(&self) -> Dimensions {
-        Dimensions { width: self.width, height: self.height }
+        Dimensions {
+            width: self.width,
+            height: self.height,
+        }
     }
     pub fn center(&self) -> Point {
-        Point { x: self.left + self.width / 2.0, y: self.top + self.height / 2.0 }
+        Point {
+            x: self.left + self.width / 2.0,
+            y: self.top + self.height / 2.0,
+        }
     }
 }
 impl Div<Dimensions> for Dimensions {
     type Output = Self;
     fn div(self, rhs: Dimensions) -> Self {
-        Dimensions { width: self.width / rhs.width, height: self.height / rhs.height }
+        Dimensions {
+            width: self.width / rhs.width,
+            height: self.height / rhs.height,
+        }
     }
 }
 pub fn map_rect_i32(rect: rusttype::Rect<i32>) -> types::Rectangle {
@@ -239,19 +248,28 @@ impl Mul<Dimensions> for types::Rectangle {
 impl Add<Point> for Point {
     type Output = Self;
     fn add(self, rhs: Point) -> Self {
-        Point { x: self.x + rhs.x, y: self.y + rhs.y }
+        Point {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
     }
 }
 impl Sub<Point> for Point {
     type Output = Self;
     fn sub(self, rhs: Point) -> Self {
-        Point { x: self.x - rhs.x, y: self.y - rhs.y }
+        Point {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
     }
 }
 impl Mul<Scalar> for Point {
     type Output = Self;
     fn mul(self, rhs: Scalar) -> Self {
-        Point { x: self.x * rhs, y: self.y * rhs }
+        Point {
+            x: self.x * rhs,
+            y: self.y * rhs,
+        }
     }
 }
 
@@ -284,12 +302,10 @@ pub fn draw_rect_outline(rect: Rectangle, color: Color, context: Context, graphi
 pub fn crop_context(context: Context, rect: Rectangle) -> Context {
     let view_size = context.get_view_size();
     // convert from left, top, width, height to left, bottom, width, height
-    let scissor_bounds = [
-        rect.left as u32,
-        (view_size[1] - rect.top - rect.height) as u32,
-        rect.width as u32,
-        rect.height as u32,
-    ];
+    let scissor_bounds = [rect.left as u32,
+                          (view_size[1] - rect.top - rect.height) as u32,
+                          rect.width as u32,
+                          rect.height as u32];
     Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
 }
 

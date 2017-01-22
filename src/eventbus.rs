@@ -25,13 +25,16 @@ struct HandlerPtr<T> {
 
 impl<T> HandlerPtr<T> {
     fn new(handler: Box<Fn(T) + 'static>) -> Self {
-        HandlerPtr{handler: handler}
+        HandlerPtr { handler: handler }
     }
 }
 
 impl EventBus {
     pub fn new() -> EventBus {
-        EventBus{next_id: 0, handlers: HashMap::new()}
+        EventBus {
+            next_id: 0,
+            handlers: HashMap::new(),
+        }
     }
 
     pub fn register<T: Any, H: Fn(T) + 'static>(&mut self, handler: H) -> Id {
@@ -42,7 +45,9 @@ impl EventBus {
         id
     }
 
-    pub fn register_address<T: Any, H: Fn(T) + 'static>(&mut self, event_address: EventAddress, handler: H) {
+    pub fn register_address<T: Any, H: Fn(T) + 'static>(&mut self,
+                                                        event_address: EventAddress,
+                                                        handler: H) {
         let handler_ptr = HandlerPtr::new(Box::new(handler));
         self.handlers.insert(event_address, Box::new(handler_ptr));
     }
@@ -64,7 +69,8 @@ impl EventBus {
             if let Some(handler) = handler.downcast_ref::<HandlerPtr<T>>() {
                 (handler.handler)(arg);
             } else {
-                println!("Error, wrong event type posted for address {:?}", event_address);
+                println!("Error, wrong event type posted for address {:?}",
+                         event_address);
             }
             true
         } else {
