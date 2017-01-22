@@ -1,15 +1,11 @@
-use super::EventHandler;
-use super::layout::WidgetLayout;
-use event::Event;
-use input;
-use input::{EventId, MouseScrollEvent};
 use std::any::Any;
-use super::super::event;
-use cassowary::{Solver, Constraint};
+
 use cassowary::strength::*;
-use util::*;
-use widget::EventArgs;
-use event::EventAddress;
+
+use event::{self, Event, EventAddress};
+use input::{self, EventId, MouseScrollEvent};
+use widget::{EventArgs, EventHandler};
+use util::{Point, Rectangle};
 
 pub struct ScrollEvent {
     pub data: (input::Event, Rectangle),
@@ -23,14 +19,7 @@ impl Event for ScrollEvent {
     }
 }
 
-pub struct ScrollHandler {
-    offset: Point,
-}
-impl ScrollHandler {
-    pub fn new() -> Self {
-        ScrollHandler { offset: Point { x: 0.0, y: 0.0 } }
-    }
-}
+pub struct ScrollHandler {}
 impl EventHandler for ScrollHandler {
     fn event_id(&self) -> EventId {
         event::WIDGET_SCROLL
@@ -75,10 +64,10 @@ impl EventHandler for WidgetScrollHandler {
                                      f64::max(parent_bounds.height - widget_bounds.height,
                                               self.offset.y));
             if !solver.has_edit_variable(&layout.left) {
-                solver.add_edit_variable(layout.left, STRONG);
+                solver.add_edit_variable(layout.left, STRONG).unwrap();
             }
             if !solver.has_edit_variable(&layout.top) {
-                solver.add_edit_variable(layout.top, STRONG);
+                solver.add_edit_variable(layout.top, STRONG).unwrap();
             }
             solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
             solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();

@@ -1,18 +1,13 @@
-use window::Size;
-use graphics::types;
-
-pub use graphics::types::Scalar;
-use rusttype;
-use graphics::Context;
-use graphics;
-use backend::gfx::G2d;
-use graphics::types::Color;
 use std::ops::{Mul, Div, Add, Sub};
 
-// #[derive(Copy, Clone, Debug, PartialEq)]
-// pub struct Px(pub f64);
-// #[derive(Copy, Clone, Debug)]
-// pub struct Dp(pub f64);
+use window::Size;
+use rusttype;
+use graphics::{self, Context};
+use graphics::types::{self, Color};
+
+pub use graphics::types::Scalar;
+
+use backend::gfx::G2d;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Dimensions {

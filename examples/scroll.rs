@@ -1,41 +1,17 @@
 extern crate limn;
-extern crate backend;
-extern crate cassowary;
-extern crate graphics;
-extern crate input;
-extern crate window;
-extern crate find_folder;
-
-#[macro_use]
-extern crate matches;
 
 mod util;
 
-use limn::ui::*;
-use limn::util::*;
-use limn::widget::text::*;
 use limn::widget;
-use limn::event;
-
-use limn::widget::{Widget, EventHandler};
 use limn::widget::builder::WidgetBuilder;
-use limn::widget::primitives::{RectDrawable};
-use limn::widget::image::ImageDrawable;
+use limn::widget::primitives::RectDrawable;
 use limn::widget::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::color::*;
+use limn::util::Dimensions;
 
-use backend::{Window, WindowEvents, OpenGL};
-use backend::events::WindowEvent;
-use backend::glyph::GlyphCache;
-use input::{ResizeEvent, MouseCursorEvent, PressEvent, ReleaseEvent, Event, Input, EventId};
-
-use cassowary::WeightedRelation::*;
-use cassowary::strength::*;
-
-use std::any::Any;
 
 fn main() {
-    let (window, mut ui) = util::init_default("Limn scroll demo");
+    let (window, ui) = util::init_default("Limn scroll demo");
     
     let mut root_widget = WidgetBuilder::new();
 
@@ -43,7 +19,7 @@ fn main() {
     scroll_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0 });
     scroll_widget.layout.pad(100.0, &root_widget.layout);
     scroll_widget.layout.scrollable = true;
-    scroll_widget.event_handlers.push(Box::new(ScrollHandler::new()));
+    scroll_widget.event_handlers.push(Box::new(ScrollHandler {}));
 
     let mut rect_container_widget = WidgetBuilder::new();
     rect_container_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));

@@ -1,57 +1,29 @@
 #[macro_use]
 extern crate limn;
-extern crate backend;
-extern crate cassowary;
 extern crate graphics;
 extern crate input;
-extern crate window;
-extern crate find_folder;
 
 extern crate chrono;
 
-#[macro_use]
-extern crate matches;
-
 mod util;
-
-use limn::ui::*;
-use limn::util::*;
-use limn::widget::text::*;
-use limn::widget;
-use limn::event;
-use limn::resources::Id;
-
-use limn::event::{Event, Signal};
-
-use limn::widget::DrawArgs;
-use limn::widget::builder::WidgetBuilder;
-use limn::widget::primitives::{RectDrawable, EllipseDrawable};
-use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widget::DrawableEventHandler;
-use limn::widget::{EventHandler, EventArgs};
-
-use limn::event::{EventAddress, EventQueue};
-
-use backend::glyph::GlyphCache;
-use backend::{Window, WindowEvents};
-use input::ResizeEvent;
-use backend::events::WindowEvent;
-
-use graphics::types::Color;
-use limn::color::*;
 
 use std::thread;
 use std::time;
-use std::any::Any;
 use std::f64;
 
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{self, channel, Sender, Receiver};
-
 use chrono::*;
-
+use graphics::types::Color;
 use input::EventId;
-const WIDGET_EVENT: usize = 0;
+
+use limn::event::Signal;
+use limn::widget::{self, DrawArgs, DrawableEventHandler};
+use limn::widget::builder::WidgetBuilder;
+use limn::widget::primitives::EllipseDrawable;
+use limn::widget::{EventHandler, EventArgs};
+use limn::ui::Resources;
+use limn::event::{EventAddress, EventQueue};
+use limn::color::*;
+use limn::util::{Point, Dimensions, Scalar};
 
 fn hour_angle() -> f64 {
     2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0

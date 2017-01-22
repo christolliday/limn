@@ -1,24 +1,14 @@
-use super::EventHandler;
-use super::super::event;
-use event::Event;
-use input::EventId;
-use input;
-use std::any::Any;
-use super::primitives::{RectDrawable, EllipseDrawable};
-use super::text::TextDrawable;
-use super::layout::WidgetLayout;
-use widget::DrawableEventHandler;
+use input::{self, EventId};
+
+use widget::{self, EventHandler, DrawableEventHandler, EventArgs};
+use event::{self, EventAddress};
+use widget::primitives::RectDrawable;
+use widget::text::TextDrawable;
 use widget::builder::WidgetBuilder;
-use widget::EventArgs;
-use widget;
-use graphics::types::Color;
-use util::{Scalar, Dimensions};
+use util::Dimensions;
 use resources::Id;
 use ui::Resources;
-use event::EventAddress;
 use color::*;
-
-use cassowary::Solver;
 
 pub struct ToggleEventHandler {
     on: bool,
@@ -79,7 +69,6 @@ impl ToggleButtonBuilder {
                     on_text: &'static str,
                     off_text: &'static str,
                     font_id: Id,
-                    font_size: Scalar,
                     resources: &Resources) {
 
         let set_text_on = move |state: &mut TextDrawable| {

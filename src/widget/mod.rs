@@ -6,25 +6,22 @@ pub mod button;
 pub mod scroll;
 pub mod builder;
 
-use backend::gfx::G2d;
-use backend::glyph::GlyphCache;
+use std::any::Any;
+
 use graphics::Context;
 use graphics::types::Color;
-
-use event::{Event, EventAddress, EventQueue};
-use input::EventId;
-use super::util::*;
-use super::util;
-use super::resources::Id;
-
-use ui::Ui;
-use super::ui::Resources;
-use self::layout::WidgetLayout;
-
 use cassowary::Solver;
-use cassowary::strength::*;
 
-use std::any::Any;
+use backend::gfx::G2d;
+use backend::glyph::GlyphCache;
+
+use event::{Event, EventQueue};
+use input::EventId;
+use resources::Id;
+use ui::Resources;
+use util::{self, Point, Rectangle};
+
+use self::layout::WidgetLayout;
 
 pub struct DrawArgs<'a, 'b: 'a> {
     pub state: &'a Any,
@@ -60,14 +57,13 @@ pub struct Widget {
     pub debug_color: Color,
 }
 
-use input::{Input, Motion};
 impl Widget {
     pub fn new(id: Id) -> Self {
         Widget {
             id: id,
             draw_fn: None,
             drawable: None,
-            mouse_over_fn: point_inside_rect,
+            mouse_over_fn: util::point_inside_rect,
             layout: WidgetLayout::new(),
             event_handlers: Vec::new(),
             debug_color: [0.0, 1.0, 0.0, 1.0],
@@ -131,8 +127,6 @@ impl Widget {
         }
     }
 }
-
-
 
 pub struct DrawableEventHandler<T> {
     event_id: EventId,

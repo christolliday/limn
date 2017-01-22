@@ -1,5 +1,5 @@
-
-use backend::gfx::G2d;
+use std::collections::HashMap;
+use std::f64;
 
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
@@ -8,35 +8,25 @@ use petgraph::Direction;
 use petgraph::graph::Neighbors;
 
 use input;
-use input::{GenericEvent, MouseCursorEvent, UpdateArgs};
+use input::{GenericEvent, MouseCursorEvent};
 
-use cassowary::{Solver, Constraint};
-use cassowary::WeightedRelation::*;
+use cassowary::Solver;
 use cassowary::strength::*;
 
 use graphics::Context;
-use super::widget::*;
-use super::widget;
-use widget::layout::WidgetLayout;
-use widget::builder::WidgetBuilder;
-use super::util::*;
-use super::util;
-use super::event::{self, EventAddress};
-use event::{Event, InputEvent};
-use resources;
-use resources::font::Font;
+
+use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
-use input::EventId;
-use event::EventQueue;
 
+use widget::Widget;
+use widget::builder::WidgetBuilder;
+use event::{self, Event, InputEvent, EventQueue, EventAddress};
+use resources;
+use resources::font::Font;
 use resources::image::Texture;
 use resources::Id;
-
-use std::collections::HashMap;
-use std::f64;
-use std::cmp::max;
-use std::any::Any;
+use util::{self, Point, Rectangle, Dimensions};
 
 const DEBUG_BOUNDS: bool = false;
 
@@ -83,20 +73,16 @@ pub struct Ui {
 }
 impl Ui {
     pub fn new(window: &mut Window) -> Self {
-        let mut solver = Solver::new();
-        let mut graph = Graph::<Widget, ()>::new();
-        let input_state = InputState::new();
-        let mut ui = Ui {
-            graph: graph,
+        Ui {
+            graph: Graph::<Widget, ()>::new(),
             root_index: None,
-            solver: solver,
-            input_state: input_state,
+            solver: Solver::new(),
+            input_state: InputState::new(),
             widget_map: HashMap::new(),
             event_queue: EventQueue::new(window),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
             resources: Resources::new(),
-        };
-        ui
+        }
     }
     pub fn resize_window_to_fit(&mut self, window: &Window) {
         let window_dims = self.get_root_dims();
@@ -117,7 +103,7 @@ impl Ui {
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
         root.layout.get_dims(&mut self.solver)
     }
-    pub fn window_resized(&mut self, window: &Window, window_dims: Dimensions) {
+    pub fn window_resized(&mut self, window_dims: Dimensions) {
         let ref root = self.graph[self.root_index.unwrap()];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
@@ -176,7 +162,7 @@ impl Ui {
             let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
-                draw_rect_outline(widget.layout.bounds(&mut self.solver),
+                util::draw_rect_outline(widget.layout.bounds(&mut self.solver),
                                   widget.debug_color,
                                   context,
                                   graphics);

@@ -1,23 +1,13 @@
-use backend::gfx::G2d;
-use graphics::Context;
-use graphics::types::Color;
+use std::any::Any;
 
-use input::EventId;
-use util::*;
-use util;
-use widget::Widget;
+use graphics::types::Color;
 use petgraph::graph::NodeIndex;
 
-use ui::{Ui, Resources};
+use ui::Ui;
+use widget::{Widget, EventHandler, DrawArgs};
 use widget::layout::WidgetLayout;
-use widget::EventHandler;
-use widget::DrawArgs;
 use resources::Id;
-
-use cassowary::Solver;
-use cassowary::strength::*;
-
-use std::any::Any;
+use util::{self, Point, Rectangle};
 
 pub struct WidgetBuilder {
     pub draw_fn: Option<fn(DrawArgs)>,
@@ -35,7 +25,7 @@ impl WidgetBuilder {
         WidgetBuilder {
             draw_fn: None,
             drawable: None,
-            mouse_over_fn: point_inside_rect,
+            mouse_over_fn: util::point_inside_rect,
             layout: WidgetLayout::new(),
             event_handlers: Vec::new(),
             debug_color: [0.0, 1.0, 0.0, 1.0],

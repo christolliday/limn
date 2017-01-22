@@ -2,8 +2,7 @@ use cassowary::{Solver, Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use super::super::util::*;
-use super::Widget;
+use util::{Point, Rectangle, Dimensions, Scalar};
 
 #[derive(Copy, Clone)]
 pub enum Orientation {
@@ -79,7 +78,7 @@ impl WidgetLayout {
         let constraints = self.constraints.clone();
         for constraint in constraints {
             if !solver.has_constraint(&constraint) {
-                solver.add_constraint(constraint.clone());
+                solver.add_constraint(constraint.clone()).unwrap();
             }
         }
     }

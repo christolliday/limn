@@ -1,16 +1,14 @@
-use util::*;
 use graphics;
-use graphics::Context;
-use backend::glyph;
+use graphics::types::Color;
+
+use backend::glyph::{self, GlyphCache};
+use backend::gfx::ImageSize;
+
 use text::{self, Wrap};
 use resources;
 use ui::Resources;
 use widget::DrawArgs;
-use backend::glyph::GlyphCache;
-use backend::gfx::G2d;
-use backend::gfx::ImageSize;
-use graphics::types::Color;
-use std::any::Any;
+use util::{self, Dimensions, Align, Scalar};
 
 pub struct TextDrawable {
     pub text: String,
@@ -96,7 +94,7 @@ pub fn draw_text(draw_args: DrawArgs) {
 
     let rectangles = positioned_glyphs.into_iter()
         .filter_map(|g| glyph_cache.rect_for(state.font_id.index(), g).ok().unwrap_or(None))
-        .map(|(uv_rect, screen_rect)| (map_rect_i32(screen_rect), map_rect_f32(uv_rect) * tex_dim));
+        .map(|(uv_rect, screen_rect)| (util::map_rect_i32(screen_rect), util::map_rect_f32(uv_rect) * tex_dim));
     // A re-usable buffer of rectangles describing the glyph's screen and texture positions.
     let mut glyph_rectangles = Vec::new();
     glyph_rectangles.extend(rectangles);

@@ -10,15 +10,13 @@ cassowary = "0.2.0"
 pistoncore-input = "0.15.0"
 pistoncore-window = "0.24.0"
 petgraph = "0.4.1"
-matches = "0.1.4"
 rusttype = "0.2.0"
-find_folder = "0.3.0"
 gfx_device_gl = "0.11.0"
 piston2d-gfx_graphics = "0.33.1"
 glutin = "0.7.0"
 
-
 [dev-dependencies]
+find_folder = "0.3.0"
 chrono = "0.2.25"
 
 [replace]

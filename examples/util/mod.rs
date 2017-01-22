@@ -40,7 +40,7 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
             WindowEvent::Input(event) => {
                 if let Some(window_dims) = event.resize_args() {
                     window.window_resized();
-                    ui.window_resized(&mut window, window_dims.into());
+                    ui.window_resized(window_dims.into());
                 }
                 ui.handle_event(event.clone());
             },

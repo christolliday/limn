@@ -1,10 +1,5 @@
 use graphics;
-use super::super::util::*;
-use super::super::ui::Resources;
-use backend::gfx::G2d;
-use graphics::Context;
 use graphics::types::Color;
-use std::any::Any;
 use widget::DrawArgs;
 
 pub struct RectDrawable {

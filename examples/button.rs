@@ -11,7 +11,7 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
     let mut button = ToggleButtonBuilder::new();
-    button.set_text("ON", "OFF", font_id, 20.0, &ui.resources);
+    button.set_text("ON", "OFF", font_id, &ui.resources);
     button.widget.layout.center(&root_widget.layout);
     button.widget.layout.pad(50.0, &root_widget.layout);
     root_widget.add_child(Box::new(button.builder()));

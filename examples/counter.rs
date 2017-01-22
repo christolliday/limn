@@ -1,38 +1,22 @@
 #[macro_use]
 extern crate limn;
-extern crate backend;
-extern crate cassowary;
-extern crate graphics;
 extern crate input;
-extern crate window;
-extern crate find_folder;
-
-#[macro_use]
-extern crate matches;
 
 mod util;
 
-use limn::ui::*;
-use limn::util::*;
-use limn::widget::text::*;
-use limn::widget;
+use std::any::Any;
 
+use input::EventId;
+
+use limn::widget;
+use limn::widget::text::TextDrawable;
 use limn::widget::builder::WidgetBuilder;
-use limn::widget::primitives::RectDrawable;
-use limn::widget::button::{PushButtonBuilder};
+use limn::widget::button::PushButtonBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::event::{self, Event, Signal, EventAddress};
 use limn::widget::{EventHandler, EventArgs};
 use limn::resources::Id;
 use limn::color::*;
-
-use input::EventId;
-use backend::glyph::GlyphCache;
-use backend::{Window, WindowEvents};
-use input::ResizeEvent;
-use backend::events::WindowEvent;
-
-use std::any::Any;
 
 const COUNTER: EventId = EventId("COUNTER");
 const COUNT: EventId = EventId("COUNT");
@@ -40,8 +24,6 @@ const COUNT: EventId = EventId("COUNT");
 fn main() {
     let (window, mut ui) = util::init_default("Limn counter demo");
     let font_id = util::load_default_font(&mut ui);
-
-    let mut root_widget = WidgetBuilder::new();
     
     let mut root_widget = WidgetBuilder::new();
     let root_id = ui.resources.widget_id();

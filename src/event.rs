@@ -1,10 +1,11 @@
-#[macro_use]
+use std::any::Any;
+use std::sync::{Arc, Mutex};
 
 use input;
 use input::EventId;
-use input::GenericEvent;
+use glutin::WindowProxy;
 
-use std::any::Any;
+use backend::Window;
 
 // from piston input
 pub const AFTER_RENDER: EventId = EventId("piston/after_render");
@@ -90,10 +91,6 @@ macro_rules! event {
 }
 
 event!(InputEvent, input::Event);
-
-use std::sync::{Arc, Mutex};
-use glutin::WindowProxy;
-use backend::Window;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {

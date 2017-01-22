@@ -1,13 +1,11 @@
-use graphics;
-use util::*;
-use ui::Resources;
-use backend::gfx::G2d;
+use graphics::{self, Transformed};
+
 use backend::gfx::ImageSize;
-use graphics::Context;
-use graphics::Transformed;
+
+use ui::Resources;
 use resources::Id;
-use std::any::Any;
 use widget::DrawArgs;
+use util::Dimensions;
 
 pub struct ImageDrawable {
     pub image_id: Id,
@@ -41,7 +39,7 @@ pub fn draw_image(draw_args: DrawArgs) {
     let scale = bounds.dims() / dims;
     let image = graphics::image::Image::new();
     image.rect(bounds);
-    let mut context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
+    let context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
 
     image.draw(img, &context.draw_state, context.transform, graphics);
 }

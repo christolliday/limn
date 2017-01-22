@@ -1,19 +1,12 @@
 pub mod font;
 pub mod image;
 
-/// The `font::Id` and `font::Map` types.
 use std;
 
-/// A type-safe wrapper around the `FontId`.
-///
-/// This is used as both:
-///
-/// - The key for the `font::Map`'s inner `HashMap`.
-/// - The `font_id` field for the rusttype::gpu_cache::Cache.
+/// A type-safe wrapper around a resource `Id`.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Id(pub usize);
 
-/// A collection of mappings from `font::Id`s to `rusttype::Font`s.
 pub struct Map<T> {
     next_index: usize,
     map: std::collections::HashMap<Id, T>,
@@ -34,12 +27,12 @@ impl<T> Map<T> {
             map: std::collections::HashMap::new(),
         }
     }
-    /// Borrow the `rusttype::Font` associated with the given `font::Id`.
+    /// Borrow the resource associated with the given `Id`.
     pub fn get(&self, id: Id) -> Option<&T> {
         self.map.get(&id)
     }
 
-    /// Adds the given `rusttype::Font` to the `Map` and returns a unique `Id` for it.
+    /// Adds the given resource to the `Map` and returns a unique `Id` for it.
     pub fn insert(&mut self, resource: T) -> Id {
         let index = self.next_index;
         self.next_index = index.wrapping_add(1);
