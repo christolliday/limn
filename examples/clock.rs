@@ -16,7 +16,7 @@ use graphics::types::Color;
 use input::EventId;
 
 use limn::event::Signal;
-use limn::widget::{DrawArgs, EventHandler, EventArgs, DrawableEventHandler};
+use limn::widget::{DrawArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::primitives::{self, EllipseDrawable};
 use limn::event::{EventAddress, EventQueue};
@@ -89,18 +89,6 @@ impl ClockBuilder {
             state.angle = second_angle();
         };
 
-        struct ClockEventHandler {}
-        impl EventHandler for ClockEventHandler {
-            fn event_id(&self) -> EventId {
-                CLOCK_TICK
-            }
-            fn handle_event(&mut self, event_args: EventArgs) {
-                let EventArgs { widget_id, event_queue, .. } = event_args;
-                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id), Box::new(Signal::new(CLOCK_TICK)));
-            }
-        }
-        widget.event_handlers.push(Box::new(ClockEventHandler {}));
-
         hour_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand)));
         minute_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand)));
         second_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_second_hand)));
@@ -113,7 +101,7 @@ impl ClockBuilder {
         thread::spawn(move || {
             loop {
                 thread::sleep(time::Duration::from_millis(1000));
-                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), clock_id), Box::new(Signal::new(CLOCK_TICK)));
+                event_queue.push(EventAddress::SubTree(clock_id), Box::new(Signal::new(CLOCK_TICK)));
             }
         });
 

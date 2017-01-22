@@ -74,8 +74,7 @@ fn main() {
         fn handle_event(&mut self, event_args: EventArgs) {
             let EventArgs { event_queue, .. } = event_args;
             let event = Signal::new(COUNTER);
-            event_queue.push(EventAddress::IdAddress("SELF".to_owned(), self.receiver_id),
-                             Box::new(event));
+            event_queue.push(EventAddress::Widget(self.receiver_id), Box::new(event));
         }
     }
     let mut button_widget = PushButtonBuilder::new();
@@ -105,8 +104,7 @@ fn main() {
             let EventArgs { widget_id, event_queue, .. } = event_args;
             self.count += 1;
             let event = CountEvent::new(COUNT, self.count);
-            event_queue.push(EventAddress::IdAddress("CHILDREN".to_owned(), widget_id),
-                             Box::new(event));
+            event_queue.push(EventAddress::SubTree(widget_id), Box::new(event));
         }
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));

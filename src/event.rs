@@ -96,9 +96,10 @@ event!(InputEvent, input::Event);
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {
-    Id(Id),
-    Address(String),
-    IdAddress(String, Id),
+    Widget(Id),
+    Child(Id),
+    SubTree(Id),
+    UnderMouse,
 }
 
 #[derive(Clone)]
