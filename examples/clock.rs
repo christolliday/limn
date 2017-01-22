@@ -65,12 +65,9 @@ fn second_angle() -> f64 {
 const CLOCK_TICK: EventId = EventId("CLOCK_TICK");
 struct ClockBuilder {
     widget: WidgetBuilder,
-    hour_id: Id,
-    minute_id: Id,
-    second_id: Id,
 }
 impl ClockBuilder {
-    fn new(resources: &mut Resources, event_bus: &EventBus, sender: Sender<i32>) -> Self {
+    fn new(resources: &mut Resources, mut event_queue: EventQueue) -> Self {
 
         let circle = EllipseDrawable { background: WHITE, border: Some(graphics::ellipse::Border { color: BLACK, radius: 2.0 }) };
         let mut widget = WidgetBuilder::new();
@@ -114,12 +111,8 @@ impl ClockBuilder {
         let mut second_widget = WidgetBuilder::new();
         second_widget.set_drawable(draw_clock_hand, Box::new(second_drawable));
 
-        let hour_id = resources.widget_id();
-        hour_widget.set_id(hour_id);
-        let minute_id = resources.widget_id();
-        minute_widget.set_id(minute_id);
-        let second_id = resources.widget_id();
-        second_widget.set_id(second_id);
+        let clock_id = resources.widget_id();
+        widget.set_id(clock_id);
 
         fn update_hour_hand(state: &mut HandDrawable) {
             state.angle = hour_angle();
@@ -137,9 +130,11 @@ impl ClockBuilder {
                 CLOCK_TICK
             }
             fn handle_event(&mut self, event_args: EventArgs) {
-
+                let EventArgs { widget_id, event_queue, .. } = event_args;
+                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id.0), Box::new(Signal::new(CLOCK_TICK)));
             }
         }
+        widget.event_handlers.push(Box::new(ClockEventHandler {}));
 
         hour_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand)));
         minute_widget.event_handlers.push(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand)));
@@ -152,11 +147,11 @@ impl ClockBuilder {
         thread::spawn(move || {
             loop {
                 thread::sleep(time::Duration::from_millis(1000));
-                sender.send(0);
+                event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), clock_id.0), Box::new(Signal::new(CLOCK_TICK)));
             }
         });
 
-        ClockBuilder { widget: widget, hour_id: hour_id, minute_id: minute_id, second_id: second_id }
+        ClockBuilder { widget: widget }
     }
     pub fn builder(self) -> WidgetBuilder {
         self.widget
@@ -164,6 +159,10 @@ impl ClockBuilder {
 }
 
 fn main() {
+    let window_dims = Dimensions { width: 600.0, height: 400.0 };
+    let mut window = Window::new("Limn clock demo", window_dims, Some(window_dims));
+    let ui = &mut Ui::new();
+    ui.event_queue.set_window(&window);
     let mut resources = Resources::new();
 
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
@@ -171,44 +170,16 @@ fn main() {
 
     let font_id = resources.fonts.insert_from_file(font_path).unwrap();
 
-    let mut event_bus = EventBus::new();
-
-    let (tx, rx): (Sender<i32>, Receiver<i32>) = mpsc::channel();
-
     let mut root_widget = WidgetBuilder::new();
     
-    let mut clock = ClockBuilder::new(&mut resources, &event_bus, tx);
+    let mut clock = ClockBuilder::new(&mut resources, ui.event_queue.clone());
     clock.widget.layout.center(&root_widget.layout);
     clock.widget.layout.pad(50.0, &root_widget.layout);
 
-    let hour_id = clock.hour_id;
-    let minute_id = clock.minute_id;
-    let second_id = clock.second_id;
-
     root_widget.add_child(Box::new(clock.builder()));
-
-    let ui = &mut Ui::new();
     ui.set_root(root_widget, &mut resources);
-
-    let window_dims = ui.get_root_dims();
-    // Construct the window.
-    let mut window = Window::new("Limn clock demo", window_dims, Some(window_dims));
+    ui.resize_window_to_fit(&window);
     let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
-
-
-    let window_proxy = window.window.window.create_window_proxy();
-    let event_queue = Arc::new(Mutex::new(Vec::new()));
-    {
-        let event_queue = event_queue.clone();
-        thread::spawn(move || {
-            loop {
-                rx.recv();
-                let mut queue = event_queue.lock().unwrap();
-                queue.push(1);
-                window_proxy.wakeup_event_loop();
-            }
-        });
-    }
 
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window) {
@@ -221,13 +192,7 @@ fn main() {
                 ui.handle_event(event.clone());
             },
             WindowEvent::Render => {
-                let mut queue = event_queue.lock().unwrap();
-                while queue.len() > 0 {
-                    queue.pop();
-                    ui.send_event(hour_id, Signal::new(CLOCK_TICK));
-                    ui.send_event(minute_id, Signal::new(CLOCK_TICK));
-                    ui.send_event(second_id, Signal::new(CLOCK_TICK));
-                }
+                ui.handle_event_queue();
                 window.draw_2d(|context, graphics| {
                     graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
                     ui.draw(&resources, &mut glyph_cache, context, graphics);

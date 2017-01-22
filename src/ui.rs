@@ -37,6 +37,9 @@ use std::collections::HashMap;
 use std::f64;
 use std::cmp::max;
 use std::any::Any;
+use std::sync::{Arc, Mutex};
+
+use glutin::WindowProxy;
 
 const DEBUG_BOUNDS: bool = false;
 
@@ -61,6 +64,34 @@ impl Resources {
         Id(id)
     }
 }
+#[derive(Clone)]
+pub struct EventQueue {
+    queue: Arc<Mutex<Vec<(EventAddress, Box<Event + Send>)>>>,
+    window_proxy: Option<WindowProxy>,
+}
+impl EventQueue {
+    fn new() -> Self {
+        EventQueue { queue: Arc::new(Mutex::new(Vec::new())), window_proxy: None }
+    }
+    pub fn set_window(&mut self, window: &Window) {
+        self.window_proxy = Some(window.window.window.create_window_proxy());
+    }
+    pub fn push(&mut self, address: EventAddress, event: Box<Event + Send>) {
+        let mut queue = self.queue.lock().unwrap();
+        queue.push((address, event));
+        if let Some(ref window_proxy) = self.window_proxy {
+            window_proxy.wakeup_event_loop();
+        }
+    }
+    pub fn is_empty(&mut self) -> bool {
+        let queue = self.queue.lock().unwrap();
+        queue.len() == 0
+    }
+    pub fn next(&mut self) -> (EventAddress, Box<Event + Send>) {
+        let mut queue = self.queue.lock().unwrap();
+        queue.pop().unwrap()
+    }
+}
 
 pub struct InputState {
     pub mouse: Point,
@@ -78,7 +109,7 @@ pub struct Ui {
     pub input_state: InputState,
     pub widget_map: HashMap<Id, NodeIndex>,
     pub event_bus: EventBus,
-    pub event_queue: Vec<(EventAddress, Box<Event>)>,
+    pub event_queue: EventQueue,
 }
 impl Ui {
     pub fn new() -> Self {
@@ -93,9 +124,13 @@ impl Ui {
             input_state: input_state,
             widget_map: HashMap::new(),
             event_bus: event_bus,
-            event_queue: Vec::new(),
+            event_queue: EventQueue::new(),
         };
         ui
+    }
+    pub fn resize_window_to_fit(&mut self, window: &Window) {
+        let window_dims = self.get_root_dims();
+        window.window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
     fn update_child(&mut self, widget_id: Id, event: &Event) {
         if self.widget_map.contains_key(&widget_id) {
@@ -249,8 +284,8 @@ impl Ui {
         self.handle_event_queue();
     }
     pub fn handle_event_queue(&mut self) {
-        while self.event_queue.len() > 0 {
-            let (event_address, event) = self.event_queue.pop().unwrap();
+        while !self.event_queue.is_empty() {
+            let (event_address, event) = self.event_queue.next();
             match event_address {
                 EventAddress::IdAddress(address, id) => {
                     if address == "CHILD" {

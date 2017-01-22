@@ -90,9 +90,7 @@ fn main() {
 
     let ui = &mut Ui::new();
     ui.set_root(root_widget, &mut resources);
-
-    let window_dims = ui.get_root_dims();
-    window.window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
+    ui.resize_window_to_fit(&window);
 
     let mut glyph_cache = GlyphCache::new(&mut window.context.factory, 512, 512);
     let mut events = WindowEvents::new();

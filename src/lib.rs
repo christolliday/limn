@@ -8,6 +8,7 @@ extern crate petgraph;
 extern crate rusttype;
 extern crate gfx_device_gl;
 extern crate gfx_graphics;
+extern crate glutin;
 
 pub mod widget;
 pub mod ui;

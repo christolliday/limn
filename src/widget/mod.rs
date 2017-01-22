@@ -19,6 +19,7 @@ use super::util;
 use super::resources::Id;
 
 use ui::Ui;
+use ui::EventQueue;
 use super::ui::Resources;
 use self::layout::WidgetLayout;
 
@@ -38,13 +39,13 @@ pub struct DrawArgs<'a, 'b: 'a> {
 }
 
 pub struct EventArgs<'a> {
-    event: &'a Event,
-    widget_id: Id,
-    state: Option<&'a mut Any>,
-    layout: &'a mut WidgetLayout,
-    parent_layout: &'a WidgetLayout,
-    event_queue: &'a mut Vec<(EventAddress, Box<Event>)>,
-    solver: &'a mut Solver,
+    pub event: &'a Event,
+    pub widget_id: Id,
+    pub state: Option<&'a mut Any>,
+    pub layout: &'a mut WidgetLayout,
+    pub parent_layout: &'a WidgetLayout,
+    pub event_queue: &'a mut EventQueue,
+    pub solver: &'a mut Solver,
 }
 
 pub trait EventHandler {
@@ -104,19 +105,22 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         (self.mouse_over_fn)(mouse, bounds)
     }
-    pub fn trigger_event(&mut self, id: EventId, event: &Event, event_queue: &mut Vec<(EventAddress, Box<Event>)>, parent_layout: &WidgetLayout, solver: &mut Solver) {
-        let event_handler = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id).unwrap();
-
-        let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
-        event_handler.handle_event(EventArgs {
-            event: event,
-            widget_id: self.id,
-            state: drawable,
-            layout: &mut self.layout,
-            parent_layout: parent_layout,
-            event_queue: event_queue,
-            solver: solver,
-        });
+    pub fn trigger_event(&mut self, id: EventId, event: &Event, event_queue: &mut EventQueue, parent_layout: &WidgetLayout, solver: &mut Solver) {
+        if let Some(event_handler) = self.event_handlers.iter_mut().find(|event_handler| event_handler.event_id() == id) {
+            let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
+            event_handler.handle_event(EventArgs {
+                event: event,
+                widget_id: self.id,
+                state: drawable,
+                layout: &mut self.layout,
+                parent_layout: parent_layout,
+                event_queue: event_queue,
+                solver: solver,
+            });
+        } else {
+            // no event handler for id
+            println!("widget {:?} has no handler for {:?}", self.id, id);
+        }
     }
 }
 

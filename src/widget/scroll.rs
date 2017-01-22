@@ -28,7 +28,7 @@ impl EventHandler for ScrollHandler {
         let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
         let event = event::InputEvent::new(event::SCROLL_SCROLLED, event.clone());
 
-        event_queue.push((EventAddress::IdAddress("CHILD".to_owned(), widget_id.0), Box::new(event)));
+        event_queue.push(EventAddress::IdAddress("CHILD".to_owned(), widget_id.0), Box::new(event));
     }
 }
 
