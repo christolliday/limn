@@ -24,26 +24,26 @@ fn main() {
     rect_container_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));
     rect_container_widget.layout.dimensions(Dimensions { width: 400.0, height: 400.0});
 
-    let mut rect_tl_widget = WidgetBuilder::new();
-    rect_tl_widget.set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: RED }));
+    let mut rect_tl_widget = WidgetBuilder::new()
+        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: RED }));
     rect_tl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_tl_widget.layout.align_top(&rect_container_widget.layout);
     rect_tl_widget.layout.align_left(&rect_container_widget.layout);
 
-    let mut rect_tr_widget = WidgetBuilder::new();
-    rect_tr_widget.set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: GREEN }));
+    let mut rect_tr_widget = WidgetBuilder::new()
+        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: GREEN }));
     rect_tr_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_tr_widget.layout.align_top(&rect_container_widget.layout);
     rect_tr_widget.layout.align_right(&rect_container_widget.layout);
 
-    let mut rect_bl_widget = WidgetBuilder::new();
-    rect_bl_widget.set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: BLUE }));
+    let mut rect_bl_widget = WidgetBuilder::new()
+        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: BLUE }));
     rect_bl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_bl_widget.layout.align_bottom(&rect_container_widget.layout);
     rect_bl_widget.layout.align_left(&rect_container_widget.layout);
 
-    let mut rect_br_widget = WidgetBuilder::new();
-    rect_br_widget.set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: FUSCHIA }));
+    let mut rect_br_widget = WidgetBuilder::new()
+        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: FUSCHIA }));
     rect_br_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_br_widget.layout.align_bottom(&rect_container_widget.layout);
     rect_br_widget.layout.align_right(&rect_container_widget.layout);

@@ -42,8 +42,8 @@ pub struct ToggleButtonBuilder {
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
         let rect = RectDrawable { background: RED };
-        let mut widget = WidgetBuilder::new();
-        widget.set_drawable(primitives::draw_rect, Box::new(rect));
+        let mut widget = WidgetBuilder::new()
+            .set_drawable(primitives::draw_rect, Box::new(rect));
         widget.event_handlers.push(Box::new(ToggleEventHandler::new()));
 
         fn set_rect_on(state: &mut RectDrawable) {
@@ -63,10 +63,10 @@ impl ToggleButtonBuilder {
 
         ToggleButtonBuilder { widget: widget }
     }
-    pub fn set_text(&mut self,
+    pub fn set_text(mut self,
                     on_text: &'static str,
                     off_text: &'static str,
-                    font_id: Id) {
+                    font_id: Id) -> Self {
 
         let set_text_on = move |state: &mut TextDrawable| {
             state.text = on_text.to_owned();
@@ -82,8 +82,8 @@ impl ToggleButtonBuilder {
             background_color: TRANSPARENT,
         };
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
-        let mut button_text_widget = WidgetBuilder::new();
-        button_text_widget.set_drawable(text::draw_text, Box::new(button_text_drawable));
+        let mut button_text_widget = WidgetBuilder::new()
+            .set_drawable(text::draw_text, Box::new(button_text_drawable));
         button_text_widget.event_handlers
             .push(Box::new(DrawableEventHandler::new(event::BUTTON_ENABLED, set_text_on)));
         button_text_widget.event_handlers
@@ -92,6 +92,7 @@ impl ToggleButtonBuilder {
         button_text_widget.layout.center(&self.widget.layout);
 
         self.widget.add_child(Box::new(button_text_widget));
+        self
     }
     pub fn builder(self) -> WidgetBuilder {
         self.widget
@@ -104,8 +105,8 @@ pub struct PushButtonBuilder {
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let rect = RectDrawable { background: RED };
-        let mut widget = WidgetBuilder::new();
-        widget.set_drawable(primitives::draw_rect, Box::new(rect));
+        let mut widget = WidgetBuilder::new()
+            .set_drawable(primitives::draw_rect, Box::new(rect));
 
         widget.layout.dimensions(Dimensions {
             width: 100.0,
@@ -114,7 +115,7 @@ impl PushButtonBuilder {
 
         PushButtonBuilder { widget: widget }
     }
-    pub fn set_text(&mut self, text: &'static str, font_id: Id) {
+    pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
         let button_text_drawable = TextDrawable {
             text: text.to_owned(),
             font_id: font_id,
@@ -123,12 +124,13 @@ impl PushButtonBuilder {
             background_color: TRANSPARENT,
         };
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
-        let mut button_text_widget = WidgetBuilder::new();
-        button_text_widget.set_drawable(text::draw_text, Box::new(button_text_drawable));
+        let mut button_text_widget = WidgetBuilder::new()
+            .set_drawable(text::draw_text, Box::new(button_text_drawable));
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
 
         self.widget.add_child(Box::new(button_text_widget));
+        self
     }
     pub fn builder(self) -> WidgetBuilder {
         self.widget

@@ -24,6 +24,7 @@ use widget::builder::WidgetBuilder;
 use event::{self, Event, InputEvent, EventQueue, EventAddress};
 use util::{self, Point, Rectangle, Dimensions};
 use resources::Id;
+use color::*;
 
 const DEBUG_BOUNDS: bool = false;
 
@@ -137,8 +138,9 @@ impl Ui {
             let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
+                let color = widget.debug_color.unwrap_or(GREEN);
                 util::draw_rect_outline(widget.layout.bounds(&mut self.solver),
-                                  widget.debug_color,
+                                  color,
                                   context,
                                   graphics);
             }

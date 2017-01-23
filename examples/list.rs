@@ -28,10 +28,10 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget.layout);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
-            let mut list_item_widget = WidgetBuilder::new();
             let text_drawable = TextDrawable::new("hello".to_owned(), font_id);
             let text_dims = text_drawable.measure_dims_no_wrap();
-            list_item_widget.set_drawable(text::draw_text, Box::new(text_drawable));
+            let mut list_item_widget = WidgetBuilder::new()
+                .set_drawable(text::draw_text, Box::new(text_drawable));
             list_item_widget.layout.match_width(&list_widget.layout);
             list_item_widget.layout.height(text_dims.height);
             linear_layout.add_widget(&mut list_item_widget.layout);

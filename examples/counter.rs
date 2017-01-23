@@ -40,8 +40,8 @@ fn main() {
         background_color: WHITE,
     };
     let text_dims = text_drawable.measure_dims_no_wrap();
-    let mut text_widget = WidgetBuilder::new();
-    text_widget.set_drawable(text::draw_text, Box::new(text_drawable));
+    let mut text_widget = WidgetBuilder::new()
+        .set_drawable(text::draw_text, Box::new(text_drawable));
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);
     text_widget.layout.center_vertical(&root_widget.layout);
@@ -74,8 +74,8 @@ fn main() {
             args.event_queue.push(EventAddress::Widget(self.receiver_id), Box::new(event));
         }
     }
-    let mut button_widget = PushButtonBuilder::new();
-    button_widget.set_text("Count", font_id);
+    let mut button_widget = PushButtonBuilder::new()
+        .set_text("Count", font_id);
     button_widget.widget.layout.center(&button_container.layout);
     button_widget.widget.layout.pad(50.0, &button_container.layout);
     button_widget.widget.event_handlers.push(Box::new(PushButtonHandler { receiver_id: root_widget.id }));

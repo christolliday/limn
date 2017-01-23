@@ -15,6 +15,7 @@ use input::EventId;
 use resources::Id;
 use util::{self, Point, Rectangle};
 
+use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
 
 pub struct DrawArgs<'a, 'b: 'a> {
@@ -51,26 +52,34 @@ impl WidgetState {
 
 pub struct Widget {
     pub id: Id,
-    pub name: Option<String>,
     pub draw_fn: Option<fn(DrawArgs)>,
     pub drawable: WidgetState,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
     pub event_handlers: Vec<Box<EventHandler>>,
-    pub debug_color: Color,
+    pub debug_name: Option<String>,
+    pub debug_color: Option<Color>,
 }
 
 impl Widget {
-    pub fn new(id: Id) -> Self {
+    pub fn new(id: Id,
+               draw_fn: Option<fn(DrawArgs)>,
+               drawable: WidgetState,
+               mouse_over_fn: fn(Point, Rectangle) -> bool,
+               layout: WidgetLayout,
+               event_handlers: Vec<Box<EventHandler>>,
+               debug_name: Option<String>,
+               debug_color: Option<Color>,
+               ) -> Self {
         Widget {
             id: id,
-            name: None,
-            draw_fn: None,
-            drawable: WidgetState { state: None },
-            mouse_over_fn: util::point_inside_rect,
-            layout: WidgetLayout::new(),
-            event_handlers: Vec::new(),
-            debug_color: [0.0, 1.0, 0.0, 1.0],
+            draw_fn: draw_fn,
+            drawable: drawable,
+            mouse_over_fn: mouse_over_fn,
+            layout: layout,
+            event_handlers: event_handlers,
+            debug_name: debug_name,
+            debug_color: debug_color,
         }
     }
     pub fn draw(&self,
