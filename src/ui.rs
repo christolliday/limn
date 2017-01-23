@@ -106,7 +106,10 @@ impl Ui {
         };
 
         let children: Vec<NodeIndex> = self.children(node_index).collect();
-        for child_index in children {
+        // need to iterate backwards to draw in correct order, because 
+        // petgraph neighbours iterate in reverse order of insertion, not sure why
+        for child_index in children.iter().rev() {
+            let child_index = child_index.clone();
             self.draw_node(context,
                            graphics,
                            child_index,

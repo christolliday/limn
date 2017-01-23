@@ -104,7 +104,6 @@ impl Widget {
         if let Some(event_handler) = self.event_handlers
             .iter_mut()
             .find(|event_handler| event_handler.event_id() == id) {
-            //let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
             event_handler.handle_event(EventArgs {
                 event: event,
                 widget_id: self.id,
