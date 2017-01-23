@@ -210,7 +210,7 @@ impl Ui {
         self.widget_map.get(&widget_id).map(|index| *index)
     }
 
-    fn trigger_widget_event(&mut self, node_index: NodeIndex, event: &Event) {
+    fn trigger_widget_event(&mut self, node_index: NodeIndex, event: &(Event + 'static)) {
         let ref mut widget = self.graph[node_index];
         widget.trigger_event(event.event_id(),
                              event,

@@ -50,6 +50,11 @@ pub trait Event {
     fn event_id(&self) -> EventId;
     fn event_data(&self) -> Option<&Any>;
 }
+impl Event {
+    pub fn data<T: 'static>(&self) -> &T {
+        self.event_data().unwrap().downcast_ref::<T>().unwrap()
+    }
+}
 
 // event with an id but no associated data
 pub struct Signal {

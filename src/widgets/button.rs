@@ -23,7 +23,7 @@ impl EventHandler for ToggleEventHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { event, widget_id, event_queue, .. } = event_args;
-        let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
+        let event = event.data::<input::Event>();
 
         self.on = !self.on;
         let event = if self.on {

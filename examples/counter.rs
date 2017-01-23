@@ -52,11 +52,9 @@ fn main() {
         fn event_id(&self) -> EventId {
             COUNT
         }
-        fn handle_event(&mut self, event_args: EventArgs) {
-            let EventArgs { event, state, .. } = event_args;
-            let state = state.unwrap();
-            let state = state.downcast_mut::<TextDrawable>().unwrap();
-            let count: &u32 = event.event_data().unwrap().downcast_ref().unwrap();
+        fn handle_event(&mut self, args: EventArgs) {
+            let state = args.state.state::<TextDrawable>();
+            let count = args.event.data::<u32>();
             state.text = format!("{}", count);
         }
     }
@@ -71,10 +69,9 @@ fn main() {
         fn event_id(&self) -> EventId {
             event::WIDGET_PRESS
         }
-        fn handle_event(&mut self, event_args: EventArgs) {
-            let EventArgs { event_queue, .. } = event_args;
+        fn handle_event(&mut self, args: EventArgs) {
             let event = Signal::new(COUNTER);
-            event_queue.push(EventAddress::Widget(self.receiver_id), Box::new(event));
+            args.event_queue.push(EventAddress::Widget(self.receiver_id), Box::new(event));
         }
     }
     let mut button_widget = PushButtonBuilder::new();
@@ -100,11 +97,10 @@ fn main() {
         fn event_id(&self) -> EventId {
             COUNTER
         }
-        fn handle_event(&mut self, event_args: EventArgs) {
-            let EventArgs { widget_id, event_queue, .. } = event_args;
+        fn handle_event(&mut self, args: EventArgs) {
             self.count += 1;
             let event = CountEvent::new(COUNT, self.count);
-            event_queue.push(EventAddress::SubTree(widget_id), Box::new(event));
+            args.event_queue.push(EventAddress::SubTree(args.widget_id), Box::new(event));
         }
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));

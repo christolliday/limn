@@ -18,6 +18,7 @@ pub struct WidgetBuilder {
     pub debug_color: Color,
     pub children: Vec<Box<WidgetBuilder>>,
     pub id: Id,
+    pub name: Option<String>,
 }
 
 impl WidgetBuilder {
@@ -31,7 +32,11 @@ impl WidgetBuilder {
             debug_color: [0.0, 1.0, 0.0, 1.0],
             children: Vec::new(),
             id: resources().widget_id(),
+            name: None,
         }
+    }
+    pub fn set_name(&mut self, name: &str) {
+        self.name = Some(name.to_owned());
     }
     pub fn set_drawable(&mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) {
         self.draw_fn = Some(draw_fn);
@@ -54,10 +59,10 @@ impl WidgetBuilder {
                   -> NodeIndex {
         let mut widget = Widget::new(self.id);
 
-        if let (Some(draw_fn), Some(drawable)) = (self.draw_fn, self.drawable) {
-            widget.set_drawable(draw_fn, drawable);
-        }
-        widget.set_mouse_over_fn(self.mouse_over_fn);
+        widget.drawable.state = self.drawable;
+        widget.draw_fn = self.draw_fn;
+        widget.name = self.name;
+        widget.mouse_over_fn = self.mouse_over_fn;
         widget.event_handlers = self.event_handlers;
         widget.layout = self.layout;
         widget.layout.update_solver(&mut ui.solver);

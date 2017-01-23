@@ -26,7 +26,7 @@ impl EventHandler for ScrollHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { event, widget_id, layout, event_queue, solver, .. } = event_args;
-        let event: &input::Event = event.event_data().unwrap().downcast_ref().unwrap();
+        let event = event.data::<input::Event>();
         let widget_bounds = layout.bounds(solver);
         let event = ScrollEvent { data: (event.clone(), widget_bounds) };
         event_queue.push(EventAddress::Child(widget_id), Box::new(event));
@@ -47,9 +47,7 @@ impl EventHandler for WidgetScrollHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { event, layout, solver, .. } = event_args;
-        let event_data = event.event_data().unwrap();
-        let &(ref event, parent_bounds) = event_data.downcast_ref::<(input::Event, Rectangle)>()
-            .unwrap();
+        let &(ref event, parent_bounds) = event.data::<(input::Event, Rectangle)>();
 
         if let Some(scroll) = event.mouse_scroll_args() {
             let scroll: Point = scroll.into();

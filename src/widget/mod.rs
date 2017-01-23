@@ -27,9 +27,9 @@ pub struct DrawArgs<'a, 'b: 'a> {
 }
 
 pub struct EventArgs<'a> {
-    pub event: &'a Event,
+    pub event: &'a (Event + 'static),
     pub widget_id: Id,
-    pub state: Option<&'a mut Any>,
+    pub state: &'a mut WidgetState,
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
@@ -37,13 +37,23 @@ pub struct EventArgs<'a> {
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, event_args: EventArgs);
+    fn handle_event(&mut self, mut event_args: EventArgs);
+}
+
+pub struct WidgetState {
+    pub state: Option<Box<Any>>,
+}
+impl WidgetState {
+    pub fn state<T: 'static>(&mut self) -> &mut T {
+        self.state.as_mut().map(|draw| draw.as_mut()).unwrap().downcast_mut::<T>().unwrap()
+    }
 }
 
 pub struct Widget {
     pub id: Id,
+    pub name: Option<String>,
     pub draw_fn: Option<fn(DrawArgs)>,
-    pub drawable: Option<Box<Any>>,
+    pub drawable: WidgetState,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
     pub event_handlers: Vec<Box<EventHandler>>,
@@ -54,23 +64,14 @@ impl Widget {
     pub fn new(id: Id) -> Self {
         Widget {
             id: id,
+            name: None,
             draw_fn: None,
-            drawable: None,
+            drawable: WidgetState { state: None },
             mouse_over_fn: util::point_inside_rect,
             layout: WidgetLayout::new(),
             event_handlers: Vec::new(),
             debug_color: [0.0, 1.0, 0.0, 1.0],
         }
-    }
-    pub fn set_drawable(&mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) {
-        self.draw_fn = Some(draw_fn);
-        self.drawable = Some(drawable);
-    }
-    pub fn set_mouse_over_fn(&mut self, mouse_over_fn: fn(Point, Rectangle) -> bool) {
-        self.mouse_over_fn = mouse_over_fn;
-    }
-    pub fn debug_color(&mut self, color: Color) {
-        self.debug_color = color;
     }
     pub fn draw(&self,
                 crop_to: Rectangle,
@@ -78,7 +79,7 @@ impl Widget {
                 glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {
-        if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.as_ref()) {
+        if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.state.as_ref()) {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);
             draw_fn(DrawArgs {
@@ -97,17 +98,17 @@ impl Widget {
     }
     pub fn trigger_event(&mut self,
                          id: EventId,
-                         event: &Event,
+                         event: &(Event + 'static),
                          event_queue: &mut EventQueue,
                          solver: &mut Solver) {
         if let Some(event_handler) = self.event_handlers
             .iter_mut()
             .find(|event_handler| event_handler.event_id() == id) {
-            let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
+            //let drawable = self.drawable.as_mut().map(|draw| draw.as_mut());
             event_handler.handle_event(EventArgs {
                 event: event,
                 widget_id: self.id,
-                state: drawable,
+                state: &mut self.drawable,
                 layout: &mut self.layout,
                 event_queue: event_queue,
                 solver: solver,
@@ -135,10 +136,7 @@ impl<T: 'static> EventHandler for DrawableEventHandler<T> {
     fn event_id(&self) -> EventId {
         self.event_id
     }
-    fn handle_event(&mut self, event_args: EventArgs) {
-        let EventArgs { state, .. } = event_args;
-        let state = state.unwrap();
-        let state = state.downcast_mut::<T>().unwrap();
-        (self.drawable_callback)(state);
+    fn handle_event(&mut self, mut event_args: EventArgs) {
+        (self.drawable_callback)(event_args.state.state::<T>());
     }
 }
