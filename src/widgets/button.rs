@@ -1,13 +1,16 @@
 use input::{self, EventId};
 
 use widget::{self, EventHandler, DrawableEventHandler, EventArgs};
-use event::{self, EventAddress};
+use event::{self, EventAddress, Signal};
 use widgets::primitives::{self, RectDrawable};
 use widgets::text::{self, TextDrawable};
 use widget::builder::WidgetBuilder;
 use util::Dimensions;
 use resources::Id;
 use color::*;
+
+pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
+pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
 
 pub struct ToggleEventHandler {
     on: bool,
@@ -26,11 +29,7 @@ impl EventHandler for ToggleEventHandler {
         let event = event.data::<input::Event>();
 
         self.on = !self.on;
-        let event = if self.on {
-            event::InputEvent::new(event::BUTTON_ENABLED, event.clone())
-        } else {
-            event::InputEvent::new(event::BUTTON_DISABLED, event.clone())
-        };
+        let event = Signal::new(if self.on { BUTTON_ENABLED } else { BUTTON_DISABLED });
         event_queue.push(EventAddress::SubTree(widget_id), Box::new(event));
     }
 }
@@ -42,9 +41,6 @@ pub struct ToggleButtonBuilder {
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
         let rect = RectDrawable { background: RED };
-        let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::draw_rect, Box::new(rect));
-        widget.event_handlers.push(Box::new(ToggleEventHandler::new()));
 
         fn set_rect_on(state: &mut RectDrawable) {
             state.background = WHITE;
@@ -52,10 +48,11 @@ impl ToggleButtonBuilder {
         fn set_rect_off(state: &mut RectDrawable) {
             state.background = RED;
         };
-        widget.event_handlers
-            .push(Box::new(DrawableEventHandler::new(event::BUTTON_ENABLED, set_rect_on)));
-        widget.event_handlers
-            .push(Box::new(DrawableEventHandler::new(event::BUTTON_DISABLED, set_rect_off)));
+        let mut widget = WidgetBuilder::new()
+            .set_drawable(primitives::draw_rect, Box::new(rect))
+            .add_handler(Box::new(ToggleEventHandler::new()))
+            .add_handler(Box::new(DrawableEventHandler::new(BUTTON_ENABLED, set_rect_on)))
+            .add_handler(Box::new(DrawableEventHandler::new(BUTTON_DISABLED, set_rect_off)));
         widget.layout.dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
@@ -83,19 +80,14 @@ impl ToggleButtonBuilder {
         };
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new()
-            .set_drawable(text::draw_text, Box::new(button_text_drawable));
-        button_text_widget.event_handlers
-            .push(Box::new(DrawableEventHandler::new(event::BUTTON_ENABLED, set_text_on)));
-        button_text_widget.event_handlers
-            .push(Box::new(DrawableEventHandler::new(event::BUTTON_DISABLED, set_text_off)));
+            .set_drawable(text::draw_text, Box::new(button_text_drawable))
+            .add_handler(Box::new(DrawableEventHandler::new(BUTTON_ENABLED, set_text_on)))
+            .add_handler(Box::new(DrawableEventHandler::new(BUTTON_DISABLED, set_text_off)));
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
 
         self.widget.add_child(Box::new(button_text_widget));
         self
-    }
-    pub fn builder(self) -> WidgetBuilder {
-        self.widget
     }
 }
 
@@ -131,8 +123,5 @@ impl PushButtonBuilder {
 
         self.widget.add_child(Box::new(button_text_widget));
         self
-    }
-    pub fn builder(self) -> WidgetBuilder {
-        self.widget
     }
 }

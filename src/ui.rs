@@ -124,25 +124,16 @@ impl Ui {
         self.handle_event_queue();
 
         let index = self.root_index.unwrap().clone();
-        self.draw_node(context,
-                       graphics,
-                       index,
-                       Rectangle {
-                           top: 0.0,
-                           left: 0.0,
-                           width: f64::MAX,
-                           height: f64::MAX,
-                       });
+        let crop_to = Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX };
+        self.draw_node(context, graphics, index, crop_to);
 
         if DEBUG_BOUNDS {
             let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
                 let color = widget.debug_color.unwrap_or(GREEN);
-                util::draw_rect_outline(widget.layout.bounds(&mut self.solver),
-                                  color,
-                                  context,
-                                  graphics);
+                let bounds = widget.layout.bounds(&mut self.solver);
+                util::draw_rect_outline(bounds, color, context, graphics);
             }
         }
     }
@@ -201,10 +192,7 @@ impl Ui {
                     while let Some(node_index) = dfs.next(&self.graph) {
                         let ref mut widget = self.graph[node_index];
                         if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                            widget.trigger_event(event.event_id(),
-                                                 event,
-                                                 &mut self.event_queue,
-                                                 &mut self.solver);
+                            widget.trigger_event(event, &mut self.event_queue, &mut self.solver);
                         }
                     }
                 }
@@ -217,9 +205,6 @@ impl Ui {
 
     fn trigger_widget_event(&mut self, node_index: NodeIndex, event: &(Event + 'static)) {
         let ref mut widget = self.graph[node_index];
-        widget.trigger_event(event.event_id(),
-                             event,
-                             &mut self.event_queue,
-                             &mut self.solver);
+        widget.trigger_event(event, &mut self.event_queue, &mut self.solver);
     }
 }

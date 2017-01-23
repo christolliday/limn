@@ -14,14 +14,14 @@ fn main() {
     
     let mut root_widget = WidgetBuilder::new();
 
-    let mut scroll_widget = WidgetBuilder::new();
+    let mut scroll_widget = WidgetBuilder::new()
+        .add_handler(Box::new(ScrollHandler {}));
     scroll_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0 });
     scroll_widget.layout.pad(100.0, &root_widget.layout);
     scroll_widget.layout.scrollable = true;
-    scroll_widget.event_handlers.push(Box::new(ScrollHandler {}));
 
-    let mut rect_container_widget = WidgetBuilder::new();
-    rect_container_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));
+    let mut rect_container_widget = WidgetBuilder::new()
+        .add_handler(Box::new(WidgetScrollHandler::new()));
     rect_container_widget.layout.dimensions(Dimensions { width: 400.0, height: 400.0});
 
     let mut rect_tl_widget = WidgetBuilder::new()

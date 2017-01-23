@@ -11,10 +11,10 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
     let mut button = ToggleButtonBuilder::new()
-        .set_text("ON", "OFF", font_id);
-    button.widget.layout.center(&root_widget.layout);
-    button.widget.layout.pad(50.0, &root_widget.layout);
-    root_widget.add_child(Box::new(button.builder()));
+        .set_text("ON", "OFF", font_id).widget;
+    button.layout.center(&root_widget.layout);
+    button.layout.pad(50.0, &root_widget.layout);
+    root_widget.add_child(Box::new(button));
 
     util::set_root_and_loop(window, ui, root_widget);
 }

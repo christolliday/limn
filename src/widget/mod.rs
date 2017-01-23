@@ -106,13 +106,12 @@ impl Widget {
         (self.mouse_over_fn)(mouse, bounds)
     }
     pub fn trigger_event(&mut self,
-                         id: EventId,
                          event: &(Event + 'static),
                          event_queue: &mut EventQueue,
                          solver: &mut Solver) {
         if let Some(event_handler) = self.event_handlers
             .iter_mut()
-            .find(|event_handler| event_handler.event_id() == id) {
+            .find(|event_handler| event_handler.event_id() == event.event_id()) {
             event_handler.handle_event(EventArgs {
                 event: event,
                 widget_id: self.id,

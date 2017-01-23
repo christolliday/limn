@@ -32,10 +32,6 @@ pub const WIDGET_SCROLL: EventId = EventId("piston/limn/widget_scroll");
 pub const WIDGET_PRESS: EventId = EventId("piston/limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("piston/limn/widget_release");
 
-pub const SCROLL_SCROLLED: EventId = EventId("piston/limn/scroll_scrolled");
-pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
-pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
-
 // get the widget event that is received if the event occurs while mouse is over widget
 pub fn widget_event(event_id: EventId) -> Option<EventId> {
     match event_id {

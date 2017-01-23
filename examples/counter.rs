@@ -32,21 +32,6 @@ fn main() {
     linear_layout.add_widget(&mut left_spacer.layout);
     root_widget.add_child(Box::new(left_spacer));
 
-    let text_drawable = TextDrawable {
-        text: "0".to_owned(),
-        font_id: font_id,
-        font_size: 20.0,
-        text_color: BLACK,
-        background_color: WHITE,
-    };
-    let text_dims = text_drawable.measure_dims_no_wrap();
-    let mut text_widget = WidgetBuilder::new()
-        .set_drawable(text::draw_text, Box::new(text_drawable));
-    text_widget.layout.width(80.0);
-    text_widget.layout.height(text_dims.height);
-    text_widget.layout.center_vertical(&root_widget.layout);
-    linear_layout.add_widget(&mut text_widget.layout);
-
     struct CountHandler {}
     impl EventHandler for CountHandler {
         fn event_id(&self) -> EventId {
@@ -58,7 +43,21 @@ fn main() {
             state.text = format!("{}", count);
         }
     }
-    text_widget.event_handlers.push(Box::new(CountHandler {}));
+    let text_drawable = TextDrawable {
+        text: "0".to_owned(),
+        font_id: font_id,
+        font_size: 20.0,
+        text_color: BLACK,
+        background_color: WHITE,
+    };
+    let text_dims = text_drawable.measure_dims_no_wrap();
+    let mut text_widget = WidgetBuilder::new()
+        .set_drawable(text::draw_text, Box::new(text_drawable))
+        .add_handler(Box::new(CountHandler {}));
+    text_widget.layout.width(80.0);
+    text_widget.layout.height(text_dims.height);
+    text_widget.layout.center_vertical(&root_widget.layout);
+    linear_layout.add_widget(&mut text_widget.layout);
 
     let mut button_container = WidgetBuilder::new();
     linear_layout.add_widget(&mut button_container.layout);
@@ -75,11 +74,11 @@ fn main() {
         }
     }
     let mut button_widget = PushButtonBuilder::new()
-        .set_text("Count", font_id);
-    button_widget.widget.layout.center(&button_container.layout);
-    button_widget.widget.layout.pad(50.0, &button_container.layout);
-    button_widget.widget.event_handlers.push(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
-    button_container.add_child(Box::new(button_widget.builder()));
+        .set_text("Count", font_id)
+        .widget.add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
+    button_widget.layout.center(&button_container.layout);
+    button_widget.layout.pad(50.0, &button_container.layout);
+    button_container.add_child(Box::new(button_widget));
     root_widget.add_child(Box::new(text_widget));
     root_widget.add_child(Box::new(button_container));
 

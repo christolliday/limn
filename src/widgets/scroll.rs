@@ -7,12 +7,14 @@ use input::{self, EventId, MouseScrollEvent};
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
+pub const SCROLL_SCROLLED: EventId = EventId("piston/limn/scroll_scrolled");
+
 pub struct ScrollEvent {
     pub data: (input::Event, Rectangle),
 }
 impl Event for ScrollEvent {
     fn event_id(&self) -> EventId {
-        event::SCROLL_SCROLLED
+        SCROLL_SCROLLED
     }
     fn event_data(&self) -> Option<&Any> {
         Some(&self.data)
@@ -43,7 +45,7 @@ impl WidgetScrollHandler {
 }
 impl EventHandler for WidgetScrollHandler {
     fn event_id(&self) -> EventId {
-        event::SCROLL_SCROLLED
+        SCROLL_SCROLLED
     }
     fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { event, layout, solver, .. } = event_args;
