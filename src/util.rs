@@ -306,10 +306,14 @@ pub fn crop_context(context: Context, rect: Rectangle) -> Context {
 
 // get smallest shared region
 pub fn crop_rect(outer: Rectangle, inner: Rectangle) -> Rectangle {
+    let top = f64::max(outer.top, inner.top);
+    let left = f64::max(outer.left, inner.left);
+    let right = f64::min(outer.left + outer.width, inner.left + inner.width);
+    let bottom = f64::min(outer.top + outer.height, inner.top + inner.height);
     Rectangle {
-        top: f64::max(outer.top, inner.top),
-        left: f64::max(outer.left, inner.left),
-        width: f64::min(outer.width, inner.width),
-        height: f64::min(outer.height, inner.height),
+        top: top,
+        left: left,
+        width: f64::max(0.0, right - left),
+        height: f64::max(0.0, bottom - top),
     }
 }
