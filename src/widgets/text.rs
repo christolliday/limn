@@ -8,6 +8,7 @@ use text::{self, Wrap};
 use resources::{Id, resources};
 use widget::DrawArgs;
 use util::{self, Dimensions, Align, Scalar};
+use color::*;
 
 pub struct TextDrawable {
     pub text: String,
@@ -22,8 +23,8 @@ impl TextDrawable {
             text: text,
             font_id: font_id,
             font_size: 24.0,
-            text_color: [0.0, 0.0, 0.0, 1.0],
-            background_color: [1.0, 1.0, 1.0, 1.0],
+            text_color: BLACK,
+            background_color: TRANSPARENT,
         }
     }
     pub fn measure_dims_no_wrap(&self) -> Dimensions {

@@ -28,6 +28,7 @@ pub const TOUCH: EventId = EventId("piston/touch");
 pub const UPDATE: EventId = EventId("piston/update");
 
 pub const WIDGET_MOUSE_OVER: EventId = EventId("piston/limn/widget_mouse_over");
+pub const WIDGET_MOUSE_OFF: EventId = EventId("piston/limn/widget_mouse_off");
 pub const WIDGET_SCROLL: EventId = EventId("piston/limn/widget_scroll");
 pub const WIDGET_PRESS: EventId = EventId("piston/limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("piston/limn/widget_release");

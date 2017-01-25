@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 use std::f64;
 
 use petgraph::Graph;
@@ -21,7 +21,7 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::{self, Event, InputEvent, EventQueue, EventAddress};
+use event::{self, Event, Signal, InputEvent, EventQueue, EventAddress};
 use util::{self, Point, Rectangle, Dimensions};
 use resources::Id;
 use color::*;
@@ -30,10 +30,11 @@ const DEBUG_BOUNDS: bool = false;
 
 pub struct InputState {
     pub mouse: Point,
+    pub last_over: HashSet<Id>,
 }
 impl InputState {
     fn new() -> Self {
-        InputState { mouse: Point { x: 0.0, y: 0.0 } }
+        InputState { mouse: Point { x: 0.0, y: 0.0 }, last_over: HashSet::new() }
     }
 }
 
@@ -156,6 +157,18 @@ impl Ui {
     pub fn handle_event(&mut self, event: input::Event) {
         if let Some(mouse) = event.mouse_cursor_args() {
             self.input_state.mouse = mouse.into();
+            let last_over = self.input_state.last_over.clone();
+            for last_over in last_over {
+                let last_over = last_over.clone();
+                if let Some(last_index) = self.find_widget(last_over) {
+                    let ref mut widget = self.graph[last_index];
+                    if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
+                        let event = Signal::new(event::WIDGET_MOUSE_OFF);
+                        self.event_queue.push(EventAddress::Widget(last_over), Box::new(event));
+                        self.input_state.last_over.remove(&last_over);
+                    }
+                }
+            }
         }
         if let Some(event_id) = event::widget_event(event.event_id()) {
             let event = InputEvent::new(event_id, event);
@@ -193,6 +206,7 @@ impl Ui {
                         let ref mut widget = self.graph[node_index];
                         if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
                             widget.trigger_event(event, &mut self.event_queue, &mut self.solver);
+                            self.input_state.last_over.insert(widget.id);
                         }
                     }
                 }
