@@ -54,14 +54,16 @@ impl EventHandler for WidgetScrollHandler {
         let scroll = match *event {
             glutin::Event::MouseWheel(delta, _) => {
                 match delta {
+                    glutin::MouseScrollDelta::LineDelta(x, y) => {
+                        Some(Point{ x: x as f64, y: y as f64})
+                    },
                     glutin::MouseScrollDelta::PixelDelta(x, y) => {
                         Some(Point{ x: x as f64, y: y as f64})
-                    }, _ => None
+                    }
                 }
             }, _ => None
         };
         if let Some(scroll) = scroll {
-            //let scroll: Point = Point { x: scroll.x, y: scroll.y };//scroll.into();
             let widget_bounds = layout.bounds(solver);
 
             self.offset = self.offset + scroll * 13.0;

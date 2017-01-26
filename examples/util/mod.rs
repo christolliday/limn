@@ -39,10 +39,13 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
     ui.resize_window_to_fit(&window);
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window.window) {
-        //println!("event {:?}", event);
         match event {
             WindowEvent::Input(event) => {
                 match event {
+                    Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
+                    Event::Closed => {
+                        break;
+                    },
                     Event::Resized(width, height) => {
                         window.window_resized();
                         ui.window_resized(Dimensions {width: width as f64, height: height as f64});

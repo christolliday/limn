@@ -83,6 +83,7 @@ impl Ui {
         let ref root = self.graph[self.root_index.unwrap()];
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
+        self.dirty_widgets.insert(self.root_index.unwrap());
     }
     pub fn parents(&mut self, node_index: NodeIndex) -> Neighbors<()> {
         self.graph.neighbors_directed(node_index, Direction::Incoming)

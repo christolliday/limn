@@ -14,6 +14,7 @@ use std::thread;
 
 use glutin;
 
+#[derive(Debug)]
 pub enum WindowEvent {
     Render,
     Input(glutin::Event),

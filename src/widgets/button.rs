@@ -28,9 +28,17 @@ impl EventHandler for ToggleEventHandler {
         let EventArgs { event, widget_id, event_queue, .. } = event_args;
         let event = event.data::<glutin::Event>();
 
-        self.on = !self.on;
-        let event = Signal::new(if self.on { BUTTON_ENABLED } else { BUTTON_DISABLED });
-        event_queue.push(EventAddress::SubTree(widget_id), Box::new(event));
+        match *event {
+            glutin::Event::MouseInput(state, button) => {
+                match state {
+                    glutin::ElementState::Released => {
+                        self.on = !self.on;
+                        let event = Signal::new(if self.on { BUTTON_ENABLED } else { BUTTON_DISABLED });
+                        event_queue.push(EventAddress::SubTree(widget_id), Box::new(event));
+                    }, _ => ()
+                }
+            }, _ => ()
+        }
     }
 }
 
