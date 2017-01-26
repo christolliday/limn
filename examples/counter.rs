@@ -38,9 +38,8 @@ fn main() {
             COUNT
         }
         fn handle_event(&mut self, args: EventArgs) {
-            let state = args.state.state::<TextDrawable>();
             let count = args.event.data::<u32>();
-            state.text = format!("{}", count);
+            args.state.update(|state: &mut TextDrawable| state.text = format!("{}", count));
         }
     }
     let text_drawable = TextDrawable {

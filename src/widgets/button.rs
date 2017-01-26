@@ -71,13 +71,7 @@ impl ToggleButtonBuilder {
         let set_text_off = move |state: &mut TextDrawable| {
             state.text = off_text.to_owned();
         };
-        let button_text_drawable = TextDrawable {
-            text: off_text.to_owned(),
-            font_id: font_id,
-            font_size: 20.0,
-            text_color: BLACK,
-            background_color: TRANSPARENT,
-        };
+        let button_text_drawable = TextDrawable::new(off_text.to_owned(), font_id, 20.0, BLACK, TRANSPARENT);
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(text::draw_text, Box::new(button_text_drawable))
@@ -108,13 +102,7 @@ impl PushButtonBuilder {
         PushButtonBuilder { widget: widget }
     }
     pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
-        let button_text_drawable = TextDrawable {
-            text: text.to_owned(),
-            font_id: font_id,
-            font_size: 20.0,
-            text_color: BLACK,
-            background_color: TRANSPARENT,
-        };
+        let button_text_drawable = TextDrawable::new(text.to_owned(), font_id, 20.0, BLACK, TRANSPARENT);
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(text::draw_text, Box::new(button_text_drawable));

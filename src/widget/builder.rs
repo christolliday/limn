@@ -27,7 +27,7 @@ impl WidgetBuilder {
         WidgetBuilder {
             id: resources().widget_id(),
             draw_fn: None,
-            drawable: WidgetState { state: None },
+            drawable: WidgetState::new(),
             mouse_over_fn: util::point_inside_rect,
             layout: WidgetLayout::new(),
             event_handlers: Vec::new(),
@@ -38,7 +38,7 @@ impl WidgetBuilder {
     }
     pub fn set_drawable(mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) -> Self {
         self.draw_fn = Some(draw_fn);
-        self.drawable = WidgetState { state: Some(drawable) };
+        self.drawable = WidgetState::new_state(drawable);
         self
     }
     pub fn set_mouse_over_fn(mut self, mouse_over_fn: fn(Point, Rectangle) -> bool) -> Self {

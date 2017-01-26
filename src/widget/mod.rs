@@ -19,7 +19,7 @@ use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
 
 pub struct DrawArgs<'a, 'b: 'a> {
-    pub state: &'a Any,
+    pub state: &'a mut Any,
     pub bounds: Rectangle,
     pub parent_bounds: Rectangle,
     pub glyph_cache: &'a mut GlyphCache,
@@ -42,11 +42,23 @@ pub trait EventHandler {
 }
 
 pub struct WidgetState {
-    pub state: Option<Box<Any>>,
+    state: Option<Box<Any>>,
+    has_updated: bool,
 }
 impl WidgetState {
-    pub fn state<T: 'static>(&mut self) -> &mut T {
-        self.state.as_mut().map(|draw| draw.as_mut()).unwrap().downcast_mut::<T>().unwrap()
+    pub fn new() -> Self {
+        WidgetState { state: None, has_updated: false }
+    }
+    pub fn new_state(state: Box<Any>) -> Self {
+        WidgetState { state: Some(state), has_updated: false }
+    }
+    pub fn update<F, T: 'static>(&mut self, f: F) where F: FnOnce(&mut T) {
+        self.has_updated = true;
+        let state = self.state.as_mut().map(|state| state.as_mut()).unwrap().downcast_mut::<T>().unwrap();
+        f(state);
+    }
+    pub fn state<T: 'static>(&self) -> &T {
+        self.state.as_ref().map(|draw| draw.as_ref()).unwrap().downcast_ref::<T>().unwrap()
     }
 }
 
@@ -82,17 +94,17 @@ impl Widget {
             debug_color: debug_color,
         }
     }
-    pub fn draw(&self,
+    pub fn draw(&mut self,
                 crop_to: Rectangle,
                 solver: &mut Solver,
                 glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {
-        if let (Some(draw_fn), Some(ref drawable)) = (self.draw_fn, self.drawable.state.as_ref()) {
+        if let (Some(draw_fn), Some(ref mut drawable)) = (self.draw_fn, self.drawable.state.as_mut()) {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);
             draw_fn(DrawArgs {
-                state: drawable.as_ref(),
+                state: drawable.as_mut(),
                 bounds: bounds,
                 parent_bounds: crop_to,
                 glyph_cache: glyph_cache,
@@ -132,7 +144,7 @@ pub struct DrawableEventHandler<T> {
     drawable_callback: Box<Fn(&mut T)>,
 }
 impl<T: 'static> DrawableEventHandler<T> {
-    pub fn new<H: Fn(&mut T) + 'static>(event_id: EventId, drawable_callback: H) -> Self {
+    pub fn new<F: Fn(&mut T) + 'static>(event_id: EventId, drawable_callback: F) -> Self {
         DrawableEventHandler {
             event_id: event_id,
             drawable_callback: Box::new(drawable_callback),
@@ -144,6 +156,8 @@ impl<T: 'static> EventHandler for DrawableEventHandler<T> {
         self.event_id
     }
     fn handle_event(&mut self, mut event_args: EventArgs) {
-        (self.drawable_callback)(event_args.state.state::<T>());
+        event_args.state.update(|state: &mut T|
+            (self.drawable_callback)(state)
+        );
     }
 }

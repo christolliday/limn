@@ -212,6 +212,10 @@ impl Rectangle {
             y: self.top + self.height / 2.0,
         }
     }
+    /// true if either width or height are exactly 0
+    pub fn no_area(&self) -> bool {
+        return self.width == 0.0 || self.height == 0.0;
+    }
 }
 impl Div<Dimensions> for Dimensions {
     type Output = Self;

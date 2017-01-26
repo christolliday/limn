@@ -37,8 +37,7 @@ fn main() {
             event::WIDGET_MOUSE_OVER
         }
         fn handle_event(&mut self, mut args: EventArgs) {
-            let state = args.state.state::<RectDrawable>();
-            state.background = BLUE;
+            args.state.update(|state: &mut RectDrawable| state.background = BLUE);
         }
     }
     struct MouseOffHandler {}
@@ -47,8 +46,7 @@ fn main() {
             event::WIDGET_MOUSE_OFF
         }
         fn handle_event(&mut self, mut args: EventArgs) {
-            let state = args.state.state::<RectDrawable>();
-            state.background = WHITE;
+            args.state.update(|state: &mut RectDrawable| state.background = WHITE);
         }
     }
     struct MouseOnTextHandler {}
@@ -57,8 +55,7 @@ fn main() {
             event::WIDGET_MOUSE_OVER
         }
         fn handle_event(&mut self, mut args: EventArgs) {
-            let state = args.state.state::<TextDrawable>();
-            state.text_color = WHITE;
+            args.state.update(|state: &mut TextDrawable| state.text_color = WHITE);
         }
     }
     struct MouseOffTextHandler {}
@@ -67,8 +64,7 @@ fn main() {
             event::WIDGET_MOUSE_OFF
         }
         fn handle_event(&mut self, mut args: EventArgs) {
-            let state = args.state.state::<TextDrawable>();
-            state.text_color = BLACK;
+            args.state.update(|state: &mut TextDrawable| state.text_color = BLACK);
         }
     }
 
@@ -76,7 +72,7 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget.layout);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
-            let text_drawable = TextDrawable::new("hello".to_owned(), font_id);
+            let text_drawable = TextDrawable::new_default("hello".to_owned(), font_id);
             let text_dims = text_drawable.measure_dims_no_wrap();
 
             let rect_drawable = RectDrawable { background: WHITE };

@@ -18,13 +18,22 @@ pub struct TextDrawable {
     pub background_color: Color,
 }
 impl TextDrawable {
-    pub fn new(text: String, font_id: Id) -> Self {
+    pub fn new_default(text: String, font_id: Id) -> Self {
         TextDrawable {
             text: text,
             font_id: font_id,
             font_size: 24.0,
             text_color: BLACK,
             background_color: TRANSPARENT,
+        }
+    }
+    pub fn new(text: String, font_id: Id, font_size: Scalar, text_color: Color, background_color: Color) -> Self {
+        TextDrawable {
+            text: text,
+            font_id: font_id,
+            font_size: font_size,
+            text_color: text_color,
+            background_color: background_color,
         }
     }
     pub fn measure_dims_no_wrap(&self) -> Dimensions {

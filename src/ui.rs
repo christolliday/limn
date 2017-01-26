@@ -97,7 +97,7 @@ impl Ui {
                      crop_to: Rectangle) {
 
         let crop_to = {
-            let ref widget = self.graph[node_index];
+            let ref mut widget = self.graph[node_index];
             widget.draw(crop_to,
                         &mut self.solver,
                         &mut self.glyph_cache,
@@ -107,15 +107,17 @@ impl Ui {
             util::crop_rect(crop_to, widget.layout.bounds(&mut self.solver))
         };
 
-        let children: Vec<NodeIndex> = self.children(node_index).collect();
-        // need to iterate backwards to draw in correct order, because 
-        // petgraph neighbours iterate in reverse order of insertion, not sure why
-        for child_index in children.iter().rev() {
-            let child_index = child_index.clone();
-            self.draw_node(context,
-                           graphics,
-                           child_index,
-                           crop_to);
+        if !crop_to.no_area() {
+            let children: Vec<NodeIndex> = self.children(node_index).collect();
+            // need to iterate backwards to draw in correct order, because 
+            // petgraph neighbours iterate in reverse order of insertion, not sure why
+            for child_index in children.iter().rev() {
+                let child_index = child_index.clone();
+                self.draw_node(context,
+                            graphics,
+                            child_index,
+                            crop_to);
+            }
         }
     }
     pub fn draw(&mut self,
