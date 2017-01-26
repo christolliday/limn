@@ -8,11 +8,10 @@ use gfx_core::factory::Typed;
 use self::gfx::Device;
 use self::gfx::format::{DepthStencil, Format, Formatted, Srgba8};
 
-use pistoncore_window::{OpenGLWindow, Size};
+use glutin;
 
 use texture;
 use gfx_device_gl;
-use input::RenderArgs;
 use super::glyph::GlyphCache;
 use graphics::Viewport;
 
@@ -56,17 +55,16 @@ fn create_main_targets(dim: gfx::tex::Dimensions) ->
     let output_stencil = Typed::new(output_stencil);
     (output_color, output_stencil)
 }
+
 impl GfxContext {
     /// Constructor for a new `GfxContext`
-    pub fn new<W>(window: &mut W, opengl: OpenGL, samples: u8) -> Self
-        where W: OpenGLWindow 
-    {
+    pub fn new(window: &mut glutin::Window, opengl: OpenGL, samples: u8) -> Self {
         let (device, mut factory) = gfx_device_gl::create(|s| window.get_proc_address(s) as *const _);
 
-        let draw_size = window.draw_size();
+        let draw_size: (u32, u32) = window.get_inner_size_pixels().unwrap_or((0, 0));
         let (output_color, output_stencil) = {
             let aa = samples as gfx::tex::NumSamples;
-            let dim = (draw_size.width as u16, draw_size.height as u16, 1, aa.into());
+            let dim = (draw_size.0 as u16, draw_size.1 as u16, 1, aa.into());
             create_main_targets(dim)
         };
 
@@ -104,12 +102,12 @@ impl GfxContext {
     }
 
     /// Check whether window has resized and update the output.
-    pub fn check_resize(&mut self, draw_size: Size) {
+    pub fn check_resize(&mut self, draw_size: (u32, u32)) {
         let dim = self.output_color.raw().get_dimensions();
         let (w, h) = (dim.0, dim.1);
-        if w != draw_size.width as u16 || h != draw_size.height as u16 {
-            let dim = (draw_size.width as u16,
-                       draw_size.height as u16,
+        if w != draw_size.0 as u16 || h != draw_size.1 as u16 {
+            let dim = (draw_size.0 as u16,
+                       draw_size.1 as u16,
                        dim.2, dim.3);
             let (output_color, output_stencil) = create_main_targets(dim);
             self.output_color = output_color;

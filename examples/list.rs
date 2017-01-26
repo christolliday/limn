@@ -1,9 +1,6 @@
 extern crate limn;
-extern crate input;
 
 mod util;
-
-use input::EventId;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
@@ -11,7 +8,7 @@ use limn::widget::{EventHandler, EventArgs};
 use limn::widgets::text::{self, TextDrawable};
 use limn::widgets::primitives::{self, RectDrawable};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
-use limn::event;
+use limn::event::{self, EventId};
 use limn::util::Dimensions;
 use limn::color::*;
 

@@ -1,6 +1,5 @@
 use std::ops::{Mul, Div, Add, Sub};
 
-use window::Size;
 use rusttype;
 use graphics::{self, Context};
 use graphics::types::{self, Color};
@@ -110,12 +109,9 @@ impl Range {
     }
 }
 
-impl Into<Size> for Dimensions {
-    fn into(self) -> Size {
-        Size {
-            width: self.width as u32,
-            height: self.height as u32,
-        }
+impl Into<(u32, u32)> for Dimensions {
+    fn into(self) -> (u32, u32) {
+        (self.width as u32, self.height as u32)
     }
 }
 impl Into<[f64; 2]> for Dimensions {

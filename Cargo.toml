@@ -7,8 +7,6 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 backend = { path = "backend" }
 piston2d-graphics = "0.19"
 cassowary = "0.2.0"
-pistoncore-input = "0.15.0"
-pistoncore-window = "0.24.0"
 petgraph = "0.4.1"
 rusttype = "0.2.0"
 gfx_device_gl = "0.11.0"

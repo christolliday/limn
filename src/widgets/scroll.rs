@@ -1,16 +1,16 @@
 use std::any::Any;
 
+use glutin;
 use cassowary::strength::*;
 
-use event::{self, Event, EventAddress};
-use input::{self, EventId, MouseScrollEvent};
+use event::{self, EventId, Event, EventAddress};
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
 pub const SCROLL_SCROLLED: EventId = EventId("piston/limn/scroll_scrolled");
 
 pub struct ScrollEvent {
-    pub data: (input::Event, Rectangle),
+    pub data: (glutin::Event, Rectangle),
 }
 impl Event for ScrollEvent {
     fn event_id(&self) -> EventId {
@@ -28,7 +28,7 @@ impl EventHandler for ScrollHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { event, widget_id, layout, event_queue, solver, .. } = event_args;
-        let event = event.data::<input::Event>();
+        let event = event.data::<glutin::Event>();
         let widget_bounds = layout.bounds(solver);
         let event = ScrollEvent { data: (event.clone(), widget_bounds) };
         event_queue.push(EventAddress::Child(widget_id), Box::new(event));
@@ -49,10 +49,19 @@ impl EventHandler for WidgetScrollHandler {
     }
     fn handle_event(&mut self, args: EventArgs) {
         let EventArgs { event, layout, solver, .. } = args;
-        let &(ref event, parent_bounds) = event.data::<(input::Event, Rectangle)>();
+        let &(ref event, parent_bounds) = event.data::<(glutin::Event, Rectangle)>();
 
-        if let Some(scroll) = event.mouse_scroll_args() {
-            let scroll: Point = scroll.into();
+        let scroll = match *event {
+            glutin::Event::MouseWheel(delta, _) => {
+                match delta {
+                    glutin::MouseScrollDelta::PixelDelta(x, y) => {
+                        Some(Point{ x: x as f64, y: y as f64})
+                    }, _ => None
+                }
+            }, _ => None
+        };
+        if let Some(scroll) = scroll {
+            //let scroll: Point = Point { x: scroll.x, y: scroll.y };//scroll.into();
             let widget_bounds = layout.bounds(solver);
 
             self.offset = self.offset + scroll * 13.0;

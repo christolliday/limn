@@ -9,22 +9,14 @@
 //! can be called only when an animation is currently running, to post updates in the absence of 
 //! user input.
 
-
-//#![deny(missing_docs)]
-//#![deny(missing_copy_implementations)]
-
-extern crate window as pistoncore_window;
-
 use std::time::{Duration, Instant};
+use std::thread;
 
-use self::pistoncore_window::Window as BasicWindow;
-use input::{Event, Input};
-
-//use super::window::Window;
+use glutin;
 
 pub enum WindowEvent {
     Render,
-    Input(Event),
+    Input(glutin::Event),
 }
 
 /// An event loop iterator
@@ -64,6 +56,20 @@ impl UpdateDuration for Duration {
 /// The default maximum frames per second.
 pub const DEFAULT_MAX_FPS: u64 = 60;
 
+fn wait_event_timeout(window: &mut glutin::Window, timeout: Duration) -> Option<glutin::Event> {
+    // First check for and handle any pending events.
+    if let Some(event) = window.poll_events().next() {
+        return Some(event);
+    }
+    // schedule wake up from `wait_event`
+    let window_proxy = window.create_window_proxy();
+    thread::spawn(move || {
+        thread::sleep(timeout);
+        window_proxy.wakeup_event_loop();
+    });
+    window.wait_events().next()
+}
+
 impl WindowEvents
 {
     /// Creates a new event iterator
@@ -93,16 +99,14 @@ impl WindowEvents
     ///
     /// While in the `Waiting` state, returns `Input` events up until `dt_frame` has passed, or if idle, waits indefinitely.
     /// Once `dt_frame` has elapsed, or no longer idle, returns in order, `Update`, `Render` and `AfterRender` then resumes `Waiting` state.
-    pub fn next(&mut self, window: &mut BasicWindow<Event=Input>) -> Option<WindowEvent>
+    pub fn next(&mut self, window: &mut glutin::Window) -> Option<WindowEvent>
     {
-        if window.should_close() { return None; }
-
         if self.idle {
             // Block and wait until an event is received.
-            let event = window.wait_event_timeout(Duration::new(u64::max_value(), 0));
+            let event = wait_event_timeout(window, Duration::new(u64::max_value(), 0));
             self.idle = false;
             if let Some(event) = event {
-                Some(WindowEvent::Input(Event::Input(event)))
+                Some(WindowEvent::Input(event))
             } else {
                 Some(WindowEvent::Render)
             }
@@ -110,14 +114,14 @@ impl WindowEvents
             let current_time = Instant::now();
             if current_time < self.next_frame_time {
                 // Wait for events until ready for next frame.
-                let event = window.wait_event_timeout(self.next_frame_time - current_time);
+                let event = wait_event_timeout(window, self.next_frame_time - current_time);
                 if let Some(event) = event {
-                    return Some(WindowEvent::Input(Event::Input(event)));
+                    return Some(WindowEvent::Input(event));
                 }
             }
             // Handle any pending input before updating.
-            if let Some(event) = window.poll_event() {
-                return Some(WindowEvent::Input(Event::Input(event)));
+            if let Some(event) = window.poll_events().next() {
+                return Some(WindowEvent::Input(event));
             }
 
             // Just rendered, send `AfterRender`, initialize for next frame

@@ -1,7 +1,7 @@
-use input::{self, EventId};
+use glutin;
 
 use widget::{self, EventHandler, DrawableEventHandler, EventArgs};
-use event::{self, EventAddress, Signal};
+use event::{self, EventId, EventAddress, Signal};
 use widgets::primitives::{self, RectDrawable};
 use widgets::text::{self, TextDrawable};
 use widget::builder::WidgetBuilder;
@@ -26,7 +26,7 @@ impl EventHandler for ToggleEventHandler {
     }
     fn handle_event(&mut self, event_args: EventArgs) {
         let EventArgs { event, widget_id, event_queue, .. } = event_args;
-        let event = event.data::<input::Event>();
+        let event = event.data::<glutin::Event>();
 
         self.on = !self.on;
         let event = Signal::new(if self.on { BUTTON_ENABLED } else { BUTTON_DISABLED });

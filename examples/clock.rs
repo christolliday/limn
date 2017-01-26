@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate limn;
 extern crate graphics;
-extern crate input;
 
 extern crate chrono;
 
@@ -13,13 +12,12 @@ use std::f64;
 
 use chrono::*;
 use graphics::types::Color;
-use input::EventId;
 
 use limn::event::Signal;
 use limn::widget::{DrawArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::primitives::{self, EllipseDrawable};
-use limn::event::{EventAddress, EventQueue};
+use limn::event::{EventId, EventAddress, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Dimensions, Scalar};
 

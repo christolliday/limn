@@ -1,19 +1,16 @@
 #[macro_use]
 extern crate limn;
-extern crate input;
 
 mod util;
 
 use std::any::Any;
-
-use input::EventId;
 
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widgets::text::{self, TextDrawable};
 use limn::widgets::button::PushButtonBuilder;
-use limn::event::{self, Event, Signal, EventAddress};
+use limn::event::{self, EventId, Event, Signal, EventAddress};
 use limn::resources::Id;
 use limn::color::*;
 

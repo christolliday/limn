@@ -7,8 +7,7 @@ use petgraph::visit::Dfs;
 use petgraph::Direction;
 use petgraph::graph::Neighbors;
 
-use input;
-use input::{GenericEvent, MouseCursorEvent};
+use glutin;
 
 use cassowary::Solver;
 use cassowary::strength::*;
@@ -63,7 +62,7 @@ impl Ui {
     }
     pub fn resize_window_to_fit(&mut self, window: &Window) {
         let window_dims = self.get_root_dims();
-        window.window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
+        window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
     pub fn set_root(&mut self, root_widget: WidgetBuilder) {
         self.root_index = Some(root_widget.create(self, None));
@@ -157,23 +156,26 @@ impl Ui {
         });
         None
     }
-    pub fn handle_event(&mut self, event: input::Event) {
-        if let Some(mouse) = event.mouse_cursor_args() {
-            self.input_state.mouse = mouse.into();
-            let last_over = self.input_state.last_over.clone();
-            for last_over in last_over {
-                let last_over = last_over.clone();
-                if let Some(last_index) = self.find_widget(last_over) {
-                    let ref mut widget = self.graph[last_index];
-                    if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                        let event = Signal::new(event::WIDGET_MOUSE_OFF);
-                        self.event_queue.push(EventAddress::Widget(last_over), Box::new(event));
-                        self.input_state.last_over.remove(&last_over);
+    pub fn handle_event(&mut self, event: glutin::Event) {
+        match event {
+            glutin::Event::MouseMoved(x, y) => {
+                let mouse = Point {x: x as f64, y: y as f64};
+                self.input_state.mouse = mouse.into();
+                let last_over = self.input_state.last_over.clone();
+                for last_over in last_over {
+                    let last_over = last_over.clone();
+                    if let Some(last_index) = self.find_widget(last_over) {
+                        let ref mut widget = self.graph[last_index];
+                        if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
+                            let event = Signal::new(event::WIDGET_MOUSE_OFF);
+                            self.event_queue.push(EventAddress::Widget(last_over), Box::new(event));
+                            self.input_state.last_over.remove(&last_over);
+                        }
                     }
                 }
-            }
+            }, _ => ()
         }
-        if let Some(event_id) = event::widget_event(event.event_id()) {
+        if let Some(event_id) = event::widget_event(&event) {
             let event = InputEvent::new(event_id, event);
             self.event_queue.push(EventAddress::UnderMouse, Box::new(event));
         }

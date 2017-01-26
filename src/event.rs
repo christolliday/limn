@@ -1,13 +1,15 @@
 use std::any::Any;
 use std::sync::{Arc, Mutex};
 
-use input;
-use input::EventId;
+use glutin;
 use glutin::WindowProxy;
 
 use backend::Window;
 
 use resources::Id;
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct EventId(pub &'static str);
 
 // from piston input
 pub const AFTER_RENDER: EventId = EventId("piston/after_render");
@@ -34,11 +36,11 @@ pub const WIDGET_PRESS: EventId = EventId("piston/limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("piston/limn/widget_release");
 
 // get the widget event that is received if the event occurs while mouse is over widget
-pub fn widget_event(event_id: EventId) -> Option<EventId> {
-    match event_id {
-        MOUSE_CURSOR => Some(WIDGET_MOUSE_OVER),
-        MOUSE_SCROLL => Some(WIDGET_SCROLL),
-        PRESS => Some(WIDGET_PRESS),
+pub fn widget_event(event: &glutin::Event) -> Option<EventId> {
+    match *event {
+        glutin::Event::MouseMoved(..) => Some(WIDGET_MOUSE_OVER),
+        glutin::Event::MouseWheel(..) => Some(WIDGET_SCROLL),
+        glutin::Event::MouseInput(..) => Some(WIDGET_PRESS),
         _ => None,
     }
 }
@@ -94,7 +96,7 @@ macro_rules! event {
     };
 }
 
-event!(InputEvent, input::Event);
+event!(InputEvent, glutin::Event);
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {
@@ -113,7 +115,7 @@ impl EventQueue {
     pub fn new(window: &Window) -> Self {
         EventQueue {
             queue: Arc::new(Mutex::new(Vec::new())),
-            window_proxy: window.window.window.create_window_proxy(),
+            window_proxy: window.window.create_window_proxy(),
         }
     }
     pub fn push(&mut self, address: EventAddress, event: Box<Event + Send>) {

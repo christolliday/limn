@@ -10,8 +10,7 @@ use cassowary::Solver;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use event::{Event, EventQueue};
-use input::EventId;
+use event::{EventId, Event, EventQueue};
 use resources::Id;
 use util::{self, Point, Rectangle};
 

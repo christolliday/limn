@@ -1,9 +1,9 @@
 extern crate find_folder;
 extern crate graphics;
-extern crate input;
 extern crate backend;
+extern crate glutin;
 
-use self::input::ResizeEvent;
+use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
 use limn::ui::Ui;
@@ -38,13 +38,15 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
     ui.set_root(root_widget);
     ui.resize_window_to_fit(&window);
     let mut events = WindowEvents::new();
-    while let Some(event) = events.next(&mut window) {
-        println!("event {:?}", event);
+    while let Some(event) = events.next(&mut window.window) {
+        //println!("event {:?}", event);
         match event {
             WindowEvent::Input(event) => {
-                if let Some(window_dims) = event.resize_args() {
-                    window.window_resized();
-                    ui.window_resized(window_dims.into());
+                match event {
+                    Event::Resized(width, height) => {
+                        window.window_resized();
+                        ui.window_resized(Dimensions {width: width as f64, height: height as f64});
+                    }, _ => ()
                 }
                 ui.handle_event(event.clone());
                 ui.handle_event_queue();
