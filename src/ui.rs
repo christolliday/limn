@@ -161,7 +161,7 @@ impl Ui {
         match event {
             glutin::Event::MouseMoved(x, y) => {
                 let mouse = Point {x: x as f64, y: y as f64};
-                self.input_state.mouse = mouse.into();
+                self.input_state.mouse = mouse;
                 let last_over = self.input_state.last_over.clone();
                 for last_over in last_over {
                     let last_over = last_over.clone();
@@ -218,6 +218,13 @@ impl Ui {
                     }
                 }
             }
+        }
+        // if layout has changed, send new mouse event, in case widget under mouse has shifted
+        let has_changes = self.solver.fetch_changes().len() > 0;
+        if has_changes {
+            let mouse = self.input_state.mouse;
+            let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
+            self.handle_event(event);
         }
     }
     fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
