@@ -47,8 +47,8 @@ impl EventHandler for WidgetScrollHandler {
     fn event_id(&self) -> EventId {
         SCROLL_SCROLLED
     }
-    fn handle_event(&mut self, event_args: EventArgs) {
-        let EventArgs { event, layout, solver, .. } = event_args;
+    fn handle_event(&mut self, args: EventArgs) {
+        let EventArgs { event, layout, solver, .. } = args;
         let &(ref event, parent_bounds) = event.data::<(input::Event, Rectangle)>();
 
         if let Some(scroll) = event.mouse_scroll_args() {
@@ -71,5 +71,6 @@ impl EventHandler for WidgetScrollHandler {
             solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
             solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
         }
+        args.state.has_updated = true;
     }
 }

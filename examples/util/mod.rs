@@ -39,6 +39,7 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
     ui.resize_window_to_fit(&window);
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window) {
+        println!("event {:?}", event);
         match event {
             WindowEvent::Input(event) => {
                 if let Some(window_dims) = event.resize_args() {
@@ -46,12 +47,16 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
                     ui.window_resized(window_dims.into());
                 }
                 ui.handle_event(event.clone());
+                ui.handle_event_queue();
             },
             WindowEvent::Render => {
-                window.draw_2d(|context, graphics| {
-                    graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                    ui.draw(context, graphics);
-                });
+                if ui.dirty_widgets.len() > 0 {
+                    window.draw_2d(|context, graphics| {
+                        graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
+                        ui.draw(context, graphics);
+                    });
+                    ui.dirty_widgets.clear();
+                }
             }
         }
     }

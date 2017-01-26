@@ -43,7 +43,7 @@ pub trait EventHandler {
 
 pub struct WidgetState {
     state: Option<Box<Any>>,
-    has_updated: bool,
+    pub has_updated: bool,
 }
 impl WidgetState {
     pub fn new() -> Self {

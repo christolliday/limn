@@ -44,6 +44,7 @@ pub struct Ui {
     pub solver: Solver,
     pub input_state: InputState,
     pub widget_map: HashMap<Id, NodeIndex>,
+    pub dirty_widgets: HashSet<NodeIndex>,
     pub event_queue: EventQueue,
     pub glyph_cache: GlyphCache,
 }
@@ -55,6 +56,7 @@ impl Ui {
             solver: Solver::new(),
             input_state: InputState::new(),
             widget_map: HashMap::new(),
+            dirty_widgets: HashSet::new(),
             event_queue: EventQueue::new(window),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
         }
@@ -124,8 +126,6 @@ impl Ui {
                 context: Context,
                 graphics: &mut G2d) {
 
-        self.handle_event_queue();
-
         let index = self.root_index.unwrap().clone();
         let crop_to = Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX };
         self.draw_node(context, graphics, index, crop_to);
@@ -147,6 +147,7 @@ impl Ui {
             self.graph.add_edge(parent_index, child_index, ());
         }
         self.widget_map.insert(id, child_index);
+        self.dirty_widgets.insert(child_index);
         child_index
     }
     pub fn get_widget(&self, widget_id: Id) -> Option<&Widget> {
@@ -205,15 +206,20 @@ impl Ui {
                 EventAddress::UnderMouse => {
                     let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
                     while let Some(node_index) = dfs.next(&self.graph) {
-                        let ref mut widget = self.graph[node_index];
-                        if widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                            widget.trigger_event(event, &mut self.event_queue, &mut self.solver);
+                        let is_mouse_over = self.is_mouse_over(node_index);
+                        if is_mouse_over {
+                            self.trigger_widget_event(node_index, event);
+                            let ref mut widget = self.graph[node_index];
                             self.input_state.last_over.insert(widget.id);
                         }
                     }
                 }
             }
         }
+    }
+    fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
+        let ref mut widget = self.graph[node_index];
+        widget.is_mouse_over(&mut self.solver, self.input_state.mouse)
     }
     fn find_widget(&mut self, widget_id: Id) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
@@ -222,5 +228,9 @@ impl Ui {
     fn trigger_widget_event(&mut self, node_index: NodeIndex, event: &(Event + 'static)) {
         let ref mut widget = self.graph[node_index];
         widget.trigger_event(event, &mut self.event_queue, &mut self.solver);
+        if widget.drawable.has_updated {
+            self.dirty_widgets.insert(node_index);
+            widget.drawable.has_updated = false;
+        }
     }
 }
