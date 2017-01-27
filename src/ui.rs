@@ -197,7 +197,7 @@ impl Ui {
                             self.trigger_widget_event(child_index, event);
                         }
                     }
-                }
+                },
                 EventAddress::SubTree(id) => {
                     if let Some(node_index) = self.find_widget(id) {
                         let mut dfs = Dfs::new(&self.graph, node_index);

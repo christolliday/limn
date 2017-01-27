@@ -11,17 +11,52 @@ use cassowary::Solver;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use event::{EventId, Event, EventQueue};
+#[macro_use]
+use event::{self, EventAddress, EventId, Event, Signal, EventQueue};
 use resources::Id;
 use util::{self, Point, Rectangle};
 
 use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, Clone)]
 pub enum WidgetProperty {
     Hover,
+    Activated,
     Pressed,
+}
+
+pub struct ChangePropEvent {
+    val: (WidgetProperty, bool),
+}
+impl ChangePropEvent {
+    pub fn new(prop: WidgetProperty, add: bool) -> Self {
+        ChangePropEvent { val: (prop, add) }
+    }
+}
+impl Event for ChangePropEvent {
+    fn event_id(&self) -> EventId {
+        event::WIDGET_CHANGE_PROP
+    }
+    fn event_data(&self) -> Option<&Any> {
+        Some(&self.val)
+    }
+}
+
+pub struct PropsChangeEventHandler {}
+impl EventHandler for PropsChangeEventHandler {
+    fn event_id(&self) -> EventId {
+        event::WIDGET_CHANGE_PROP
+    }
+    fn handle_event(&mut self, args: EventArgs) {
+        let &(ref prop, add) = args.event.data::<(WidgetProperty, bool)>();
+        if add {
+            args.props.insert(prop.clone());
+        } else {
+            args.props.remove(prop);
+        }
+        args.event_queue.push(EventAddress::Widget(args.widget_id), Box::new(Signal::new(event::WIDGET_PROPS_CHANGED)));
+    }
 }
 
 pub struct DrawArgs<'a, 'b: 'a> {
@@ -132,21 +167,19 @@ impl Widget {
                          event: &(Event + 'static),
                          event_queue: &mut EventQueue,
                          solver: &mut Solver) {
-        if let Some(event_handler) = self.event_handlers
-            .iter_mut()
-            .find(|event_handler| event_handler.event_id() == event.event_id()) {
-            event_handler.handle_event(EventArgs {
-                event: event,
-                widget_id: self.id,
-                state: &mut self.drawable,
-                layout: &mut self.layout,
-                props: &mut self.props,
-                event_queue: event_queue,
-                solver: solver,
-            });
-        } else {
-            // no event handler for id
-            // println!("widget {:?} has no handler for {:?}", self.id, id);
+
+        for ref mut event_handler in self.event_handlers.iter_mut() {
+            if event_handler.event_id() == event.event_id() {
+                event_handler.handle_event(EventArgs {
+                    event: event,
+                    widget_id: self.id,
+                    state: &mut self.drawable,
+                    layout: &mut self.layout,
+                    props: &mut self.props,
+                    event_queue: event_queue,
+                    solver: solver,
+                });
+            }
         }
     }
 }
