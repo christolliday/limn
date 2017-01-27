@@ -11,29 +11,16 @@ use resources::Id;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct EventId(pub &'static str);
 
-// from piston input
-pub const AFTER_RENDER: EventId = EventId("piston/after_render");
-pub const CONTROLLER_AXIS: EventId = EventId("piston/controller_axis");
-pub const CURSOR: EventId = EventId("piston/cursor");
-pub const FOCUS: EventId = EventId("piston/focus");
-pub const CLOSE: EventId = EventId("piston/close");
-pub const IDLE: EventId = EventId("piston/idle");
-pub const MOUSE_SCROLL: EventId = EventId("piston/mouse_scroll");
-pub const MOUSE_RELATIVE: EventId = EventId("piston/mouse_relative");
-pub const MOUSE_CURSOR: EventId = EventId("piston/mouse_cursor");
-pub const PRESS: EventId = EventId("piston/press");
-pub const RELEASE: EventId = EventId("piston/release");
-pub const RENDER: EventId = EventId("piston/render");
-pub const RESIZE: EventId = EventId("piston/resize");
-pub const TEXT: EventId = EventId("piston/text");
-pub const TOUCH: EventId = EventId("piston/touch");
-pub const UPDATE: EventId = EventId("piston/update");
+pub const MOUSE_SCROLL: EventId = EventId("glutin/mouse_scroll");
+pub const MOUSE_CURSOR: EventId = EventId("glutin/mouse_cursor");
+pub const MOUSE_INPUT: EventId = EventId("glutin/mouse_input");
 
-pub const WIDGET_MOUSE_OVER: EventId = EventId("piston/limn/widget_mouse_over");
-pub const WIDGET_MOUSE_OFF: EventId = EventId("piston/limn/widget_mouse_off");
-pub const WIDGET_SCROLL: EventId = EventId("piston/limn/widget_scroll");
-pub const WIDGET_PRESS: EventId = EventId("piston/limn/widget_press");
-pub const WIDGET_RELEASE: EventId = EventId("piston/limn/widget_release");
+pub const WIDGET_MOUSE_OVER: EventId = EventId("limn/widget_mouse_over");
+pub const WIDGET_MOUSE_OFF: EventId = EventId("limn/widget_mouse_off");
+pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
+pub const WIDGET_PRESS: EventId = EventId("limn/widget_press");
+pub const WIDGET_RELEASE: EventId = EventId("limn/widget_release");
+
 
 // get the widget event that is received if the event occurs while mouse is over widget
 pub fn widget_event(event: &glutin::Event) -> Option<EventId> {

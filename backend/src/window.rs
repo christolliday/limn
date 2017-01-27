@@ -22,32 +22,19 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new<T, S>(title: T, size: S, min_size: Option<S>) -> Self 
-    where T: Into<String>,
-          S: Into<(u32, u32)>,
-    {
-        let size: (u32, u32) = size.into();
-        
-        let builder = glutin::WindowBuilder::new()
+    pub fn new(title: &str, size: (u32, u32), min_size: Option<(u32, u32)>) -> Self {
+        let mut builder = glutin::WindowBuilder::new()
             .with_title(title)
             .with_dimensions(size.0, size.1);
         
-        let builder = {
-            if let Some(min_size) = min_size {
-                let min_size: (u32, u32) = min_size.into();
-                builder.with_min_dimensions(min_size.0, min_size.1)
-            } else {
-                builder
-            }
-        };
+        if let Some(min_size) = min_size {
+            builder = builder.with_min_dimensions(min_size.0, min_size.1)
+        }
         let mut window = builder.build().unwrap();
         unsafe { window.make_current() };
         gl::load_with(|s| window.get_proc_address(s) as *const _);
 
-        let opengl = OpenGL::V3_2;
-        let samples = 4;
-        let context = GfxContext::new(&mut window, opengl, samples);
-
+        let context = GfxContext::new(&mut window, OpenGL::V3_2, 4);
         Window {
             window: window,
             context: context,
@@ -61,10 +48,10 @@ impl Window {
         }
     }
     fn size(&self) -> (u32, u32) {
-        self.window.get_inner_size().unwrap_or((0, 0)).into()
+        self.window.get_inner_size().unwrap_or((0, 0))
     }
     fn draw_size(&self) -> (u32, u32) {
-        self.window.get_inner_size_pixels().unwrap_or((0, 0)).into()
+        self.window.get_inner_size_pixels().unwrap_or((0, 0))
     }
 
     /// Renders 2D graphics.
@@ -77,7 +64,7 @@ impl Window {
         self.window.swap_buffers();
         self.context.after_render();
         res
-    }    
+    }
     pub fn window_resized(&mut self) {
         let draw_size = self.draw_size();
         self.context.check_resize(draw_size);

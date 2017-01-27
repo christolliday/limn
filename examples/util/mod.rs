@@ -12,7 +12,7 @@ use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
 
 pub fn init_default(title: &str) -> (Window, Ui) {
-    let window_dims = Dimensions { width: 100.0, height: 100.0 };
+    let window_dims = (100, 100);
     let mut window = Window::new(title, window_dims, Some(window_dims));
     let ui = Ui::new(&mut window);
 

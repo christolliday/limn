@@ -1,13 +1,13 @@
 todo:
 
-compound widgets
-lists
-animation, event handler?
-styles/themes, cascading?
+composable handlers/controllers
+improve layout api, create/modify
+cache widget bounds, detect changes, associate with state
+animation
+styles/themes
 scroll bars
 dragging
 resizing
 high level events, eg. double click
-sending an event to another widget, by index?
 tabs
 

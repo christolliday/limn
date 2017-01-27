@@ -2,8 +2,6 @@
 extern crate backend;
 extern crate graphics;
 extern crate cassowary;
-//extern crate input;
-//extern crate window;
 extern crate petgraph;
 extern crate rusttype;
 extern crate gfx_device_gl;
