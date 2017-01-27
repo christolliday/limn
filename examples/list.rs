@@ -4,14 +4,17 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widget::{EventHandler, EventArgs, WidgetProperty};
+use limn::widget::{EventHandler, EventArgs, WidgetProperty, WidgetNotifyEvent, ChangePropEvent, PropsChangeEventHandler};
 use limn::widgets::text::{self, TextDrawable};
 use limn::widgets::primitives::{self, RectDrawable};
+use limn::widgets::list::{ListHandler, ListItemHandler, ListItemPropsHandler};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widgets::hover::{MouseOnHandler, MouseOffHandler};
+use limn::resources::Id;
 use limn::event::{self, EventId, EventAddress, Signal};
 use limn::util::Dimensions;
 use limn::color::*;
+
 
 fn main() {
     let (window, ui) = util::init_default("Limn list demo");
@@ -25,50 +28,27 @@ fn main() {
     scroll_widget.layout.scrollable = true;
     scroll_widget.event_handlers.push(Box::new(ScrollHandler {}));
 
-    let mut list_widget = WidgetBuilder::new();
+    let mut list_widget = WidgetBuilder::new()
+        .add_handler(Box::new(ListHandler::new()))
+        .add_handler(Box::new(WidgetScrollHandler::new()));
     list_widget.layout.match_width(&scroll_widget.layout);
-    list_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));
 
-    struct ListItemPropsHandler {}
-    impl EventHandler for ListItemPropsHandler {
-        fn event_id(&self) -> EventId {
-            event::WIDGET_PROPS_CHANGED
-        }
-        fn handle_event(&mut self, mut args: EventArgs) {
-            if args.props.contains(&WidgetProperty::Hover) {
-                args.state.update(|state: &mut RectDrawable| state.background = BLUE);
-            } else {
-                args.state.update(|state: &mut RectDrawable| state.background = WHITE);
-            }
-        }
-    }
-    struct TextPropsHandler {}
-    impl EventHandler for TextPropsHandler {
-        fn event_id(&self) -> EventId {
-            event::WIDGET_PROPS_CHANGED
-        }
-        fn handle_event(&mut self, mut args: EventArgs) {
-            if args.props.contains(&WidgetProperty::Hover) {
-                args.state.update(|state: &mut TextDrawable| state.text_color = WHITE);
-            } else {
-                args.state.update(|state: &mut TextDrawable| state.text_color = BLACK);
-            }
-        }
-    }
 
     let list_item_widgets = {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget.layout);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
-            let text_drawable = TextDrawable::new_default("hello".to_owned(), font_id);
+            let text_drawable = TextDrawable::new("hello".to_owned(), font_id, 20.0, WHITE, TRANSPARENT);
             let text_dims = text_drawable.measure_dims_no_wrap();
 
-            let rect_drawable = RectDrawable { background: WHITE };
+            let rect_drawable = RectDrawable { background: [0.3, 0.3, 0.3, 1.0] };
             let mut list_item_widget = WidgetBuilder::new()
                 .set_drawable(primitives::draw_rect, Box::new(rect_drawable))
                 .set_debug_name("item")
                 .add_handler(Box::new(MouseOnHandler{}))
                 .add_handler(Box::new(MouseOffHandler{}))
+                .add_handler(Box::new(PropsChangeEventHandler{}))
+                .add_handler(Box::new(ListItemHandler::new(list_widget.id)))
                 .add_handler(Box::new(ListItemPropsHandler{}));
             list_item_widget.layout.match_width(&list_widget.layout);
             list_item_widget.layout.height(text_dims.height);
@@ -76,10 +56,7 @@ fn main() {
 
             let mut list_text_widget = WidgetBuilder::new()
                 .set_drawable(text::draw_text, Box::new(text_drawable))
-                .set_debug_name("text")
-                .add_handler(Box::new(MouseOnHandler{}))
-                .add_handler(Box::new(MouseOffHandler{}))
-                .add_handler(Box::new(TextPropsHandler{}));
+                .set_debug_name("text");
             list_text_widget.layout.center(&list_item_widget.layout);
             list_item_widget.add_child(Box::new(list_text_widget));
 

@@ -23,6 +23,7 @@ use self::layout::WidgetLayout;
 pub enum WidgetProperty {
     Hover,
     Activated,
+    Selected,
     Pressed,
 }
 
@@ -56,6 +57,27 @@ impl EventHandler for PropsChangeEventHandler {
             args.props.remove(prop);
         }
         args.event_queue.push(EventAddress::Widget(args.widget_id), Box::new(Signal::new(event::WIDGET_PROPS_CHANGED)));
+    }
+}
+
+pub struct WidgetNotifyEvent {
+    event_id: EventId,
+    widget_id: Id,
+}
+impl WidgetNotifyEvent {
+    pub fn new(event_id: EventId, widget_id: Id) -> Self {
+        WidgetNotifyEvent {
+            event_id: event_id,
+            widget_id: widget_id,
+        }
+    }
+}
+impl Event for WidgetNotifyEvent {
+    fn event_id(&self) -> EventId {
+        self.event_id
+    }
+    fn event_data(&self) -> Option<&Any> {
+        Some(&self.widget_id)
     }
 }
 

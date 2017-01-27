@@ -1,4 +1,4 @@
-use widget::{EventArgs, EventHandler, WidgetProperty};
+use widget::{EventArgs, EventHandler, WidgetProperty, ChangePropEvent};
 use event::{self, EventId, EventAddress, Signal};
 
 pub struct MouseOnHandler {}
@@ -7,8 +7,8 @@ impl EventHandler for MouseOnHandler {
         event::WIDGET_MOUSE_OVER
     }
     fn handle_event(&mut self, mut args: EventArgs) {
-        args.props.insert(WidgetProperty::Hover);
-        args.event_queue.push(EventAddress::Widget(args.widget_id), Box::new(Signal::new(event::WIDGET_PROPS_CHANGED)));
+        let event = ChangePropEvent::new(WidgetProperty::Hover, true);
+        args.event_queue.push(EventAddress::SubTree(args.widget_id), Box::new(event));
     }
 }
 pub struct MouseOffHandler {}
@@ -17,7 +17,7 @@ impl EventHandler for MouseOffHandler {
         event::WIDGET_MOUSE_OFF
     }
     fn handle_event(&mut self, mut args: EventArgs) {
-        args.props.remove(&WidgetProperty::Hover);
-        args.event_queue.push(EventAddress::Widget(args.widget_id), Box::new(Signal::new(event::WIDGET_PROPS_CHANGED)));
+        let event = ChangePropEvent::new(WidgetProperty::Hover, false);
+        args.event_queue.push(EventAddress::SubTree(args.widget_id), Box::new(event));
     }
 }
