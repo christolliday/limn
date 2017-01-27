@@ -2,6 +2,7 @@ pub mod layout;
 pub mod builder;
 
 use std::any::Any;
+use std::collections::HashSet;
 
 use graphics::Context;
 use graphics::types::Color;
@@ -17,8 +18,15 @@ use util::{self, Point, Rectangle};
 use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
 
+#[derive(Hash, PartialEq, Eq)]
+pub enum WidgetProperty {
+    Hover,
+    Pressed,
+}
+
 pub struct DrawArgs<'a, 'b: 'a> {
-    pub state: &'a mut Any,
+    pub state: &'a Any,
+    pub props: &'a HashSet<WidgetProperty>,
     pub bounds: Rectangle,
     pub parent_bounds: Rectangle,
     pub glyph_cache: &'a mut GlyphCache,
@@ -30,6 +38,7 @@ pub struct EventArgs<'a> {
     pub event: &'a (Event + 'static),
     pub widget_id: Id,
     pub state: &'a mut WidgetState,
+    pub props: &'a mut HashSet<WidgetProperty>,
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
@@ -67,6 +76,7 @@ pub struct Widget {
     pub drawable: WidgetState,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
+    pub props: HashSet<WidgetProperty>,
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -88,6 +98,7 @@ impl Widget {
             drawable: drawable,
             mouse_over_fn: mouse_over_fn,
             layout: layout,
+            props: HashSet::new(),
             event_handlers: event_handlers,
             debug_name: debug_name,
             debug_color: debug_color,
@@ -103,7 +114,8 @@ impl Widget {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);
             draw_fn(DrawArgs {
-                state: drawable.as_mut(),
+                state: drawable.as_ref(),
+                props: &self.props,
                 bounds: bounds,
                 parent_bounds: crop_to,
                 glyph_cache: glyph_cache,
@@ -128,6 +140,7 @@ impl Widget {
                 widget_id: self.id,
                 state: &mut self.drawable,
                 layout: &mut self.layout,
+                props: &mut self.props,
                 event_queue: event_queue,
                 solver: solver,
             });

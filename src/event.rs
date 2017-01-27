@@ -21,6 +21,8 @@ pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
 pub const WIDGET_PRESS: EventId = EventId("limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("limn/widget_release");
 
+pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props");
+
 
 // get the widget event that is received if the event occurs while mouse is over widget
 pub fn widget_event(event: &glutin::Event) -> Option<EventId> {

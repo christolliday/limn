@@ -4,11 +4,12 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widget::{EventHandler, EventArgs};
+use limn::widget::{EventHandler, EventArgs, WidgetProperty};
 use limn::widgets::text::{self, TextDrawable};
 use limn::widgets::primitives::{self, RectDrawable};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
-use limn::event::{self, EventId};
+use limn::widgets::hover::{MouseOnHandler, MouseOffHandler};
+use limn::event::{self, EventId, EventAddress, Signal};
 use limn::util::Dimensions;
 use limn::color::*;
 
@@ -28,40 +29,30 @@ fn main() {
     list_widget.layout.match_width(&scroll_widget.layout);
     list_widget.event_handlers.push(Box::new(WidgetScrollHandler::new()));
 
-    struct MouseOnHandler {}
-    impl EventHandler for MouseOnHandler {
+    struct ListItemPropsHandler {}
+    impl EventHandler for ListItemPropsHandler {
         fn event_id(&self) -> EventId {
-            event::WIDGET_MOUSE_OVER
+            event::WIDGET_PROPS_CHANGED
         }
         fn handle_event(&mut self, mut args: EventArgs) {
-            args.state.update(|state: &mut RectDrawable| state.background = BLUE);
+            if args.props.contains(&WidgetProperty::Hover) {
+                args.state.update(|state: &mut RectDrawable| state.background = BLUE);
+            } else {
+                args.state.update(|state: &mut RectDrawable| state.background = WHITE);
+            }
         }
     }
-    struct MouseOffHandler {}
-    impl EventHandler for MouseOffHandler {
+    struct TextPropsHandler {}
+    impl EventHandler for TextPropsHandler {
         fn event_id(&self) -> EventId {
-            event::WIDGET_MOUSE_OFF
+            event::WIDGET_PROPS_CHANGED
         }
         fn handle_event(&mut self, mut args: EventArgs) {
-            args.state.update(|state: &mut RectDrawable| state.background = WHITE);
-        }
-    }
-    struct MouseOnTextHandler {}
-    impl EventHandler for MouseOnTextHandler {
-        fn event_id(&self) -> EventId {
-            event::WIDGET_MOUSE_OVER
-        }
-        fn handle_event(&mut self, mut args: EventArgs) {
-            args.state.update(|state: &mut TextDrawable| state.text_color = WHITE);
-        }
-    }
-    struct MouseOffTextHandler {}
-    impl EventHandler for MouseOffTextHandler {
-        fn event_id(&self) -> EventId {
-            event::WIDGET_MOUSE_OFF
-        }
-        fn handle_event(&mut self, mut args: EventArgs) {
-            args.state.update(|state: &mut TextDrawable| state.text_color = BLACK);
+            if args.props.contains(&WidgetProperty::Hover) {
+                args.state.update(|state: &mut TextDrawable| state.text_color = WHITE);
+            } else {
+                args.state.update(|state: &mut TextDrawable| state.text_color = BLACK);
+            }
         }
     }
 
@@ -77,7 +68,8 @@ fn main() {
                 .set_drawable(primitives::draw_rect, Box::new(rect_drawable))
                 .set_debug_name("item")
                 .add_handler(Box::new(MouseOnHandler{}))
-                .add_handler(Box::new(MouseOffHandler{}));
+                .add_handler(Box::new(MouseOffHandler{}))
+                .add_handler(Box::new(ListItemPropsHandler{}));
             list_item_widget.layout.match_width(&list_widget.layout);
             list_item_widget.layout.height(text_dims.height);
             linear_layout.add_widget(&mut list_item_widget.layout);
@@ -85,8 +77,9 @@ fn main() {
             let mut list_text_widget = WidgetBuilder::new()
                 .set_drawable(text::draw_text, Box::new(text_drawable))
                 .set_debug_name("text")
-                .add_handler(Box::new(MouseOnTextHandler{}))
-                .add_handler(Box::new(MouseOffTextHandler{}));
+                .add_handler(Box::new(MouseOnHandler{}))
+                .add_handler(Box::new(MouseOffHandler{}))
+                .add_handler(Box::new(TextPropsHandler{}));
             list_text_widget.layout.center(&list_item_widget.layout);
             list_item_widget.add_child(Box::new(list_text_widget));
 
