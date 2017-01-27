@@ -15,8 +15,7 @@ pub const MOUSE_SCROLL: EventId = EventId("glutin/mouse_scroll");
 pub const MOUSE_CURSOR: EventId = EventId("glutin/mouse_cursor");
 pub const MOUSE_INPUT: EventId = EventId("glutin/mouse_input");
 
-pub const WIDGET_MOUSE_OVER: EventId = EventId("limn/widget_mouse_over");
-pub const WIDGET_MOUSE_OFF: EventId = EventId("limn/widget_mouse_off");
+pub const WIDGET_HOVER: EventId = EventId("limn/widget_hover");
 pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
 pub const WIDGET_PRESS: EventId = EventId("limn/widget_press");
 pub const WIDGET_RELEASE: EventId = EventId("limn/widget_release");
@@ -26,9 +25,8 @@ pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props_changed");
 
 
 // get the widget event that is received if the event occurs while mouse is over widget
-pub fn widget_event(event: &glutin::Event) -> Option<EventId> {
+pub fn mouse_under_event(event: &glutin::Event) -> Option<EventId> {
     match *event {
-        glutin::Event::MouseMoved(..) => Some(WIDGET_MOUSE_OVER),
         glutin::Event::MouseWheel(..) => Some(WIDGET_SCROLL),
         glutin::Event::MouseInput(..) => Some(WIDGET_PRESS),
         _ => None,
@@ -87,6 +85,27 @@ macro_rules! event {
 }
 
 event!(InputEvent, glutin::Event);
+
+pub enum Hover {
+    Over,
+    Out,
+}
+pub struct HoverEvent {
+    hover: Hover,
+}
+impl HoverEvent {
+    pub fn new(hover: Hover) -> Self {
+        HoverEvent { hover: hover }
+    }
+}
+impl Event for HoverEvent {
+    fn event_id(&self) -> EventId {
+        WIDGET_HOVER
+    }
+    fn event_data(&self) -> Option<&Any> {
+        Some(&self.hover)
+    }
+}
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {

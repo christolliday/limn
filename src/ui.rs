@@ -20,7 +20,7 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::{self, Event, Signal, InputEvent, EventQueue, EventAddress};
+use event::{self, Event, Signal, InputEvent, EventQueue, EventAddress, HoverEvent, Hover};
 use util::{self, Point, Rectangle, Dimensions};
 use resources::Id;
 use color::*;
@@ -168,15 +168,17 @@ impl Ui {
                     if let Some(last_index) = self.find_widget(last_over) {
                         let ref mut widget = self.graph[last_index];
                         if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                            let event = Signal::new(event::WIDGET_MOUSE_OFF);
+                            let event = HoverEvent::new(Hover::Out);
                             self.event_queue.push(EventAddress::Widget(last_over), Box::new(event));
                             self.input_state.last_over.remove(&last_over);
                         }
                     }
                 }
+                let event = HoverEvent::new(Hover::Over);
+                self.event_queue.push(EventAddress::UnderMouse, Box::new(event));
             }, _ => ()
         }
-        if let Some(event_id) = event::widget_event(&event) {
+        if let Some(event_id) = event::mouse_under_event(&event) {
             let event = InputEvent::new(event_id, event);
             self.event_queue.push(EventAddress::UnderMouse, Box::new(event));
         }

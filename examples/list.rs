@@ -9,7 +9,7 @@ use limn::widgets::text::{self, TextDrawable};
 use limn::widgets::primitives::{self, RectDrawable};
 use limn::widgets::list::{ListHandler, ListItemHandler, ListItemPropsHandler};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
-use limn::widgets::hover::{MouseOnHandler, MouseOffHandler};
+use limn::widgets::hover::HoverHandler;
 use limn::resources::Id;
 use limn::event::{self, EventId, EventAddress, Signal};
 use limn::util::Dimensions;
@@ -45,8 +45,7 @@ fn main() {
             let mut list_item_widget = WidgetBuilder::new()
                 .set_drawable(primitives::draw_rect, Box::new(rect_drawable))
                 .set_debug_name("item")
-                .add_handler(Box::new(MouseOnHandler{}))
-                .add_handler(Box::new(MouseOffHandler{}))
+                .add_handler(Box::new(HoverHandler{}))
                 .add_handler(Box::new(PropsChangeEventHandler{}))
                 .add_handler(Box::new(ListItemHandler::new(list_widget.id)))
                 .add_handler(Box::new(ListItemPropsHandler{}));
