@@ -4,7 +4,7 @@ use linked_hash_map::LinkedHashMap;
 use widget::{self, EventHandler, ChangePropEvent, PropsChangeEventHandler, DrawableEventHandler, EventArgs, WidgetProperty};
 use event::{self, EventId, EventAddress, Signal, InputEvent};
 use widgets::primitives::{self, RectDrawable, RectStyle};
-use widgets::text::{self, TextDrawable};
+use widgets::text::{self, TextDrawable, TextStyle};
 use widget::builder::WidgetBuilder;
 use widget::style::StyleSheet;
 use util::Dimensions;
@@ -101,27 +101,30 @@ impl ToggleButtonBuilder {
                     off_text: &'static str,
                     font_id: Id) -> Self {
 
-        struct ButtonTextPropsHandler {
-            on_text: String,
-            off_text: String,
-        }
-        impl EventHandler for ButtonTextPropsHandler {
-            fn event_id(&self) -> EventId {
-                event::WIDGET_PROPS_CHANGED
-            }
-            fn handle_event(&mut self, args: EventArgs) {
-                let EventArgs { state, props, .. } = args;
-                let activated = props.contains(&WidgetProperty::Activated);
-                let text = if activated { self.on_text.to_owned() } else { self.off_text.to_owned() };
-                state.update(|state: &mut TextDrawable| state.text = text);
-            }
-        }
+        let active = btreeset!{WidgetProperty::Activated};
+        let mut style = LinkedHashMap::new();
+        style.insert(active, on_text.to_owned());
+
+        let text_style = StyleSheet::new(style, off_text.to_owned());
+        let font_id_style = StyleSheet::new_default(font_id);
+        let font_size_style = StyleSheet::new_default(20.0);
+        let text_color_style = StyleSheet::new_default(BLACK);
+        let background_color_style = StyleSheet::new_default(TRANSPARENT);
+
+        let text_style_set = TextStyle {
+            text: text_style,
+            font_id: font_id_style,
+            font_size: font_size_style,
+            text_color: text_color_style,
+            background_color: background_color_style,
+        };
+
         let button_text_drawable = TextDrawable::new(off_text.to_owned(), font_id, 20.0, BLACK, TRANSPARENT);
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(text::draw_text, Box::new(button_text_drawable))
-            .add_handler(Box::new(PropsChangeEventHandler{}))
-            .add_handler(Box::new(ButtonTextPropsHandler{ on_text: on_text.to_owned(), off_text: off_text.to_owned() }));
+            .set_style(text::apply_text_style, Box::new(text_style_set))
+            .add_handler(Box::new(PropsChangeEventHandler{}));
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
 

@@ -12,6 +12,11 @@ pub struct StyleSheet<T> {
     pub default: T,
 }
 impl<T: Clone> StyleSheet<T> {
+    pub fn new_default(default: T) -> Self {
+        let mut style_sheet = LinkedHashMap::new();
+        style_sheet.insert(BTreeSet::new(), default.clone());
+        StyleSheet { style_sheet: style_sheet, default: default }
+    }
     pub fn new(mut style_sheet: LinkedHashMap<BTreeSet<WidgetProperty>, T>, default: T) -> Self {
         style_sheet.insert(BTreeSet::new(), default.clone());
         StyleSheet { style_sheet: style_sheet, default: default }

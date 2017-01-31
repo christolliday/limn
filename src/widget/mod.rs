@@ -159,6 +159,7 @@ fn apply_style(state: &mut WidgetState, style: &Option<Box<Any>>, style_fn: Opti
             style: style.as_ref(),
             props: props,
         });
+        state.has_updated = true;
     }
 }
 impl Widget {

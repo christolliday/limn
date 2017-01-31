@@ -28,13 +28,15 @@ pub fn apply_text_style(args: StyleArgs) {
 }
 
 pub struct TextStyle {
-    font_id: StyleSheet<Id>,
-    font_size: StyleSheet<Scalar>,
-    text_color: StyleSheet<Color>,
-    background_color: StyleSheet<Color>,
+    pub text: StyleSheet<String>,
+    pub font_id: StyleSheet<Id>,
+    pub font_size: StyleSheet<Scalar>,
+    pub text_color: StyleSheet<Color>,
+    pub background_color: StyleSheet<Color>,
 }
 impl DrawableStyle<TextDrawable> for TextStyle {
     fn apply(&self, drawable: &mut TextDrawable, props: &BTreeSet<WidgetProperty>) {
+        drawable.text = self.text.apply(props).clone();
         drawable.font_id = self.font_id.apply(props).clone();
         drawable.font_size = self.font_size.apply(props).clone();
         drawable.text_color = self.text_color.apply(props).clone();
