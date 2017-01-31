@@ -21,8 +21,7 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::WIDGET_HOVER;
-use event::{self, EventId, EventQueue, EventAddress, Hover};
+use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_HOVER, WIDGET_SCROLL, WIDGET_PRESS};
 use util::{self, Point, Rectangle, Dimensions};
 use resources::Id;
 use color::*;
@@ -178,10 +177,11 @@ impl Ui {
                 self.event_queue.push(EventAddress::UnderMouse, WIDGET_HOVER, Box::new(Hover::Over));
             }, _ => ()
         }
-        if let Some(event_id) = event::mouse_under_event(&event) {
+        if let Some(event_id) = mouse_under_event(&event) {
             self.event_queue.push(EventAddress::UnderMouse, event_id, Box::new(event));
         }
     }
+
     pub fn handle_event_queue(&mut self) {
         while !self.event_queue.is_empty() {
             let (event_address, event_id, data) = self.event_queue.next();
@@ -243,5 +243,14 @@ impl Ui {
             self.dirty_widgets.insert(node_index);
             widget.drawable.has_updated = false;
         }
+    }
+}
+
+// get the widget event that is received if the event occurs while mouse is over widget
+pub fn mouse_under_event(event: &glutin::Event) -> Option<EventId> {
+    match *event {
+        glutin::Event::MouseWheel(..) => Some(WIDGET_SCROLL),
+        glutin::Event::MouseInput(..) => Some(WIDGET_PRESS),
+        _ => None,
     }
 }

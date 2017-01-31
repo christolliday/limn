@@ -8,7 +8,7 @@ use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use resources::Id;
 use color::*;
 
-const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("WIDGET_LIST_ITEM_SELECTED");
+const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("limn/list_item_selected");
 
 static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
 static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];

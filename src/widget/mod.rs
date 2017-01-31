@@ -30,23 +30,6 @@ pub enum Property {
 }
 pub type PropSet = BTreeSet<Property>;
 
-pub struct PropsChangeEventHandler {}
-impl EventHandler for PropsChangeEventHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_CHANGE_PROP
-    }
-    fn handle_event(&mut self, args: EventArgs) {
-        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap();
-        if add {
-            args.props.insert(prop.clone());
-        } else {
-            args.props.remove(prop);
-        }
-        apply_style(args.state, args.style, args.style_fn, args.props);
-        args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED, Box::new(()));
-    }
-}
-
 pub struct DrawArgs<'a, 'b: 'a> {
     pub state: &'a Any,
     pub props: &'a PropSet,
@@ -201,6 +184,23 @@ impl Widget {
                 });
             }
         }
+    }
+}
+
+pub struct PropsChangeEventHandler {}
+impl EventHandler for PropsChangeEventHandler {
+    fn event_id(&self) -> EventId {
+        WIDGET_CHANGE_PROP
+    }
+    fn handle_event(&mut self, args: EventArgs) {
+        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap();
+        if add {
+            args.props.insert(prop.clone());
+        } else {
+            args.props.remove(prop);
+        }
+        apply_style(args.state, args.style, args.style_fn, args.props);
+        args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED, Box::new(()));
     }
 }
 

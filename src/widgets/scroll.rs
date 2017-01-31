@@ -7,19 +7,7 @@ use event::{self, EventId, EventAddress};
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
-pub const SCROLL_SCROLLED: EventId = EventId("piston/limn/scroll_scrolled");
-
-/*pub struct ScrollEvent {
-    pub data: (glutin::Event, Rectangle),
-}
-impl Event for ScrollEvent {
-    fn event_id(&self) -> EventId {
-        SCROLL_SCROLLED
-    }
-    fn event_data(&self) -> Option<&Any> {
-        Some(&self.data)
-    }
-}*/
+pub const SCROLL_SCROLLED: EventId = EventId("limn/scroll_scrolled");
 
 pub struct ScrollHandler {}
 impl EventHandler for ScrollHandler {

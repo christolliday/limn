@@ -23,16 +23,6 @@ pub const WIDGET_RELEASE: EventId = EventId("limn/widget_release");
 pub const WIDGET_CHANGE_PROP: EventId = EventId("limn/widget_change_prop");
 pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props_changed");
 
-
-// get the widget event that is received if the event occurs while mouse is over widget
-pub fn mouse_under_event(event: &glutin::Event) -> Option<EventId> {
-    match *event {
-        glutin::Event::MouseWheel(..) => Some(WIDGET_SCROLL),
-        glutin::Event::MouseInput(..) => Some(WIDGET_PRESS),
-        _ => None,
-    }
-}
-
 pub enum Hover {
     Over,
     Out,
