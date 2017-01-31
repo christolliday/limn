@@ -8,7 +8,7 @@ use std::any::Any;
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{self, TextDrawable};
+use limn::widgets::text::{self, TextDrawable, TEXT_STYLE_DEFAULT};
 use limn::widgets::button::PushButtonBuilder;
 use limn::event::{self, EventId, Event, Signal, EventAddress};
 use limn::resources::Id;
@@ -39,13 +39,7 @@ fn main() {
             args.state.update(|state: &mut TextDrawable| state.text = format!("{}", count));
         }
     }
-    let text_drawable = TextDrawable {
-        text: "0".to_owned(),
-        font_id: font_id,
-        font_size: 20.0,
-        text_color: BLACK,
-        background_color: WHITE,
-    };
+    let text_drawable = TextDrawable::new_style(TEXT_STYLE_DEFAULT.clone().with_text("0").with_background_color(WHITE));
     let text_dims = text_drawable.measure_dims_no_wrap();
     let mut text_widget = WidgetBuilder::new()
         .set_drawable(text::draw_text, Box::new(text_drawable))

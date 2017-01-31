@@ -71,22 +71,3 @@ impl EventHandler for ListItemHandler {
         }
     }
 }
-
-pub struct ListItemPropsHandler {}
-impl EventHandler for ListItemPropsHandler {
-    fn event_id(&self) -> EventId {
-        event::WIDGET_PROPS_CHANGED
-    }
-    fn handle_event(&mut self, mut args: EventArgs) {
-        let selected = args.props.contains(&Property::Selected);
-        let hover = args.props.contains(&Property::Hover);
-        let color_selected = BLUE;
-        let color_hover = [0.6, 0.6, 0.6, 1.0];
-        let color_none = [0.3, 0.3, 0.3, 1.0];
-        let color =
-            if selected { color_selected }
-            else if hover { color_hover }
-            else { color_none };
-        args.state.update(|state: &mut RectDrawable| state.background = color);
-    }
-}

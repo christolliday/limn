@@ -52,6 +52,20 @@ pub struct TextStyle {
     pub text_color: StyleSheet<Color>,
     pub background_color: StyleSheet<Color>,
 }
+impl TextStyle {
+    pub fn with_text(&mut self, text: &str) -> &mut Self {
+        self.text = StyleSheet::new_default(text.to_owned());
+        self
+    }
+    pub fn with_text_color(&mut self, text_color: Color) -> &mut Self {
+        self.text_color = StyleSheet::new_default(text_color);
+        self
+    }
+    pub fn with_background_color(&mut self, background_color: Color) -> &mut Self {
+        self.background_color = StyleSheet::new_default(background_color);
+        self
+    }
+}
 impl DrawableStyle<TextDrawable> for TextStyle {
     fn apply(&self, drawable: &mut TextDrawable, props: &PropSet) {
         drawable.text = self.text.apply(props).clone();

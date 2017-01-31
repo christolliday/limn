@@ -142,10 +142,7 @@ impl PushButtonBuilder {
     }
     pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
 
-        let mut text_style_set = TEXT_STYLE_DEFAULT.clone();
-        text_style_set.text = StyleSheet::new_default(text.to_owned());
-
-        let button_text_drawable = TextDrawable::new_style(&text_style_set);
+        let button_text_drawable = TextDrawable::new_style(TEXT_STYLE_DEFAULT.clone().with_text(text));
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(text::draw_text, Box::new(button_text_drawable));
