@@ -58,6 +58,7 @@ impl EventHandler for PropsChangeEventHandler {
         } else {
             args.props.remove(prop);
         }
+        apply_style(args.state, args.style, args.style_fn, args.props);
         args.event_queue.push(EventAddress::Widget(args.widget_id), Box::new(Signal::new(event::WIDGET_PROPS_CHANGED)));
     }
 }
@@ -97,6 +98,8 @@ pub struct EventArgs<'a> {
     pub event: &'a (Event + 'static),
     pub widget_id: Id,
     pub state: &'a mut WidgetState,
+    pub style: &'a Option<Box<Any>>,
+    pub style_fn: Option<fn(StyleArgs)>,
     pub props: &'a mut BTreeSet<WidgetProperty>,
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
@@ -149,6 +152,15 @@ pub struct Widget {
     pub debug_color: Option<Color>,
 }
 
+fn apply_style(state: &mut WidgetState, style: &Option<Box<Any>>, style_fn: Option<fn(StyleArgs)>, props: &BTreeSet<WidgetProperty>) {
+    if let (Some(drawable), Some(style), Some(style_fn)) = (state.state.as_mut(), style.as_ref(), style_fn) {
+        style_fn(StyleArgs {
+            state: drawable.as_mut(),
+            style: style.as_ref(),
+            props: props,
+        });
+    }
+}
 impl Widget {
     pub fn new(id: Id,
                draw_fn: Option<fn(DrawArgs)>,
@@ -161,6 +173,10 @@ impl Widget {
                debug_name: Option<String>,
                debug_color: Option<Color>,
                ) -> Self {
+
+        let mut drawable = drawable;
+        let props = BTreeSet::new();
+        apply_style(&mut drawable, &style, style_fn, &props);
         Widget {
             id: id,
             draw_fn: draw_fn,
@@ -169,19 +185,10 @@ impl Widget {
             style_fn: style_fn,
             mouse_over_fn: mouse_over_fn,
             layout: layout,
-            props: BTreeSet::new(),
+            props: props,
             event_handlers: event_handlers,
             debug_name: debug_name,
             debug_color: debug_color,
-        }
-    }
-    pub fn apply_style(&mut self) {
-        if let (Some(ref mut drawable), Some(style), Some(style_fn)) = (self.drawable.state.as_mut(), self.style.as_ref(), self.style_fn) {
-            style_fn(StyleArgs {
-                state: drawable.as_mut(),
-                style: style.as_ref(),
-                props: &self.props,
-            });
         }
     }
     pub fn draw(&mut self,
@@ -190,8 +197,6 @@ impl Widget {
                 glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {
-
-        self.apply_style();
 
         if let (Some(draw_fn), Some(ref mut drawable)) = (self.draw_fn, self.drawable.state.as_mut()) {
             let bounds = self.layout.bounds(solver);
@@ -222,6 +227,8 @@ impl Widget {
                     event: event,
                     widget_id: self.id,
                     state: &mut self.drawable,
+                    style: &self.style,
+                    style_fn: self.style_fn,
                     layout: &mut self.layout,
                     props: &mut self.props,
                     event_queue: event_queue,

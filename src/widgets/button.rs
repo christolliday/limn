@@ -81,24 +81,14 @@ impl ToggleButtonBuilder {
         let bg_style = StyleSheet::new(style, color_default);
         let rect_style = RectStyle { background: bg_style };
 
-        let rect = RectDrawable { background: RED };
+        let rect = RectDrawable::new(&rect_style);
 
-        struct ButtonRectPropsHandler {}
-        impl EventHandler for ButtonRectPropsHandler {
-            fn event_id(&self) -> EventId {
-                event::WIDGET_PROPS_CHANGED
-            }
-            fn handle_event(&mut self, args: EventArgs) {
-                args.state.update(|state: &mut RectDrawable| {});
-            }
-        }
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::draw_rect, Box::new(rect))
             .set_style(primitives::apply_rect_style, Box::new(rect_style))
             .add_handler(Box::new(ButtonDownHandler{}))
             .add_handler(Box::new(ToggleEventHandler{}))
-            .add_handler(Box::new(PropsChangeEventHandler{}))
-            .add_handler(Box::new(ButtonRectPropsHandler{}));
+            .add_handler(Box::new(PropsChangeEventHandler{}));
         widget.layout.dimensions(Dimensions {
             width: 100.0,
             height: 50.0,

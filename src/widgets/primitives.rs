@@ -8,6 +8,11 @@ use widget::style::{StyleSheet, DrawableStyle};
 pub struct RectDrawable {
     pub background: Color,
 }
+impl RectDrawable {
+    pub fn new(style: &RectStyle) -> Self {
+        RectDrawable { background: style.background.default }
+    }
+}
 pub fn draw_rect(draw_args: DrawArgs) {
     let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
     let state: &RectDrawable = state.downcast_ref().unwrap();

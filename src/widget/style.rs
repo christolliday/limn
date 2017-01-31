@@ -8,8 +8,8 @@ pub trait DrawableStyle<T> {
 }
 
 pub struct StyleSheet<T> {
-    style_sheet: LinkedHashMap<BTreeSet<WidgetProperty>, T>,
-    default: T,
+    pub style_sheet: LinkedHashMap<BTreeSet<WidgetProperty>, T>,
+    pub default: T,
 }
 impl<T: Clone> StyleSheet<T> {
     pub fn new(mut style_sheet: LinkedHashMap<BTreeSet<WidgetProperty>, T>, default: T) -> Self {
