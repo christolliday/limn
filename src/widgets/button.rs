@@ -1,10 +1,12 @@
 use glutin;
+use linked_hash_map::LinkedHashMap;
 
 use widget::{self, EventHandler, ChangePropEvent, PropsChangeEventHandler, DrawableEventHandler, EventArgs, WidgetProperty};
 use event::{self, EventId, EventAddress, Signal, InputEvent};
-use widgets::primitives::{self, RectDrawable};
+use widgets::primitives::{self, RectDrawable, RectStyle};
 use widgets::text::{self, TextDrawable};
 use widget::builder::WidgetBuilder;
+use widget::style::StyleSheet;
 use util::Dimensions;
 use resources::Id;
 use color::*;
@@ -62,6 +64,23 @@ pub struct ToggleButtonBuilder {
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
+        let color_active_down = [0.9, 0.9, 0.9, 1.0];
+        let color_active = [1.0, 1.0, 1.0, 1.0];
+        let color_down = [0.8, 0.0, 0.0, 1.0];
+        let color_default = [1.0, 0.0, 0.0, 1.0];
+
+        let active_down = btreeset!{WidgetProperty::Pressed, WidgetProperty::Activated};
+        let active = btreeset!{WidgetProperty::Activated};
+        let down = btreeset!{WidgetProperty::Pressed};
+
+        let mut style = LinkedHashMap::new();
+        style.insert(active_down, color_active_down);
+        style.insert(active, color_active);
+        style.insert(down, color_down);
+
+        let bg_style = StyleSheet::new(style, color_default);
+        let rect_style = RectStyle { background: bg_style };
+
         let rect = RectDrawable { background: RED };
 
         struct ButtonRectPropsHandler {}
@@ -70,25 +89,12 @@ impl ToggleButtonBuilder {
                 event::WIDGET_PROPS_CHANGED
             }
             fn handle_event(&mut self, args: EventArgs) {
-                let EventArgs { state, props, .. } = args;
-                let pressed = props.contains(&WidgetProperty::Pressed);
-                let activated = props.contains(&WidgetProperty::Activated);
-
-                let color_activated = [1.0, 1.0, 1.0, 1.0];
-                let color_activated_pressed = [0.9, 0.9, 0.9, 1.0];
-                let color_unactivated = [1.0, 0.0, 0.0, 1.0];
-                let color_unactivated_pressed = [0.8, 0.0, 0.0, 1.0];
-                let color =
-                    if pressed && activated { color_activated_pressed } else
-                    if activated { color_activated } else
-                    if pressed { color_unactivated_pressed }
-                    else { color_unactivated };
-
-                state.update(|state: &mut RectDrawable| state.background = color);
+                args.state.update(|state: &mut RectDrawable| {});
             }
         }
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::draw_rect, Box::new(rect))
+            .set_style(primitives::apply_rect_style, Box::new(rect_style))
             .add_handler(Box::new(ButtonDownHandler{}))
             .add_handler(Box::new(ToggleEventHandler{}))
             .add_handler(Box::new(PropsChangeEventHandler{}))

@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use graphics;
 use graphics::types::Color;
 
@@ -6,9 +8,10 @@ use backend::gfx::ImageSize;
 
 use text::{self, Wrap};
 use resources::{Id, resources};
-use widget::DrawArgs;
 use util::{self, Dimensions, Align, Scalar};
 use color::*;
+use widget::{StyleArgs, DrawArgs, WidgetProperty};
+use widget::style::{DrawableStyle, StyleSheet};
 
 pub struct TextDrawable {
     pub text: String,
@@ -17,6 +20,28 @@ pub struct TextDrawable {
     pub text_color: Color,
     pub background_color: Color,
 }
+
+pub fn apply_text_style(args: StyleArgs) {
+    let state: &mut TextDrawable = args.state.downcast_mut().unwrap();
+    let style: &TextStyle = args.style.downcast_ref().unwrap();
+    style.apply(state, args.props);
+}
+
+pub struct TextStyle {
+    font_id: StyleSheet<Id>,
+    font_size: StyleSheet<Scalar>,
+    text_color: StyleSheet<Color>,
+    background_color: StyleSheet<Color>,
+}
+impl DrawableStyle<TextDrawable> for TextStyle {
+    fn apply(&self, drawable: &mut TextDrawable, props: &BTreeSet<WidgetProperty>) {
+        drawable.font_id = self.font_id.apply(props).clone();
+        drawable.font_size = self.font_size.apply(props).clone();
+        drawable.text_color = self.text_color.apply(props).clone();
+        drawable.background_color = self.background_color.apply(props).clone();
+    }
+}
+
 impl TextDrawable {
     pub fn new_default(text: String, font_id: Id) -> Self {
         TextDrawable {

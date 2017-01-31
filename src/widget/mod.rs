@@ -1,8 +1,9 @@
 pub mod layout;
 pub mod builder;
+pub mod style;
 
 use std::any::Any;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use graphics::Context;
 use graphics::types::Color;
@@ -18,8 +19,9 @@ use util::{self, Point, Rectangle};
 
 use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
+use self::style::DrawableStyle;
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub enum WidgetProperty {
     Hover,
     Activated,
@@ -83,7 +85,7 @@ impl Event for WidgetNotifyEvent {
 
 pub struct DrawArgs<'a, 'b: 'a> {
     pub state: &'a Any,
-    pub props: &'a HashSet<WidgetProperty>,
+    pub props: &'a BTreeSet<WidgetProperty>,
     pub bounds: Rectangle,
     pub parent_bounds: Rectangle,
     pub glyph_cache: &'a mut GlyphCache,
@@ -95,10 +97,16 @@ pub struct EventArgs<'a> {
     pub event: &'a (Event + 'static),
     pub widget_id: Id,
     pub state: &'a mut WidgetState,
-    pub props: &'a mut HashSet<WidgetProperty>,
+    pub props: &'a mut BTreeSet<WidgetProperty>,
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
+}
+
+pub struct StyleArgs<'a> {
+    pub state: &'a mut Any,
+    pub style: &'a Any,
+    pub props: &'a BTreeSet<WidgetProperty>,
 }
 
 pub trait EventHandler {
@@ -131,9 +139,11 @@ pub struct Widget {
     pub id: Id,
     pub draw_fn: Option<fn(DrawArgs)>,
     pub drawable: WidgetState,
+    pub style: Option<Box<Any>>,
+    pub style_fn: Option<fn(StyleArgs)>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
-    pub props: HashSet<WidgetProperty>,
+    pub props: BTreeSet<WidgetProperty>,
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -143,6 +153,8 @@ impl Widget {
     pub fn new(id: Id,
                draw_fn: Option<fn(DrawArgs)>,
                drawable: WidgetState,
+               style: Option<Box<Any>>,
+               style_fn: Option<fn(StyleArgs)>,
                mouse_over_fn: fn(Point, Rectangle) -> bool,
                layout: WidgetLayout,
                event_handlers: Vec<Box<EventHandler>>,
@@ -153,12 +165,23 @@ impl Widget {
             id: id,
             draw_fn: draw_fn,
             drawable: drawable,
+            style: style,
+            style_fn: style_fn,
             mouse_over_fn: mouse_over_fn,
             layout: layout,
-            props: HashSet::new(),
+            props: BTreeSet::new(),
             event_handlers: event_handlers,
             debug_name: debug_name,
             debug_color: debug_color,
+        }
+    }
+    pub fn apply_style(&mut self) {
+        if let (Some(ref mut drawable), Some(style), Some(style_fn)) = (self.drawable.state.as_mut(), self.style.as_ref(), self.style_fn) {
+            style_fn(StyleArgs {
+                state: drawable.as_mut(),
+                style: style.as_ref(),
+                props: &self.props,
+            });
         }
     }
     pub fn draw(&mut self,
@@ -167,6 +190,9 @@ impl Widget {
                 glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {
+
+        self.apply_style();
+
         if let (Some(draw_fn), Some(ref mut drawable)) = (self.draw_fn, self.drawable.state.as_mut()) {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);

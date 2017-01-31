@@ -9,6 +9,9 @@ extern crate gfx_graphics;
 extern crate glutin;
 #[macro_use]
 extern crate lazy_static;
+extern crate linked_hash_map;
+#[macro_use]
+extern crate maplit;
 
 pub mod widget;
 pub mod widgets;

@@ -1,6 +1,9 @@
+use std::collections::BTreeSet;
+
 use graphics;
 use graphics::types::Color;
-use widget::DrawArgs;
+use widget::{StyleArgs, DrawArgs, WidgetProperty};
+use widget::style::{StyleSheet, DrawableStyle};
 
 pub struct RectDrawable {
     pub background: Color,
@@ -23,4 +26,18 @@ pub fn draw_ellipse(draw_args: DrawArgs) {
     graphics::Ellipse::new(state.background)
         .maybe_border(state.border)
         .draw(bounds, &context.draw_state, context.transform, graphics);
+}
+
+pub fn apply_rect_style(args: StyleArgs) {
+    let state: &mut RectDrawable = args.state.downcast_mut().unwrap();
+    let style: &RectStyle = args.style.downcast_ref().unwrap();
+    style.apply(state, args.props);
+}
+pub struct RectStyle {
+    pub background: StyleSheet<Color>,
+}
+impl DrawableStyle<RectDrawable> for RectStyle {
+    fn apply(&self, drawable: &mut RectDrawable, props: &BTreeSet<WidgetProperty>) {
+        drawable.background = self.background.apply(props).clone();
+    }
 }
