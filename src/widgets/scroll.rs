@@ -31,7 +31,7 @@ impl EventHandler for ScrollHandler {
         let event = event.data::<glutin::Event>();
         let widget_bounds = layout.bounds(solver);
         let event = ScrollEvent { data: (event.clone(), widget_bounds) };
-        event_queue.push(EventAddress::Child(widget_id), Box::new(event));
+        event_queue.push(EventAddress::Child(widget_id), SCROLL_SCROLLED, Box::new(event));
     }
 }
 

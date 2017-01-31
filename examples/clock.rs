@@ -104,7 +104,7 @@ impl ClockBuilder {
         thread::spawn(move || {
             loop {
                 thread::sleep(time::Duration::from_millis(1000));
-                event_queue.push(EventAddress::SubTree(clock_id), Box::new(Signal::new(CLOCK_TICK)));
+                event_queue.push(EventAddress::SubTree(clock_id), CLOCK_TICK, Box::new(Signal::new(CLOCK_TICK)));
             }
         });
 

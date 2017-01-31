@@ -117,7 +117,7 @@ pub enum EventAddress {
 
 #[derive(Clone)]
 pub struct EventQueue {
-    queue: Arc<Mutex<Vec<(EventAddress, Box<Event + Send>)>>>,
+    queue: Arc<Mutex<Vec<(EventAddress, EventId, Box<Event + Send>)>>>,
     window_proxy: WindowProxy,
 }
 impl EventQueue {
@@ -127,16 +127,16 @@ impl EventQueue {
             window_proxy: window.window.create_window_proxy(),
         }
     }
-    pub fn push(&mut self, address: EventAddress, event: Box<Event + Send>) {
+    pub fn push(&mut self, address: EventAddress, event_id: EventId, event: Box<Event + Send>) {
         let mut queue = self.queue.lock().unwrap();
-        queue.push((address, event));
+        queue.push((address, event_id, event));
         self.window_proxy.wakeup_event_loop();
     }
     pub fn is_empty(&mut self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.len() == 0
     }
-    pub fn next(&mut self) -> (EventAddress, Box<Event + Send>) {
+    pub fn next(&mut self) -> (EventAddress, EventId, Box<Event + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.pop().unwrap()
     }

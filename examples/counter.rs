@@ -60,7 +60,7 @@ fn main() {
         }
         fn handle_event(&mut self, args: EventArgs) {
             let event = Signal::new(COUNTER);
-            args.event_queue.push(EventAddress::Widget(self.receiver_id), Box::new(event));
+            args.event_queue.push(EventAddress::Widget(self.receiver_id), COUNTER, Box::new(event));
         }
     }
     let mut button_widget = PushButtonBuilder::new()
@@ -89,7 +89,7 @@ fn main() {
         fn handle_event(&mut self, args: EventArgs) {
             self.count += 1;
             let event = CountEvent::new(COUNT, self.count);
-            args.event_queue.push(EventAddress::SubTree(args.widget_id), Box::new(event));
+            args.event_queue.push(EventAddress::SubTree(args.widget_id), COUNT, Box::new(event));
         }
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));

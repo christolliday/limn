@@ -6,7 +6,7 @@ use linked_hash_map::LinkedHashMap;
 use graphics::types::Color;
 
 use widget::{self, EventHandler, ChangePropEvent, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property, PropSet};
-use event::{self, EventId, EventAddress, Signal, InputEvent};
+use event::{self, EventId, EventAddress, Signal, InputEvent, WIDGET_CHANGE_PROP};
 use widgets::primitives::{self, RectDrawable, RectStyle};
 use widgets::text::{self, TextDrawable, TextStyle, TEXT_STYLE_DEFAULT};
 use widget::builder::WidgetBuilder;
@@ -50,7 +50,7 @@ impl EventHandler for ButtonDownHandler {
                     glutin::ElementState::Released => false,
                 };
                 let event = ChangePropEvent::new(Property::Pressed, pressed);
-                args.event_queue.push(EventAddress::SubTree(args.widget_id), Box::new(event));
+                args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new(event));
             }, _ => ()
         }
     }
@@ -71,7 +71,7 @@ impl EventHandler for ToggleEventHandler {
                     glutin::ElementState::Released => {
                         let activated = props.contains(&Property::Activated);
                         let event = ChangePropEvent::new(Property::Activated, !activated);
-                        event_queue.push(EventAddress::SubTree(widget_id), Box::new(event));
+                        event_queue.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new(event));
                     }, _ => ()
                 }
             }, _ => ()
