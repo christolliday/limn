@@ -4,10 +4,10 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widget::{EventHandler, EventArgs, WidgetProperty, WidgetNotifyEvent, ChangePropEvent, PropsChangeEventHandler};
+use limn::widget::{EventHandler, EventArgs, Property, WidgetNotifyEvent, ChangePropEvent, PropsChangeEventHandler};
 use limn::widgets::text::{self, TextDrawable};
 use limn::widgets::primitives::{self, RectDrawable};
-use limn::widgets::list::{ListHandler, ListItemHandler, ListItemPropsHandler};
+use limn::widgets::list::{ListHandler, ListItemHandler, ListItemPropsHandler, LIST_ITEM_STYLE_DEFAULT};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widgets::hover::HoverHandler;
 use limn::resources::Id;
@@ -41,9 +41,10 @@ fn main() {
             let text_drawable = TextDrawable::new("hello".to_owned(), font_id, 20.0, WHITE, TRANSPARENT);
             let text_dims = text_drawable.measure_dims_no_wrap();
 
-            let rect_drawable = RectDrawable { background: [0.3, 0.3, 0.3, 1.0] };
+            let rect_drawable = RectDrawable::new(&LIST_ITEM_STYLE_DEFAULT);
             let mut list_item_widget = WidgetBuilder::new()
                 .set_drawable(primitives::draw_rect, Box::new(rect_drawable))
+                .set_style(primitives::apply_rect_style, Box::new(LIST_ITEM_STYLE_DEFAULT.clone()))
                 .set_debug_name("item")
                 .add_handler(Box::new(HoverHandler{}))
                 .add_handler(Box::new(PropsChangeEventHandler{}))

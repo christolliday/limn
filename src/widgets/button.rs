@@ -8,7 +8,7 @@ use graphics::types::Color;
 use widget::{self, EventHandler, ChangePropEvent, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property, PropSet};
 use event::{self, EventId, EventAddress, Signal, InputEvent};
 use widgets::primitives::{self, RectDrawable, RectStyle};
-use widgets::text::{self, TextDrawable, TextStyle};
+use widgets::text::{self, TextDrawable, TextStyle, TEXT_STYLE_DEFAULT};
 use widget::builder::WidgetBuilder;
 use widget::style::StyleSheet;
 use util::Dimensions;
@@ -106,20 +106,9 @@ impl ToggleButtonBuilder {
 
         let mut style = LinkedHashMap::new();
         style.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
-
         let text_style = StyleSheet::new(style, off_text.to_owned());
-        let font_id_style = StyleSheet::new_default(font_id);
-        let font_size_style = StyleSheet::new_default(20.0);
-        let text_color_style = StyleSheet::new_default(BLACK);
-        let background_color_style = StyleSheet::new_default(TRANSPARENT);
-
-        let text_style_set = TextStyle {
-            text: text_style,
-            font_id: font_id_style,
-            font_size: font_size_style,
-            text_color: text_color_style,
-            background_color: background_color_style,
-        };
+        let mut text_style_set = TEXT_STYLE_DEFAULT.clone();
+        text_style_set.text = text_style;
 
         let button_text_drawable = TextDrawable::new_style(&text_style_set);
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
@@ -152,7 +141,11 @@ impl PushButtonBuilder {
         PushButtonBuilder { widget: widget }
     }
     pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
-        let button_text_drawable = TextDrawable::new(text.to_owned(), font_id, 20.0, BLACK, TRANSPARENT);
+
+        let mut text_style_set = TEXT_STYLE_DEFAULT.clone();
+        text_style_set.text = StyleSheet::new_default(text.to_owned());
+
+        let button_text_drawable = TextDrawable::new_style(&text_style_set);
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(text::draw_text, Box::new(button_text_drawable));

@@ -1,10 +1,30 @@
-use widget::{EventArgs, EventHandler, Property, ChangePropEvent, WidgetNotifyEvent};
-use widgets::primitives::RectDrawable;
+use linked_hash_map::LinkedHashMap;
+use graphics::types::Color;
+
+use widget::{EventArgs, EventHandler, Property, PropSet, ChangePropEvent, WidgetNotifyEvent};
+use widgets::primitives::{RectDrawable, RectStyle};
+use widget::style::StyleSheet;
 use event::{self, EventId, EventAddress, Signal};
 use resources::Id;
 use color::*;
 
 const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("WIDGET_LIST_ITEM_SELECTED");
+
+static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
+static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
+static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
+
+lazy_static! {
+    pub static ref STATE_DEFAULT: PropSet = btreeset!{};
+    pub static ref STATE_SELECTED: PropSet = btreeset!{Property::Selected};
+    pub static ref STATE_HOVER: PropSet = btreeset!{Property::Hover};
+    pub static ref LIST_ITEM_STYLE_DEFAULT: RectStyle = {
+        let mut style = LinkedHashMap::new();
+        style.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
+        style.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
+        RectStyle { background: StyleSheet::new(style, COLOR_LIST_ITEM_DEFAULT) }
+    };
+}
 
 pub struct ListHandler {
     selected: Option<Id>,

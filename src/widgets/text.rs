@@ -13,6 +13,23 @@ use color::*;
 use widget::{StyleArgs, DrawArgs, Property, PropSet};
 use widget::style::{DrawableStyle, StyleSheet};
 
+lazy_static! {
+    pub static ref TEXT_STYLE_DEFAULT: TextStyle = {
+        let text_style = StyleSheet::new_default("".to_owned());
+        let font_id_style = StyleSheet::new_default(Id(0)); // make first font loaded default for now
+        let font_size_style = StyleSheet::new_default(20.0);
+        let text_color_style = StyleSheet::new_default(BLACK);
+        let background_color_style = StyleSheet::new_default(TRANSPARENT);
+        TextStyle {
+            text: text_style,
+            font_id: font_id_style,
+            font_size: font_size_style,
+            text_color: text_color_style,
+            background_color: background_color_style,
+        }
+    };
+}
+
 pub struct TextDrawable {
     pub text: String,
     pub font_id: Id,
@@ -27,6 +44,7 @@ pub fn apply_text_style(args: StyleArgs) {
     style.apply(state, args.props);
 }
 
+#[derive(Clone)]
 pub struct TextStyle {
     pub text: StyleSheet<String>,
     pub font_id: StyleSheet<Id>,
