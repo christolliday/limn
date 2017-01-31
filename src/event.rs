@@ -33,78 +33,9 @@ pub fn mouse_under_event(event: &glutin::Event) -> Option<EventId> {
     }
 }
 
-pub trait Event {
-    fn event_id(&self) -> EventId;
-    fn event_data(&self) -> Option<&Any>;
-}
-impl Event {
-    pub fn data<T: 'static>(&self) -> &T {
-        self.event_data().unwrap().downcast_ref::<T>().unwrap()
-    }
-}
-
-// event with an id but no associated data
-pub struct Signal {
-    event_id: EventId,
-}
-impl Signal {
-    pub fn new(event_id: EventId) -> Self {
-        Signal { event_id: event_id }
-    }
-}
-impl Event for Signal {
-    fn event_id(&self) -> EventId {
-        self.event_id
-    }
-    fn event_data(&self) -> Option<&Any> {
-        None
-    }
-}
-
-#[macro_export]
-macro_rules! event {
-    ( $name:ident, $data_type:path ) => {
-        pub struct $name {
-            event_id: EventId,
-            data: $data_type,
-        }
-        impl $name {
-            pub fn new(event_id: EventId, data: $data_type) -> Self {
-                $name { event_id: event_id, data: data }
-            }
-        }
-        impl Event for $name {
-            fn event_id(&self) -> EventId {
-                self.event_id
-            }
-            fn event_data(&self) -> Option<&Any> {
-                Some(&self.data)
-            }
-        }
-    };
-}
-
-event!(InputEvent, glutin::Event);
-
 pub enum Hover {
     Over,
     Out,
-}
-pub struct HoverEvent {
-    hover: Hover,
-}
-impl HoverEvent {
-    pub fn new(hover: Hover) -> Self {
-        HoverEvent { hover: hover }
-    }
-}
-impl Event for HoverEvent {
-    fn event_id(&self) -> EventId {
-        WIDGET_HOVER
-    }
-    fn event_data(&self) -> Option<&Any> {
-        Some(&self.hover)
-    }
 }
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
@@ -117,7 +48,7 @@ pub enum EventAddress {
 
 #[derive(Clone)]
 pub struct EventQueue {
-    queue: Arc<Mutex<Vec<(EventAddress, EventId, Box<Event + Send>)>>>,
+    queue: Arc<Mutex<Vec<(EventAddress, EventId, Box<Any + Send>)>>>,
     window_proxy: WindowProxy,
 }
 impl EventQueue {
@@ -127,16 +58,16 @@ impl EventQueue {
             window_proxy: window.window.create_window_proxy(),
         }
     }
-    pub fn push(&mut self, address: EventAddress, event_id: EventId, event: Box<Event + Send>) {
+    pub fn push(&mut self, address: EventAddress, event_id: EventId, data: Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
-        queue.push((address, event_id, event));
+        queue.push((address, event_id, data));
         self.window_proxy.wakeup_event_loop();
     }
     pub fn is_empty(&mut self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.len() == 0
     }
-    pub fn next(&mut self) -> (EventAddress, EventId, Box<Event + Send>) {
+    pub fn next(&mut self) -> (EventAddress, EventId, Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.pop().unwrap()
     }

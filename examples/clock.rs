@@ -13,7 +13,6 @@ use std::f64;
 use chrono::*;
 use graphics::types::Color;
 
-use limn::event::Signal;
 use limn::widget::{DrawArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::primitives::{self, EllipseDrawable};
@@ -104,7 +103,7 @@ impl ClockBuilder {
         thread::spawn(move || {
             loop {
                 thread::sleep(time::Duration::from_millis(1000));
-                event_queue.push(EventAddress::SubTree(clock_id), CLOCK_TICK, Box::new(Signal::new(CLOCK_TICK)));
+                event_queue.push(EventAddress::SubTree(clock_id), CLOCK_TICK, Box::new(()));
             }
         });
 

@@ -1,10 +1,10 @@
 use linked_hash_map::LinkedHashMap;
 use graphics::types::Color;
 
-use widget::{EventArgs, EventHandler, Property, PropSet, ChangePropEvent, WidgetNotifyEvent};
+use widget::{EventArgs, EventHandler, Property, PropSet};
 use widgets::primitives::{RectDrawable, RectStyle};
 use widget::style::StyleSheet;
-use event::{self, EventId, EventAddress, Signal, WIDGET_CHANGE_PROP};
+use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use resources::Id;
 use color::*;
 
@@ -39,11 +39,10 @@ impl EventHandler for ListHandler {
         WIDGET_LIST_ITEM_SELECTED
     }
     fn handle_event(&mut self, mut args: EventArgs) {
-        let selected = args.event.data::<Id>();
+        let selected = args.data.downcast_ref::<Id>().unwrap();
         if let Some(old_selected) = self.selected {
             if selected != &old_selected {
-                let event = ChangePropEvent::new(Property::Selected, false);
-                args.event_queue.push(EventAddress::SubTree(old_selected), WIDGET_CHANGE_PROP, Box::new(event));
+                args.event_queue.push(EventAddress::SubTree(old_selected), WIDGET_CHANGE_PROP, Box::new((Property::Selected, false)));
             }
         }
         self.selected = Some(*selected);
@@ -64,10 +63,8 @@ impl EventHandler for ListItemHandler {
     }
     fn handle_event(&mut self, mut args: EventArgs) {
         if !args.props.contains(&Property::Selected) {
-            let event = ChangePropEvent::new(Property::Selected, true);
-            args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new(event));
-            let event = WidgetNotifyEvent::new(WIDGET_LIST_ITEM_SELECTED, args.widget_id);
-            args.event_queue.push(EventAddress::Widget(self.list_id), WIDGET_LIST_ITEM_SELECTED, Box::new(event));
+            args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Selected, true)));
+            args.event_queue.push(EventAddress::Widget(self.list_id), WIDGET_LIST_ITEM_SELECTED, Box::new(args.widget_id));
         }
     }
 }

@@ -4,14 +4,14 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widget::{EventHandler, EventArgs, Property, WidgetNotifyEvent, ChangePropEvent, PropsChangeEventHandler};
+use limn::widget::{EventHandler, EventArgs, Property, PropsChangeEventHandler};
 use limn::widgets::text::{self, TextDrawable, TEXT_STYLE_DEFAULT};
 use limn::widgets::primitives::{self, RectDrawable};
 use limn::widgets::list::{ListHandler, ListItemHandler, LIST_ITEM_STYLE_DEFAULT};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widgets::hover::HoverHandler;
 use limn::resources::Id;
-use limn::event::{self, EventId, EventAddress, Signal};
+use limn::event::{self, EventId, EventAddress};
 use limn::util::Dimensions;
 use limn::color::*;
 

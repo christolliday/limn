@@ -5,8 +5,8 @@ use glutin;
 use linked_hash_map::LinkedHashMap;
 use graphics::types::Color;
 
-use widget::{self, EventHandler, ChangePropEvent, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property, PropSet};
-use event::{self, EventId, EventAddress, Signal, InputEvent, WIDGET_CHANGE_PROP};
+use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property, PropSet};
+use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use widgets::primitives::{self, RectDrawable, RectStyle};
 use widgets::text::{self, TextDrawable, TextStyle, TEXT_STYLE_DEFAULT};
 use widget::builder::WidgetBuilder;
@@ -42,15 +42,14 @@ impl EventHandler for ButtonDownHandler {
         event::WIDGET_PRESS
     }
     fn handle_event(&mut self, args: EventArgs) {
-        let event = args.event.data::<glutin::Event>();
+        let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
             glutin::Event::MouseInput(state, button) => {
                 let pressed = match state {
                     glutin::ElementState::Pressed => true,
                     glutin::ElementState::Released => false,
                 };
-                let event = ChangePropEvent::new(Property::Pressed, pressed);
-                args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new(event));
+                args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Pressed, pressed)));
             }, _ => ()
         }
     }
@@ -63,15 +62,14 @@ impl EventHandler for ToggleEventHandler {
         event::WIDGET_PRESS
     }
     fn handle_event(&mut self, args: EventArgs) {
-        let EventArgs { event, props, widget_id, event_queue, .. } = args;
-        let event = event.data::<glutin::Event>();
+        let EventArgs { props, widget_id, event_queue, .. } = args;
+        let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
             glutin::Event::MouseInput(state, button) => {
                 match state {
                     glutin::ElementState::Released => {
                         let activated = props.contains(&Property::Activated);
-                        let event = ChangePropEvent::new(Property::Activated, !activated);
-                        event_queue.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new(event));
+                        event_queue.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Activated, !activated)));
                     }, _ => ()
                 }
             }, _ => ()

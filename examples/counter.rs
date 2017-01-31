@@ -10,7 +10,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widgets::text::{self, TextDrawable, TEXT_STYLE_DEFAULT};
 use limn::widgets::button::PushButtonBuilder;
-use limn::event::{self, EventId, Event, Signal, EventAddress};
+use limn::event::{self, EventId, EventAddress};
 use limn::resources::Id;
 use limn::color::*;
 
@@ -35,7 +35,7 @@ fn main() {
             COUNT
         }
         fn handle_event(&mut self, args: EventArgs) {
-            let count = args.event.data::<u32>();
+            let count = args.data.downcast_ref::<u32>().unwrap();
             args.state.update(|state: &mut TextDrawable| state.text = format!("{}", count));
         }
     }
@@ -59,8 +59,7 @@ fn main() {
             event::WIDGET_PRESS
         }
         fn handle_event(&mut self, args: EventArgs) {
-            let event = Signal::new(COUNTER);
-            args.event_queue.push(EventAddress::Widget(self.receiver_id), COUNTER, Box::new(event));
+            args.event_queue.push(EventAddress::Widget(self.receiver_id), COUNTER, Box::new(()));
         }
     }
     let mut button_widget = PushButtonBuilder::new()
@@ -72,8 +71,6 @@ fn main() {
     root_widget.add_child(Box::new(text_widget));
     root_widget.add_child(Box::new(button_container));
 
-
-    event!(CountEvent, u32);
     struct CounterHandler {
         count: u32,
     }
@@ -88,8 +85,7 @@ fn main() {
         }
         fn handle_event(&mut self, args: EventArgs) {
             self.count += 1;
-            let event = CountEvent::new(COUNT, self.count);
-            args.event_queue.push(EventAddress::SubTree(args.widget_id), COUNT, Box::new(event));
+            args.event_queue.push(EventAddress::SubTree(args.widget_id), COUNT, Box::new(self.count));
         }
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));
