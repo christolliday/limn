@@ -10,7 +10,7 @@ use text::{self, Wrap};
 use resources::{Id, resources};
 use util::{self, Dimensions, Align, Scalar};
 use color::*;
-use widget::{StyleArgs, DrawArgs, WidgetProperty};
+use widget::{StyleArgs, DrawArgs, Property, PropSet};
 use widget::style::{DrawableStyle, StyleSheet};
 
 pub struct TextDrawable {
@@ -35,7 +35,7 @@ pub struct TextStyle {
     pub background_color: StyleSheet<Color>,
 }
 impl DrawableStyle<TextDrawable> for TextStyle {
-    fn apply(&self, drawable: &mut TextDrawable, props: &BTreeSet<WidgetProperty>) {
+    fn apply(&self, drawable: &mut TextDrawable, props: &PropSet) {
         drawable.text = self.text.apply(props).clone();
         drawable.font_id = self.font_id.apply(props).clone();
         drawable.font_size = self.font_size.apply(props).clone();
@@ -43,7 +43,6 @@ impl DrawableStyle<TextDrawable> for TextStyle {
         drawable.background_color = self.background_color.apply(props).clone();
     }
 }
-
 impl TextDrawable {
     pub fn new_default(text: String, font_id: Id) -> Self {
         TextDrawable {
@@ -53,6 +52,9 @@ impl TextDrawable {
             text_color: BLACK,
             background_color: TRANSPARENT,
         }
+    }
+    pub fn new_style(style: &TextStyle) -> Self {
+        TextDrawable::new(style.text.default.clone(), style.font_id.default, style.font_size.default, style.text_color.default, style.background_color.default)
     }
     pub fn new(text: String, font_id: Id, font_size: Scalar, text_color: Color, background_color: Color) -> Self {
         TextDrawable {

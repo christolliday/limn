@@ -1,7 +1,11 @@
+use std::collections::BTreeSet;
+use std::ops::Deref;
+
 use glutin;
 use linked_hash_map::LinkedHashMap;
+use graphics::types::Color;
 
-use widget::{self, EventHandler, ChangePropEvent, PropsChangeEventHandler, DrawableEventHandler, EventArgs, WidgetProperty};
+use widget::{self, EventHandler, ChangePropEvent, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property, PropSet};
 use event::{self, EventId, EventAddress, Signal, InputEvent};
 use widgets::primitives::{self, RectDrawable, RectStyle};
 use widgets::text::{self, TextDrawable, TextStyle};
@@ -11,8 +15,25 @@ use util::Dimensions;
 use resources::Id;
 use color::*;
 
-pub const BUTTON_ENABLED: EventId = EventId("piston/limn/button_enabled");
-pub const BUTTON_DISABLED: EventId = EventId("piston/limn/button_disabled");
+
+static COLOR_BUTTON_DEFAULT: Color = RED;
+static COLOR_BUTTON_PRESSED: Color = [0.8, 0.0, 0.0, 1.0];
+static COLOR_BUTTON_ACTIVATED: Color = WHITE;
+static COLOR_BUTTON_ACTIVATED_PRESSED: Color = [0.9, 0.9, 0.9, 1.0];
+
+lazy_static! {
+    pub static ref STATE_DEFAULT: PropSet = btreeset!{};
+    pub static ref STATE_PRESSED: PropSet = btreeset!{Property::Pressed};
+    pub static ref STATE_ACTIVATED: PropSet = btreeset!{Property::Activated};
+    pub static ref STATE_ACTIVATED_PRESSED: PropSet = btreeset!{Property::Activated, Property::Pressed};
+    pub static ref TOGGLE_RECT_STYLE: RectStyle = {
+        let mut style = LinkedHashMap::new();
+        style.insert(STATE_ACTIVATED_PRESSED.deref().clone(), COLOR_BUTTON_ACTIVATED_PRESSED);
+        style.insert(STATE_ACTIVATED.deref().clone(), COLOR_BUTTON_ACTIVATED);
+        style.insert(STATE_PRESSED.deref().clone(), COLOR_BUTTON_PRESSED);
+        RectStyle { background: StyleSheet::new(style, COLOR_BUTTON_DEFAULT) }
+    };
+}
 
 // show whether button is held down or not
 pub struct ButtonDownHandler {}
@@ -28,7 +49,7 @@ impl EventHandler for ButtonDownHandler {
                     glutin::ElementState::Pressed => true,
                     glutin::ElementState::Released => false,
                 };
-                let event = ChangePropEvent::new(WidgetProperty::Pressed, pressed);
+                let event = ChangePropEvent::new(Property::Pressed, pressed);
                 args.event_queue.push(EventAddress::SubTree(args.widget_id), Box::new(event));
             }, _ => ()
         }
@@ -48,8 +69,8 @@ impl EventHandler for ToggleEventHandler {
             glutin::Event::MouseInput(state, button) => {
                 match state {
                     glutin::ElementState::Released => {
-                        let activated = props.contains(&WidgetProperty::Activated);
-                        let event = ChangePropEvent::new(WidgetProperty::Activated, !activated);
+                        let activated = props.contains(&Property::Activated);
+                        let event = ChangePropEvent::new(Property::Activated, !activated);
                         event_queue.push(EventAddress::SubTree(widget_id), Box::new(event));
                     }, _ => ()
                 }
@@ -63,29 +84,11 @@ pub struct ToggleButtonBuilder {
 }
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
-
-        let color_active_down = [0.9, 0.9, 0.9, 1.0];
-        let color_active = [1.0, 1.0, 1.0, 1.0];
-        let color_down = [0.8, 0.0, 0.0, 1.0];
-        let color_default = [1.0, 0.0, 0.0, 1.0];
-
-        let active_down = btreeset!{WidgetProperty::Pressed, WidgetProperty::Activated};
-        let active = btreeset!{WidgetProperty::Activated};
-        let down = btreeset!{WidgetProperty::Pressed};
-
-        let mut style = LinkedHashMap::new();
-        style.insert(active_down, color_active_down);
-        style.insert(active, color_active);
-        style.insert(down, color_down);
-
-        let bg_style = StyleSheet::new(style, color_default);
-        let rect_style = RectStyle { background: bg_style };
-
-        let rect = RectDrawable::new(&rect_style);
+        let rect = RectDrawable::new(&TOGGLE_RECT_STYLE);
 
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::draw_rect, Box::new(rect))
-            .set_style(primitives::apply_rect_style, Box::new(rect_style))
+            .set_style(primitives::apply_rect_style, Box::new(TOGGLE_RECT_STYLE.clone()))
             .add_handler(Box::new(ButtonDownHandler{}))
             .add_handler(Box::new(ToggleEventHandler{}))
             .add_handler(Box::new(PropsChangeEventHandler{}));
@@ -101,9 +104,8 @@ impl ToggleButtonBuilder {
                     off_text: &'static str,
                     font_id: Id) -> Self {
 
-        let active = btreeset!{WidgetProperty::Activated};
         let mut style = LinkedHashMap::new();
-        style.insert(active, on_text.to_owned());
+        style.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
 
         let text_style = StyleSheet::new(style, off_text.to_owned());
         let font_id_style = StyleSheet::new_default(font_id);
@@ -119,7 +121,7 @@ impl ToggleButtonBuilder {
             background_color: background_color_style,
         };
 
-        let button_text_drawable = TextDrawable::new(off_text.to_owned(), font_id, 20.0, BLACK, TRANSPARENT);
+        let button_text_drawable = TextDrawable::new_style(&text_style_set);
         let button_text_dims = button_text_drawable.measure_dims_no_wrap();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(text::draw_text, Box::new(button_text_drawable))

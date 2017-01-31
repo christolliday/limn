@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use graphics;
 use graphics::types::Color;
-use widget::{StyleArgs, DrawArgs, WidgetProperty};
+use widget::{StyleArgs, DrawArgs, PropSet};
 use widget::style::{StyleSheet, DrawableStyle};
 
 pub struct RectDrawable {
@@ -38,11 +38,12 @@ pub fn apply_rect_style(args: StyleArgs) {
     let style: &RectStyle = args.style.downcast_ref().unwrap();
     style.apply(state, args.props);
 }
+#[derive(Clone)]
 pub struct RectStyle {
     pub background: StyleSheet<Color>,
 }
 impl DrawableStyle<RectDrawable> for RectStyle {
-    fn apply(&self, drawable: &mut RectDrawable, props: &BTreeSet<WidgetProperty>) {
+    fn apply(&self, drawable: &mut RectDrawable, props: &PropSet) {
         drawable.background = self.background.apply(props).clone();
     }
 }

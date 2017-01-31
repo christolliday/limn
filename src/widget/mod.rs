@@ -22,18 +22,19 @@ use self::layout::WidgetLayout;
 use self::style::DrawableStyle;
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
-pub enum WidgetProperty {
+pub enum Property {
     Hover,
     Activated,
     Selected,
     Pressed,
 }
+pub type PropSet = BTreeSet<Property>;
 
 pub struct ChangePropEvent {
-    val: (WidgetProperty, bool),
+    val: (Property, bool),
 }
 impl ChangePropEvent {
-    pub fn new(prop: WidgetProperty, add: bool) -> Self {
+    pub fn new(prop: Property, add: bool) -> Self {
         ChangePropEvent { val: (prop, add) }
     }
 }
@@ -52,7 +53,7 @@ impl EventHandler for PropsChangeEventHandler {
         event::WIDGET_CHANGE_PROP
     }
     fn handle_event(&mut self, args: EventArgs) {
-        let &(ref prop, add) = args.event.data::<(WidgetProperty, bool)>();
+        let &(ref prop, add) = args.event.data::<(Property, bool)>();
         if add {
             args.props.insert(prop.clone());
         } else {
@@ -86,7 +87,7 @@ impl Event for WidgetNotifyEvent {
 
 pub struct DrawArgs<'a, 'b: 'a> {
     pub state: &'a Any,
-    pub props: &'a BTreeSet<WidgetProperty>,
+    pub props: &'a PropSet,
     pub bounds: Rectangle,
     pub parent_bounds: Rectangle,
     pub glyph_cache: &'a mut GlyphCache,
@@ -100,7 +101,7 @@ pub struct EventArgs<'a> {
     pub state: &'a mut WidgetState,
     pub style: &'a Option<Box<Any>>,
     pub style_fn: Option<fn(StyleArgs)>,
-    pub props: &'a mut BTreeSet<WidgetProperty>,
+    pub props: &'a mut PropSet,
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
@@ -109,7 +110,7 @@ pub struct EventArgs<'a> {
 pub struct StyleArgs<'a> {
     pub state: &'a mut Any,
     pub style: &'a Any,
-    pub props: &'a BTreeSet<WidgetProperty>,
+    pub props: &'a PropSet,
 }
 
 pub trait EventHandler {
@@ -146,13 +147,13 @@ pub struct Widget {
     pub style_fn: Option<fn(StyleArgs)>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
-    pub props: BTreeSet<WidgetProperty>,
+    pub props: PropSet,
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
 }
 
-fn apply_style(state: &mut WidgetState, style: &Option<Box<Any>>, style_fn: Option<fn(StyleArgs)>, props: &BTreeSet<WidgetProperty>) {
+fn apply_style(state: &mut WidgetState, style: &Option<Box<Any>>, style_fn: Option<fn(StyleArgs)>, props: &PropSet) {
     if let (Some(drawable), Some(style), Some(style_fn)) = (state.state.as_mut(), style.as_ref(), style_fn) {
         style_fn(StyleArgs {
             state: drawable.as_mut(),
