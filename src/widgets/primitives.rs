@@ -1,4 +1,6 @@
 use std::collections::BTreeSet;
+use std::any::Any;
+use std::ops::Index;
 
 use graphics;
 use graphics::types::Color;
@@ -15,6 +17,19 @@ pub fn rect_drawable(style: RectStyle) -> Drawable {
 pub struct RectDrawState {
     pub background: Color,
 }
+pub enum RectField {
+    Background
+}
+
+impl<RectField> Index<RectField> for RectDrawState {
+    type Output = Any;
+    fn index(&self, field: RectField) -> &Any {
+        match field {
+            Background => &self.background
+        }
+    }
+}
+
 pub fn draw_rect(args: DrawArgs) {
     let DrawArgs { state, bounds, context, graphics, .. } = args;
     let state: &RectDrawState = state.downcast_ref().unwrap();

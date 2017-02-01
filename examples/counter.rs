@@ -8,11 +8,12 @@ use std::any::Any;
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{self, TextDrawState, TEXT_STYLE_DEFAULT};
+use limn::widgets::text::{self, TextDrawState};
 use limn::widgets::button::PushButtonBuilder;
 use limn::event::{self, EventId, EventAddress};
 use limn::resources::Id;
 use limn::color::*;
+use limn::theme::STYLE_TEXT;
 
 const COUNTER: EventId = EventId("COUNTER");
 const COUNT: EventId = EventId("COUNT");
@@ -41,7 +42,7 @@ fn main() {
             }
         }
     }
-    let text_style = TEXT_STYLE_DEFAULT.clone().with_text("0").with_background_color(WHITE).clone();
+    let text_style = STYLE_TEXT.clone().with_text("0").with_background_color(WHITE).clone();
     let text_drawable = text::text_drawable(text_style);
     let text_dims = text::measure_dims_no_wrap(&text_drawable);
     let mut text_widget = WidgetBuilder::new()

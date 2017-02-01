@@ -5,15 +5,16 @@ mod util;
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::{EventHandler, EventArgs, Property, PropsChangeEventHandler};
-use limn::widgets::text::{self, TEXT_STYLE_DEFAULT};
+use limn::widgets::text;
 use limn::widgets::primitives;
-use limn::widgets::list::{ListHandler, ListItemHandler, LIST_ITEM_STYLE_DEFAULT};
+use limn::widgets::list::{ListHandler, ListItemHandler};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widgets::hover::HoverHandler;
 use limn::resources::Id;
 use limn::event::{self, EventId, EventAddress};
 use limn::util::Dimensions;
 use limn::color::*;
+use limn::theme::{STYLE_TEXT, STYLE_LIST_ITEM};
 
 
 fn main() {
@@ -42,12 +43,12 @@ fn main() {
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
             let text_style =
-                TEXT_STYLE_DEFAULT.clone().with_text("hello").with_text_color(WHITE).clone();
+                STYLE_TEXT.clone().with_text("hello").with_text_color(WHITE).clone();
             let text_drawable = text::text_drawable(text_style);
             let text_dims = text::measure_dims_no_wrap(&text_drawable);
 
             let mut list_item_widget = WidgetBuilder::new()
-                .set_drawable(primitives::rect_drawable(LIST_ITEM_STYLE_DEFAULT.clone()))
+                .set_drawable(primitives::rect_drawable(STYLE_LIST_ITEM.clone()))
                 .set_debug_name("item")
                 .add_handler(Box::new(HoverHandler {}))
                 .add_handler(Box::new(PropsChangeEventHandler {}))

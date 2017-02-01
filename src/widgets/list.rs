@@ -10,22 +10,6 @@ use color::*;
 
 const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("limn/list_item_selected");
 
-static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
-static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
-static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
-
-lazy_static! {
-    pub static ref STATE_DEFAULT: PropSet = btreeset!{};
-    pub static ref STATE_SELECTED: PropSet = btreeset!{Property::Selected};
-    pub static ref STATE_HOVER: PropSet = btreeset!{Property::Hover};
-    pub static ref LIST_ITEM_STYLE_DEFAULT: RectStyle = {
-        let mut selector = LinkedHashMap::new();
-        selector.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
-        selector.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
-        RectStyle { background: Value::Selector((selector, COLOR_LIST_ITEM_DEFAULT)) }
-    };
-}
-
 pub struct ListHandler {
     selected: Option<Id>,
 }

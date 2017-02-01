@@ -21,3 +21,4 @@ pub mod text;
 pub mod resources;
 pub mod event;
 pub mod color;
+pub mod theme;

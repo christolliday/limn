@@ -9,33 +9,15 @@ use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, 
              PropSet};
 use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use widgets::primitives::{self, RectStyle};
-use widgets::text::{self, TextStyle, TEXT_STYLE_DEFAULT};
+use widgets::text::{self, TextStyle};
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
+use theme::{STATE_ACTIVATED};
+use theme::{STYLE_TEXT, STYLE_TOGGLE_BUTTON};
 use util::Dimensions;
 use resources::Id;
 use color::*;
 
-
-static COLOR_BUTTON_DEFAULT: Color = RED;
-static COLOR_BUTTON_PRESSED: Color = [0.8, 0.0, 0.0, 1.0];
-static COLOR_BUTTON_ACTIVATED: Color = WHITE;
-static COLOR_BUTTON_ACTIVATED_PRESSED: Color = [0.9, 0.9, 0.9, 1.0];
-
-lazy_static! {
-    pub static ref STATE_DEFAULT: PropSet = btreeset!{};
-    pub static ref STATE_PRESSED: PropSet = btreeset!{Property::Pressed};
-    pub static ref STATE_ACTIVATED: PropSet = btreeset!{Property::Activated};
-    pub static ref STATE_ACTIVATED_PRESSED: PropSet = btreeset!{Property::Activated, Property::Pressed};
-    pub static ref TOGGLE_RECT_STYLE: RectStyle = {
-        let mut selector = LinkedHashMap::new();
-        selector.insert(STATE_ACTIVATED_PRESSED.deref().clone(), COLOR_BUTTON_ACTIVATED_PRESSED);
-        selector.insert(STATE_ACTIVATED.deref().clone(), COLOR_BUTTON_ACTIVATED);
-        selector.insert(STATE_PRESSED.deref().clone(), COLOR_BUTTON_PRESSED);
-        selector.insert(STATE_DEFAULT.deref().clone(), COLOR_BUTTON_DEFAULT);
-        RectStyle { background: Value::Selector((selector, COLOR_BUTTON_DEFAULT)) }
-    };
-}
 
 // show whether button is held down or not
 pub struct ButtonDownHandler {}
@@ -95,7 +77,7 @@ impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(TOGGLE_RECT_STYLE.clone()))
+            .set_drawable(primitives::rect_drawable(STYLE_TOGGLE_BUTTON.clone()))
             .add_handler(Box::new(ButtonDownHandler {}))
             .add_handler(Box::new(ToggleEventHandler {}))
             .add_handler(Box::new(PropsChangeEventHandler {}));
@@ -111,7 +93,7 @@ impl ToggleButtonBuilder {
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
         let text_style_value = Value::Selector((selector, off_text.to_owned()));
-        let mut text_style = TEXT_STYLE_DEFAULT.clone();
+        let mut text_style = STYLE_TEXT.clone();
         text_style.text = text_style_value;
 
         let button_text_drawable = text::text_drawable(text_style);
@@ -133,7 +115,7 @@ pub struct PushButtonBuilder {
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(TOGGLE_RECT_STYLE.clone()));
+            .set_drawable(primitives::rect_drawable(STYLE_TOGGLE_BUTTON.clone()));
 
         widget.layout.dimensions(Dimensions {
             width: 100.0,
@@ -144,7 +126,7 @@ impl PushButtonBuilder {
     }
     pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
 
-        let button_text_style = TEXT_STYLE_DEFAULT.clone().with_text(text).clone();
+        let button_text_style = STYLE_TEXT.clone().with_text(text).clone();
         let drawable = text::text_drawable(button_text_style);
         let button_text_dims = text::measure_dims_no_wrap(&drawable);
         let mut button_text_widget = WidgetBuilder::new().set_drawable(drawable);

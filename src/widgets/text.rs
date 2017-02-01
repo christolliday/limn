@@ -13,23 +13,6 @@ use color::*;
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, Property, PropSet};
 use widget::style::Value;
 
-lazy_static! {
-    pub static ref TEXT_STYLE_DEFAULT: TextStyle = {
-        let text_style = Value::Single("".to_owned());
-        let font_id_style = Value::Single(Id(0)); // make first font loaded default for now
-        let font_size_style = Value::Single(20.0);
-        let text_color_style = Value::Single(BLACK);
-        let background_color_style = Value::Single(TRANSPARENT);
-        TextStyle {
-            text: text_style,
-            font_id: font_id_style,
-            font_size: font_size_style,
-            text_color: text_color_style,
-            background_color: background_color_style,
-        }
-    };
-}
-
 pub fn text_drawable(style: TextStyle) -> Drawable {
     let draw_state = TextDrawState::new_style(&style);
     let mut drawable = Drawable::new(Box::new(draw_state), draw_text);
