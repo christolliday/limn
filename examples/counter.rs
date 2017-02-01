@@ -35,8 +35,10 @@ fn main() {
             COUNT
         }
         fn handle_event(&mut self, args: EventArgs) {
-            let count = args.data.downcast_ref::<u32>().unwrap();
-            args.state.update(|state: &mut TextDrawable| state.text = format!("{}", count));
+            if let Some(drawable) = args.drawable.as_mut() {
+                let count = args.data.downcast_ref::<u32>().unwrap();
+                drawable.state.update(|state: &mut TextDrawable| state.text = format!("{}", count));
+            }
         }
     }
     let text_drawable = TextDrawable::new_style(TEXT_STYLE_DEFAULT.clone().with_text("0").with_background_color(WHITE));

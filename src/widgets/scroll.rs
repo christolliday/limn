@@ -3,7 +3,7 @@ use std::any::Any;
 use glutin;
 use cassowary::strength::*;
 
-use event::{self, EventId, EventAddress};
+use event::{self, EventId, EventAddress, WIDGET_REDRAW};
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
@@ -69,6 +69,6 @@ impl EventHandler for WidgetScrollHandler {
             solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
             solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
         }
-        args.state.has_updated = true;
+        args.event_queue.push(EventAddress::Root, WIDGET_REDRAW, Box::new(()));
     }
 }

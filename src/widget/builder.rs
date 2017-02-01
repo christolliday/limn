@@ -12,7 +12,7 @@ use util::{self, Point, Rectangle};
 pub struct WidgetBuilder {
     pub id: Id,
     pub draw_fn: Option<fn(DrawArgs)>,
-    pub drawable: WidgetState,
+    pub drawable: Option<WidgetState>,
     pub style: Option<Box<Any>>,
     pub style_fn: Option<fn(StyleArgs)>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
@@ -28,7 +28,7 @@ impl WidgetBuilder {
         WidgetBuilder {
             id: resources().widget_id(),
             draw_fn: None,
-            drawable: WidgetState::new(),
+            drawable: None,
             style: None,
             style_fn: None,
             mouse_over_fn: util::point_inside_rect,
@@ -41,7 +41,7 @@ impl WidgetBuilder {
     }
     pub fn set_drawable(mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) -> Self {
         self.draw_fn = Some(draw_fn);
-        self.drawable = WidgetState::new_state(drawable);
+        self.drawable = Some(WidgetState::new(drawable));
         self
     }
     pub fn set_style(mut self, style_fn: fn(StyleArgs), style: Box<Any>) -> Self {

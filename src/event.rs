@@ -23,6 +23,8 @@ pub const WIDGET_RELEASE: EventId = EventId("limn/widget_release");
 pub const WIDGET_CHANGE_PROP: EventId = EventId("limn/widget_change_prop");
 pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props_changed");
 
+pub const WIDGET_REDRAW: EventId = EventId("limn/widget_redraw");
+
 pub enum Hover {
     Over,
     Out,
@@ -34,6 +36,7 @@ pub enum EventAddress {
     Child(Id),
     SubTree(Id),
     UnderMouse,
+    Root,
 }
 
 #[derive(Clone)]

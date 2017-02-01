@@ -21,7 +21,7 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_HOVER, WIDGET_SCROLL, WIDGET_PRESS};
+use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_REDRAW, WIDGET_HOVER, WIDGET_SCROLL, WIDGET_PRESS};
 use util::{self, Point, Rectangle, Dimensions};
 use resources::Id;
 use color::*;
@@ -217,6 +217,11 @@ impl Ui {
                             self.input_state.last_over.insert(widget.id);
                         }
                     }
+                },
+                EventAddress::Root => {
+                    if event_id == WIDGET_REDRAW {
+                        self.dirty_widgets.insert(self.root_index.unwrap());
+                    }
                 }
             }
         }
@@ -239,9 +244,11 @@ impl Ui {
     fn trigger_widget_event(&mut self, node_index: NodeIndex, event_id: EventId, data: &(Any + 'static)) {
         let ref mut widget = self.graph[node_index];
         widget.trigger_event(event_id, data, &mut self.event_queue, &mut self.solver);
-        if widget.drawable.has_updated {
-            self.dirty_widgets.insert(node_index);
-            widget.drawable.has_updated = false;
+        if let Some(ref mut drawable) = widget.drawable {
+            if drawable.state.has_updated {
+                self.dirty_widgets.insert(node_index);
+                drawable.state.has_updated = false;
+            }
         }
     }
 }

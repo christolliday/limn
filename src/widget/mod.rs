@@ -43,9 +43,7 @@ pub struct DrawArgs<'a, 'b: 'a> {
 pub struct EventArgs<'a> {
     pub data: &'a (Any + 'static),
     pub widget_id: Id,
-    pub state: &'a mut WidgetState,
-    pub style: &'a Option<Box<Any>>,
-    pub style_fn: Option<fn(StyleArgs)>,
+    pub drawable: &'a mut Option<Drawable>,
     pub props: &'a mut PropSet,
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
@@ -60,36 +58,37 @@ pub struct StyleArgs<'a> {
 
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, mut event_args: EventArgs);
+    fn handle_event(&mut self, args: EventArgs);
+}
+
+pub struct Drawable {
+    pub state: WidgetState,
+    pub draw_fn: fn(DrawArgs),
+    pub style: Option<Box<Any>>,
+    pub style_fn: Option<fn(StyleArgs)>,
 }
 
 pub struct WidgetState {
-    state: Option<Box<Any>>,
+    state: Box<Any>,
     pub has_updated: bool,
 }
 impl WidgetState {
-    pub fn new() -> Self {
-        WidgetState { state: None, has_updated: false }
-    }
-    pub fn new_state(state: Box<Any>) -> Self {
-        WidgetState { state: Some(state), has_updated: false }
+    pub fn new(state: Box<Any>) -> Self {
+        WidgetState { state: state, has_updated: false }
     }
     pub fn update<F, T: 'static>(&mut self, f: F) where F: FnOnce(&mut T) {
         self.has_updated = true;
-        let state = self.state.as_mut().map(|state| state.as_mut()).unwrap().downcast_mut::<T>().unwrap();
+        let state = self.state.as_mut().downcast_mut::<T>().unwrap();
         f(state);
     }
     pub fn state<T: 'static>(&self) -> &T {
-        self.state.as_ref().map(|draw| draw.as_ref()).unwrap().downcast_ref::<T>().unwrap()
+        self.state.as_ref().downcast_ref::<T>().unwrap()
     }
 }
 
 pub struct Widget {
     pub id: Id,
-    pub draw_fn: Option<fn(DrawArgs)>,
-    pub drawable: WidgetState,
-    pub style: Option<Box<Any>>,
-    pub style_fn: Option<fn(StyleArgs)>,
+    pub drawable: Option<Drawable>,
     pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
     pub props: PropSet,
@@ -98,20 +97,18 @@ pub struct Widget {
     pub debug_color: Option<Color>,
 }
 
-fn apply_style(state: &mut WidgetState, style: &Option<Box<Any>>, style_fn: Option<fn(StyleArgs)>, props: &PropSet) {
-    if let (Some(drawable), Some(style), Some(style_fn)) = (state.state.as_mut(), style.as_ref(), style_fn) {
-        style_fn(StyleArgs {
-            state: drawable.as_mut(),
-            style: style.as_ref(),
-            props: props,
-        });
-        state.has_updated = true;
-    }
+fn apply_style(state: &mut WidgetState, style: &Box<Any>, style_fn: fn(StyleArgs), props: &PropSet) {
+    style_fn(StyleArgs {
+        state: state.state.as_mut(),
+        style: style.as_ref(),
+        props: props,
+    });
+    state.has_updated = true;
 }
 impl Widget {
     pub fn new(id: Id,
                draw_fn: Option<fn(DrawArgs)>,
-               drawable: WidgetState,
+               state: Option<WidgetState>,
                style: Option<Box<Any>>,
                style_fn: Option<fn(StyleArgs)>,
                mouse_over_fn: fn(Point, Rectangle) -> bool,
@@ -121,15 +118,19 @@ impl Widget {
                debug_color: Option<Color>,
                ) -> Self {
 
-        let mut drawable = drawable;
         let props = BTreeSet::new();
-        apply_style(&mut drawable, &style, style_fn, &props);
+        let drawable = if let Some(state) = state {
+            let mut drawable = Drawable { state: state, draw_fn: draw_fn.unwrap(), style: style, style_fn: style_fn };
+            if let Some(ref style) = drawable.style {
+                apply_style(&mut drawable.state, &style, drawable.style_fn.unwrap(), &props);
+            }
+            Some(drawable)
+        } else {
+            None
+        };
         Widget {
             id: id,
-            draw_fn: draw_fn,
             drawable: drawable,
-            style: style,
-            style_fn: style_fn,
             mouse_over_fn: mouse_over_fn,
             layout: layout,
             props: props,
@@ -145,11 +146,11 @@ impl Widget {
                 context: Context,
                 graphics: &mut G2d) {
 
-        if let (Some(draw_fn), Some(ref mut drawable)) = (self.draw_fn, self.drawable.state.as_mut()) {
+        if let Some(drawable) = self.drawable.as_mut() {
             let bounds = self.layout.bounds(solver);
             let context = util::crop_context(context, crop_to);
-            draw_fn(DrawArgs {
-                state: drawable.as_ref(),
+            (drawable.draw_fn)(DrawArgs {
+                state: drawable.state.state.as_ref(),
                 props: &self.props,
                 bounds: bounds,
                 parent_bounds: crop_to,
@@ -174,9 +175,7 @@ impl Widget {
                 event_handler.handle_event(EventArgs {
                     data: data,
                     widget_id: self.id,
-                    state: &mut self.drawable,
-                    style: &self.style,
-                    style_fn: self.style_fn,
+                    drawable: &mut self.drawable,
                     layout: &mut self.layout,
                     props: &mut self.props,
                     event_queue: event_queue,
@@ -199,8 +198,12 @@ impl EventHandler for PropsChangeEventHandler {
         } else {
             args.props.remove(prop);
         }
-        apply_style(args.state, args.style, args.style_fn, args.props);
-        args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED, Box::new(()));
+        if let Some(drawable) = args.drawable.as_mut() {
+            if let Some(ref style) = drawable.style {
+                apply_style(&mut drawable.state, &style, drawable.style_fn.unwrap(), args.props);
+                args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED, Box::new(()));
+            }
+        }
     }
 }
 
@@ -220,9 +223,11 @@ impl<T: 'static> EventHandler for DrawableEventHandler<T> {
     fn event_id(&self) -> EventId {
         self.event_id
     }
-    fn handle_event(&mut self, mut event_args: EventArgs) {
-        event_args.state.update(|state: &mut T|
-            (self.drawable_callback)(state)
-        );
+    fn handle_event(&mut self, args: EventArgs) {
+        if let Some(drawable) = args.drawable.as_mut() {
+            drawable.state.update(|state: &mut T|
+                (self.drawable_callback)(state)
+            );
+        }
     }
 }
