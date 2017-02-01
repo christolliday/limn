@@ -4,7 +4,7 @@ use graphics::types::Color;
 use petgraph::graph::NodeIndex;
 
 use ui::{self, Ui};
-use widget::{Drawable, Widget, WidgetStyle, EventHandler, StyleArgs, DrawArgs, WidgetState};
+use widget::{Drawable, Widget, WidgetStyle, EventHandler, StyleArgs, DrawArgs};
 use widget::layout::WidgetLayout;
 use resources::{resources, Id};
 use util::{self, Point, Rectangle};
@@ -32,14 +32,8 @@ impl WidgetBuilder {
             children: Vec::new(),
         }
     }
-    pub fn set_drawable(mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) -> Self {
-        self.drawable = Some(Drawable { state: WidgetState::new(drawable), draw_fn: draw_fn, style: None, mouse_over_fn: None });
-        self
-    }
-    pub fn set_style(mut self, style_fn: fn(StyleArgs), style: Box<Any>) -> Self {
-        if let Some(ref mut drawable) = self.drawable {
-            drawable.style = Some(WidgetStyle { style: style, style_fn: style_fn });
-        }
+    pub fn set_drawable(mut self, drawable: Drawable) -> Self {
+        self.drawable = Some(drawable);
         self
     }
     pub fn set_mouse_over_fn(mut self, mouse_over_fn: fn(Point, Rectangle) -> bool) -> Self {

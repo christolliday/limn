@@ -3,16 +3,20 @@ use graphics::{self, Transformed};
 use backend::gfx::ImageSize;
 
 use resources::{Id, resources};
-use widget::DrawArgs;
+use widget::{Drawable, DrawArgs};
 use util::Dimensions;
 
-pub struct ImageDrawable {
+pub fn image_drawable(image_id: Id) -> Drawable {
+    let draw_state = ImageDrawState::new(image_id);
+    Drawable::new(Box::new(draw_state), draw_image)
+}
+pub struct ImageDrawState {
     pub image_id: Id,
     pub scale: Dimensions,
 }
-impl ImageDrawable {
+impl ImageDrawState {
     pub fn new(image_id: Id) -> Self {
-        ImageDrawable {
+        ImageDrawState {
             image_id: image_id,
             scale: Dimensions {
                 width: 1.0,
@@ -30,9 +34,14 @@ impl ImageDrawable {
     }
 }
 
+pub fn measure_image(drawable: &Drawable) -> Dimensions {
+    let draw_state: &ImageDrawState = drawable.state();
+    draw_state.measure_image()
+}
+
 pub fn draw_image(draw_args: DrawArgs) {
     let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
-    let state: &ImageDrawable = state.downcast_ref().unwrap();
+    let state: &ImageDrawState = state.downcast_ref().unwrap();
 
     let res = resources();
     let img = res.images.get(state.image_id).unwrap();

@@ -2,7 +2,7 @@ use linked_hash_map::LinkedHashMap;
 use graphics::types::Color;
 
 use widget::{EventArgs, EventHandler, Property, PropSet};
-use widgets::primitives::{RectDrawable, RectStyle};
+use widgets::primitives::RectStyle;
 use widget::style::StyleSheet;
 use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use resources::Id;

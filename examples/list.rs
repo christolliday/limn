@@ -5,8 +5,8 @@ mod util;
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::{EventHandler, EventArgs, Property, PropsChangeEventHandler};
-use limn::widgets::text::{self, TextDrawable, TEXT_STYLE_DEFAULT};
-use limn::widgets::primitives::{self, RectDrawable};
+use limn::widgets::text::{self, TEXT_STYLE_DEFAULT};
+use limn::widgets::primitives;
 use limn::widgets::list::{ListHandler, ListItemHandler, LIST_ITEM_STYLE_DEFAULT};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widgets::hover::HoverHandler;
@@ -38,13 +38,12 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget.layout);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
-            let text_drawable = TextDrawable::new_style(TEXT_STYLE_DEFAULT.clone().with_text("hello").with_text_color(WHITE));
-            let text_dims = text_drawable.measure_dims_no_wrap();
+            let text_style = TEXT_STYLE_DEFAULT.clone().with_text("hello").with_text_color(WHITE).clone();
+            let text_drawable = text::text_drawable(text_style);
+            let text_dims = text::measure_dims_no_wrap(&text_drawable);
 
-            let rect_drawable = RectDrawable::new(&LIST_ITEM_STYLE_DEFAULT);
             let mut list_item_widget = WidgetBuilder::new()
-                .set_drawable(primitives::draw_rect, Box::new(rect_drawable))
-                .set_style(primitives::apply_rect_style, Box::new(LIST_ITEM_STYLE_DEFAULT.clone()))
+                .set_drawable(primitives::rect_drawable(LIST_ITEM_STYLE_DEFAULT.clone()))
                 .set_debug_name("item")
                 .add_handler(Box::new(HoverHandler{}))
                 .add_handler(Box::new(PropsChangeEventHandler{}))
@@ -54,7 +53,7 @@ fn main() {
             linear_layout.add_widget(&mut list_item_widget.layout);
 
             let mut list_text_widget = WidgetBuilder::new()
-                .set_drawable(text::draw_text, Box::new(text_drawable))
+                .set_drawable(text_drawable)
                 .set_debug_name("text");
             list_text_widget.layout.center(&list_item_widget.layout);
             list_item_widget.add_child(Box::new(list_text_widget));

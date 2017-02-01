@@ -245,9 +245,9 @@ impl Ui {
         let ref mut widget = self.graph[node_index];
         widget.trigger_event(event_id, data, &mut self.event_queue, &mut self.solver);
         if let Some(ref mut drawable) = widget.drawable {
-            if drawable.state.has_updated {
+            if drawable.has_updated {
                 self.dirty_widgets.insert(node_index);
-                drawable.state.has_updated = false;
+                drawable.has_updated = false;
             }
         }
     }

@@ -10,7 +10,7 @@ use text::{self, Wrap};
 use resources::{Id, resources};
 use util::{self, Dimensions, Align, Scalar};
 use color::*;
-use widget::{StyleArgs, DrawArgs, Property, PropSet};
+use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, Property, PropSet};
 use widget::style::{DrawableStyle, StyleSheet};
 
 lazy_static! {
@@ -30,7 +30,14 @@ lazy_static! {
     };
 }
 
-pub struct TextDrawable {
+pub fn text_drawable(style: TextStyle) -> Drawable {
+    let draw_state = TextDrawState::new_style(&style);
+    let mut drawable = Drawable::new(Box::new(draw_state), draw_text);
+    drawable.style = Some(WidgetStyle::new(Box::new(style), apply_text_style));
+    drawable
+}
+
+pub struct TextDrawState {
     pub text: String,
     pub font_id: Id,
     pub font_size: Scalar,
@@ -39,7 +46,7 @@ pub struct TextDrawable {
 }
 
 pub fn apply_text_style(args: StyleArgs) {
-    let state: &mut TextDrawable = args.state.downcast_mut().unwrap();
+    let state: &mut TextDrawState = args.state.downcast_mut().unwrap();
     let style: &TextStyle = args.style.downcast_ref().unwrap();
     style.apply(state, args.props);
 }
@@ -66,8 +73,8 @@ impl TextStyle {
         self
     }
 }
-impl DrawableStyle<TextDrawable> for TextStyle {
-    fn apply(&self, drawable: &mut TextDrawable, props: &PropSet) {
+impl DrawableStyle<TextDrawState> for TextStyle {
+    fn apply(&self, drawable: &mut TextDrawState, props: &PropSet) {
         drawable.text = self.text.apply(props).clone();
         drawable.font_id = self.font_id.apply(props).clone();
         drawable.font_size = self.font_size.apply(props).clone();
@@ -75,9 +82,15 @@ impl DrawableStyle<TextDrawable> for TextStyle {
         drawable.background_color = self.background_color.apply(props).clone();
     }
 }
-impl TextDrawable {
+
+pub fn measure_dims_no_wrap(drawable: &Drawable) -> Dimensions {
+    let draw_state: &TextDrawState = drawable.state();
+    draw_state.measure_dims_no_wrap()
+}
+
+impl TextDrawState {
     pub fn new_default(text: String, font_id: Id) -> Self {
-        TextDrawable {
+        TextDrawState {
             text: text,
             font_id: font_id,
             font_size: 24.0,
@@ -86,10 +99,10 @@ impl TextDrawable {
         }
     }
     pub fn new_style(style: &TextStyle) -> Self {
-        TextDrawable::new(style.text.default.clone(), style.font_id.default, style.font_size.default, style.text_color.default, style.background_color.default)
+        TextDrawState::new(style.text.default.clone(), style.font_id.default, style.font_size.default, style.text_color.default, style.background_color.default)
     }
     pub fn new(text: String, font_id: Id, font_size: Scalar, text_color: Color, background_color: Color) -> Self {
-        TextDrawable {
+        TextDrawState {
             text: text,
             font_id: font_id,
             font_size: font_size,
@@ -124,7 +137,7 @@ impl TextDrawable {
 pub fn draw_text(draw_args: DrawArgs) {
 
     let DrawArgs { state, bounds, glyph_cache, context, graphics, .. } = draw_args;
-    let state: &TextDrawable = state.downcast_ref().unwrap();
+    let state: &TextDrawState = state.downcast_ref().unwrap();
 
     graphics::Rectangle::new(state.background_color)
         .draw(bounds, &context.draw_state, context.transform, graphics);

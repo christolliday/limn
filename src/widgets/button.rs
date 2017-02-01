@@ -7,8 +7,8 @@ use graphics::types::Color;
 
 use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property, PropSet};
 use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
-use widgets::primitives::{self, RectDrawable, RectStyle};
-use widgets::text::{self, TextDrawable, TextStyle, TEXT_STYLE_DEFAULT};
+use widgets::primitives::{self, RectStyle};
+use widgets::text::{self, TextStyle, TEXT_STYLE_DEFAULT};
 use widget::builder::WidgetBuilder;
 use widget::style::StyleSheet;
 use util::Dimensions;
@@ -82,11 +82,9 @@ pub struct ToggleButtonBuilder {
 }
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
-        let rect = RectDrawable::new(&TOGGLE_RECT_STYLE);
 
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::draw_rect, Box::new(rect))
-            .set_style(primitives::apply_rect_style, Box::new(TOGGLE_RECT_STYLE.clone()))
+            .set_drawable(primitives::rect_drawable(TOGGLE_RECT_STYLE.clone()))
             .add_handler(Box::new(ButtonDownHandler{}))
             .add_handler(Box::new(ToggleEventHandler{}))
             .add_handler(Box::new(PropsChangeEventHandler{}));
@@ -108,11 +106,10 @@ impl ToggleButtonBuilder {
         let mut text_style_set = TEXT_STYLE_DEFAULT.clone();
         text_style_set.text = text_style;
 
-        let button_text_drawable = TextDrawable::new_style(&text_style_set);
-        let button_text_dims = button_text_drawable.measure_dims_no_wrap();
+        let button_text_drawable = text::text_drawable(text_style_set);
+        let button_text_dims = text::measure_dims_no_wrap(&button_text_drawable);
         let mut button_text_widget = WidgetBuilder::new()
-            .set_drawable(text::draw_text, Box::new(button_text_drawable))
-            .set_style(text::apply_text_style, Box::new(text_style_set))
+            .set_drawable(button_text_drawable)
             .add_handler(Box::new(PropsChangeEventHandler{}));
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
@@ -127,9 +124,8 @@ pub struct PushButtonBuilder {
 }
 impl PushButtonBuilder {
     pub fn new() -> Self {
-        let rect = RectDrawable { background: RED };
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::draw_rect, Box::new(rect));
+            .set_drawable(primitives::rect_drawable(TOGGLE_RECT_STYLE.clone()));
 
         widget.layout.dimensions(Dimensions {
             width: 100.0,
@@ -140,10 +136,11 @@ impl PushButtonBuilder {
     }
     pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
 
-        let button_text_drawable = TextDrawable::new_style(TEXT_STYLE_DEFAULT.clone().with_text(text));
-        let button_text_dims = button_text_drawable.measure_dims_no_wrap();
+        let button_text_style = TEXT_STYLE_DEFAULT.clone().with_text(text).clone();
+        let drawable = text::text_drawable(button_text_style);
+        let button_text_dims = text::measure_dims_no_wrap(&drawable);
         let mut button_text_widget = WidgetBuilder::new()
-            .set_drawable(text::draw_text, Box::new(button_text_drawable));
+            .set_drawable(drawable);
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
 

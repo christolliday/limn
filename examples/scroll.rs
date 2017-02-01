@@ -3,8 +3,9 @@ extern crate limn;
 mod util;
 
 use limn::widget::builder::WidgetBuilder;
-use limn::widgets::primitives::{self, RectDrawable};
+use limn::widgets::primitives::{self, RectStyle};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
+use limn::widget::style::StyleSheet;
 use limn::color::*;
 use limn::util::Dimensions;
 
@@ -24,26 +25,30 @@ fn main() {
         .add_handler(Box::new(WidgetScrollHandler::new()));
     rect_container_widget.layout.dimensions(Dimensions { width: 400.0, height: 400.0});
 
+    let style = RectStyle { background: StyleSheet::new_default(RED) };
     let mut rect_tl_widget = WidgetBuilder::new()
-        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: RED }));
+        .set_drawable(primitives::rect_drawable(style));
     rect_tl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_tl_widget.layout.align_top(&rect_container_widget.layout);
     rect_tl_widget.layout.align_left(&rect_container_widget.layout);
 
+    let style = RectStyle { background: StyleSheet::new_default(GREEN) };
     let mut rect_tr_widget = WidgetBuilder::new()
-        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: GREEN }));
+        .set_drawable(primitives::rect_drawable(style));
     rect_tr_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_tr_widget.layout.align_top(&rect_container_widget.layout);
     rect_tr_widget.layout.align_right(&rect_container_widget.layout);
 
+    let style = RectStyle { background: StyleSheet::new_default(BLUE) };
     let mut rect_bl_widget = WidgetBuilder::new()
-        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: BLUE }));
+        .set_drawable(primitives::rect_drawable(style));
     rect_bl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_bl_widget.layout.align_bottom(&rect_container_widget.layout);
     rect_bl_widget.layout.align_left(&rect_container_widget.layout);
 
+    let style = RectStyle { background: StyleSheet::new_default(FUSCHIA) };
     let mut rect_br_widget = WidgetBuilder::new()
-        .set_drawable(primitives::draw_rect, Box::new(RectDrawable { background: FUSCHIA }));
+        .set_drawable(primitives::rect_drawable(style));
     rect_br_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
     rect_br_widget.layout.align_bottom(&rect_container_widget.layout);
     rect_br_widget.layout.align_right(&rect_container_widget.layout);

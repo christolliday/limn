@@ -8,7 +8,7 @@ use std::any::Any;
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{self, TextDrawable, TEXT_STYLE_DEFAULT};
+use limn::widgets::text::{self, TextDrawState, TEXT_STYLE_DEFAULT};
 use limn::widgets::button::PushButtonBuilder;
 use limn::event::{self, EventId, EventAddress};
 use limn::resources::Id;
@@ -37,14 +37,15 @@ fn main() {
         fn handle_event(&mut self, args: EventArgs) {
             if let Some(drawable) = args.drawable.as_mut() {
                 let count = args.data.downcast_ref::<u32>().unwrap();
-                drawable.state.update(|state: &mut TextDrawable| state.text = format!("{}", count));
+                drawable.update(|state: &mut TextDrawState| state.text = format!("{}", count));
             }
         }
     }
-    let text_drawable = TextDrawable::new_style(TEXT_STYLE_DEFAULT.clone().with_text("0").with_background_color(WHITE));
-    let text_dims = text_drawable.measure_dims_no_wrap();
+    let text_style = TEXT_STYLE_DEFAULT.clone().with_text("0").with_background_color(WHITE).clone();
+    let text_drawable = text::text_drawable(text_style);
+    let text_dims = text::measure_dims_no_wrap(&text_drawable);
     let mut text_widget = WidgetBuilder::new()
-        .set_drawable(text::draw_text, Box::new(text_drawable))
+        .set_drawable(text_drawable)
         .add_handler(Box::new(CountHandler {}));
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);

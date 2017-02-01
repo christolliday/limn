@@ -13,9 +13,9 @@ use std::f64;
 use chrono::*;
 use graphics::types::Color;
 
-use limn::widget::{DrawArgs, DrawableEventHandler};
+use limn::widget::{Drawable, DrawArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
-use limn::widgets::primitives::{self, EllipseDrawable};
+use limn::widgets::primitives;
 use limn::event::{EventId, EventAddress, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Dimensions, Scalar};
@@ -36,25 +36,20 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new(mut event_queue: EventQueue) -> Self {
 
-        let circle = EllipseDrawable { background: WHITE, border: Some(graphics::ellipse::Border { color: BLACK, radius: 2.0 }) };
+        let drawable = primitives::ellipse_drawable(WHITE, Some(graphics::ellipse::Border { color: BLACK, radius: 2.0 }));
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::draw_ellipse, Box::new(circle));
+            .set_drawable(drawable);
         widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0 });
 
-        struct HandDrawable {
+        struct HandDrawState {
             color: Color,
             width: Scalar,
             length: Scalar,
             angle: Scalar, // radians
         }
-        impl HandDrawable {
-            fn new(color: Color, width: Scalar, length: Scalar, angle: Scalar) -> Self {
-                HandDrawable { color: color, width: width, length: length, angle: angle }
-            }
-        }
         pub fn draw_clock_hand(draw_args: DrawArgs) {
             let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
-            let state: &HandDrawable = state.downcast_ref().unwrap();
+            let state: &HandDrawState = state.downcast_ref().unwrap();
 
             let cos = state.angle.cos();
             let sin = state.angle.sin();
@@ -71,28 +66,29 @@ impl ClockBuilder {
             graphics::Polygon::new(state.color)
                 .draw(&points, &context.draw_state, context.transform, graphics);
         }
-        let hour_drawable = HandDrawable::new(BLACK, 4.0, 60.0, hour_angle());
-        let minute_drawable = HandDrawable::new(BLACK, 3.0, 90.0, minute_angle());
-        let second_drawable = HandDrawable::new(RED, 2.0, 80.0, second_angle());
+        fn hand_drawable(color: Color, width: Scalar, length: Scalar, angle: Scalar) -> Drawable {
+            let draw_state = HandDrawState { color: color, width: width, length: length, angle: angle };
+            Drawable::new(Box::new(draw_state), draw_clock_hand)
+        }
 
-        fn update_hour_hand(state: &mut HandDrawable) {
+        fn update_hour_hand(state: &mut HandDrawState) {
             state.angle = hour_angle();
         };
-        fn update_minute_hand(state: &mut HandDrawable) {
+        fn update_minute_hand(state: &mut HandDrawState) {
             state.angle = minute_angle();
         };
-        fn update_second_hand(state: &mut HandDrawable) {
+        fn update_second_hand(state: &mut HandDrawState) {
             state.angle = second_angle();
         };
 
         let hour_widget = WidgetBuilder::new()
-            .set_drawable(draw_clock_hand, Box::new(hour_drawable))
+            .set_drawable(hand_drawable(BLACK, 4.0, 60.0, hour_angle()))
             .add_handler(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand)));
         let minute_widget = WidgetBuilder::new()
-            .set_drawable(draw_clock_hand, Box::new(minute_drawable))
+            .set_drawable(hand_drawable(BLACK, 3.0, 90.0, minute_angle()))
             .add_handler(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand)));
         let second_widget = WidgetBuilder::new()
-            .set_drawable(draw_clock_hand, Box::new(second_drawable))
+            .set_drawable(hand_drawable(RED, 2.0, 80.0, second_angle()))
             .add_handler(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_second_hand)));
 
         widget.add_child(Box::new(hour_widget));
