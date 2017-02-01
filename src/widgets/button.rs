@@ -5,7 +5,8 @@ use glutin;
 use linked_hash_map::LinkedHashMap;
 use graphics::types::Color;
 
-use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property, PropSet};
+use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property,
+             PropSet};
 use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use widgets::primitives::{self, RectStyle};
 use widgets::text::{self, TextStyle, TEXT_STYLE_DEFAULT};
@@ -49,8 +50,11 @@ impl EventHandler for ButtonDownHandler {
                     glutin::ElementState::Pressed => true,
                     glutin::ElementState::Released => false,
                 };
-                args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Pressed, pressed)));
-            }, _ => ()
+                args.event_queue.push(EventAddress::SubTree(args.widget_id),
+                                      WIDGET_CHANGE_PROP,
+                                      Box::new((Property::Pressed, pressed)));
+            }
+            _ => (),
         }
     }
 }
@@ -70,11 +74,15 @@ impl EventHandler for ToggleEventHandler {
                     glutin::ElementState::Released => {
                         if let &mut Some(ref drawable) = args.drawable {
                             let activated = drawable.props.contains(&Property::Activated);
-                            event_queue.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Activated, !activated)));
+                            event_queue.push(EventAddress::SubTree(widget_id),
+                                             WIDGET_CHANGE_PROP,
+                                             Box::new((Property::Activated, !activated)));
                         }
-                    }, _ => ()
+                    }
+                    _ => (),
                 }
-            }, _ => ()
+            }
+            _ => (),
         }
     }
 }
@@ -87,9 +95,9 @@ impl ToggleButtonBuilder {
 
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::rect_drawable(TOGGLE_RECT_STYLE.clone()))
-            .add_handler(Box::new(ButtonDownHandler{}))
-            .add_handler(Box::new(ToggleEventHandler{}))
-            .add_handler(Box::new(PropsChangeEventHandler{}));
+            .add_handler(Box::new(ButtonDownHandler {}))
+            .add_handler(Box::new(ToggleEventHandler {}))
+            .add_handler(Box::new(PropsChangeEventHandler {}));
         widget.layout.dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
@@ -97,10 +105,7 @@ impl ToggleButtonBuilder {
 
         ToggleButtonBuilder { widget: widget }
     }
-    pub fn set_text(mut self,
-                    on_text: &'static str,
-                    off_text: &'static str,
-                    font_id: Id) -> Self {
+    pub fn set_text(mut self, on_text: &'static str, off_text: &'static str, font_id: Id) -> Self {
 
         let mut style = LinkedHashMap::new();
         style.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
@@ -112,7 +117,7 @@ impl ToggleButtonBuilder {
         let button_text_dims = text::measure_dims_no_wrap(&button_text_drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(button_text_drawable)
-            .add_handler(Box::new(PropsChangeEventHandler{}));
+            .add_handler(Box::new(PropsChangeEventHandler {}));
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
 
@@ -141,8 +146,7 @@ impl PushButtonBuilder {
         let button_text_style = TEXT_STYLE_DEFAULT.clone().with_text(text).clone();
         let drawable = text::text_drawable(button_text_style);
         let button_text_dims = text::measure_dims_no_wrap(&drawable);
-        let mut button_text_widget = WidgetBuilder::new()
-            .set_drawable(drawable);
+        let mut button_text_widget = WidgetBuilder::new().set_drawable(drawable);
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget.layout);
 

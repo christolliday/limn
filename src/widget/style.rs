@@ -12,12 +12,18 @@ impl<T: Clone> StyleSheet<T> {
     pub fn new_default(default: T) -> Self {
         let mut style_sheet = LinkedHashMap::new();
         style_sheet.insert(BTreeSet::new(), default.clone());
-        StyleSheet { style_sheet: style_sheet, default: default }
+        StyleSheet {
+            style_sheet: style_sheet,
+            default: default,
+        }
     }
     pub fn new(style_sheet: LinkedHashMap<PropSet, T>, default: T) -> Self {
         let mut style_sheet = style_sheet.clone();
         style_sheet.insert(BTreeSet::new(), default.clone());
-        StyleSheet { style_sheet: style_sheet.clone(), default: default }
+        StyleSheet {
+            style_sheet: style_sheet.clone(),
+            default: default,
+        }
     }
     pub fn apply(&self, props: &PropSet) -> &T {
         if self.style_sheet.contains_key(&props) {

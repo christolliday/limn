@@ -12,6 +12,8 @@ impl EventHandler for HoverHandler {
             Hover::Over => true,
             Hover::Out => false,
         };
-        args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Hover, hover)));
+        args.event_queue.push(EventAddress::SubTree(args.widget_id),
+                              WIDGET_CHANGE_PROP,
+                              Box::new((Property::Hover, hover)));
     }
 }

@@ -21,10 +21,13 @@ fn main() {
     let font_id = util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    
+
     let mut scroll_widget = WidgetBuilder::new();
     scroll_widget.layout.pad(50.0, &root_widget.layout);
-    scroll_widget.layout.dimensions(Dimensions { width: 300.0, height: 300.0 });
+    scroll_widget.layout.dimensions(Dimensions {
+        width: 300.0,
+        height: 300.0,
+    });
     scroll_widget.layout.scrollable = true;
     scroll_widget.event_handlers.push(Box::new(ScrollHandler {}));
 
@@ -38,15 +41,16 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget.layout);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
-            let text_style = TEXT_STYLE_DEFAULT.clone().with_text("hello").with_text_color(WHITE).clone();
+            let text_style =
+                TEXT_STYLE_DEFAULT.clone().with_text("hello").with_text_color(WHITE).clone();
             let text_drawable = text::text_drawable(text_style);
             let text_dims = text::measure_dims_no_wrap(&text_drawable);
 
             let mut list_item_widget = WidgetBuilder::new()
                 .set_drawable(primitives::rect_drawable(LIST_ITEM_STYLE_DEFAULT.clone()))
                 .set_debug_name("item")
-                .add_handler(Box::new(HoverHandler{}))
-                .add_handler(Box::new(PropsChangeEventHandler{}))
+                .add_handler(Box::new(HoverHandler {}))
+                .add_handler(Box::new(PropsChangeEventHandler {}))
                 .add_handler(Box::new(ListItemHandler::new(list_widget.id)));
             list_item_widget.layout.match_width(&list_widget.layout);
             list_item_widget.layout.height(text_dims.height);

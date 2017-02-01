@@ -33,7 +33,11 @@ pub struct RectStyle {
 }
 
 pub fn ellipse_drawable(background: Color, border: Option<graphics::ellipse::Border>) -> Drawable {
-    let mut drawable = Drawable::new(Box::new(EllipseDrawState { background: background, border: border }), draw_ellipse);
+    let mut drawable = Drawable::new(Box::new(EllipseDrawState {
+                                         background: background,
+                                         border: border,
+                                     }),
+                                     draw_ellipse);
     drawable
 }
 pub struct EllipseDrawState {

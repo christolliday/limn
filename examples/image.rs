@@ -12,8 +12,7 @@ fn main() {
     let mut root_widget = WidgetBuilder::new();
     let image_drawable = image::image_drawable(image_id);
     let image_dims = image::measure_image(&image_drawable);
-    let mut image_widget = WidgetBuilder::new()
-        .set_drawable(image_drawable);
+    let mut image_widget = WidgetBuilder::new().set_drawable(image_drawable);
     image_widget.layout.dimensions(image_dims);
     image_widget.layout.center(&root_widget.layout);
     image_widget.layout.pad(50.0, &root_widget.layout);

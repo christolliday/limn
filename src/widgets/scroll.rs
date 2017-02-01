@@ -18,7 +18,9 @@ impl EventHandler for ScrollHandler {
         let EventArgs { data, widget_id, layout, event_queue, solver, .. } = args;
         let event = data.downcast_ref::<glutin::Event>().unwrap();
         let widget_bounds = layout.bounds(solver);
-        event_queue.push(EventAddress::Child(widget_id), SCROLL_SCROLLED, Box::new((event.clone(), widget_bounds)));
+        event_queue.push(EventAddress::Child(widget_id),
+                         SCROLL_SCROLLED,
+                         Box::new((event.clone(), widget_bounds)));
     }
 }
 
@@ -36,19 +38,27 @@ impl EventHandler for WidgetScrollHandler {
     }
     fn handle_event(&mut self, args: EventArgs) {
         let EventArgs { layout, solver, .. } = args;
-        let &(ref event, parent_bounds) = args.data.downcast_ref::<(glutin::Event, Rectangle)>().unwrap();
+        let &(ref event, parent_bounds) =
+            args.data.downcast_ref::<(glutin::Event, Rectangle)>().unwrap();
 
         let scroll = match *event {
             glutin::Event::MouseWheel(delta, _) => {
                 match delta {
                     glutin::MouseScrollDelta::LineDelta(x, y) => {
-                        Some(Point{ x: x as f64, y: y as f64})
-                    },
+                        Some(Point {
+                            x: x as f64,
+                            y: y as f64,
+                        })
+                    }
                     glutin::MouseScrollDelta::PixelDelta(x, y) => {
-                        Some(Point{ x: x as f64, y: y as f64})
+                        Some(Point {
+                            x: x as f64,
+                            y: y as f64,
+                        })
                     }
                 }
-            }, _ => None
+            }
+            _ => None,
         };
         if let Some(scroll) = scroll {
             let widget_bounds = layout.bounds(solver);

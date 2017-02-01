@@ -12,44 +12,57 @@ use limn::util::Dimensions;
 
 fn main() {
     let (window, ui) = util::init_default("Limn scroll demo");
-    
+
     let mut root_widget = WidgetBuilder::new();
 
-    let mut scroll_widget = WidgetBuilder::new()
-        .add_handler(Box::new(ScrollHandler {}));
-    scroll_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0 });
+    let mut scroll_widget = WidgetBuilder::new().add_handler(Box::new(ScrollHandler {}));
+    scroll_widget.layout.dimensions(Dimensions {
+        width: 200.0,
+        height: 200.0,
+    });
     scroll_widget.layout.pad(100.0, &root_widget.layout);
     scroll_widget.layout.scrollable = true;
 
     let mut rect_container_widget = WidgetBuilder::new()
         .add_handler(Box::new(WidgetScrollHandler::new()));
-    rect_container_widget.layout.dimensions(Dimensions { width: 400.0, height: 400.0});
+    rect_container_widget.layout.dimensions(Dimensions {
+        width: 400.0,
+        height: 400.0,
+    });
 
     let style = RectStyle { background: StyleSheet::new_default(RED) };
-    let mut rect_tl_widget = WidgetBuilder::new()
-        .set_drawable(primitives::rect_drawable(style));
-    rect_tl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+    let mut rect_tl_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
+    rect_tl_widget.layout.dimensions(Dimensions {
+        width: 200.0,
+        height: 200.0,
+    });
     rect_tl_widget.layout.align_top(&rect_container_widget.layout);
     rect_tl_widget.layout.align_left(&rect_container_widget.layout);
 
     let style = RectStyle { background: StyleSheet::new_default(GREEN) };
-    let mut rect_tr_widget = WidgetBuilder::new()
-        .set_drawable(primitives::rect_drawable(style));
-    rect_tr_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+    let mut rect_tr_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
+    rect_tr_widget.layout.dimensions(Dimensions {
+        width: 200.0,
+        height: 200.0,
+    });
     rect_tr_widget.layout.align_top(&rect_container_widget.layout);
     rect_tr_widget.layout.align_right(&rect_container_widget.layout);
 
     let style = RectStyle { background: StyleSheet::new_default(BLUE) };
-    let mut rect_bl_widget = WidgetBuilder::new()
-        .set_drawable(primitives::rect_drawable(style));
-    rect_bl_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+    let mut rect_bl_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
+    rect_bl_widget.layout.dimensions(Dimensions {
+        width: 200.0,
+        height: 200.0,
+    });
     rect_bl_widget.layout.align_bottom(&rect_container_widget.layout);
     rect_bl_widget.layout.align_left(&rect_container_widget.layout);
 
     let style = RectStyle { background: StyleSheet::new_default(FUSCHIA) };
-    let mut rect_br_widget = WidgetBuilder::new()
-        .set_drawable(primitives::rect_drawable(style));
-    rect_br_widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0});
+    let mut rect_br_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
+    rect_br_widget.layout.dimensions(Dimensions {
+        width: 200.0,
+        height: 200.0,
+    });
     rect_br_widget.layout.align_bottom(&rect_container_widget.layout);
     rect_br_widget.layout.align_right(&rect_container_widget.layout);
 

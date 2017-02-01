@@ -21,7 +21,8 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_REDRAW, WIDGET_HOVER, WIDGET_SCROLL, WIDGET_PRESS};
+use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_REDRAW, WIDGET_HOVER,
+            WIDGET_SCROLL, WIDGET_PRESS};
 use util::{self, Point, Rectangle, Dimensions};
 use resources::Id;
 use color::*;
@@ -34,7 +35,10 @@ pub struct InputState {
 }
 impl InputState {
     fn new() -> Self {
-        InputState { mouse: Point { x: 0.0, y: 0.0 }, last_over: HashSet::new() }
+        InputState {
+            mouse: Point { x: 0.0, y: 0.0 },
+            last_over: HashSet::new(),
+        }
     }
 }
 
@@ -112,23 +116,23 @@ impl Ui {
 
         if !crop_to.no_area() {
             let children: Vec<NodeIndex> = self.children(node_index).collect();
-            // need to iterate backwards to draw in correct order, because 
+            // need to iterate backwards to draw in correct order, because
             // petgraph neighbours iterate in reverse order of insertion, not sure why
             for child_index in children.iter().rev() {
                 let child_index = child_index.clone();
-                self.draw_node(context,
-                            graphics,
-                            child_index,
-                            crop_to);
+                self.draw_node(context, graphics, child_index, crop_to);
             }
         }
     }
-    pub fn draw(&mut self,
-                context: Context,
-                graphics: &mut G2d) {
+    pub fn draw(&mut self, context: Context, graphics: &mut G2d) {
 
         let index = self.root_index.unwrap().clone();
-        let crop_to = Rectangle { top: 0.0, left: 0.0, width: f64::MAX, height: f64::MAX };
+        let crop_to = Rectangle {
+            top: 0.0,
+            left: 0.0,
+            width: f64::MAX,
+            height: f64::MAX,
+        };
         self.draw_node(context, graphics, index, crop_to);
 
         if DEBUG_BOUNDS {
@@ -161,7 +165,10 @@ impl Ui {
     pub fn handle_event(&mut self, event: glutin::Event) {
         match event {
             glutin::Event::MouseMoved(x, y) => {
-                let mouse = Point {x: x as f64, y: y as f64};
+                let mouse = Point {
+                    x: x as f64,
+                    y: y as f64,
+                };
                 self.input_state.mouse = mouse;
                 let last_over = self.input_state.last_over.clone();
                 for last_over in last_over {
@@ -169,13 +176,18 @@ impl Ui {
                     if let Some(last_index) = self.find_widget(last_over) {
                         let ref mut widget = self.graph[last_index];
                         if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                            self.event_queue.push(EventAddress::Widget(last_over), WIDGET_HOVER, Box::new(Hover::Out));
+                            self.event_queue.push(EventAddress::Widget(last_over),
+                                                  WIDGET_HOVER,
+                                                  Box::new(Hover::Out));
                             self.input_state.last_over.remove(&last_over);
                         }
                     }
                 }
-                self.event_queue.push(EventAddress::UnderMouse, WIDGET_HOVER, Box::new(Hover::Over));
-            }, _ => ()
+                self.event_queue.push(EventAddress::UnderMouse,
+                                      WIDGET_HOVER,
+                                      Box::new(Hover::Over));
+            }
+            _ => (),
         }
         if let Some(event_id) = mouse_under_event(&event) {
             self.event_queue.push(EventAddress::UnderMouse, event_id, Box::new(event));
@@ -191,14 +203,14 @@ impl Ui {
                     if let Some(node_index) = self.find_widget(id) {
                         self.trigger_widget_event(node_index, event_id, data);
                     }
-                },
+                }
                 EventAddress::Child(id) => {
                     if let Some(node_index) = self.find_widget(id) {
                         if let Some(child_index) = self.children(node_index).next() {
                             self.trigger_widget_event(child_index, event_id, data);
                         }
                     }
-                },
+                }
                 EventAddress::SubTree(id) => {
                     if let Some(node_index) = self.find_widget(id) {
                         let mut dfs = Dfs::new(&self.graph, node_index);
@@ -206,7 +218,7 @@ impl Ui {
                             self.trigger_widget_event(node_index, event_id, data);
                         }
                     }
-                },
+                }
                 EventAddress::UnderMouse => {
                     let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
                     while let Some(node_index) = dfs.next(&self.graph) {
@@ -217,7 +229,7 @@ impl Ui {
                             self.input_state.last_over.insert(widget.id);
                         }
                     }
-                },
+                }
                 EventAddress::Root => {
                     if event_id == WIDGET_REDRAW {
                         self.dirty_widgets.insert(self.root_index.unwrap());
@@ -241,7 +253,10 @@ impl Ui {
         self.widget_map.get(&widget_id).map(|index| *index)
     }
 
-    fn trigger_widget_event(&mut self, node_index: NodeIndex, event_id: EventId, data: &(Any + 'static)) {
+    fn trigger_widget_event(&mut self,
+                            node_index: NodeIndex,
+                            event_id: EventId,
+                            data: &(Any + 'static)) {
         let ref mut widget = self.graph[node_index];
         widget.trigger_event(event_id, data, &mut self.event_queue, &mut self.solver);
         if let Some(ref mut drawable) = widget.drawable {

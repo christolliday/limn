@@ -91,7 +91,7 @@ impl<'a, 'b> Iterator for SelectedGlyphRects<'a, 'b> {
     fn next(&mut self) -> Option<Self::Item> {
         let SelectedGlyphRects { ref mut enumerated_rects, end_char_idx } = *self;
         enumerated_rects.next()
-            .and_then(|(i, rect)| { if i < end_char_idx { Some(rect) } else { None } })
+            .and_then(|(i, rect)| if i < end_char_idx { Some(rect) } else { None })
     }
 }
 

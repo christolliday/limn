@@ -36,10 +36,16 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new(mut event_queue: EventQueue) -> Self {
 
-        let drawable = primitives::ellipse_drawable(WHITE, Some(graphics::ellipse::Border { color: BLACK, radius: 2.0 }));
-        let mut widget = WidgetBuilder::new()
-            .set_drawable(drawable);
-        widget.layout.dimensions(Dimensions { width: 200.0, height: 200.0 });
+        let drawable = primitives::ellipse_drawable(WHITE,
+                                                    Some(graphics::ellipse::Border {
+                                                        color: BLACK,
+                                                        radius: 2.0,
+                                                    }));
+        let mut widget = WidgetBuilder::new().set_drawable(drawable);
+        widget.layout.dimensions(Dimensions {
+            width: 200.0,
+            height: 200.0,
+        });
 
         struct HandDrawState {
             color: Color,
@@ -53,21 +59,33 @@ impl ClockBuilder {
 
             let cos = state.angle.cos();
             let sin = state.angle.sin();
-            let hand_dir = Point { x: sin * 1.0, y: -cos * 1.0} * state.length;
-            let hand_norm = Point { x: -cos * 1.0, y: -sin * 1.0} * state.width;
+            let hand_dir = Point {
+                x: sin * 1.0,
+                y: -cos * 1.0,
+            } * state.length;
+            let hand_norm = Point {
+                x: -cos * 1.0,
+                y: -sin * 1.0,
+            } * state.width;
             let center = bounds.center();
-            let points: Vec<[f64; 2]> = [
-                center + hand_norm,
-                center + hand_norm + hand_dir,
-                center - hand_norm + hand_dir,
-                center - hand_norm,
-            ].iter().map(|point| { [point.x, point.y]}).collect();
+            let points: Vec<[f64; 2]> = [center + hand_norm,
+                                         center + hand_norm + hand_dir,
+                                         center - hand_norm + hand_dir,
+                                         center - hand_norm]
+                .iter()
+                .map(|point| [point.x, point.y])
+                .collect();
 
             graphics::Polygon::new(state.color)
                 .draw(&points, &context.draw_state, context.transform, graphics);
         }
         fn hand_drawable(color: Color, width: Scalar, length: Scalar, angle: Scalar) -> Drawable {
-            let draw_state = HandDrawState { color: color, width: width, length: length, angle: angle };
+            let draw_state = HandDrawState {
+                color: color,
+                width: width,
+                length: length,
+                angle: angle,
+            };
             Drawable::new(Box::new(draw_state), draw_clock_hand)
         }
 
@@ -96,11 +114,9 @@ impl ClockBuilder {
         widget.add_child(Box::new(second_widget));
 
         let clock_id = widget.id;
-        thread::spawn(move || {
-            loop {
-                thread::sleep(time::Duration::from_millis(1000));
-                event_queue.push(EventAddress::SubTree(clock_id), CLOCK_TICK, Box::new(()));
-            }
+        thread::spawn(move || loop {
+            thread::sleep(time::Duration::from_millis(1000));
+            event_queue.push(EventAddress::SubTree(clock_id), CLOCK_TICK, Box::new(()));
         });
 
         ClockBuilder { widget: widget }

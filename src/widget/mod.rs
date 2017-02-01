@@ -68,7 +68,14 @@ pub struct Drawable {
 }
 impl Drawable {
     pub fn new(state: Box<Any>, draw_fn: fn(DrawArgs)) -> Drawable {
-        Drawable { state: state, draw_fn: draw_fn, mouse_over_fn: None, style: None, has_updated: false, props: BTreeSet::new() }
+        Drawable {
+            state: state,
+            draw_fn: draw_fn,
+            mouse_over_fn: None,
+            style: None,
+            has_updated: false,
+            props: BTreeSet::new(),
+        }
     }
     fn apply_style(&mut self) {
         if let Some(ref style) = self.style {
@@ -80,7 +87,9 @@ impl Drawable {
             self.has_updated = true;
         }
     }
-    pub fn update<F, T: 'static>(&mut self, f: F) where F: FnOnce(&mut T) {
+    pub fn update<F, T: 'static>(&mut self, f: F)
+        where F: FnOnce(&mut T)
+    {
         self.has_updated = true;
         let state = self.state.as_mut().downcast_mut::<T>().unwrap();
         f(state);
@@ -96,7 +105,10 @@ pub struct WidgetStyle {
 }
 impl WidgetStyle {
     pub fn new(style: Box<Any>, style_fn: fn(StyleArgs)) -> Self {
-        WidgetStyle { style: style, style_fn: style_fn }
+        WidgetStyle {
+            style: style,
+            style_fn: style_fn,
+        }
     }
 }
 
@@ -115,8 +127,8 @@ impl Widget {
                layout: WidgetLayout,
                event_handlers: Vec<Box<EventHandler>>,
                debug_name: Option<String>,
-               debug_color: Option<Color>,
-               ) -> Self {
+               debug_color: Option<Color>)
+               -> Self {
 
         Widget {
             id: id,
@@ -151,7 +163,7 @@ impl Widget {
         let bounds = self.layout.bounds(solver);
         if let Some(ref drawable) = self.drawable {
             if let Some(mouse_over_fn) = drawable.mouse_over_fn {
-                return mouse_over_fn(mouse, bounds)
+                return mouse_over_fn(mouse, bounds);
             }
         }
         util::point_inside_rect(mouse, bounds)
@@ -183,7 +195,7 @@ impl EventHandler for PropsChangeEventHandler {
         WIDGET_CHANGE_PROP
     }
     fn handle_event(&mut self, mut args: EventArgs) {
-        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap(); 
+        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap();
         if let &mut Some(ref mut drawable) = args.drawable {
             if add {
                 drawable.props.insert(prop.clone());
@@ -192,7 +204,9 @@ impl EventHandler for PropsChangeEventHandler {
             }
             drawable.apply_style();
         }
-        args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED, Box::new(()));
+        args.event_queue.push(EventAddress::Widget(args.widget_id),
+                              WIDGET_PROPS_CHANGED,
+                              Box::new(()));
     }
 }
 
@@ -214,9 +228,7 @@ impl<T: 'static> EventHandler for DrawableEventHandler<T> {
     }
     fn handle_event(&mut self, args: EventArgs) {
         if let Some(drawable) = args.drawable.as_mut() {
-            drawable.update(|state: &mut T|
-                (self.drawable_callback)(state)
-            );
+            drawable.update(|state: &mut T| (self.drawable_callback)(state));
         }
     }
 }

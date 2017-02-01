@@ -17,7 +17,6 @@ pub struct WidgetBuilder {
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<Box<WidgetBuilder>>,
-
 }
 
 impl WidgetBuilder {
@@ -60,11 +59,13 @@ impl WidgetBuilder {
         self.children.push(widget);
     }
 
-    pub fn create(self,
-                  ui: &mut Ui,
-                  parent_index: Option<NodeIndex>)
-                  -> NodeIndex {
-        let mut widget = Widget::new(self.id, self.drawable, self.layout, self.event_handlers, self.debug_name, self.debug_color);
+    pub fn create(self, ui: &mut Ui, parent_index: Option<NodeIndex>) -> NodeIndex {
+        let mut widget = Widget::new(self.id,
+                                     self.drawable,
+                                     self.layout,
+                                     self.event_handlers,
+                                     self.debug_name,
+                                     self.debug_color);
 
         widget.layout.update_solver(&mut ui.solver);
 

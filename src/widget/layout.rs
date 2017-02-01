@@ -33,8 +33,8 @@ impl LinearLayout {
         }
     }
     pub fn add_widget(&mut self, widget_layout: &mut WidgetLayout) {
-        let constraint = LinearLayout::beginning(self.orientation, &widget_layout) | GE(REQUIRED) |
-                         self.end;
+        let constraint = LinearLayout::beginning(self.orientation, &widget_layout) |
+                         GE(REQUIRED) | self.end;
         self.end = LinearLayout::ending(self.orientation, &widget_layout);
         widget_layout.add_constraint(constraint);
     }

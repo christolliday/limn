@@ -45,15 +45,19 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
                     Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
                     Event::Closed => {
                         break;
-                    },
+                    }
                     Event::Resized(width, height) => {
                         window.window_resized();
-                        ui.window_resized(Dimensions {width: width as f64, height: height as f64});
-                    }, _ => ()
+                        ui.window_resized(Dimensions {
+                            width: width as f64,
+                            height: height as f64,
+                        });
+                    }
+                    _ => (),
                 }
                 ui.handle_event(event.clone());
                 ui.handle_event_queue();
-            },
+            }
             WindowEvent::Render => {
                 if ui.dirty_widgets.len() > 0 {
                     window.draw_2d(|context, graphics| {

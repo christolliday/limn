@@ -42,7 +42,9 @@ impl EventHandler for ListHandler {
         let selected = args.data.downcast_ref::<Id>().unwrap();
         if let Some(old_selected) = self.selected {
             if selected != &old_selected {
-                args.event_queue.push(EventAddress::SubTree(old_selected), WIDGET_CHANGE_PROP, Box::new((Property::Selected, false)));
+                args.event_queue.push(EventAddress::SubTree(old_selected),
+                                      WIDGET_CHANGE_PROP,
+                                      Box::new((Property::Selected, false)));
             }
         }
         self.selected = Some(*selected);
@@ -64,8 +66,12 @@ impl EventHandler for ListItemHandler {
     fn handle_event(&mut self, mut args: EventArgs) {
         if let &mut Some(ref drawable) = args.drawable {
             if !drawable.props.contains(&Property::Selected) {
-                args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Selected, true)));
-                args.event_queue.push(EventAddress::Widget(self.list_id), WIDGET_LIST_ITEM_SELECTED, Box::new(args.widget_id));
+                args.event_queue.push(EventAddress::SubTree(args.widget_id),
+                                      WIDGET_CHANGE_PROP,
+                                      Box::new((Property::Selected, true)));
+                args.event_queue.push(EventAddress::Widget(self.list_id),
+                                      WIDGET_LIST_ITEM_SELECTED,
+                                      Box::new(args.widget_id));
             }
         }
     }

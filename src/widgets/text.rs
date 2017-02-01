@@ -95,9 +95,18 @@ impl TextDrawState {
         }
     }
     pub fn new_style(style: &TextStyle) -> Self {
-        TextDrawState::new(style.text.default.clone(), style.font_id.default, style.font_size.default, style.text_color.default, style.background_color.default)
+        TextDrawState::new(style.text.default.clone(),
+                           style.font_id.default,
+                           style.font_size.default,
+                           style.text_color.default,
+                           style.background_color.default)
     }
-    pub fn new(text: String, font_id: Id, font_size: Scalar, text_color: Color, background_color: Color) -> Self {
+    pub fn new(text: String,
+               font_id: Id,
+               font_size: Scalar,
+               text_color: Color,
+               background_color: Color)
+               -> Self {
         TextDrawState {
             text: text,
             font_id: font_id,
@@ -176,7 +185,9 @@ pub fn draw_text(draw_args: DrawArgs) {
 
     let rectangles = positioned_glyphs.into_iter()
         .filter_map(|g| glyph_cache.rect_for(state.font_id.index(), g).ok().unwrap_or(None))
-        .map(|(uv_rect, screen_rect)| (util::map_rect_i32(screen_rect), util::map_rect_f32(uv_rect) * tex_dim));
+        .map(|(uv_rect, screen_rect)| {
+            (util::map_rect_i32(screen_rect), util::map_rect_f32(uv_rect) * tex_dim)
+        });
     // A re-usable buffer of rectangles describing the glyph's screen and texture positions.
     let mut glyph_rectangles = Vec::new();
     glyph_rectangles.extend(rectangles);

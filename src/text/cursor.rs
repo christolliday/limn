@@ -205,20 +205,18 @@ impl Index {
     {
         let Index { line, char } = self;
         line_infos.nth(line)
-            .and_then(|info| {
-                if char >= info.char_range().count() {
-                    line_infos.next().map(|_| {
-                        Index {
-                            line: line + 1,
-                            char: 0,
-                        }
-                    })
-                } else {
-                    Some(Index {
-                        line: line,
-                        char: char + 1,
-                    })
-                }
+            .and_then(|info| if char >= info.char_range().count() {
+                line_infos.next().map(|_| {
+                    Index {
+                        line: line + 1,
+                        char: 0,
+                    }
+                })
+            } else {
+                Some(Index {
+                    line: line,
+                    char: char + 1,
+                })
             })
     }
 

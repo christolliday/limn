@@ -20,7 +20,7 @@ const COUNT: EventId = EventId("COUNT");
 fn main() {
     let (window, ui) = util::init_default("Limn counter demo");
     let font_id = util::load_default_font();
-    
+
     let mut root_widget = WidgetBuilder::new();
 
     let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget.layout);
@@ -62,12 +62,15 @@ fn main() {
             event::WIDGET_PRESS
         }
         fn handle_event(&mut self, args: EventArgs) {
-            args.event_queue.push(EventAddress::Widget(self.receiver_id), COUNTER, Box::new(()));
+            args.event_queue.push(EventAddress::Widget(self.receiver_id),
+                                  COUNTER,
+                                  Box::new(()));
         }
     }
     let mut button_widget = PushButtonBuilder::new()
         .set_text("Count", font_id)
-        .widget.add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
+        .widget
+        .add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
     button_widget.layout.center(&button_container.layout);
     button_widget.layout.pad(50.0, &button_container.layout);
     button_container.add_child(Box::new(button_widget));
@@ -88,7 +91,9 @@ fn main() {
         }
         fn handle_event(&mut self, args: EventArgs) {
             self.count += 1;
-            args.event_queue.push(EventAddress::SubTree(args.widget_id), COUNT, Box::new(self.count));
+            args.event_queue.push(EventAddress::SubTree(args.widget_id),
+                                  COUNT,
+                                  Box::new(self.count));
         }
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));
