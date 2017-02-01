@@ -4,34 +4,27 @@ use graphics::types::Color;
 use petgraph::graph::NodeIndex;
 
 use ui::{self, Ui};
-use widget::{Widget, EventHandler, StyleArgs, DrawArgs, WidgetState};
+use widget::{Drawable, Widget, WidgetStyle, EventHandler, StyleArgs, DrawArgs, WidgetState};
 use widget::layout::WidgetLayout;
 use resources::{resources, Id};
 use util::{self, Point, Rectangle};
 
 pub struct WidgetBuilder {
     pub id: Id,
-    pub draw_fn: Option<fn(DrawArgs)>,
-    pub drawable: Option<WidgetState>,
-    pub style: Option<Box<Any>>,
-    pub style_fn: Option<fn(StyleArgs)>,
-    pub mouse_over_fn: fn(Point, Rectangle) -> bool,
+    pub drawable: Option<Drawable>,
     pub layout: WidgetLayout,
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<Box<WidgetBuilder>>,
+
 }
 
 impl WidgetBuilder {
     pub fn new() -> Self {
         WidgetBuilder {
             id: resources().widget_id(),
-            draw_fn: None,
             drawable: None,
-            style: None,
-            style_fn: None,
-            mouse_over_fn: util::point_inside_rect,
             layout: WidgetLayout::new(),
             event_handlers: Vec::new(),
             debug_name: None,
@@ -40,17 +33,19 @@ impl WidgetBuilder {
         }
     }
     pub fn set_drawable(mut self, draw_fn: fn(DrawArgs), drawable: Box<Any>) -> Self {
-        self.draw_fn = Some(draw_fn);
-        self.drawable = Some(WidgetState::new(drawable));
+        self.drawable = Some(Drawable { state: WidgetState::new(drawable), draw_fn: draw_fn, style: None, mouse_over_fn: None });
         self
     }
     pub fn set_style(mut self, style_fn: fn(StyleArgs), style: Box<Any>) -> Self {
-        self.style_fn = Some(style_fn);
-        self.style = Some(style);
+        if let Some(ref mut drawable) = self.drawable {
+            drawable.style = Some(WidgetStyle { style: style, style_fn: style_fn });
+        }
         self
     }
     pub fn set_mouse_over_fn(mut self, mouse_over_fn: fn(Point, Rectangle) -> bool) -> Self {
-        self.mouse_over_fn = mouse_over_fn;
+        if let Some(ref mut drawable) = self.drawable {
+            drawable.mouse_over_fn = Some(mouse_over_fn);
+        }
         self
     }
     pub fn add_handler(mut self, handler: Box<EventHandler>) -> Self {
@@ -75,7 +70,7 @@ impl WidgetBuilder {
                   ui: &mut Ui,
                   parent_index: Option<NodeIndex>)
                   -> NodeIndex {
-        let mut widget = Widget::new(self.id, self.draw_fn, self.drawable, self.style, self.style_fn, self.mouse_over_fn, self.layout, self.event_handlers, self.debug_name, self.debug_color);
+        let mut widget = Widget::new(self.id, self.drawable, self.layout, self.event_handlers, self.debug_name, self.debug_color);
 
         widget.layout.update_solver(&mut ui.solver);
 

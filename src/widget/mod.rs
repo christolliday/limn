@@ -64,8 +64,13 @@ pub trait EventHandler {
 pub struct Drawable {
     pub state: WidgetState,
     pub draw_fn: fn(DrawArgs),
-    pub style: Option<Box<Any>>,
-    pub style_fn: Option<fn(StyleArgs)>,
+    pub mouse_over_fn: Option<fn(Point, Rectangle) -> bool>,
+    pub style: Option<WidgetStyle>,
+}
+
+pub struct WidgetStyle {
+    pub style: Box<Any>,
+    pub style_fn: fn(StyleArgs),
 }
 
 pub struct WidgetState {
@@ -89,7 +94,6 @@ impl WidgetState {
 pub struct Widget {
     pub id: Id,
     pub drawable: Option<Drawable>,
-    pub mouse_over_fn: fn(Point, Rectangle) -> bool,
     pub layout: WidgetLayout,
     pub props: PropSet,
     pub event_handlers: Vec<Box<EventHandler>>,
@@ -107,11 +111,7 @@ fn apply_style(state: &mut WidgetState, style: &Box<Any>, style_fn: fn(StyleArgs
 }
 impl Widget {
     pub fn new(id: Id,
-               draw_fn: Option<fn(DrawArgs)>,
-               state: Option<WidgetState>,
-               style: Option<Box<Any>>,
-               style_fn: Option<fn(StyleArgs)>,
-               mouse_over_fn: fn(Point, Rectangle) -> bool,
+               mut drawable: Option<Drawable>,
                layout: WidgetLayout,
                event_handlers: Vec<Box<EventHandler>>,
                debug_name: Option<String>,
@@ -119,19 +119,14 @@ impl Widget {
                ) -> Self {
 
         let props = BTreeSet::new();
-        let drawable = if let Some(state) = state {
-            let mut drawable = Drawable { state: state, draw_fn: draw_fn.unwrap(), style: style, style_fn: style_fn };
+        if let Some(ref mut drawable) = drawable {
             if let Some(ref style) = drawable.style {
-                apply_style(&mut drawable.state, &style, drawable.style_fn.unwrap(), &props);
+                apply_style(&mut drawable.state, &style.style, style.style_fn, &props);
             }
-            Some(drawable)
-        } else {
-            None
-        };
+        }
         Widget {
             id: id,
             drawable: drawable,
-            mouse_over_fn: mouse_over_fn,
             layout: layout,
             props: props,
             event_handlers: event_handlers,
@@ -162,7 +157,12 @@ impl Widget {
     }
     pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
         let bounds = self.layout.bounds(solver);
-        (self.mouse_over_fn)(mouse, bounds)
+        if let Some(ref drawable) = self.drawable {
+            if let Some(mouse_over_fn) = drawable.mouse_over_fn {
+                return mouse_over_fn(mouse, bounds)
+            }
+        }
+        util::point_inside_rect(mouse, bounds)
     }
     pub fn trigger_event(&mut self,
                          event_id: EventId,
@@ -200,7 +200,7 @@ impl EventHandler for PropsChangeEventHandler {
         }
         if let Some(drawable) = args.drawable.as_mut() {
             if let Some(ref style) = drawable.style {
-                apply_style(&mut drawable.state, &style, drawable.style_fn.unwrap(), args.props);
+                apply_style(&mut drawable.state, &style.style, style.style_fn, args.props);
                 args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED, Box::new(()));
             }
         }
