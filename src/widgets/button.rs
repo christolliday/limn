@@ -11,7 +11,7 @@ use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use widgets::primitives::{self, RectStyle};
 use widgets::text::{self, TextStyle, TEXT_STYLE_DEFAULT};
 use widget::builder::WidgetBuilder;
-use widget::style::StyleSheet;
+use widget::style::Value;
 use util::Dimensions;
 use resources::Id;
 use color::*;
@@ -28,11 +28,12 @@ lazy_static! {
     pub static ref STATE_ACTIVATED: PropSet = btreeset!{Property::Activated};
     pub static ref STATE_ACTIVATED_PRESSED: PropSet = btreeset!{Property::Activated, Property::Pressed};
     pub static ref TOGGLE_RECT_STYLE: RectStyle = {
-        let mut style = LinkedHashMap::new();
-        style.insert(STATE_ACTIVATED_PRESSED.deref().clone(), COLOR_BUTTON_ACTIVATED_PRESSED);
-        style.insert(STATE_ACTIVATED.deref().clone(), COLOR_BUTTON_ACTIVATED);
-        style.insert(STATE_PRESSED.deref().clone(), COLOR_BUTTON_PRESSED);
-        RectStyle { background: StyleSheet::new(style, COLOR_BUTTON_DEFAULT) }
+        let mut selector = LinkedHashMap::new();
+        selector.insert(STATE_ACTIVATED_PRESSED.deref().clone(), COLOR_BUTTON_ACTIVATED_PRESSED);
+        selector.insert(STATE_ACTIVATED.deref().clone(), COLOR_BUTTON_ACTIVATED);
+        selector.insert(STATE_PRESSED.deref().clone(), COLOR_BUTTON_PRESSED);
+        selector.insert(STATE_DEFAULT.deref().clone(), COLOR_BUTTON_DEFAULT);
+        RectStyle { background: Value::Selector((selector, COLOR_BUTTON_DEFAULT)) }
     };
 }
 
@@ -107,13 +108,13 @@ impl ToggleButtonBuilder {
     }
     pub fn set_text(mut self, on_text: &'static str, off_text: &'static str, font_id: Id) -> Self {
 
-        let mut style = LinkedHashMap::new();
-        style.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
-        let text_style = StyleSheet::new(style, off_text.to_owned());
-        let mut text_style_set = TEXT_STYLE_DEFAULT.clone();
-        text_style_set.text = text_style;
+        let mut selector = LinkedHashMap::new();
+        selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
+        let text_style_value = Value::Selector((selector, off_text.to_owned()));
+        let mut text_style = TEXT_STYLE_DEFAULT.clone();
+        text_style.text = text_style_value;
 
-        let button_text_drawable = text::text_drawable(text_style_set);
+        let button_text_drawable = text::text_drawable(text_style);
         let button_text_dims = text::measure_dims_no_wrap(&button_text_drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(button_text_drawable)

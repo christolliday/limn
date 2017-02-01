@@ -11,15 +11,15 @@ use resources::{Id, resources};
 use util::{self, Dimensions, Align, Scalar};
 use color::*;
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, Property, PropSet};
-use widget::style::StyleSheet;
+use widget::style::Value;
 
 lazy_static! {
     pub static ref TEXT_STYLE_DEFAULT: TextStyle = {
-        let text_style = StyleSheet::new_default("".to_owned());
-        let font_id_style = StyleSheet::new_default(Id(0)); // make first font loaded default for now
-        let font_size_style = StyleSheet::new_default(20.0);
-        let text_color_style = StyleSheet::new_default(BLACK);
-        let background_color_style = StyleSheet::new_default(TRANSPARENT);
+        let text_style = Value::Single("".to_owned());
+        let font_id_style = Value::Single(Id(0)); // make first font loaded default for now
+        let font_size_style = Value::Single(20.0);
+        let text_color_style = Value::Single(BLACK);
+        let background_color_style = Value::Single(TRANSPARENT);
         TextStyle {
             text: text_style,
             font_id: font_id_style,
@@ -49,32 +49,32 @@ pub fn apply_text_style(args: StyleArgs) {
     let state: &mut TextDrawState = args.state.downcast_mut().unwrap();
     let style: &TextStyle = args.style.downcast_ref().unwrap();
     let props = args.props;
-    state.text = style.text.apply(props).clone();
-    state.font_id = style.font_id.apply(props).clone();
-    state.font_size = style.font_size.apply(props).clone();
-    state.text_color = style.text_color.apply(props).clone();
-    state.background_color = style.background_color.apply(props).clone();
+    state.text = style.text.from_props(props);
+    state.font_id = style.font_id.from_props(props);
+    state.font_size = style.font_size.from_props(props);
+    state.text_color = style.text_color.from_props(props);
+    state.background_color = style.background_color.from_props(props);
 }
 
 #[derive(Clone)]
 pub struct TextStyle {
-    pub text: StyleSheet<String>,
-    pub font_id: StyleSheet<Id>,
-    pub font_size: StyleSheet<Scalar>,
-    pub text_color: StyleSheet<Color>,
-    pub background_color: StyleSheet<Color>,
+    pub text: Value<String>,
+    pub font_id: Value<Id>,
+    pub font_size: Value<Scalar>,
+    pub text_color: Value<Color>,
+    pub background_color: Value<Color>,
 }
 impl TextStyle {
     pub fn with_text(&mut self, text: &str) -> &mut Self {
-        self.text = StyleSheet::new_default(text.to_owned());
+        self.text = Value::Single(text.to_owned());
         self
     }
     pub fn with_text_color(&mut self, text_color: Color) -> &mut Self {
-        self.text_color = StyleSheet::new_default(text_color);
+        self.text_color = Value::Single(text_color);
         self
     }
     pub fn with_background_color(&mut self, background_color: Color) -> &mut Self {
-        self.background_color = StyleSheet::new_default(background_color);
+        self.background_color = Value::Single(background_color);
         self
     }
 }
@@ -95,11 +95,11 @@ impl TextDrawState {
         }
     }
     pub fn new_style(style: &TextStyle) -> Self {
-        TextDrawState::new(style.text.default.clone(),
-                           style.font_id.default,
-                           style.font_size.default,
-                           style.text_color.default,
-                           style.background_color.default)
+        TextDrawState::new(style.text.default(),
+                           style.font_id.default(),
+                           style.font_size.default(),
+                           style.text_color.default(),
+                           style.background_color.default())
     }
     pub fn new(text: String,
                font_id: Id,

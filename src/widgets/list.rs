@@ -3,7 +3,7 @@ use graphics::types::Color;
 
 use widget::{EventArgs, EventHandler, Property, PropSet};
 use widgets::primitives::RectStyle;
-use widget::style::StyleSheet;
+use widget::style::Value;
 use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use resources::Id;
 use color::*;
@@ -19,10 +19,10 @@ lazy_static! {
     pub static ref STATE_SELECTED: PropSet = btreeset!{Property::Selected};
     pub static ref STATE_HOVER: PropSet = btreeset!{Property::Hover};
     pub static ref LIST_ITEM_STYLE_DEFAULT: RectStyle = {
-        let mut style = LinkedHashMap::new();
-        style.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
-        style.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
-        RectStyle { background: StyleSheet::new(style, COLOR_LIST_ITEM_DEFAULT) }
+        let mut selector = LinkedHashMap::new();
+        selector.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
+        selector.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
+        RectStyle { background: Value::Selector((selector, COLOR_LIST_ITEM_DEFAULT)) }
     };
 }
 

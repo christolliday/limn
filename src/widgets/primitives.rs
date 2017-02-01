@@ -3,10 +3,10 @@ use std::collections::BTreeSet;
 use graphics;
 use graphics::types::Color;
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, PropSet};
-use widget::style::StyleSheet;
+use widget::style::Value;
 
 pub fn rect_drawable(style: RectStyle) -> Drawable {
-    let draw_state = RectDrawState { background: style.background.default };
+    let draw_state = RectDrawState { background: style.background.default() };
     let mut drawable = Drawable::new(Box::new(draw_state), draw_rect);
     drawable.style = Some(WidgetStyle::new(Box::new(style), apply_rect_style));
     drawable
@@ -15,8 +15,8 @@ pub fn rect_drawable(style: RectStyle) -> Drawable {
 pub struct RectDrawState {
     pub background: Color,
 }
-pub fn draw_rect(draw_args: DrawArgs) {
-    let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
+pub fn draw_rect(args: DrawArgs) {
+    let DrawArgs { state, bounds, context, graphics, .. } = args;
     let state: &RectDrawState = state.downcast_ref().unwrap();
     graphics::Rectangle::new(state.background)
         .draw(bounds, &context.draw_state, context.transform, graphics);
@@ -25,11 +25,11 @@ pub fn draw_rect(draw_args: DrawArgs) {
 pub fn apply_rect_style(args: StyleArgs) {
     let state: &mut RectDrawState = args.state.downcast_mut().unwrap();
     let style: &RectStyle = args.style.downcast_ref().unwrap();
-    state.background = style.background.apply(&args.props).clone();
+    state.background = style.background.from_props(&args.props);
 }
 #[derive(Clone)]
 pub struct RectStyle {
-    pub background: StyleSheet<Color>,
+    pub background: Value<Color>,
 }
 
 pub fn ellipse_drawable(background: Color, border: Option<graphics::ellipse::Border>) -> Drawable {
