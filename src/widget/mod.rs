@@ -19,7 +19,6 @@ use util::{self, Point, Rectangle};
 
 use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
-use self::style::DrawableStyle;
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub enum Property {
@@ -32,7 +31,6 @@ pub type PropSet = BTreeSet<Property>;
 
 pub struct DrawArgs<'a, 'b: 'a> {
     pub state: &'a Any,
-    pub props: &'a PropSet,
     pub bounds: Rectangle,
     pub parent_bounds: Rectangle,
     pub glyph_cache: &'a mut GlyphCache,
@@ -44,7 +42,6 @@ pub struct EventArgs<'a> {
     pub data: &'a (Any + 'static),
     pub widget_id: Id,
     pub drawable: &'a mut Option<Drawable>,
-    pub props: &'a mut PropSet,
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
@@ -66,18 +63,19 @@ pub struct Drawable {
     pub draw_fn: fn(DrawArgs),
     pub mouse_over_fn: Option<fn(Point, Rectangle) -> bool>,
     pub style: Option<WidgetStyle>,
+    pub props: PropSet,
     pub has_updated: bool,
 }
 impl Drawable {
     pub fn new(state: Box<Any>, draw_fn: fn(DrawArgs)) -> Drawable {
-        Drawable { state: state, draw_fn: draw_fn, mouse_over_fn: None, style: None, has_updated: false }
+        Drawable { state: state, draw_fn: draw_fn, mouse_over_fn: None, style: None, has_updated: false, props: BTreeSet::new() }
     }
-    fn apply_style(&mut self, props: &PropSet) {
+    fn apply_style(&mut self) {
         if let Some(ref style) = self.style {
             (style.style_fn)(StyleArgs {
                 state: self.state.as_mut(),
                 style: style.style.as_ref(),
-                props: props,
+                props: &self.props,
             });
             self.has_updated = true;
         }
@@ -106,7 +104,6 @@ pub struct Widget {
     pub id: Id,
     pub drawable: Option<Drawable>,
     pub layout: WidgetLayout,
-    pub props: PropSet,
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -121,15 +118,10 @@ impl Widget {
                debug_color: Option<Color>,
                ) -> Self {
 
-        let props = BTreeSet::new();
-        if let Some(ref mut drawable) = drawable {
-            drawable.apply_style(&props);
-        }
         Widget {
             id: id,
             drawable: drawable,
             layout: layout,
-            props: props,
             event_handlers: event_handlers,
             debug_name: debug_name,
             debug_color: debug_color,
@@ -147,7 +139,6 @@ impl Widget {
             let context = util::crop_context(context, crop_to);
             (drawable.draw_fn)(DrawArgs {
                 state: drawable.state.as_ref(),
-                props: &self.props,
                 bounds: bounds,
                 parent_bounds: crop_to,
                 glyph_cache: glyph_cache,
@@ -178,7 +169,6 @@ impl Widget {
                     widget_id: self.id,
                     drawable: &mut self.drawable,
                     layout: &mut self.layout,
-                    props: &mut self.props,
                     event_queue: event_queue,
                     solver: solver,
                 });
@@ -193,14 +183,14 @@ impl EventHandler for PropsChangeEventHandler {
         WIDGET_CHANGE_PROP
     }
     fn handle_event(&mut self, mut args: EventArgs) {
-        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap();
-        if add {
-            args.props.insert(prop.clone());
-        } else {
-            args.props.remove(prop);
-        }
+        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap(); 
         if let &mut Some(ref mut drawable) = args.drawable {
-            drawable.apply_style(&args.props);
+            if add {
+                drawable.props.insert(prop.clone());
+            } else {
+                drawable.props.remove(prop);
+            }
+            drawable.apply_style();
         }
         args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED, Box::new(()));
     }

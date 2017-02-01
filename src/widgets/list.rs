@@ -62,9 +62,11 @@ impl EventHandler for ListItemHandler {
         event::WIDGET_PRESS
     }
     fn handle_event(&mut self, mut args: EventArgs) {
-        if !args.props.contains(&Property::Selected) {
-            args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Selected, true)));
-            args.event_queue.push(EventAddress::Widget(self.list_id), WIDGET_LIST_ITEM_SELECTED, Box::new(args.widget_id));
+        if let &mut Some(ref drawable) = args.drawable {
+            if !drawable.props.contains(&Property::Selected) {
+                args.event_queue.push(EventAddress::SubTree(args.widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Selected, true)));
+                args.event_queue.push(EventAddress::Widget(self.list_id), WIDGET_LIST_ITEM_SELECTED, Box::new(args.widget_id));
+            }
         }
     }
 }

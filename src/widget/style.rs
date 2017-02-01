@@ -3,10 +3,6 @@ use linked_hash_map::LinkedHashMap;
 use widget::{Property, PropSet};
 use std::collections::BTreeSet;
 
-pub trait DrawableStyle<T> {
-    fn apply(&self, drawable: &mut T, props: &PropSet);
-}
-
 #[derive(Clone)]
 pub struct StyleSheet<T> {
     pub style_sheet: LinkedHashMap<PropSet, T>,

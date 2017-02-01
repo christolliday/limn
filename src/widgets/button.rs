@@ -62,14 +62,16 @@ impl EventHandler for ToggleEventHandler {
         event::WIDGET_PRESS
     }
     fn handle_event(&mut self, args: EventArgs) {
-        let EventArgs { props, widget_id, event_queue, .. } = args;
+        let EventArgs { widget_id, event_queue, .. } = args;
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
             glutin::Event::MouseInput(state, button) => {
                 match state {
                     glutin::ElementState::Released => {
-                        let activated = props.contains(&Property::Activated);
-                        event_queue.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Activated, !activated)));
+                        if let &mut Some(ref drawable) = args.drawable {
+                            let activated = drawable.props.contains(&Property::Activated);
+                            event_queue.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new((Property::Activated, !activated)));
+                        }
                     }, _ => ()
                 }
             }, _ => ()

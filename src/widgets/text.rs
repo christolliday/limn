@@ -11,7 +11,7 @@ use resources::{Id, resources};
 use util::{self, Dimensions, Align, Scalar};
 use color::*;
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, Property, PropSet};
-use widget::style::{DrawableStyle, StyleSheet};
+use widget::style::StyleSheet;
 
 lazy_static! {
     pub static ref TEXT_STYLE_DEFAULT: TextStyle = {
@@ -48,7 +48,12 @@ pub struct TextDrawState {
 pub fn apply_text_style(args: StyleArgs) {
     let state: &mut TextDrawState = args.state.downcast_mut().unwrap();
     let style: &TextStyle = args.style.downcast_ref().unwrap();
-    style.apply(state, args.props);
+    let props = args.props;
+    state.text = style.text.apply(props).clone();
+    state.font_id = style.font_id.apply(props).clone();
+    state.font_size = style.font_size.apply(props).clone();
+    state.text_color = style.text_color.apply(props).clone();
+    state.background_color = style.background_color.apply(props).clone();
 }
 
 #[derive(Clone)]
@@ -71,15 +76,6 @@ impl TextStyle {
     pub fn with_background_color(&mut self, background_color: Color) -> &mut Self {
         self.background_color = StyleSheet::new_default(background_color);
         self
-    }
-}
-impl DrawableStyle<TextDrawState> for TextStyle {
-    fn apply(&self, drawable: &mut TextDrawState, props: &PropSet) {
-        drawable.text = self.text.apply(props).clone();
-        drawable.font_id = self.font_id.apply(props).clone();
-        drawable.font_size = self.font_size.apply(props).clone();
-        drawable.text_color = self.text_color.apply(props).clone();
-        drawable.background_color = self.background_color.apply(props).clone();
     }
 }
 
