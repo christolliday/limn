@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate limn;
+extern crate glutin;
 
 mod util;
 
@@ -46,7 +47,7 @@ fn main() {
 
     let text_fields = vec!{
         TextStyleField::text(Value::Single("0".to_owned())),
-        TextStyleField::text_color(Value::Single(WHITE)),
+        TextStyleField::background_color(Value::Single(WHITE)),
     };
     let text_style = TextStyle::from(text_fields);
     let text_drawable = text::text_drawable(text_style);
@@ -69,9 +70,18 @@ fn main() {
             event::WIDGET_PRESS
         }
         fn handle_event(&mut self, args: EventArgs) {
-            args.event_queue.push(EventAddress::Widget(self.receiver_id),
-                                  COUNTER,
-                                  Box::new(()));
+            let event = args.data.downcast_ref::<glutin::Event>().unwrap();
+            match *event {
+                glutin::Event::MouseInput(state, button) => {
+                    match state {
+                        glutin::ElementState::Released => {
+                            args.event_queue.push(EventAddress::Widget(self.receiver_id),
+                                                COUNTER,
+                                                Box::new(()));
+                        }, _ => ()
+                    }
+                }, _ => ()
+            }
         }
     }
     let mut button_widget = PushButtonBuilder::new()
