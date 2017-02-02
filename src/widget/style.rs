@@ -2,8 +2,9 @@ use graphics::types::Color;
 use linked_hash_map::LinkedHashMap;
 use widget::{Property, PropSet};
 use std::collections::BTreeSet;
+use std::hash::Hash;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Value<T> where T: Clone {
     Single(T),
     Selector((LinkedHashMap<PropSet, T>, T)),

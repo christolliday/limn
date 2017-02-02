@@ -5,17 +5,17 @@ mod util;
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::{EventHandler, EventArgs, Property, PropsChangeEventHandler};
-use limn::widgets::text;
+use limn::widgets::text::{self, TextStyle, TextStyleField};
 use limn::widgets::primitives;
 use limn::widgets::list::{ListHandler, ListItemHandler};
 use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widgets::hover::HoverHandler;
+use limn::widget::style::Value;
 use limn::resources::Id;
 use limn::event::{self, EventId, EventAddress};
 use limn::util::Dimensions;
 use limn::color::*;
 use limn::theme::{STYLE_TEXT, STYLE_LIST_ITEM};
-
 
 fn main() {
     let (window, ui) = util::init_default("Limn list demo");
@@ -42,8 +42,12 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget.layout);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
-            let text_style =
-                STYLE_TEXT.clone().with_text("hello").with_text_color(WHITE).clone();
+            let text_fields = vec!{
+                TextStyleField::text(Value::Single("hello".to_owned())),
+                TextStyleField::text_color(Value::Single(WHITE)),
+            };
+            let text_style = TextStyle::from(text_fields);
+
             let text_drawable = text::text_drawable(text_style);
             let text_dims = text::measure_dims_no_wrap(&text_drawable);
 

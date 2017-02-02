@@ -1,4 +1,6 @@
-use std::collections::BTreeSet;
+use std::collections::HashSet;
+use std::any::Any;
+use std::ops::{Index, IndexMut};
 
 use graphics;
 use graphics::types::Color;
@@ -12,9 +14,10 @@ use util::{self, Dimensions, Align, Scalar};
 use color::*;
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, Property, PropSet};
 use widget::style::Value;
+use theme::STYLE_TEXT;
 
 pub fn text_drawable(style: TextStyle) -> Drawable {
-    let draw_state = TextDrawState::new_style(&style);
+    let draw_state = TextDrawState::new(&style);
     let mut drawable = Drawable::new(Box::new(draw_state), draw_text);
     drawable.style = Some(WidgetStyle::new(Box::new(style), apply_text_style));
     drawable
@@ -47,18 +50,32 @@ pub struct TextStyle {
     pub text_color: Value<Color>,
     pub background_color: Value<Color>,
 }
+
+#[derive(Debug)]
+pub enum TextStyleField {
+    text(Value<String>),
+    font_id(Value<Id>),
+    font_size(Value<Scalar>),
+    text_color(Value<Color>),
+    background_color(Value<Color>),
+}
+
 impl TextStyle {
-    pub fn with_text(&mut self, text: &str) -> &mut Self {
-        self.text = Value::Single(text.to_owned());
-        self
+    pub fn from(fields: Vec<TextStyleField>) -> Self {
+        let mut style = STYLE_TEXT.clone();
+        style.extend(fields);
+        style
     }
-    pub fn with_text_color(&mut self, text_color: Color) -> &mut Self {
-        self.text_color = Value::Single(text_color);
-        self
-    }
-    pub fn with_background_color(&mut self, background_color: Color) -> &mut Self {
-        self.background_color = Value::Single(background_color);
-        self
+    pub fn extend(&mut self, mut style: Vec<TextStyleField>) {
+        for field in style.drain(..) {
+            match field {
+                TextStyleField::text(val) => self.text = val,
+                TextStyleField::font_id(val) => self.font_id = val,
+                TextStyleField::font_size(val) => self.font_size = val,
+                TextStyleField::text_color(val) => self.text_color = val,
+                TextStyleField::background_color(val) => self.background_color = val,
+            }
+        }
     }
 }
 
@@ -68,34 +85,13 @@ pub fn measure_dims_no_wrap(drawable: &Drawable) -> Dimensions {
 }
 
 impl TextDrawState {
-    pub fn new_default(text: String, font_id: Id) -> Self {
+    pub fn new(style: &TextStyle) -> Self {
         TextDrawState {
-            text: text,
-            font_id: font_id,
-            font_size: 24.0,
-            text_color: BLACK,
-            background_color: TRANSPARENT,
-        }
-    }
-    pub fn new_style(style: &TextStyle) -> Self {
-        TextDrawState::new(style.text.default(),
-                           style.font_id.default(),
-                           style.font_size.default(),
-                           style.text_color.default(),
-                           style.background_color.default())
-    }
-    pub fn new(text: String,
-               font_id: Id,
-               font_size: Scalar,
-               text_color: Color,
-               background_color: Color)
-               -> Self {
-        TextDrawState {
-            text: text,
-            font_id: font_id,
-            font_size: font_size,
-            text_color: text_color,
-            background_color: background_color,
+            text: style.text.default(),
+            font_id: style.font_id.default(),
+            font_size: style.font_size.default(),
+            text_color: style.text_color.default(),
+            background_color: style.background_color.default(),
         }
     }
     pub fn measure_dims_no_wrap(&self) -> Dimensions {

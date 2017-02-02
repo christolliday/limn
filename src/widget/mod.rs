@@ -20,7 +20,7 @@ use util::{self, Point, Rectangle};
 use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
 
-#[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
+#[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum Property {
     Hover,
     Activated,

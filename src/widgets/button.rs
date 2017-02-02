@@ -9,7 +9,7 @@ use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, 
              PropSet};
 use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
 use widgets::primitives::{self, RectStyle};
-use widgets::text::{self, TextStyle};
+use widgets::text::{self, TextStyle, TextStyleField};
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
 use theme::{STATE_ACTIVATED};
@@ -126,8 +126,9 @@ impl PushButtonBuilder {
     }
     pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
 
-        let button_text_style = STYLE_TEXT.clone().with_text(text).clone();
-        let drawable = text::text_drawable(button_text_style);
+        let text_fields = vec!{ TextStyleField::text(Value::Single(text.to_owned())) };
+        let text_style = TextStyle::from(text_fields);
+        let drawable = text::text_drawable(text_style);
         let button_text_dims = text::measure_dims_no_wrap(&drawable);
         let mut button_text_widget = WidgetBuilder::new().set_drawable(drawable);
         button_text_widget.layout.dimensions(button_text_dims);
