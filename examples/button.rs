@@ -6,7 +6,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::ToggleButtonBuilder;
 
 fn main() {
-    let (window, ui) = util::init_default("Limn button demo");
+    let (window, ui, event_queue) = util::init_default("Limn button demo");
     let font_id = util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -17,5 +17,5 @@ fn main() {
     button.layout.pad(50.0, &root_widget.layout);
     root_widget.add_child(Box::new(button));
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

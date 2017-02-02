@@ -18,7 +18,7 @@ use limn::color::*;
 use limn::theme::{STYLE_TEXT, STYLE_LIST_ITEM};
 
 fn main() {
-    let (window, ui) = util::init_default("Limn list demo");
+    let (window, ui, event_queue) = util::init_default("Limn list demo");
     let font_id = util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -78,5 +78,5 @@ fn main() {
     scroll_widget.add_child(Box::new(list_widget));
     root_widget.add_child(Box::new(scroll_widget));
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

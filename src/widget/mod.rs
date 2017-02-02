@@ -16,6 +16,7 @@ use backend::glyph::GlyphCache;
 use event::{self, EventAddress, EventId, EventQueue, WIDGET_PROPS_CHANGED, WIDGET_CHANGE_PROP};
 use resources::Id;
 use util::{self, Point, Rectangle};
+use ui::{Ui, InputState};
 
 use self::builder::WidgetBuilder;
 use self::layout::WidgetLayout;
@@ -45,6 +46,7 @@ pub struct EventArgs<'a> {
     pub layout: &'a mut WidgetLayout,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
+    pub input_state: &'a InputState,
 }
 
 pub struct StyleArgs<'a> {
@@ -172,7 +174,8 @@ impl Widget {
                          event_id: EventId,
                          data: &(Any + 'static),
                          event_queue: &mut EventQueue,
-                         solver: &mut Solver) {
+                         solver: &mut Solver,
+                         input_state: &InputState) {
 
         for ref mut event_handler in self.event_handlers.iter_mut() {
             if event_handler.event_id() == event_id {
@@ -183,6 +186,7 @@ impl Widget {
                     layout: &mut self.layout,
                     event_queue: event_queue,
                     solver: solver,
+                    input_state: input_state,
                 });
             }
         }

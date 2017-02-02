@@ -7,6 +7,8 @@ use glutin::WindowProxy;
 use backend::Window;
 
 use resources::Id;
+use petgraph::visit::Dfs;
+use ui::{Ui, UiEventArgs, UiEventHandler};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct EventId(pub &'static str);
@@ -36,7 +38,7 @@ pub enum EventAddress {
     Child(Id),
     SubTree(Id),
     UnderMouse,
-    Root,
+    Ui,
 }
 
 #[derive(Clone)]
@@ -44,6 +46,7 @@ pub struct EventQueue {
     queue: Arc<Mutex<Vec<(EventAddress, EventId, Box<Any + Send>)>>>,
     window_proxy: WindowProxy,
 }
+
 impl EventQueue {
     pub fn new(window: &Window) -> Self {
         EventQueue {
@@ -63,5 +66,55 @@ impl EventQueue {
     pub fn next(&mut self) -> (EventAddress, EventId, Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.pop().unwrap()
+    }
+
+    pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<Box<UiEventHandler>>) {
+        while !self.is_empty() {
+            let (event_address, event_id, data) = self.next();
+            let data = &*data;
+            match event_address {
+                EventAddress::Widget(id) => {
+                    if let Some(node_index) = ui.find_widget(id) {
+                        ui.trigger_widget_event(node_index, event_id, data, self);
+                    }
+                }
+                EventAddress::Child(id) => {
+                    if let Some(node_index) = ui.find_widget(id) {
+                        if let Some(child_index) = ui.children(node_index).next() {
+                            ui.trigger_widget_event(child_index, event_id, data, self);
+                        }
+                    }
+                }
+                EventAddress::SubTree(id) => {
+                    if let Some(node_index) = ui.find_widget(id) {
+                        let mut dfs = Dfs::new(&ui.graph, node_index);
+                        while let Some(node_index) = dfs.next(&ui.graph) {
+                            ui.trigger_widget_event(node_index, event_id, data, self);
+                        }
+                    }
+                }
+                EventAddress::UnderMouse => {
+                    let mut dfs = Dfs::new(&ui.graph, ui.root_index.unwrap());
+                    while let Some(node_index) = dfs.next(&ui.graph) {
+                        let is_mouse_over = ui.is_mouse_over(node_index);
+                        if is_mouse_over {
+                            ui.trigger_widget_event(node_index, event_id, data, self);
+                            let ref mut widget = ui.graph[node_index];
+                            ui.input_state.last_over.insert(widget.id);
+                        }
+                    }
+                }
+                EventAddress::Ui => {
+                    for ref mut event_handler in ui_event_handlers.iter_mut() {
+                        if event_handler.event_id() == event_id {
+                            event_handler.handle_event(UiEventArgs {
+                                data: data,
+                                ui: ui,
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
 }

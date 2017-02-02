@@ -11,7 +11,7 @@ use limn::util::Dimensions;
 
 
 fn main() {
-    let (window, ui) = util::init_default("Limn scroll demo");
+    let (window, ui, event_queue) = util::init_default("Limn scroll demo");
 
     let mut root_widget = WidgetBuilder::new();
 
@@ -73,5 +73,5 @@ fn main() {
     scroll_widget.add_child(Box::new(rect_container_widget));
     root_widget.add_child(Box::new(scroll_widget));
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

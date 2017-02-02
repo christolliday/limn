@@ -42,6 +42,31 @@ impl InputState {
     }
 }
 
+// special event handler for access to Ui
+pub trait UiEventHandler {
+    fn event_id(&self) -> EventId;
+    fn handle_event(&mut self, args: UiEventArgs);
+}
+pub struct UiEventArgs<'a> {
+    pub data: &'a (Any + 'static),
+    pub ui: &'a mut Ui,
+}
+
+pub struct RedrawHandler {}
+impl UiEventHandler for RedrawHandler {
+    fn event_id(&self) -> EventId {
+        WIDGET_REDRAW
+    }
+    fn handle_event(&mut self, args: UiEventArgs) {
+        let ui = args.ui;
+        ui.dirty_widgets.insert(ui.root_index.unwrap());
+    }
+}
+
+pub fn get_default_event_handlers() -> Vec<Box<UiEventHandler>> {
+    vec!{Box::new(RedrawHandler{})}
+}
+
 pub struct Ui {
     pub graph: Graph<Widget, ()>,
     pub root_index: Option<NodeIndex>,
@@ -49,7 +74,6 @@ pub struct Ui {
     pub input_state: InputState,
     pub widget_map: HashMap<Id, NodeIndex>,
     pub dirty_widgets: HashSet<NodeIndex>,
-    pub event_queue: EventQueue,
     pub glyph_cache: GlyphCache,
 }
 impl Ui {
@@ -61,7 +85,6 @@ impl Ui {
             input_state: InputState::new(),
             widget_map: HashMap::new(),
             dirty_widgets: HashSet::new(),
-            event_queue: EventQueue::new(window),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
         }
     }
@@ -162,7 +185,7 @@ impl Ui {
         });
         None
     }
-    pub fn handle_event(&mut self, event: glutin::Event) {
+    pub fn handle_event(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
         match event {
             glutin::Event::MouseMoved(x, y) => {
                 let mouse = Point {
@@ -176,89 +199,48 @@ impl Ui {
                     if let Some(last_index) = self.find_widget(last_over) {
                         let ref mut widget = self.graph[last_index];
                         if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                            self.event_queue.push(EventAddress::Widget(last_over),
-                                                  WIDGET_HOVER,
-                                                  Box::new(Hover::Out));
+                            event_queue.push(EventAddress::Widget(last_over),
+                                             WIDGET_HOVER,
+                                             Box::new(Hover::Out));
                             self.input_state.last_over.remove(&last_over);
                         }
                     }
                 }
-                self.event_queue.push(EventAddress::UnderMouse,
-                                      WIDGET_HOVER,
-                                      Box::new(Hover::Over));
+                event_queue.push(EventAddress::UnderMouse,
+                                 WIDGET_HOVER,
+                                 Box::new(Hover::Over));
             }
             _ => (),
         }
         if let Some(event_id) = mouse_under_event(&event) {
-            self.event_queue.push(EventAddress::UnderMouse, event_id, Box::new(event));
+            event_queue.push(EventAddress::UnderMouse, event_id, Box::new(event));
         }
     }
 
-    pub fn handle_event_queue(&mut self) {
-        while !self.event_queue.is_empty() {
-            let (event_address, event_id, data) = self.event_queue.next();
-            let data = &*data;
-            match event_address {
-                EventAddress::Widget(id) => {
-                    if let Some(node_index) = self.find_widget(id) {
-                        self.trigger_widget_event(node_index, event_id, data);
-                    }
-                }
-                EventAddress::Child(id) => {
-                    if let Some(node_index) = self.find_widget(id) {
-                        if let Some(child_index) = self.children(node_index).next() {
-                            self.trigger_widget_event(child_index, event_id, data);
-                        }
-                    }
-                }
-                EventAddress::SubTree(id) => {
-                    if let Some(node_index) = self.find_widget(id) {
-                        let mut dfs = Dfs::new(&self.graph, node_index);
-                        while let Some(node_index) = dfs.next(&self.graph) {
-                            self.trigger_widget_event(node_index, event_id, data);
-                        }
-                    }
-                }
-                EventAddress::UnderMouse => {
-                    let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
-                    while let Some(node_index) = dfs.next(&self.graph) {
-                        let is_mouse_over = self.is_mouse_over(node_index);
-                        if is_mouse_over {
-                            self.trigger_widget_event(node_index, event_id, data);
-                            let ref mut widget = self.graph[node_index];
-                            self.input_state.last_over.insert(widget.id);
-                        }
-                    }
-                }
-                EventAddress::Root => {
-                    if event_id == WIDGET_REDRAW {
-                        self.dirty_widgets.insert(self.root_index.unwrap());
-                    }
-                }
-            }
-        }
+    pub fn check_layout(&mut self, event_queue: &mut EventQueue) {
         // if layout has changed, send new mouse event, in case widget under mouse has shifted
         let has_changes = self.solver.fetch_changes().len() > 0;
         if has_changes {
             let mouse = self.input_state.mouse;
             let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
-            self.handle_event(event);
+            self.handle_event(event, event_queue);
         }
     }
-    fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
+    pub fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
         let ref mut widget = self.graph[node_index];
         widget.is_mouse_over(&mut self.solver, self.input_state.mouse)
     }
-    fn find_widget(&mut self, widget_id: Id) -> Option<NodeIndex> {
+    pub fn find_widget(&mut self, widget_id: Id) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
     }
 
-    fn trigger_widget_event(&mut self,
+    pub fn trigger_widget_event(&mut self,
                             node_index: NodeIndex,
                             event_id: EventId,
-                            data: &(Any + 'static)) {
+                            data: &(Any + 'static),
+                            event_queue: &mut EventQueue) {
         let ref mut widget = self.graph[node_index];
-        widget.trigger_event(event_id, data, &mut self.event_queue, &mut self.solver);
+        widget.trigger_event(event_id, data, event_queue, &mut self.solver, &self.input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
                 self.dirty_widgets.insert(node_index);

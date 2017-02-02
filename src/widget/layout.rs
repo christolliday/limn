@@ -124,8 +124,8 @@ impl WidgetLayout {
         self.constraints.push(self.bottom - self.top | EQ(strength) | height)
     }
     pub fn top_left(&mut self, point: Point) {
-        self.constraints.push(self.top | EQ(REQUIRED) | point.x);
-        self.constraints.push(self.left | EQ(REQUIRED) | point.y);
+        self.constraints.push(self.left | EQ(REQUIRED) | point.x);
+        self.constraints.push(self.top | EQ(REQUIRED) | point.y);
     }
     pub fn pad(&mut self, distance: Scalar, outer_layout: &WidgetLayout) {
         self.constraints.push(self.left - outer_layout.left | GE(REQUIRED) | distance);

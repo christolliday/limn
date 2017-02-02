@@ -6,17 +6,19 @@ extern crate glutin;
 use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
-use limn::ui::Ui;
+use limn::ui::{self, Ui, UiEventArgs, UiEventHandler};
 use limn::resources::{Id, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
+use limn::event::EventQueue;
 
-pub fn init_default(title: &str) -> (Window, Ui) {
+pub fn init_default(title: &str) -> (Window, Ui, EventQueue) {
     let window_dims = (100, 100);
     let mut window = Window::new(title, window_dims, Some(window_dims));
     let ui = Ui::new(&mut window);
+    let mut event_queue = EventQueue::new(&window);
 
-    (window, ui)
+    (window, ui, event_queue)
 }
 
 #[allow(dead_code)]
@@ -34,9 +36,11 @@ pub fn load_default_image(window: &mut Window) -> Id {
     resources().images.insert_from_file(&mut window.context.factory, image_path)
 }
 
-pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuilder) {
+pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuilder, mut event_queue: EventQueue, mut ui_event_handlers: Vec<Box<UiEventHandler>>) {
     ui.set_root(root_widget);
     ui.resize_window_to_fit(&window);
+
+    ui_event_handlers.append(&mut ui::get_default_event_handlers());
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window.window) {
         match event {
@@ -55,8 +59,9 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
                     }
                     _ => (),
                 }
-                ui.handle_event(event.clone());
-                ui.handle_event_queue();
+                ui.handle_event(event.clone(), &mut event_queue);
+                event_queue.handle_events(&mut ui, &mut ui_event_handlers);
+                ui.check_layout(&mut event_queue);
             }
             WindowEvent::Render => {
                 if ui.dirty_widgets.len() > 0 {
