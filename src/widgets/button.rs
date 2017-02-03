@@ -88,7 +88,7 @@ impl ToggleButtonBuilder {
 
         ToggleButtonBuilder { widget: widget }
     }
-    pub fn set_text(mut self, on_text: &'static str, off_text: &'static str, font_id: Id) -> Self {
+    pub fn set_text(mut self, on_text: &'static str, off_text: &'static str) -> Self {
 
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
@@ -124,7 +124,7 @@ impl PushButtonBuilder {
 
         PushButtonBuilder { widget: widget }
     }
-    pub fn set_text(mut self, text: &'static str, font_id: Id) -> Self {
+    pub fn set_text(mut self, text: &'static str) -> Self {
 
         let text_fields = vec!{ TextStyleField::text(Value::Single(text.to_owned())) };
         let text_style = TextStyle::from(text_fields);

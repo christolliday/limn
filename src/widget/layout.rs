@@ -143,17 +143,31 @@ impl WidgetLayout {
     pub fn center_vertical(&mut self, layout: &WidgetLayout) {
         self.constraints.push(self.top - layout.top | EQ(REQUIRED) | layout.bottom - self.bottom);
     }
-    pub fn align_top(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.top | EQ(REQUIRED) | layout.top);
+
+    pub fn align_top(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(self.top - layout.top | EQ(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn align_bottom(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.bottom | EQ(REQUIRED) | layout.bottom);
+    pub fn align_bottom(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(layout.bottom - self.bottom | EQ(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn align_left(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.left | EQ(REQUIRED) | layout.left);
+    pub fn align_left(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(self.left - layout.left | EQ(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn align_right(&mut self, layout: &WidgetLayout) {
-        self.constraints.push(self.right | EQ(REQUIRED) | layout.right);
+    pub fn align_right(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(layout.right - self.right | EQ(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    
+    pub fn above(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(self.bottom - layout.top | GE(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    pub fn below(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(layout.bottom - self.top | GE(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    pub fn to_left_of(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(layout.left - self.right | GE(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    pub fn to_right_of(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(self.left - layout.right | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
     pub fn bound_by(&mut self, layout: &WidgetLayout) {
         let constraints = [self.left | GE(REQUIRED) | layout.left,

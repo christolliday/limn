@@ -85,7 +85,7 @@ fn main() {
         }
     }
     let mut button_widget = PushButtonBuilder::new()
-        .set_text("Count", font_id)
+        .set_text("Count")
         .widget
         .add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
     button_widget.layout.center(&button_container.layout);
