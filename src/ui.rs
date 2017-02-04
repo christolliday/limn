@@ -173,6 +173,9 @@ impl Ui {
         let child_index = self.graph.add_node(child);
         if let Some(parent_index) = parent_index {
             self.graph.add_edge(parent_index, child_index, ());
+            let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
+            parent.layout.add_child(&mut child.layout);
+            child.layout.update_solver(&mut self.solver);
         }
         self.widget_map.insert(id, child_index);
         self.dirty_widgets.insert(child_index);

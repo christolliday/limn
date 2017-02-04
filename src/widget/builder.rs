@@ -55,7 +55,6 @@ impl WidgetBuilder {
     }
     // only method that is not chainable, because usually called out of order
     pub fn add_child(&mut self, mut widget: Box<WidgetBuilder>) {
-        self.layout.add_child(&mut widget.layout);
         self.children.push(widget);
     }
 
