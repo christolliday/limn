@@ -29,50 +29,16 @@ fn main() {
             button_container.layout.align_bottom(&root_widget.layout, Some(20.0));
             button_container.layout.minimize();
 
-            struct UndoHandler {}
-            impl EventHandler for UndoHandler {
-                fn event_id(&self) -> EventId {
-                    WIDGET_PRESS
-                }
-                fn handle_event(&mut self, mut args: EventArgs) {
-                    let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-                    match *event {
-                        glutin::Event::MouseInput(state, button) => {
-                            match state {
-                                glutin::ElementState::Released => {
-                                    println!("UNDO");
-                                    args.event_state.handled = true;
-                                }, _ => ()
-                            }
-                        }, _ => ()
-                    }
-                }
-            }
-            struct RedoHandler {}
-            impl EventHandler for RedoHandler {
-                fn event_id(&self) -> EventId {
-                    WIDGET_PRESS
-                }
-                fn handle_event(&mut self, mut args: EventArgs) {
-                    let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-                    match *event {
-                        glutin::Event::MouseInput(state, button) => {
-                            match state {
-                                glutin::ElementState::Released => {
-                                    println!("REDO");
-                                    args.event_state.handled = true;
-                                }, _ => ()
-                            }
-                        }, _ => ()
-                    }
-                }
-            }
             let mut undo_widget = PushButtonBuilder::new()
-                .set_text("Undo").widget
-                .add_handler(Box::new(UndoHandler{}));
+                .set_text("Undo")
+                .set_on_click(|args| {
+                    println!("UNDO");
+                }).widget;
             let mut redo_widget = PushButtonBuilder::new()
-                .set_text("Redo").widget
-                .add_handler(Box::new(RedoHandler{}));
+                .set_text("Redo")
+                .set_on_click(|args| {
+                    println!("REDO");
+                }).widget;
             redo_widget.layout.to_right_of(&undo_widget.layout, Some(20.0));
 
             button_container.add_child(Box::new(undo_widget));

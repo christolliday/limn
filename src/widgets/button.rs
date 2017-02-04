@@ -7,7 +7,7 @@ use graphics::types::Color;
 
 use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property,
              PropSet};
-use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
+use event::{self, EventId, EventAddress, WIDGET_PRESS, WIDGET_CHANGE_PROP};
 use widgets::primitives::{self, RectStyle};
 use widgets::text::{self, TextStyle, TextStyleField};
 use widget::builder::WidgetBuilder;
@@ -23,7 +23,7 @@ use color::*;
 pub struct ButtonDownHandler {}
 impl EventHandler for ButtonDownHandler {
     fn event_id(&self) -> EventId {
-        event::WIDGET_PRESS
+        WIDGET_PRESS
     }
     fn handle_event(&mut self, args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
@@ -46,7 +46,7 @@ impl EventHandler for ButtonDownHandler {
 pub struct ToggleEventHandler {}
 impl EventHandler for ToggleEventHandler {
     fn event_id(&self) -> EventId {
-        event::WIDGET_PRESS
+        WIDGET_PRESS
     }
     fn handle_event(&mut self, args: EventArgs) {
         let EventArgs { widget_id, event_queue, .. } = args;
@@ -109,6 +109,28 @@ impl ToggleButtonBuilder {
     }
 }
 
+struct ClickHandler<F> where F: Fn(&EventArgs) {
+    callback: F
+}
+impl<F> EventHandler for ClickHandler<F> where F: Fn(&EventArgs) {
+    fn event_id(&self) -> EventId {
+        WIDGET_PRESS
+    }
+    fn handle_event(&mut self, mut args: EventArgs) {
+        let event = args.data.downcast_ref::<glutin::Event>().unwrap();
+        match *event {
+            glutin::Event::MouseInput(state, button) => {
+                match state {
+                    glutin::ElementState::Released => {
+                        (self.callback)(&args);
+                        args.event_state.handled = true;
+                    }, _ => ()
+                }
+            }, _ => ()
+        }
+    }
+}
+
 pub struct PushButtonBuilder {
     pub widget: WidgetBuilder,
 }
@@ -135,6 +157,11 @@ impl PushButtonBuilder {
         button_text_widget.layout.center(&self.widget.layout);
 
         self.widget.add_child(Box::new(button_text_widget));
+        self
+    }
+    pub fn set_on_click<F>(mut self, on_click: F) -> Self
+        where F: Fn(&EventArgs) + 'static {
+        self.widget.event_handlers.push(Box::new(ClickHandler{ callback: on_click }));
         self
     }
 }
