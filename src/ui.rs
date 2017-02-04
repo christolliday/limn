@@ -2,11 +2,11 @@ use std::collections::{HashSet, HashMap};
 use std::f64;
 use std::any::Any;
 
-use petgraph::Graph;
+use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Dfs;
-use petgraph::Direction;
-use petgraph::graph::Neighbors;
+use petgraph::{Direction, Directed};
+use petgraph::stable_graph::Neighbors;
 
 use glutin;
 
@@ -68,7 +68,7 @@ pub fn get_default_event_handlers() -> Vec<Box<UiEventHandler>> {
 }
 
 pub struct Ui {
-    pub graph: Graph<Widget, ()>,
+    pub graph: StableGraph<Widget, ()>,
     pub root_index: Option<NodeIndex>,
     pub solver: Solver,
     pub input_state: InputState,
@@ -79,7 +79,7 @@ pub struct Ui {
 impl Ui {
     pub fn new(window: &mut Window) -> Self {
         Ui {
-            graph: Graph::<Widget, ()>::new(),
+            graph: StableGraph::<Widget, ()>::new(),
             root_index: None,
             solver: Solver::new(),
             input_state: InputState::new(),
