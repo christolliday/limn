@@ -32,12 +32,12 @@ fn main() {
             let mut undo_widget = PushButtonBuilder::new()
                 .set_text("Undo")
                 .set_on_click(|args| {
-                    println!("UNDO");
+                    args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(CircleEvent::Undo));
                 }).widget;
             let mut redo_widget = PushButtonBuilder::new()
                 .set_text("Redo")
                 .set_on_click(|args| {
-                    println!("REDO");
+                    args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(CircleEvent::Redo));
                 }).widget;
             redo_widget.layout.to_right_of(&undo_widget.layout, Some(20.0));
 
@@ -66,8 +66,8 @@ fn main() {
         Redo,
     }
 
-    struct CircleHandler {}
-    impl EventHandler for CircleHandler {
+    struct CircleClickHandler {}
+    impl EventHandler for CircleClickHandler {
         fn event_id(&self) -> EventId {
             WIDGET_PRESS
         }
@@ -85,16 +85,16 @@ fn main() {
             }
         }
     }
-    struct AddCircleHandler {
+    struct CircleEventHandler {
         circles: Vec<NodeIndex>,
         undo: Vec<Point>,
     }
-    impl AddCircleHandler {
+    impl CircleEventHandler {
         fn new() -> Self {
-            AddCircleHandler { circles: Vec::new(), undo: Vec::new() }
+            CircleEventHandler { circles: Vec::new(), undo: Vec::new() }
         }
     }
-    impl UiEventHandler for AddCircleHandler {
+    impl UiEventHandler for CircleEventHandler {
         fn event_id(&self) -> EventId {
             CIRCLE_EVENT
         }
@@ -105,7 +105,10 @@ fn main() {
                     self.circles.push(create_circle(args.ui, &point));
                 }
                 CircleEvent::Undo => {
-                    // remove one
+                    if self.circles.len() > 0 {
+                        let node_index = self.circles.pop().unwrap();
+                        args.ui.remove_widget(node_index);
+                    }
                 }
                 CircleEvent::Redo => {
                     // add from undo queue, if any
@@ -115,12 +118,12 @@ fn main() {
         }
     }
     let mut root_widget = WidgetBuilder::new()
-        .add_handler(Box::new(CircleHandler{}));
+        .add_handler(Box::new(CircleClickHandler{}));
     root_widget.layout.dimensions(Dimensions {width: 300.0, height: 300.0});
 
 
     create_undo_redo_buttons(&mut ui, &mut root_widget);
 
-    let ui_event_handlers: Vec<Box<UiEventHandler>> = vec!{Box::new(AddCircleHandler::new())};
+    let ui_event_handlers: Vec<Box<UiEventHandler>> = vec!{Box::new(CircleEventHandler::new())};
     util::set_root_and_loop(window, ui, root_widget, event_queue, ui_event_handlers);
 }

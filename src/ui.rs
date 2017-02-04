@@ -181,6 +181,11 @@ impl Ui {
         self.dirty_widgets.insert(child_index);
         child_index
     }
+
+    pub fn remove_widget(&mut self, node_index: NodeIndex) {
+        self.graph.remove_node(node_index);
+        self.dirty_widgets.insert(self.root_index.unwrap());
+    }
     pub fn get_widget(&self, widget_id: Id) -> Option<&Widget> {
         self.widget_map.get(&widget_id).and_then(|node_index| {
             let ref widget = self.graph[NodeIndex::new(node_index.index())];

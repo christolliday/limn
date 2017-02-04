@@ -109,10 +109,10 @@ impl ToggleButtonBuilder {
     }
 }
 
-struct ClickHandler<F> where F: Fn(&EventArgs) {
+struct ClickHandler<F> where F: Fn(&mut EventArgs) {
     callback: F
 }
-impl<F> EventHandler for ClickHandler<F> where F: Fn(&EventArgs) {
+impl<F> EventHandler for ClickHandler<F> where F: Fn(&mut EventArgs) {
     fn event_id(&self) -> EventId {
         WIDGET_PRESS
     }
@@ -122,7 +122,7 @@ impl<F> EventHandler for ClickHandler<F> where F: Fn(&EventArgs) {
             glutin::Event::MouseInput(state, button) => {
                 match state {
                     glutin::ElementState::Released => {
-                        (self.callback)(&args);
+                        (self.callback)(&mut args);
                         args.event_state.handled = true;
                     }, _ => ()
                 }
@@ -160,7 +160,7 @@ impl PushButtonBuilder {
         self
     }
     pub fn set_on_click<F>(mut self, on_click: F) -> Self
-        where F: Fn(&EventArgs) + 'static {
+        where F: Fn(&mut EventArgs) + 'static {
         self.widget.event_handlers.push(Box::new(ClickHandler{ callback: on_click }));
         self
     }
