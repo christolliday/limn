@@ -7,7 +7,7 @@ use glutin::WindowProxy;
 use backend::Window;
 
 use resources::Id;
-use petgraph::visit::Dfs;
+use petgraph::visit::{Dfs, DfsPostOrder};
 use ui::{Ui, UiEventArgs, UiEventHandler};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -94,13 +94,18 @@ impl EventQueue {
                     }
                 }
                 EventAddress::UnderMouse => {
-                    let mut dfs = Dfs::new(&ui.graph, ui.root_index.unwrap());
+                    let mut dfs = DfsPostOrder::new(&ui.graph, ui.root_index.unwrap());
                     while let Some(node_index) = dfs.next(&ui.graph) {
                         let is_mouse_over = ui.is_mouse_over(node_index);
                         if is_mouse_over {
-                            ui.trigger_widget_event(node_index, event_id, data, self);
+                            let handled = ui.trigger_widget_event(node_index, event_id, data, self);
                             let ref mut widget = ui.graph[node_index];
                             ui.input_state.last_over.insert(widget.id);
+                            // for now just one widget can handle an event, later, just don't send to parents
+                            // not no other widgets
+                            if handled {
+                                return;
+                            }
                         }
                     }
                 }

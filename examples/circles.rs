@@ -16,33 +16,70 @@ use limn::ui::{Ui, UiEventHandler, UiEventArgs};
 use limn::util::{Dimensions, Point};
 use limn::color::*;
 
-const ADD_CIRCLE: EventId = EventId("ADD_CIRCLE");
+const CIRCLE_EVENT: EventId = EventId("CIRCLE_EVENT");
 
 fn main() {
-    let (window, ui, event_queue) = util::init_default("Limn circles demo");
+    let (window, mut ui, event_queue) = util::init_default("Limn circles demo");
     let font_id = util::load_default_font();
 
-    fn create_undo_redo_buttons(ui: &mut Ui) -> NodeIndex {
+    fn create_undo_redo_buttons(ui: &mut Ui, root_widget: &mut WidgetBuilder) {
         let button_container = {
-            let root_widget = ui.get_root();
             let mut button_container = WidgetBuilder::new();
             button_container.layout.center_horizontal(&root_widget.layout);
             button_container.layout.align_bottom(&root_widget.layout, Some(20.0));
-            //button_container.layout.height(40.0);
+            button_container.layout.minimize();
 
+            struct UndoHandler {}
+            impl EventHandler for UndoHandler {
+                fn event_id(&self) -> EventId {
+                    WIDGET_PRESS
+                }
+                fn handle_event(&mut self, mut args: EventArgs) {
+                    let event = args.data.downcast_ref::<glutin::Event>().unwrap();
+                    match *event {
+                        glutin::Event::MouseInput(state, button) => {
+                            match state {
+                                glutin::ElementState::Released => {
+                                    println!("UNDO");
+                                    args.event_state.handled = true;
+                                }, _ => ()
+                            }
+                        }, _ => ()
+                    }
+                }
+            }
+            struct RedoHandler {}
+            impl EventHandler for RedoHandler {
+                fn event_id(&self) -> EventId {
+                    WIDGET_PRESS
+                }
+                fn handle_event(&mut self, mut args: EventArgs) {
+                    let event = args.data.downcast_ref::<glutin::Event>().unwrap();
+                    match *event {
+                        glutin::Event::MouseInput(state, button) => {
+                            match state {
+                                glutin::ElementState::Released => {
+                                    println!("REDO");
+                                    args.event_state.handled = true;
+                                }, _ => ()
+                            }
+                        }, _ => ()
+                    }
+                }
+            }
             let mut undo_widget = PushButtonBuilder::new()
-                .set_text("Undo").widget;
+                .set_text("Undo").widget
+                .add_handler(Box::new(UndoHandler{}));
             let mut redo_widget = PushButtonBuilder::new()
-                .set_text("Redo").widget;
+                .set_text("Redo").widget
+                .add_handler(Box::new(RedoHandler{}));
             redo_widget.layout.to_right_of(&undo_widget.layout, Some(20.0));
-            
+
             button_container.add_child(Box::new(undo_widget));
             button_container.add_child(Box::new(redo_widget));
             button_container
         };
-        let root_index = ui.root_index.unwrap();
-        println!("making undo/redo");
-        button_container.create(ui, Some(root_index))
+        root_widget.add_child(Box::new(button_container));
     }
     fn create_circle(ui: &mut Ui, center: &Point) -> NodeIndex {
 
@@ -56,6 +93,13 @@ fn main() {
         let root_index = ui.root_index.unwrap();
         widget.create(ui, Some(root_index))
     }
+
+    enum CircleEvent {
+        Add(Point),
+        Undo,
+        Redo,
+    }
+
     struct CircleHandler {}
     impl EventHandler for CircleHandler {
         fn event_id(&self) -> EventId {
@@ -67,7 +111,8 @@ fn main() {
                 glutin::Event::MouseInput(state, button) => {
                     match state {
                         glutin::ElementState::Released => {
-                            args.event_queue.push(EventAddress::Ui, ADD_CIRCLE, Box::new(args.input_state.mouse));
+                            let event = CircleEvent::Add(args.input_state.mouse);
+                            args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(event));
                         } _ => ()
                     }
                 } _ => ()
@@ -76,27 +121,39 @@ fn main() {
     }
     struct AddCircleHandler {
         circles: Vec<NodeIndex>,
+        undo: Vec<Point>,
     }
     impl AddCircleHandler {
         fn new() -> Self {
-            AddCircleHandler { circles: Vec::new() }
+            AddCircleHandler { circles: Vec::new(), undo: Vec::new() }
         }
     }
     impl UiEventHandler for AddCircleHandler {
         fn event_id(&self) -> EventId {
-            ADD_CIRCLE
+            CIRCLE_EVENT
         }
         fn handle_event(&mut self, args: UiEventArgs) {
-            let mouse = args.data.downcast_ref::<Point>().unwrap();
-            if self.circles.len() == 0 {
-                create_undo_redo_buttons(args.ui);
+            let event = args.data.downcast_ref::<CircleEvent>().unwrap();
+            match *event {
+                CircleEvent::Add(point) => {
+                    self.circles.push(create_circle(args.ui, &point));
+                }
+                CircleEvent::Undo => {
+                    // remove one
+                }
+                CircleEvent::Redo => {
+                    // add from undo queue, if any
+                    // todo
+                }
             }
-            self.circles.push(create_circle(args.ui, mouse));
         }
     }
     let mut root_widget = WidgetBuilder::new()
         .add_handler(Box::new(CircleHandler{}));
     root_widget.layout.dimensions(Dimensions {width: 300.0, height: 300.0});
+
+
+    create_undo_redo_buttons(&mut ui, &mut root_widget);
 
     let ui_event_handlers: Vec<Box<UiEventHandler>> = vec!{Box::new(AddCircleHandler::new())};
     util::set_root_and_loop(window, ui, root_widget, event_queue, ui_event_handlers);

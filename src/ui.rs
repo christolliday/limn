@@ -241,15 +241,16 @@ impl Ui {
                             node_index: NodeIndex,
                             event_id: EventId,
                             data: &(Any + 'static),
-                            event_queue: &mut EventQueue) {
+                            event_queue: &mut EventQueue) -> bool {
         let ref mut widget = self.graph[node_index];
-        widget.trigger_event(event_id, data, event_queue, &mut self.solver, &self.input_state);
+        let handled = widget.trigger_event(event_id, data, event_queue, &mut self.solver, &self.input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
                 self.dirty_widgets.insert(node_index);
                 drawable.has_updated = false;
             }
         }
+        handled
     }
 }
 

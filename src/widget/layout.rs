@@ -117,6 +117,14 @@ impl WidgetLayout {
         self.width(dimensions.width);
         self.height(dimensions.height);
     }
+    pub fn minimize(&mut self) {
+        self.width_strength(0.0, WEAK);
+        self.height_strength(0.0, WEAK);
+    }
+    pub fn maximize(&mut self) {
+        self.width_strength(10000.0, WEAK);
+        self.height_strength(10000.0, WEAK);
+    }
     pub fn width_strength(&mut self, width: Scalar, strength: f64) {
         self.constraints.push(self.right - self.left | EQ(strength) | width)
     }

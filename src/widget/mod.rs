@@ -47,6 +47,12 @@ pub struct EventArgs<'a> {
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
     pub input_state: &'a InputState,
+    pub event_state: &'a mut EventState,
+}
+
+// allows event handlers to communicate with event dispatcher
+pub struct EventState {
+    pub handled: bool,
 }
 
 pub struct StyleArgs<'a> {
@@ -175,8 +181,9 @@ impl Widget {
                          data: &(Any + 'static),
                          event_queue: &mut EventQueue,
                          solver: &mut Solver,
-                         input_state: &InputState) {
+                         input_state: &InputState) -> bool {
 
+        let mut event_state = EventState { handled: false };
         for ref mut event_handler in self.event_handlers.iter_mut() {
             if event_handler.event_id() == event_id {
                 event_handler.handle_event(EventArgs {
@@ -187,9 +194,11 @@ impl Widget {
                     event_queue: event_queue,
                     solver: solver,
                     input_state: input_state,
+                    event_state: &mut event_state,
                 });
             }
         }
+        event_state.handled
     }
 }
 
