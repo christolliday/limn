@@ -2,21 +2,23 @@ use std::any::Any;
 
 use graphics::types::Color;
 use petgraph::graph::NodeIndex;
+use cassowary::{self, Constraint};
 
 use ui::{self, Ui};
 use widget::{Drawable, Widget, WidgetStyle, EventHandler, StyleArgs, DrawArgs};
-use widget::layout::WidgetLayout;
+use widget::layout::LayoutBuilder;
 use resources::{resources, Id};
 use util::{self, Point, Rectangle};
 
 pub struct WidgetBuilder {
     pub id: Id,
     pub drawable: Option<Drawable>,
-    pub layout: WidgetLayout,
+    pub layout: LayoutBuilder,
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<Box<WidgetBuilder>>,
+    pub scrollable: bool,
 }
 
 impl WidgetBuilder {
@@ -24,11 +26,12 @@ impl WidgetBuilder {
         WidgetBuilder {
             id: resources().widget_id(),
             drawable: None,
-            layout: WidgetLayout::new(),
+            layout: LayoutBuilder::new(),
             event_handlers: Vec::new(),
             debug_name: None,
             debug_color: None,
             children: Vec::new(),
+            scrollable: false,
         }
     }
     pub fn set_drawable(mut self, drawable: Drawable) -> Self {
@@ -53,25 +56,38 @@ impl WidgetBuilder {
         self.debug_color = Some(color);
         self
     }
+    pub fn set_scrollable(mut self) -> Self {
+        self.scrollable = true;
+        self
+    }
     // only method that is not chainable, because usually called out of order
     pub fn add_child(&mut self, mut widget: Box<WidgetBuilder>) {
+        if self.scrollable {
+            widget.layout.scroll_inside(&self.layout.vars);
+        } else {
+            widget.layout.bound_by(&self.layout.vars, None);
+        }
         self.children.push(widget);
     }
 
-    pub fn create(self, ui: &mut Ui, parent_index: Option<NodeIndex>) -> NodeIndex {
-        let mut widget = Widget::new(self.id,
-                                     self.drawable,
-                                     self.layout,
-                                     self.event_handlers,
-                                     self.debug_name,
-                                     self.debug_color);
+    pub fn build(self) -> (Vec<Box<WidgetBuilder>>, Vec<Constraint>, Widget) {
 
-        widget.layout.update_solver(&mut ui.solver);
-
-        let widget_index = ui.add_widget(parent_index, widget);
-        for child in self.children {
-            child.create(ui, Some(widget_index));
+        if let Some(ref debug_name) = self.debug_name {
+            cassowary::add_var_name(self.layout.vars.left, &format!("{}.left", debug_name));
+            cassowary::add_var_name(self.layout.vars.top, &format!("{}.top", debug_name));
+            cassowary::add_var_name(self.layout.vars.right, &format!("{}.right", debug_name));
+            cassowary::add_var_name(self.layout.vars.bottom, &format!("{}.bottom", debug_name));
         }
-        widget_index
+
+        (
+            self.children,
+            self.layout.constraints,
+            Widget::new(self.id,
+                        self.drawable,
+                        self.layout.vars,
+                        self.event_handlers,
+                        self.debug_name,
+                        self.debug_color)
+        )
     }
 }

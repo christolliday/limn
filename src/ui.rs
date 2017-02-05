@@ -10,7 +10,7 @@ use petgraph::stable_graph::Neighbors;
 
 use glutin;
 
-use cassowary::Solver;
+use cassowary::{Solver, Constraint};
 use cassowary::strength::*;
 
 use graphics::Context;
@@ -21,6 +21,7 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
+use widget::layout::{self, LayoutBuilder};
 use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_REDRAW, WIDGET_HOVER,
             WIDGET_SCROLL, WIDGET_PRESS};
 use util::{self, Point, Rectangle, Dimensions};
@@ -92,13 +93,12 @@ impl Ui {
         let window_dims = self.get_root_dims();
         window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
-    pub fn set_root(&mut self, root_widget: WidgetBuilder) {
-        self.root_index = Some(root_widget.create(self, None));
+    pub fn set_root(&mut self, mut root_widget: WidgetBuilder) {
+        root_widget.layout.top_left(Point { x: 0.0, y: 0.0 }, None);
+        self.root_index = Some(self.add_widget(root_widget, None));
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
         self.solver.add_edit_variable(root.layout.right, STRONG).unwrap();
         self.solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
-        root.layout.top_left(Point { x: 0.0, y: 0.0 }, None);
-        root.layout.update_solver(&mut self.solver);
     }
     pub fn get_root(&mut self) -> &Widget {
         &self.graph[self.root_index.unwrap()]
@@ -168,18 +168,23 @@ impl Ui {
             }
         }
     }
-    pub fn add_widget(&mut self, parent_index: Option<NodeIndex>, child: Widget) -> NodeIndex {
-        let id = child.id;
-        let child_index = self.graph.add_node(child);
-        if let Some(parent_index) = parent_index {
-            self.graph.add_edge(parent_index, child_index, ());
-            let (parent, child) = self.graph.index_twice_mut(parent_index, child_index);
-            parent.layout.add_child(&mut child.layout);
-            child.layout.update_solver(&mut self.solver);
+    pub fn add_widget(&mut self, mut widget: WidgetBuilder, parent_index: Option<NodeIndex>) -> NodeIndex {
+
+        let (children, constraints, widget) = widget.build();
+        for constraint in constraints {
+            self.solver.add_constraint(constraint).unwrap();
         }
-        self.widget_map.insert(id, child_index);
-        self.dirty_widgets.insert(child_index);
-        child_index
+        let id = widget.id;
+        let widget_index = self.graph.add_node(widget);
+        if let Some(parent_index) = parent_index {
+            self.graph.add_edge(parent_index, widget_index, ());
+        }
+        self.widget_map.insert(id, widget_index);
+        self.dirty_widgets.insert(widget_index);
+        for child in children {
+            self.add_widget(*child, Some(widget_index));
+        }
+        widget_index
     }
 
     pub fn remove_widget(&mut self, node_index: NodeIndex) {
@@ -229,6 +234,7 @@ impl Ui {
         // if layout has changed, send new mouse event, in case widget under mouse has shifted
         let has_changes = self.solver.fetch_changes().len() > 0;
         if has_changes {
+            //self.solver.debug_constraints();
             let mouse = self.input_state.mouse;
             let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
             self.handle_event(event, event_queue);

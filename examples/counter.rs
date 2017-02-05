@@ -57,7 +57,7 @@ fn main() {
         .add_handler(Box::new(CountHandler {}));
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);
-    text_widget.layout.center_vertical(&root_widget.layout);
+    text_widget.layout.center_vertical(&root_widget.layout.vars);
     linear_layout.add_widget(&mut text_widget.layout);
 
     let mut button_container = WidgetBuilder::new();
@@ -88,8 +88,8 @@ fn main() {
         .set_text("Count")
         .widget
         .add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
-    button_widget.layout.center(&button_container.layout);
-    button_widget.layout.bound_by(&button_container.layout, Some(50.0));
+    button_widget.layout.center(&button_container.layout.vars);
+    button_widget.layout.bound_by(&button_container.layout.vars, Some(50.0));
     button_container.add_child(Box::new(button_widget));
     root_widget.add_child(Box::new(text_widget));
     root_widget.add_child(Box::new(button_container));

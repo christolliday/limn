@@ -102,7 +102,7 @@ impl ToggleButtonBuilder {
             .set_drawable(button_text_drawable)
             .add_handler(Box::new(PropsChangeEventHandler {}));
         button_text_widget.layout.dimensions(button_text_dims);
-        button_text_widget.layout.center(&self.widget.layout);
+        button_text_widget.layout.center(&self.widget.layout.vars);
 
         self.widget.add_child(Box::new(button_text_widget));
         self
@@ -154,7 +154,7 @@ impl PushButtonBuilder {
         let button_text_dims = text::measure_dims_no_wrap(&drawable);
         let mut button_text_widget = WidgetBuilder::new().set_drawable(drawable);
         button_text_widget.layout.dimensions(button_text_dims);
-        button_text_widget.layout.center(&self.widget.layout);
+        button_text_widget.layout.center(&self.widget.layout.vars);
 
         self.widget.add_child(Box::new(button_text_widget));
         self

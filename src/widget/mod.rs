@@ -19,7 +19,7 @@ use util::{self, Point, Rectangle};
 use ui::{Ui, InputState};
 
 use self::builder::WidgetBuilder;
-use self::layout::WidgetLayout;
+use self::layout::{LayoutVars, LayoutBuilder};
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum Property {
@@ -43,7 +43,7 @@ pub struct EventArgs<'a> {
     pub data: &'a (Any + 'static),
     pub widget_id: Id,
     pub drawable: &'a mut Option<Drawable>,
-    pub layout: &'a mut WidgetLayout,
+    pub layout: &'a mut LayoutVars,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut Solver,
     pub input_state: &'a InputState,
@@ -123,7 +123,7 @@ impl WidgetStyle {
 pub struct Widget {
     pub id: Id,
     pub drawable: Option<Drawable>,
-    pub layout: WidgetLayout,
+    pub layout: LayoutVars,
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -132,7 +132,7 @@ pub struct Widget {
 impl Widget {
     pub fn new(id: Id,
                mut drawable: Option<Drawable>,
-               layout: WidgetLayout,
+               layout: LayoutVars,
                event_handlers: Vec<Box<EventHandler>>,
                debug_name: Option<String>,
                debug_color: Option<Color>)
