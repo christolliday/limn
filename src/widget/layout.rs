@@ -40,6 +40,45 @@ impl LinearLayout {
     }
 }
 
+/*
+constraint types, for declarative layout
+pub enum ConstraintType {
+    // EQ, StrDefault: WEAK
+    ShrinkWidth,
+    ShrinkHeight,
+    // EQ, StrDefault: WEAK,
+    GrowWidth,
+    GrowHeight,
+    // EQ, Args(Widget), StrDefault: REQ
+    MatchWidth,
+    MatchHeight,
+    // GE, StrDefault: REQ
+    MinWidth,
+    MinHeight,
+    // GE, StrDefault: REQ,
+    MaxWidth,
+    MaxHeight,
+    // EQ, Args(Widget), StrDefault: REQ
+    CenterHorizontal,
+    CenterVertical,
+    // EQ, Args(Widget, Option<padding>), StrDefault: REQ
+    AlignTop,
+    AlignBottom,
+    AlignLeft,
+    AlignRight,
+    // GE, Args(Widget, Option<padding>), StrDefault: REQ
+    BoundTop,
+    BoundBottom,
+    BoundLeft,
+    BoundRight,
+    // GE, Args(Widget, Option<padding>), StrDefault: REQ
+    Above,
+    Below,
+    ToRightOf,
+    ToLeftOf,
+}
+*/
+
 pub struct WidgetLayout {
     pub left: Variable,
     pub top: Variable,
@@ -86,7 +125,7 @@ impl WidgetLayout {
         if self.scrollable {
             child_layout.scroll_inside(self);
         } else {
-            child_layout.bound_by(self);
+            child_layout.bound_by(self, None);
         }
     }
     pub fn add_constraint(&mut self, constraint: Constraint) {
@@ -131,15 +170,9 @@ impl WidgetLayout {
     pub fn height_strength(&mut self, height: Scalar, strength: f64) {
         self.constraints.push(self.bottom - self.top | EQ(strength) | height)
     }
-    pub fn top_left(&mut self, point: Point) {
-        self.constraints.push(self.left | EQ(REQUIRED) | point.x);
-        self.constraints.push(self.top | EQ(REQUIRED) | point.y);
-    }
-    pub fn pad(&mut self, distance: Scalar, outer_layout: &WidgetLayout) {
-        self.constraints.push(self.left - outer_layout.left | GE(REQUIRED) | distance);
-        self.constraints.push(self.top - outer_layout.top | GE(REQUIRED) | distance);
-        self.constraints.push(outer_layout.right - self.right | GE(REQUIRED) | distance);
-        self.constraints.push(outer_layout.bottom - self.bottom | GE(REQUIRED) | distance);
+    pub fn top_left(&mut self, point: Point, strength: Option<f64>) {
+        self.constraints.push(self.left | EQ(strength.unwrap_or(REQUIRED)) | point.x);
+        self.constraints.push(self.top | EQ(strength.unwrap_or(REQUIRED)) | point.y);
     }
     pub fn center(&mut self, layout: &WidgetLayout) {
         self.center_horizontal(layout);
@@ -177,13 +210,27 @@ impl WidgetLayout {
     pub fn to_right_of(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
         self.constraints.push(self.left - layout.right | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn bound_by(&mut self, layout: &WidgetLayout) {
-        let constraints = [self.left | GE(REQUIRED) | layout.left,
-                           self.top | GE(REQUIRED) | layout.top,
-                           self.right | LE(REQUIRED) | layout.right,
-                           self.bottom | LE(REQUIRED) | layout.bottom];
-        self.add_constraints(&constraints);
+
+    pub fn bound_left(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(self.left - layout.left | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
+    pub fn bound_top(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(self.top - layout.top | GE(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    pub fn bound_right(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(layout.right - self.right| GE(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    pub fn bound_bottom(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.constraints.push(layout.bottom - self.bottom | GE(REQUIRED) | padding.unwrap_or(0.0));
+    }
+
+    pub fn bound_by(&mut self, layout: &WidgetLayout, padding: Option<f64>) {
+        self.bound_left(layout, padding);
+        self.bound_top(layout, padding);
+        self.bound_right(layout, padding);
+        self.bound_bottom(layout, padding);
+    }
+
     pub fn scroll_inside(&mut self, layout: &WidgetLayout) {
         let constraints = [self.left | LE(REQUIRED) | layout.left,
                            self.top | LE(REQUIRED) | layout.top,

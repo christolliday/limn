@@ -89,7 +89,7 @@ fn main() {
         .widget
         .add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
     button_widget.layout.center(&button_container.layout);
-    button_widget.layout.pad(50.0, &button_container.layout);
+    button_widget.layout.bound_by(&button_container.layout, Some(50.0));
     button_container.add_child(Box::new(button_widget));
     root_widget.add_child(Box::new(text_widget));
     root_widget.add_child(Box::new(button_container));

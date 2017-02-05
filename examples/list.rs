@@ -24,7 +24,7 @@ fn main() {
     let mut root_widget = WidgetBuilder::new();
 
     let mut scroll_widget = WidgetBuilder::new();
-    scroll_widget.layout.pad(50.0, &root_widget.layout);
+    scroll_widget.layout.bound_by(&root_widget.layout, Some(50.0));
     scroll_widget.layout.dimensions(Dimensions {
         width: 300.0,
         height: 300.0,

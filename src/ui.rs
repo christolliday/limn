@@ -97,7 +97,7 @@ impl Ui {
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
         self.solver.add_edit_variable(root.layout.right, STRONG).unwrap();
         self.solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
-        root.layout.top_left(Point { x: 0.0, y: 0.0 });
+        root.layout.top_left(Point { x: 0.0, y: 0.0 }, None);
         root.layout.update_solver(&mut self.solver);
     }
     pub fn get_root(&mut self) -> &Widget {

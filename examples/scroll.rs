@@ -20,7 +20,7 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    scroll_widget.layout.pad(100.0, &root_widget.layout);
+    scroll_widget.layout.bound_by(&root_widget.layout, Some(50.0));
     scroll_widget.layout.scrollable = true;
 
     let mut rect_container_widget = WidgetBuilder::new()

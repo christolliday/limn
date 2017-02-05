@@ -2,10 +2,13 @@ extern crate limn;
 extern crate glutin;
 extern crate graphics;
 extern crate petgraph;
+extern crate cassowary;
 
 mod util;
 
 use petgraph::graph::NodeIndex;
+
+use cassowary::strength::*;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
@@ -55,7 +58,7 @@ fn main() {
         widget.layout.dimensions(Dimensions {width: 30.0, height: 30.0});
         let top_left = Point { x: center.x - 15.0, y: center.y - 15.0 };
 
-        widget.layout.top_left(top_left);
+        widget.layout.top_left(top_left, Some(STRONG));
         let root_index = ui.root_index.unwrap();
         widget.create(ui, Some(root_index))
     }

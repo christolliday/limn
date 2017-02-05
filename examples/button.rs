@@ -14,7 +14,7 @@ fn main() {
         .set_text("ON", "OFF")
         .widget;
     button.layout.center(&root_widget.layout);
-    button.layout.pad(50.0, &root_widget.layout);
+    button.layout.bound_by(&root_widget.layout, Some(50.0));
     root_widget.add_child(Box::new(button));
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
