@@ -86,7 +86,7 @@ fn main() {
         }
     }
     struct CircleEventHandler {
-        circles: Vec<NodeIndex>,
+        circles: Vec<(Point, NodeIndex)>,
         undo: Vec<Point>,
     }
     impl CircleEventHandler {
@@ -102,17 +102,21 @@ fn main() {
             let event = args.data.downcast_ref::<CircleEvent>().unwrap();
             match *event {
                 CircleEvent::Add(point) => {
-                    self.circles.push(create_circle(args.ui, &point));
+                    self.circles.push((point, create_circle(args.ui, &point)));
+                    self.undo.clear();
                 }
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
-                        let node_index = self.circles.pop().unwrap();
+                        let (point, node_index) = self.circles.pop().unwrap();
                         args.ui.remove_widget(node_index);
+                        self.undo.push(point);
                     }
                 }
                 CircleEvent::Redo => {
-                    // add from undo queue, if any
-                    // todo
+                    if self.undo.len() > 0 {
+                        let point = self.undo.pop().unwrap();
+                        self.circles.push((point, create_circle(args.ui, &point)));
+                    }
                 }
             }
         }
