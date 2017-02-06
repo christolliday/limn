@@ -6,7 +6,7 @@ use cassowary::{self, Constraint};
 
 use ui::{self, Ui};
 use widget::{Drawable, Widget, WidgetStyle, EventHandler, StyleArgs, DrawArgs};
-use widget::layout::LayoutBuilder;
+use widget::layout::{LayoutBuilder, WidgetConstraint};
 use resources::{resources, Id};
 use util::{self, Point, Rectangle};
 
@@ -70,7 +70,7 @@ impl WidgetBuilder {
         self.children.push(widget);
     }
 
-    pub fn build(self) -> (Vec<Box<WidgetBuilder>>, Vec<Constraint>, Widget) {
+    pub fn build(self) -> (Vec<Box<WidgetBuilder>>, Vec<WidgetConstraint>, Widget) {
 
         if let Some(ref debug_name) = self.debug_name {
             cassowary::add_var_name(self.layout.vars.left, &format!("{}.left", debug_name));
