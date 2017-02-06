@@ -10,6 +10,8 @@ use resources::WidgetId;
 use petgraph::visit::{Dfs, DfsPostOrder};
 use ui::{Ui, UiEventArgs, UiEventHandler};
 
+use widget::Property;
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct EventId(pub &'static str);
 
@@ -67,6 +69,10 @@ impl EventQueue {
         let mut queue = self.queue.lock().unwrap();
         queue.pop().unwrap()
     }
+    // common events
+    pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
+        self.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new((prop, add)));
+    }
 
     pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<Box<UiEventHandler>>) {
         while !self.is_empty() {
@@ -115,6 +121,7 @@ impl EventQueue {
                             event_handler.handle_event(UiEventArgs {
                                 data: data,
                                 ui: ui,
+                                event_queue: self,
                             });
                         }
                     }

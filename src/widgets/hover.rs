@@ -1,5 +1,5 @@
 use widget::{EventArgs, EventHandler, Property};
-use event::{self, EventId, EventAddress, Hover, WIDGET_HOVER, WIDGET_CHANGE_PROP};
+use event::{self, EventId, EventAddress, Hover, WIDGET_HOVER};
 
 pub struct HoverHandler {}
 impl EventHandler for HoverHandler {
@@ -12,8 +12,7 @@ impl EventHandler for HoverHandler {
             Hover::Over => true,
             Hover::Out => false,
         };
-        args.event_queue.push(EventAddress::SubTree(args.widget_id),
-                              WIDGET_CHANGE_PROP,
-                              Box::new((Property::Hover, hover)));
+
+        args.event_queue.change_prop(args.widget_id, Property::Hover, hover);
     }
 }

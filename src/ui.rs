@@ -51,6 +51,7 @@ pub trait UiEventHandler {
 pub struct UiEventArgs<'a> {
     pub data: &'a (Any + 'static),
     pub ui: &'a mut Ui,
+    pub event_queue: &'a mut EventQueue,
 }
 
 pub struct RedrawHandler {}

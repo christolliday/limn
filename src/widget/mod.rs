@@ -27,6 +27,7 @@ pub enum Property {
     Activated,
     Selected,
     Pressed,
+    Inactive,
 }
 pub type PropSet = BTreeSet<Property>;
 
