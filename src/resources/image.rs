@@ -1,8 +1,8 @@
+use std::path::Path;
 
 use gfx_device_gl::Factory;
 use gfx_graphics::{TextureSettings, Flip};
 use resources::{Map, ImageId};
-use std::path::Path;
 use backend::gfx::G2dTexture;
 
 pub type Texture = G2dTexture<'static>;

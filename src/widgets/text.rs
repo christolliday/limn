@@ -145,7 +145,7 @@ pub fn draw_text(draw_args: DrawArgs) {
 
     // Queue the glyphs to be cached.
     for glyph in positioned_glyphs.iter() {
-        glyph_cache.queue_glyph(state.font_id.index(), glyph.clone());
+        glyph_cache.queue_glyph(state.font_id.0, glyph.clone());
     }
 
     // Cache the glyphs within the GPU cache.
@@ -163,7 +163,7 @@ pub fn draw_text(draw_args: DrawArgs) {
     };
 
     let rectangles = positioned_glyphs.into_iter()
-        .filter_map(|g| glyph_cache.rect_for(state.font_id.index(), g).ok().unwrap_or(None))
+        .filter_map(|g| glyph_cache.rect_for(state.font_id.0, g).ok().unwrap_or(None))
         .map(|(uv_rect, screen_rect)| {
             (util::map_rect_i32(screen_rect), util::map_rect_f32(uv_rect) * tex_dim)
         });

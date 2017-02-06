@@ -1,27 +1,31 @@
 pub mod font;
 pub mod image;
 
-use std;
 use std::sync::{Mutex, MutexGuard};
 use std::fmt::Debug;
+use std::marker::PhantomData;
+use std::hash::Hash;
+use std::collections::HashMap;
 
 use self::font::Font;
 use self::image::Texture;
 
-pub trait Id: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {
-    fn new(index: usize) -> Self;
-    fn index(&self) -> usize;
+lazy_static! {
+    pub static ref RES: Mutex<Resources> = Mutex::new(Resources::new());
+}
+pub fn resources() -> MutexGuard<'static, Resources> {
+    RES.lock().unwrap()
 }
 
-/// A type-safe wrapper around a resource `Id`.
+pub trait Id: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {
+    fn new(index: usize) -> Self;
+}
+
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct WidgetId(pub usize);
 impl Id for WidgetId {
     fn new(index: usize) -> Self {
         WidgetId(index)
-    }
-    fn index(&self) -> usize {
-        self.0
     }
 }
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -30,9 +34,6 @@ impl Id for FontId {
     fn new(index: usize) -> Self {
         FontId(index)
     }
-    fn index(&self) -> usize {
-        self.0
-    }
 }
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ImageId(pub usize);
@@ -40,12 +41,8 @@ impl Id for ImageId {
     fn new(index: usize) -> Self {
         ImageId(index)
     }
-    fn index(&self) -> usize {
-        self.0
-    }
 }
-use std::marker::PhantomData;
-use std::hash::Hash;
+
 pub struct IdGen<I> {
     id: usize,
     phantom: PhantomData<I>
@@ -63,15 +60,15 @@ impl<I: Id> IdGen<I> {
 
 pub struct Map<I, T> {
     id_gen: IdGen<I>,
-    map: std::collections::HashMap<I, T>,
+    map: HashMap<I, T>,
 }
 
-impl<I: Id + Eq + Hash, T> Map<I, T> {
+impl<I: Id, T> Map<I, T> {
     /// Construct the new, empty `Map`.
     pub fn new() -> Self {
         Map {
             id_gen: IdGen::new(),
-            map: std::collections::HashMap::new(),
+            map: HashMap::new(),
         }
     }
     /// Borrow the resource associated with the given `Id`.
@@ -103,10 +100,4 @@ impl Resources {
     pub fn widget_id(&mut self) -> WidgetId {
         self.widget_id.next()
     }
-}
-lazy_static! {
-    pub static ref RES: Mutex<Resources> = Mutex::new(Resources::new());
-}
-pub fn resources() -> MutexGuard<'static, Resources> {
-    RES.lock().unwrap()
 }
