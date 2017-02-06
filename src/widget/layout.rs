@@ -11,17 +11,17 @@ pub enum Orientation {
     Horizontal,
     Vertical,
 }
-pub struct LinearLayout<'a> {
+pub struct LinearLayout {
     pub orientation: Orientation,
     pub end: Variable,
-    pub prev: &'a mut WidgetBuilder,
+    pub prev_id: WidgetId,
 }
-impl<'a> LinearLayout<'a> {
-    pub fn new(orientation: Orientation, parent: &'a mut WidgetBuilder) -> Self {
+impl LinearLayout {
+    pub fn new(orientation: Orientation, parent: &WidgetBuilder) -> Self {
         LinearLayout {
             orientation: orientation,
             end: LinearLayout::beginning(orientation, &parent),
-            prev: parent,
+            prev_id: parent.id,
         }
     }
     pub fn beginning(orientation: Orientation, widget: &WidgetBuilder) -> Variable {
@@ -36,12 +36,12 @@ impl<'a> LinearLayout<'a> {
             Orientation::Vertical => widget.layout.vars.bottom,
         }
     }
-    pub fn add_widget(&mut self, widget: &'a mut WidgetBuilder) {
+    pub fn add_widget(&mut self, widget: &mut WidgetBuilder) {
         let constraint = LinearLayout::beginning(self.orientation, &widget) | GE(REQUIRED) | self.end;
-        let constraint = WidgetConstraint::Relative(constraint, widget.id);
+        let constraint = WidgetConstraint::Relative(constraint, self.prev_id);
         self.end = LinearLayout::ending(self.orientation, &widget);
-        self.prev.layout.constraints.push(constraint);
-        self.prev = widget;
+        widget.layout.constraints.push(constraint);
+        self.prev_id = widget.id;
     }
 }
 
