@@ -5,8 +5,11 @@ use petgraph::graph::NodeIndex;
 use cassowary::{self, Constraint};
 
 use ui::{self, Ui};
-use widget::{Drawable, Widget, WidgetStyle, EventHandler, StyleArgs, DrawArgs};
+use widget::{Drawable, Widget, WidgetStyle, EventHandler, EventArgs, StyleArgs, DrawArgs, PropsChangeEventHandler};
 use widget::layout::{LayoutBuilder, WidgetConstraint};
+use widgets::hover::HoverHandler;
+use widgets::button::ClickHandler;
+use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
@@ -18,7 +21,7 @@ pub struct WidgetBuilder {
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<Box<WidgetBuilder>>,
-    pub scrollable: bool,
+    pub contents_scroll: bool,
 }
 
 impl WidgetBuilder {
@@ -31,7 +34,7 @@ impl WidgetBuilder {
             debug_name: None,
             debug_color: None,
             children: Vec::new(),
-            scrollable: false,
+            contents_scroll: false,
         }
     }
     pub fn set_drawable(mut self, drawable: Drawable) -> Self {
@@ -56,13 +59,28 @@ impl WidgetBuilder {
         self.debug_color = Some(color);
         self
     }
-    pub fn set_scrollable(mut self) -> Self {
-        self.scrollable = true;
-        self
+    // common handlers
+    pub fn contents_scroll(mut self) -> Self {
+        self.contents_scroll = true;
+        self.add_handler(Box::new(ScrollHandler {}))
     }
+    pub fn on_click<F>(mut self, on_click: F) -> Self
+    where F: Fn(&mut EventArgs) + 'static {
+        self.add_handler(Box::new(ClickHandler::new(on_click)))
+    }
+    pub fn enable_hover(mut self) -> Self {
+        self.add_handler(Box::new(HoverHandler {}))
+    }
+    pub fn props_may_change(mut self) -> Self {
+        self.add_handler(Box::new(PropsChangeEventHandler {}))
+    }
+    pub fn scrollable(mut self) -> Self {
+        self.add_handler(Box::new(WidgetScrollHandler::new()))
+    }
+
     // only method that is not chainable, because usually called out of order
     pub fn add_child(&mut self, mut widget: Box<WidgetBuilder>) {
-        if self.scrollable {
+        if self.contents_scroll {
             widget.layout.scroll_inside(&self);
         } else {
             widget.layout.bound_by(&self, None);

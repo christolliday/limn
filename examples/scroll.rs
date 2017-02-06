@@ -17,9 +17,8 @@ fn main() {
         .set_debug_name("root");
 
     let mut scroll_widget = WidgetBuilder::new()
-        .add_handler(Box::new(ScrollHandler {}))
         .set_debug_name("scroll")
-        .set_scrollable();
+        .contents_scroll();
     scroll_widget.layout.dimensions(Dimensions {
         width: 200.0,
         height: 200.0,
@@ -27,8 +26,8 @@ fn main() {
     scroll_widget.layout.bound_by(&root_widget, Some(50.0));
 
     let mut rect_container_widget = WidgetBuilder::new()
-        .add_handler(Box::new(WidgetScrollHandler::new()))
-        .set_debug_name("rect_container");
+        .set_debug_name("rect_container")
+        .scrollable();
     rect_container_widget.layout.dimensions(Dimensions {
         width: 400.0,
         height: 400.0,

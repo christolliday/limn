@@ -218,9 +218,7 @@ impl EventHandler for PropsChangeEventHandler {
             }
             drawable.apply_style();
         }
-        args.event_queue.push(EventAddress::Widget(args.widget_id),
-                              WIDGET_PROPS_CHANGED,
-                              Box::new(()));
+        args.event_queue.signal(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED);
     }
 }
 

@@ -104,10 +104,15 @@ impl ToggleButtonBuilder {
     }
 }
 
-struct ClickHandler<F> where F: Fn(&mut EventArgs) {
+pub struct ClickHandler<F> where F: Fn(&mut EventArgs) {
     callback: F
 }
-impl<F> EventHandler for ClickHandler<F> where F: Fn(&mut EventArgs) {
+impl<F: Fn(&mut EventArgs)> ClickHandler<F> {
+    pub fn new(callback: F) -> Self {
+        ClickHandler { callback: callback }
+    }
+}
+impl<F: Fn(&mut EventArgs)> EventHandler for ClickHandler<F> {
     fn event_id(&self) -> EventId {
         WIDGET_PRESS
     }
@@ -155,11 +160,6 @@ impl PushButtonBuilder {
         button_text_widget.layout.center(&self.widget);
 
         self.widget.add_child(Box::new(button_text_widget));
-        self
-    }
-    pub fn set_on_click<F>(mut self, on_click: F) -> Self
-        where F: Fn(&mut EventArgs) + 'static {
-        self.widget.event_handlers.push(Box::new(ClickHandler{ callback: on_click }));
         self
     }
 }

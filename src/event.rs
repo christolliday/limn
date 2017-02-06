@@ -73,6 +73,9 @@ impl EventQueue {
     pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
         self.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new((prop, add)));
     }
+    pub fn signal(&mut self, address: EventAddress, event_id: EventId) {
+        self.push(address, event_id, Box::new(()));
+    }
 
     pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<Box<UiEventHandler>>) {
         while !self.is_empty() {

@@ -14,3 +14,5 @@ resizing
 high level events, eg. double click
 tabs
 
+make event queue more general, ie. make undermouse events handled by a UiEventHandler instance
+allow event handlers to register other handlers

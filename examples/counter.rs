@@ -62,32 +62,12 @@ fn main() {
 
     let mut button_container = WidgetBuilder::new();
     linear_layout.add_widget(&mut button_container);
-    struct PushButtonHandler {
-        receiver_id: WidgetId,
-    }
-    impl EventHandler for PushButtonHandler {
-        fn event_id(&self) -> EventId {
-            event::WIDGET_PRESS
-        }
-        fn handle_event(&mut self, args: EventArgs) {
-            let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-            match *event {
-                glutin::Event::MouseInput(state, button) => {
-                    match state {
-                        glutin::ElementState::Released => {
-                            args.event_queue.push(EventAddress::Widget(self.receiver_id),
-                                                COUNTER,
-                                                Box::new(()));
-                        }, _ => ()
-                    }
-                }, _ => ()
-            }
-        }
-    }
+    let root_id = root_widget.id;
     let mut button_widget = PushButtonBuilder::new()
-        .set_text("Count")
-        .widget
-        .add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
+        .set_text("Count").widget
+        .on_click(move |args| {
+            args.event_queue.signal(EventAddress::Widget(root_id), COUNTER);
+        });
     button_widget.layout.center(&button_container);
     button_widget.layout.bound_by(&button_container, Some(50.0));
     button_container.add_child(Box::new(button_widget));
@@ -108,9 +88,8 @@ fn main() {
         }
         fn handle_event(&mut self, args: EventArgs) {
             self.count += 1;
-            args.event_queue.push(EventAddress::SubTree(args.widget_id),
-                                  COUNT,
-                                  Box::new(self.count));
+            let address = EventAddress::SubTree(args.widget_id);
+            args.event_queue.push(address, COUNT, Box::new(self.count));
         }
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));

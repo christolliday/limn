@@ -36,11 +36,8 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new(mut event_queue: EventQueue) -> Self {
 
-        let drawable = primitives::ellipse_drawable(WHITE,
-                                                    Some(graphics::ellipse::Border {
-                                                        color: BLACK,
-                                                        radius: 2.0,
-                                                    }));
+        let border = graphics::ellipse::Border { color: BLACK, radius: 2.0 };
+        let drawable = primitives::ellipse_drawable(WHITE, Some(border));
         let mut widget = WidgetBuilder::new().set_drawable(drawable);
         widget.layout.dimensions(Dimensions {
             width: 200.0,
@@ -116,7 +113,7 @@ impl ClockBuilder {
         let clock_id = widget.id;
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
-            event_queue.push(EventAddress::SubTree(clock_id), CLOCK_TICK, Box::new(()));
+            event_queue.signal(EventAddress::SubTree(clock_id), CLOCK_TICK);
         });
 
         ClockBuilder { widget: widget }

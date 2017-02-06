@@ -33,15 +33,15 @@ fn main() {
         button_container.layout.minimize();
 
         let mut undo_widget = PushButtonBuilder::new()
-            .set_text("Undo")
-            .set_on_click(|args| {
+            .set_text("Undo").widget
+            .on_click(|args| {
                 args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(CircleEvent::Undo));
-            }).widget;
+            });
         let mut redo_widget = PushButtonBuilder::new()
-            .set_text("Redo")
-            .set_on_click(|args| {
+            .set_text("Redo").widget
+            .on_click(|args| {
                 args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(CircleEvent::Redo));
-            }).widget;
+            });
         redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
 
         let (undo_id, redo_id) = (undo_widget.id, redo_widget.id);
@@ -55,7 +55,7 @@ fn main() {
     fn create_circle(ui: &mut Ui, center: &Point) -> WidgetId {
         let border = graphics::ellipse::Border { color: BLACK, radius: 2.0 };
         let mut widget = WidgetBuilder::new()
-                        .set_drawable(primitives::ellipse_drawable(RED, Some(border)));
+            .set_drawable(primitives::ellipse_drawable(RED, Some(border)));
         widget.layout.dimensions(Dimensions {width: 30.0, height: 30.0});
         let top_left = Point { x: center.x - 15.0, y: center.y - 15.0 };
 
@@ -72,25 +72,6 @@ fn main() {
         Redo,
     }
 
-    struct CircleClickHandler {}
-    impl EventHandler for CircleClickHandler {
-        fn event_id(&self) -> EventId {
-            WIDGET_PRESS
-        }
-        fn handle_event(&mut self, args: EventArgs) {
-            let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-            match *event {
-                glutin::Event::MouseInput(state, button) => {
-                    match state {
-                        glutin::ElementState::Released => {
-                            let event = CircleEvent::Add(args.input_state.mouse);
-                            args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(event));
-                        } _ => ()
-                    }
-                } _ => ()
-            }
-        }
-    }
     struct CircleEventHandler {
         undo_id: WidgetId,
         redo_id: WidgetId,
@@ -121,6 +102,7 @@ fn main() {
                         let (point, node_index) = self.circles.pop().unwrap();
                         args.ui.remove_widget(node_index);
                         self.undo.push(point);
+                        args.event_queue.change_prop(self.redo_id, Property::Inactive, false);
                         if self.circles.len() == 0 {
                             args.event_queue.change_prop(self.undo_id, Property::Inactive, true);
                         }
@@ -139,7 +121,10 @@ fn main() {
         }
     }
     let mut root_widget = WidgetBuilder::new()
-        .add_handler(Box::new(CircleClickHandler{}));
+        .on_click(|args| {
+            let event = CircleEvent::Add(args.input_state.mouse);
+            args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(event));
+        });
     root_widget.layout.dimensions(Dimensions {width: 300.0, height: 300.0});
 
 
