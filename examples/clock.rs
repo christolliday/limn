@@ -128,8 +128,8 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
     let mut clock = ClockBuilder::new(event_queue.clone()).widget;
-    clock.layout.center(&root_widget.layout.vars);
-    clock.layout.bound_by(&root_widget.layout.vars, Some(50.0));
+    clock.layout.center(&root_widget);
+    clock.layout.bound_by(&root_widget, Some(50.0));
     root_widget.add_child(Box::new(clock));
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});

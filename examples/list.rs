@@ -26,7 +26,7 @@ fn main() {
     let mut scroll_widget = WidgetBuilder::new()
         .add_handler(Box::new(ScrollHandler {}))
         .set_scrollable();
-    scroll_widget.layout.bound_by(&root_widget.layout.vars, Some(50.0));
+    scroll_widget.layout.bound_by(&root_widget, Some(50.0));
     scroll_widget.layout.dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
@@ -35,11 +35,11 @@ fn main() {
     let mut list_widget = WidgetBuilder::new()
         .add_handler(Box::new(ListHandler::new()))
         .add_handler(Box::new(WidgetScrollHandler::new()));
-    list_widget.layout.match_width(&scroll_widget.layout.vars);
+    list_widget.layout.match_width(&scroll_widget);
 
 
     let list_item_widgets = {
-        let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget.layout);
+        let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
             let text_fields = vec!{
@@ -57,14 +57,14 @@ fn main() {
                 .add_handler(Box::new(HoverHandler {}))
                 .add_handler(Box::new(PropsChangeEventHandler {}))
                 .add_handler(Box::new(ListItemHandler::new(list_widget.id)));
-            list_item_widget.layout.match_width(&list_widget.layout.vars);
+            list_item_widget.layout.match_width(&list_widget);
             list_item_widget.layout.height(text_dims.height);
-            linear_layout.add_widget(&mut list_item_widget.layout);
+            linear_layout.add_widget(&mut list_item_widget);
 
             let mut list_text_widget = WidgetBuilder::new()
                 .set_drawable(text_drawable)
                 .set_debug_name("text");
-            list_text_widget.layout.center(&list_item_widget.layout.vars);
+            list_text_widget.layout.center(&list_item_widget);
             list_item_widget.add_child(Box::new(list_text_widget));
 
             list_item_widgets.push(list_item_widget);

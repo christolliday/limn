@@ -24,7 +24,7 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    scroll_widget.layout.bound_by(&root_widget.layout.vars, Some(50.0));
+    scroll_widget.layout.bound_by(&root_widget, Some(50.0));
 
     let mut rect_container_widget = WidgetBuilder::new()
         .add_handler(Box::new(WidgetScrollHandler::new()))
@@ -40,8 +40,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_tl_widget.layout.align_top(&rect_container_widget.layout.vars, None);
-    rect_tl_widget.layout.align_left(&rect_container_widget.layout.vars, None);
+    rect_tl_widget.layout.align_top(&rect_container_widget, None);
+    rect_tl_widget.layout.align_left(&rect_container_widget, None);
 
     let style = RectStyle { background: Value::Single(GREEN) };
     let mut rect_tr_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
@@ -49,8 +49,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_tr_widget.layout.align_top(&rect_container_widget.layout.vars, None);
-    rect_tr_widget.layout.align_right(&rect_container_widget.layout.vars, None);
+    rect_tr_widget.layout.align_top(&rect_container_widget, None);
+    rect_tr_widget.layout.align_right(&rect_container_widget, None);
 
     let style = RectStyle { background: Value::Single(BLUE) };
     let mut rect_bl_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
@@ -58,8 +58,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_bl_widget.layout.align_bottom(&rect_container_widget.layout.vars, None);
-    rect_bl_widget.layout.align_left(&rect_container_widget.layout.vars, None);
+    rect_bl_widget.layout.align_bottom(&rect_container_widget, None);
+    rect_bl_widget.layout.align_left(&rect_container_widget, None);
 
     let style = RectStyle { background: Value::Single(FUSCHIA) };
     let mut rect_br_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
@@ -67,8 +67,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_br_widget.layout.align_bottom(&rect_container_widget.layout.vars, None);
-    rect_br_widget.layout.align_right(&rect_container_widget.layout.vars, None);
+    rect_br_widget.layout.align_bottom(&rect_container_widget, None);
+    rect_br_widget.layout.align_right(&rect_container_widget, None);
 
     rect_container_widget.add_child(Box::new(rect_tl_widget));
     rect_container_widget.add_child(Box::new(rect_tr_widget));

@@ -26,10 +26,10 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
 
-    let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget.layout);
+    let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget);
     let mut left_spacer = WidgetBuilder::new();
     left_spacer.layout.width(50.0);
-    linear_layout.add_widget(&mut left_spacer.layout);
+    linear_layout.add_widget(&mut left_spacer);
     root_widget.add_child(Box::new(left_spacer));
 
     struct CountHandler {}
@@ -57,11 +57,11 @@ fn main() {
         .add_handler(Box::new(CountHandler {}));
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);
-    text_widget.layout.center_vertical(&root_widget.layout.vars);
-    linear_layout.add_widget(&mut text_widget.layout);
+    text_widget.layout.center_vertical(&root_widget);
+    linear_layout.add_widget(&mut text_widget);
 
     let mut button_container = WidgetBuilder::new();
-    linear_layout.add_widget(&mut button_container.layout);
+    linear_layout.add_widget(&mut button_container);
     struct PushButtonHandler {
         receiver_id: Id,
     }
@@ -88,8 +88,8 @@ fn main() {
         .set_text("Count")
         .widget
         .add_handler(Box::new(PushButtonHandler { receiver_id: root_widget.id }));
-    button_widget.layout.center(&button_container.layout.vars);
-    button_widget.layout.bound_by(&button_container.layout.vars, Some(50.0));
+    button_widget.layout.center(&button_container);
+    button_widget.layout.bound_by(&button_container, Some(50.0));
     button_container.add_child(Box::new(button_widget));
     root_widget.add_child(Box::new(text_widget));
     root_widget.add_child(Box::new(button_container));

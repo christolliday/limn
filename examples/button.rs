@@ -13,8 +13,8 @@ fn main() {
     let mut button = ToggleButtonBuilder::new()
         .set_text("ON", "OFF")
         .widget;
-    button.layout.center(&root_widget.layout.vars);
-    button.layout.bound_by(&root_widget.layout.vars, Some(50.0));
+    button.layout.center(&root_widget);
+    button.layout.bound_by(&root_widget, Some(50.0));
     root_widget.add_child(Box::new(button));
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});

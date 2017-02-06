@@ -28,8 +28,8 @@ fn main() {
     fn create_undo_redo_buttons(ui: &mut Ui, root_widget: &mut WidgetBuilder) {
         let button_container = {
             let mut button_container = WidgetBuilder::new();
-            button_container.layout.center_horizontal(&root_widget.layout.vars);
-            button_container.layout.align_bottom(&root_widget.layout.vars, Some(20.0));
+            button_container.layout.center_horizontal(&root_widget);
+            button_container.layout.align_bottom(&root_widget, Some(20.0));
             button_container.layout.minimize();
 
             let mut undo_widget = PushButtonBuilder::new()
@@ -42,7 +42,7 @@ fn main() {
                 .set_on_click(|args| {
                     args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, Box::new(CircleEvent::Redo));
                 }).widget;
-            redo_widget.layout.to_right_of(&undo_widget.layout.vars, Some(20.0));
+            redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
 
             button_container.add_child(Box::new(undo_widget));
             button_container.add_child(Box::new(redo_widget));

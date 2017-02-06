@@ -63,9 +63,9 @@ impl WidgetBuilder {
     // only method that is not chainable, because usually called out of order
     pub fn add_child(&mut self, mut widget: Box<WidgetBuilder>) {
         if self.scrollable {
-            widget.layout.scroll_inside(&self.layout.vars);
+            widget.layout.scroll_inside(&self);
         } else {
-            widget.layout.bound_by(&self.layout.vars, None);
+            widget.layout.bound_by(&self, None);
         }
         self.children.push(widget);
     }
