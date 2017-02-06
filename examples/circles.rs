@@ -17,7 +17,7 @@ use limn::widget::{EventHandler, EventArgs};
 use limn::event::{EventId, EventAddress, WIDGET_PRESS};
 use limn::ui::{Ui, UiEventHandler, UiEventArgs};
 use limn::util::{Dimensions, Point};
-use limn::resources::Id;
+use limn::resources::WidgetId;
 use limn::color::*;
 
 const CIRCLE_EVENT: EventId = EventId("CIRCLE_EVENT");
@@ -52,7 +52,7 @@ fn main() {
         root_widget.add_child(Box::new(button_container));
     }
 
-    fn create_circle(ui: &mut Ui, center: &Point) -> Id {
+    fn create_circle(ui: &mut Ui, center: &Point) -> WidgetId {
         let border = graphics::ellipse::Border { color: BLACK, radius: 2.0 };
         let mut widget = WidgetBuilder::new()
                         .set_drawable(primitives::ellipse_drawable(RED, Some(border)));
@@ -92,7 +92,7 @@ fn main() {
         }
     }
     struct CircleEventHandler {
-        circles: Vec<(Point, Id)>,
+        circles: Vec<(Point, WidgetId)>,
         undo: Vec<Point>,
     }
     impl CircleEventHandler {

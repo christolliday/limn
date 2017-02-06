@@ -2,20 +2,20 @@ use graphics::{self, Transformed};
 
 use backend::gfx::ImageSize;
 
-use resources::{Id, resources};
+use resources::{ImageId, resources};
 use widget::{Drawable, DrawArgs};
 use util::Dimensions;
 
-pub fn image_drawable(image_id: Id) -> Drawable {
+pub fn image_drawable(image_id: ImageId) -> Drawable {
     let draw_state = ImageDrawState::new(image_id);
     Drawable::new(Box::new(draw_state), draw_image)
 }
 pub struct ImageDrawState {
-    pub image_id: Id,
+    pub image_id: ImageId,
     pub scale: Dimensions,
 }
 impl ImageDrawState {
-    pub fn new(image_id: Id) -> Self {
+    pub fn new(image_id: ImageId) -> Self {
         ImageDrawState {
             image_id: image_id,
             scale: Dimensions {

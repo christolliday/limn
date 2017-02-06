@@ -13,7 +13,7 @@ use limn::widgets::text::{self, TextDrawState, TextStyleField, TextStyle};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
 use limn::event::{self, EventId, EventAddress};
-use limn::resources::Id;
+use limn::resources::WidgetId;
 use limn::color::*;
 use limn::theme::STYLE_TEXT;
 
@@ -26,7 +26,7 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
 
-    let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &root_widget);
+    let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &mut root_widget);
     let mut left_spacer = WidgetBuilder::new();
     left_spacer.layout.width(50.0);
     linear_layout.add_widget(&mut left_spacer);
@@ -63,7 +63,7 @@ fn main() {
     let mut button_container = WidgetBuilder::new();
     linear_layout.add_widget(&mut button_container);
     struct PushButtonHandler {
-        receiver_id: Id,
+        receiver_id: WidgetId,
     }
     impl EventHandler for PushButtonHandler {
         fn event_id(&self) -> EventId {

@@ -5,13 +5,13 @@ use widget::{EventArgs, EventHandler, Property, PropSet};
 use widgets::primitives::RectStyle;
 use widget::style::Value;
 use event::{self, EventId, EventAddress, WIDGET_CHANGE_PROP};
-use resources::Id;
+use resources::WidgetId;
 use color::*;
 
 const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("limn/list_item_selected");
 
 pub struct ListHandler {
-    selected: Option<Id>,
+    selected: Option<WidgetId>,
 }
 impl ListHandler {
     pub fn new() -> Self {
@@ -23,7 +23,7 @@ impl EventHandler for ListHandler {
         WIDGET_LIST_ITEM_SELECTED
     }
     fn handle_event(&mut self, mut args: EventArgs) {
-        let selected = args.data.downcast_ref::<Id>().unwrap();
+        let selected = args.data.downcast_ref::<WidgetId>().unwrap();
         if let Some(old_selected) = self.selected {
             if selected != &old_selected {
                 args.event_queue.push(EventAddress::SubTree(old_selected),
@@ -36,10 +36,10 @@ impl EventHandler for ListHandler {
 }
 
 pub struct ListItemHandler {
-    list_id: Id,
+    list_id: WidgetId,
 }
 impl ListItemHandler {
-    pub fn new(list_id: Id) -> Self {
+    pub fn new(list_id: WidgetId) -> Self {
         ListItemHandler { list_id: list_id }
     }
 }

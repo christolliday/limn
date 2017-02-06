@@ -3,7 +3,7 @@ use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
 use widget::builder::WidgetBuilder;
-use resources::Id;
+use resources::WidgetId;
 use util::{Point, Rectangle, Dimensions, Scalar};
 
 #[derive(Copy, Clone)]
@@ -86,15 +86,8 @@ pub enum ConstraintType {
 
 pub enum WidgetConstraint {
     Local(Constraint),
-    Relative(Constraint, Id),
+    Relative(Constraint, WidgetId),
 }
-/*pub struct WidgetConstraint {
-    constraint: Constraint,
-    widget: Option<Id>,
-}
-pub fn WidgetConstraint {
-    fn new(constraint: Constraint, widget: Option)
-}*/
 
 pub struct LayoutVars {
     pub left: Variable,

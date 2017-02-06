@@ -14,7 +14,7 @@ use backend::glyph::GlyphCache;
 
 #[macro_use]
 use event::{self, EventAddress, EventId, EventQueue, WIDGET_PROPS_CHANGED, WIDGET_CHANGE_PROP};
-use resources::Id;
+use resources::WidgetId;
 use util::{self, Point, Rectangle};
 use ui::{Ui, InputState};
 
@@ -41,7 +41,7 @@ pub struct DrawArgs<'a, 'b: 'a> {
 
 pub struct EventArgs<'a> {
     pub data: &'a (Any + 'static),
-    pub widget_id: Id,
+    pub widget_id: WidgetId,
     pub drawable: &'a mut Option<Drawable>,
     pub layout: &'a mut LayoutVars,
     pub event_queue: &'a mut EventQueue,
@@ -121,7 +121,7 @@ impl WidgetStyle {
 }
 
 pub struct Widget {
-    pub id: Id,
+    pub id: WidgetId,
     pub drawable: Option<Drawable>,
     pub layout: LayoutVars,
     pub event_handlers: Vec<Box<EventHandler>>,
@@ -130,7 +130,7 @@ pub struct Widget {
 }
 
 impl Widget {
-    pub fn new(id: Id,
+    pub fn new(id: WidgetId,
                mut drawable: Option<Drawable>,
                layout: LayoutVars,
                event_handlers: Vec<Box<EventHandler>>,

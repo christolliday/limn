@@ -25,14 +25,14 @@ use widget::layout::{self, LayoutBuilder, WidgetConstraint};
 use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_REDRAW, WIDGET_HOVER,
             WIDGET_SCROLL, WIDGET_PRESS};
 use util::{self, Point, Rectangle, Dimensions};
-use resources::Id;
+use resources::WidgetId;
 use color::*;
 
 const DEBUG_BOUNDS: bool = false;
 
 pub struct InputState {
     pub mouse: Point,
-    pub last_over: HashSet<Id>,
+    pub last_over: HashSet<WidgetId>,
 }
 impl InputState {
     fn new() -> Self {
@@ -73,8 +73,8 @@ pub struct Ui {
     pub root_index: Option<NodeIndex>,
     pub solver: Solver,
     pub input_state: InputState,
-    pub widget_map: HashMap<Id, NodeIndex>,
-    pub constraint_map: HashMap<Id, Vec<Constraint>>,
+    pub widget_map: HashMap<WidgetId, NodeIndex>,
+    pub constraint_map: HashMap<WidgetId, Vec<Constraint>>,
     pub dirty_widgets: HashSet<NodeIndex>,
     pub glyph_cache: GlyphCache,
 }
@@ -207,7 +207,7 @@ impl Ui {
         widget_index
     }
 
-    pub fn remove_widget(&mut self, widget_id: Id) {
+    pub fn remove_widget(&mut self, widget_id: WidgetId) {
         if let Some(node_index) = self.find_widget(widget_id) {
             self.graph.remove_node(node_index);
             self.dirty_widgets.insert(self.root_index.unwrap());
@@ -223,7 +223,7 @@ impl Ui {
             self.constraint_map.remove(&widget_id);
         }
     }
-    pub fn get_widget(&self, widget_id: Id) -> Option<&Widget> {
+    pub fn get_widget(&self, widget_id: WidgetId) -> Option<&Widget> {
         self.widget_map.get(&widget_id).and_then(|node_index| {
             let ref widget = self.graph[NodeIndex::new(node_index.index())];
             return Some(widget);
@@ -276,7 +276,7 @@ impl Ui {
         let ref mut widget = self.graph[node_index];
         widget.is_mouse_over(&mut self.solver, self.input_state.mouse)
     }
-    pub fn find_widget(&mut self, widget_id: Id) -> Option<NodeIndex> {
+    pub fn find_widget(&mut self, widget_id: WidgetId) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
     }
 

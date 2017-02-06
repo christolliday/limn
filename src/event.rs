@@ -6,7 +6,7 @@ use glutin::WindowProxy;
 
 use backend::Window;
 
-use resources::Id;
+use resources::WidgetId;
 use petgraph::visit::{Dfs, DfsPostOrder};
 use ui::{Ui, UiEventArgs, UiEventHandler};
 
@@ -34,9 +34,9 @@ pub enum Hover {
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {
-    Widget(Id),
-    Child(Id),
-    SubTree(Id),
+    Widget(WidgetId),
+    Child(WidgetId),
+    SubTree(WidgetId),
     UnderMouse,
     Ui,
 }

@@ -39,7 +39,7 @@ fn main() {
 
 
     let list_item_widgets = {
-        let mut linear_layout = LinearLayout::new(Orientation::Vertical, &list_widget);
+        let mut linear_layout = LinearLayout::new(Orientation::Vertical, &mut list_widget);
         let mut list_item_widgets = Vec::new();
         for i in 1..15 {
             let text_fields = vec!{

@@ -9,7 +9,7 @@ use backend::glyph::{self, GlyphCache};
 use backend::gfx::ImageSize;
 
 use text::{self, Wrap};
-use resources::{Id, resources};
+use resources::{Id, FontId, resources};
 use util::{self, Dimensions, Align, Scalar};
 use color::*;
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, Property, PropSet};
@@ -25,7 +25,7 @@ pub fn text_drawable(style: TextStyle) -> Drawable {
 
 pub struct TextDrawState {
     pub text: String,
-    pub font_id: Id,
+    pub font_id: FontId,
     pub font_size: Scalar,
     pub text_color: Color,
     pub background_color: Color,
@@ -45,7 +45,7 @@ pub fn apply_text_style(args: StyleArgs) {
 #[derive(Clone)]
 pub struct TextStyle {
     pub text: Value<String>,
-    pub font_id: Value<Id>,
+    pub font_id: Value<FontId>,
     pub font_size: Value<Scalar>,
     pub text_color: Value<Color>,
     pub background_color: Value<Color>,
@@ -54,7 +54,7 @@ pub struct TextStyle {
 #[derive(Debug)]
 pub enum TextStyleField {
     text(Value<String>),
-    font_id(Value<Id>),
+    font_id(Value<FontId>),
     font_size(Value<Scalar>),
     text_color(Value<Color>),
     background_color(Value<Color>),

@@ -8,7 +8,7 @@ use widget::{Property, PropSet};
 use widget::style::Value;
 use widgets::primitives::RectStyle;
 use widgets::text::TextStyle;
-use resources::Id;
+use resources::FontId;
 use color::*;
 
 static COLOR_BUTTON_DEFAULT: Color = RED;
@@ -37,7 +37,7 @@ lazy_static! {
 
     pub static ref STYLE_TEXT: TextStyle = {
         let text_style = Value::Single("".to_owned());
-        let font_id_style = Value::Single(Id(0)); // make first font loaded default for now
+        let font_id_style = Value::Single(FontId(0)); // make first font loaded default for now
         let font_size_style = Value::Single(20.0);
         let text_color_style = Value::Single(BLACK);
         let background_color_style = Value::Single(TRANSPARENT);

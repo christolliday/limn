@@ -7,7 +7,7 @@ use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
 use limn::ui::{self, Ui, UiEventArgs, UiEventHandler};
-use limn::resources::{Id, resources};
+use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
 use limn::event::EventQueue;
@@ -22,7 +22,7 @@ pub fn init_default(title: &str) -> (Window, Ui, EventQueue) {
 }
 
 #[allow(dead_code)]
-pub fn load_default_font() -> Id {
+pub fn load_default_font() -> FontId {
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
     let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
     let mut res = resources();
@@ -30,7 +30,7 @@ pub fn load_default_font() -> Id {
 }
 
 #[allow(dead_code)]
-pub fn load_default_image(window: &mut Window) -> Id {
+pub fn load_default_image(window: &mut Window) -> ImageId {
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
     let image_path = assets.join("images/rust.png");
     resources().images.insert_from_file(&mut window.context.factory, image_path)

@@ -15,7 +15,6 @@ use widget::style::Value;
 use theme::{STATE_ACTIVATED};
 use theme::{STYLE_TEXT, STYLE_TOGGLE_BUTTON};
 use util::Dimensions;
-use resources::Id;
 use color::*;
 
 

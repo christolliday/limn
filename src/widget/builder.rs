@@ -7,11 +7,11 @@ use cassowary::{self, Constraint};
 use ui::{self, Ui};
 use widget::{Drawable, Widget, WidgetStyle, EventHandler, StyleArgs, DrawArgs};
 use widget::layout::{LayoutBuilder, WidgetConstraint};
-use resources::{resources, Id};
+use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
 pub struct WidgetBuilder {
-    pub id: Id,
+    pub id: WidgetId,
     pub drawable: Option<Drawable>,
     pub layout: LayoutBuilder,
     pub event_handlers: Vec<Box<EventHandler>>,

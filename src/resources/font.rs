@@ -1,7 +1,7 @@
 /// The `font::Id` and `font::Map` types.
 use std;
 use rusttype;
-use super::{Map, Id};
+use super::{Map, FontId};
 
 /// The RustType `FontCollection` type used by conrod.
 pub type FontCollection = rusttype::FontCollection<'static>;
@@ -17,9 +17,9 @@ pub enum Error {
     NoFont,
 }
 
-impl Map<Font> {
+impl Map<FontId, Font> {
     /// Insert a single `Font` into the map by loading it from the given file path.
-    pub fn insert_from_file<P>(&mut self, path: P) -> Result<Id, Error>
+    pub fn insert_from_file<P>(&mut self, path: P) -> Result<FontId, Error>
         where P: AsRef<std::path::Path>
     {
         let font = try!(from_file(path));
