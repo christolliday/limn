@@ -6,8 +6,8 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 [dependencies]
 backend = { path = "backend" }
 piston2d-graphics = "0.19"
-cassowary = "0.2.0"
-petgraph = "0.4.3"
+cassowary = { git = "https://github.com/christolliday/cassowary-rs", branch = "debug" }
+petgraph = { git = "https://github.com/bluss/petgraph", rev = "f58200a" }
 rusttype = "0.2.0"
 gfx_device_gl = "0.11.0"
 piston2d-gfx_graphics = "0.33.1"
@@ -19,7 +19,3 @@ maplit = "0.1.4"
 [dev-dependencies]
 find_folder = "0.3.0"
 chrono = "0.2.25"
-
-[replace]
-"cassowary:0.2.0" = { path = "../cassowary-rs" }
-"petgraph:0.4.3" = { path = "../petgraph" }

@@ -1,3 +1,7 @@
+Limn GUI library.
+
+WIP
+
 todo:
 
 improve layout api, create/modify
