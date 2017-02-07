@@ -9,7 +9,7 @@ use petgraph::graph::NodeIndex;
 
 use resources::WidgetId;
 use widget::Widget;
-use widget::layout::LayoutVars;
+use widget::layout::{LayoutVars, WidgetConstraint};
 use event::{EventAddress, EventQueue};
 use event::id::*;
 
@@ -17,6 +17,7 @@ use event::id::*;
 pub struct LimnSolver {
     solver: cassowary::Solver,
     var_map: HashMap<Variable, WidgetId>,
+    constraint_map: HashMap<WidgetId, Vec<Constraint>>,
     event_queue: EventQueue,
 }
 
@@ -25,15 +26,50 @@ impl LimnSolver {
         LimnSolver {
             solver: cassowary::Solver::new(),
             var_map: HashMap::new(),
+            constraint_map: HashMap::new(),
             event_queue: event_queue,
         }
     }
-    pub fn add_widget(&mut self, widget: &Widget) {
+    pub fn add_widget(&mut self, widget: &Widget, constraints: Vec<WidgetConstraint>) {
+        self.constraint_map.insert(widget.id, Vec::new());
+        for constraint in constraints {
+            // insert constraint into list for both widgets it affects,
+            // so that if either widget is removed, the constraint is as well
+            let constraint = match constraint {
+                WidgetConstraint::Local(constraint) => constraint,
+                WidgetConstraint::Relative(constraint, widget_id) => {
+                    if !self.constraint_map.contains_key(&widget_id) {
+                        self.constraint_map.insert(widget_id, Vec::new());
+                    }
+                    if let Some(constraint_list) = self.constraint_map.get_mut(&widget.id) {
+                        constraint_list.push(constraint.clone());
+                    }
+                    constraint
+                }
+            };
+            if let Some(constraint_list) = self.constraint_map.get_mut(&widget.id) {
+                constraint_list.push(constraint.clone());
+            }
+            self.solver.add_constraint(constraint).unwrap();
+        }
+
         let ref vars = widget.layout;
         self.var_map.insert(vars.left, widget.id);
         self.var_map.insert(vars.top, widget.id);
         self.var_map.insert(vars.right, widget.id);
         self.var_map.insert(vars.bottom, widget.id);
+    }
+    pub fn remove_widget(&mut self, widget_id: &WidgetId) {
+        // remove constraints that are relative to this widget from solver
+        if let Some(constraint_list) = self.constraint_map.get(&widget_id) {
+            for constraint in constraint_list {
+                if self.solver.has_constraint(constraint) {
+                    self.solver.remove_constraint(constraint);
+                }
+            }
+        }
+        // doesn't clean up other references to these constraints in the constraint map, but at least they won't affect the solver
+        self.constraint_map.remove(&widget_id);
     }
 
     pub fn add_edit_variable(&mut self, v: Variable, strength: f64) -> Result<(), AddEditVariableError> {

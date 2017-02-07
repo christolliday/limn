@@ -89,7 +89,6 @@ pub struct Ui {
     pub solver: LimnSolver,
     pub input_state: InputState,
     pub widget_map: HashMap<WidgetId, NodeIndex>,
-    pub constraint_map: HashMap<WidgetId, Vec<Constraint>>,
     pub dirty_widgets: HashSet<NodeIndex>,
     pub glyph_cache: GlyphCache,
 }
@@ -101,7 +100,6 @@ impl Ui {
             solver: LimnSolver::new(event_queue.clone()),
             input_state: InputState::new(),
             widget_map: HashMap::new(),
-            constraint_map: HashMap::new(),
             dirty_widgets: HashSet::new(),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
         }
@@ -197,28 +195,7 @@ impl Ui {
     pub fn add_widget(&mut self, mut widget: WidgetBuilder, parent_index: Option<NodeIndex>) -> NodeIndex {
 
         let (children, constraints, widget) = widget.build();
-        self.constraint_map.insert(widget.id, Vec::new());
-        for constraint in constraints {
-            // insert constraint into list for both widgets it affects,
-            // so that if either widget is removed, the constraint is as well
-            let constraint = match constraint {
-                WidgetConstraint::Local(constraint) => constraint,
-                WidgetConstraint::Relative(constraint, widget_id) => {
-                    if !self.constraint_map.contains_key(&widget_id) {
-                        self.constraint_map.insert(widget_id, Vec::new());
-                    }
-                    if let Some(constraint_list) = self.constraint_map.get_mut(&widget.id) {
-                        constraint_list.push(constraint.clone());
-                    }
-                    constraint
-                }
-            };
-            if let Some(constraint_list) = self.constraint_map.get_mut(&widget.id) {
-                constraint_list.push(constraint.clone());
-            }
-            self.solver.add_constraint(constraint).unwrap();
-        }
-        self.solver.add_widget(&widget);
+        self.solver.add_widget(&widget, constraints);
 
         let id = widget.id;
         let widget_index = self.graph.add_node(widget);
@@ -237,16 +214,7 @@ impl Ui {
         if let Some(node_index) = self.find_widget(widget_id) {
             self.graph.remove_node(node_index);
             self.dirty_widgets.insert(self.root_index.unwrap());
-            // remove constraints that are relative to this widget from solver
-            if let Some(constraint_list) = self.constraint_map.get(&widget_id) {
-                for constraint in constraint_list {
-                    if self.solver.has_constraint(constraint) {
-                        self.solver.remove_constraint(constraint);
-                    }
-                }
-            }
-            // doesn't clean up other references to these constraints in the constraint map, but at least they won't affect the solver
-            self.constraint_map.remove(&widget_id);
+            self.solver.remove_widget(&widget_id);
         }
     }
     pub fn get_widget(&self, widget_id: WidgetId) -> Option<&Widget> {
