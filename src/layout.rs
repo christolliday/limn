@@ -122,7 +122,7 @@ impl LimnSolver {
                 }
             }
             for widget_id in widget_ids {
-                self.event_queue.push(EventAddress::Ui, LAYOUT, Box::new(widget_id));
+                self.event_queue.push(EventAddress::Ui, LAYOUT, widget_id);
             }
         }
     }

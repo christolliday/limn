@@ -14,10 +14,10 @@ impl EventHandler for ScrollHandler {
         WIDGET_MOUSE_WHEEL
     }
     fn handle_event(&mut self, args: EventArgs) {
-        let EventArgs { data, widget_id, layout, event_queue, solver, .. } = args;
+        let EventArgs { data, widget_id, layout, event_queue, .. } = args;
         let event = data.downcast_ref::<glutin::Event>().unwrap();
         let widget_bounds = layout.bounds();
-        let event = Box::new((event.clone(), widget_bounds));
+        let event = (event.clone(), widget_bounds);
         event_queue.push(EventAddress::Child(widget_id), WIDGET_SCROLL, event);
     }
 }

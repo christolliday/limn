@@ -52,7 +52,7 @@ impl EventHandler for ListItemHandler {
                 args.event_queue.change_prop(args.widget_id, Property::Selected, true);
                 args.event_queue.push(EventAddress::Widget(self.list_id),
                                       WIDGET_LIST_ITEM_SELECTED,
-                                      Box::new(args.widget_id));
+                                      args.widget_id);
             }
         }
     }

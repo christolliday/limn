@@ -66,11 +66,17 @@ impl EventQueue {
             window_proxy: window.window.create_window_proxy(),
         }
     }
-    pub fn push(&mut self, address: EventAddress, event_id: EventId, data: Box<Any + Send>) {
+    pub fn push<T>(&mut self, address: EventAddress, event_id: EventId, data: T)
+    where T: Send + 'static {
+        let mut queue = self.queue.lock().unwrap();
+        queue.push((address, event_id, Box::new(data)));
+        self.window_proxy.wakeup_event_loop();
+    }
+    /*pub fn push(&mut self, address: EventAddress, event_id: EventId, data: Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.push((address, event_id, data));
         self.window_proxy.wakeup_event_loop();
-    }
+    }*/
     pub fn is_empty(&mut self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.len() == 0
@@ -81,10 +87,10 @@ impl EventQueue {
     }
     // common events
     pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
-        self.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, Box::new((prop, add)));
+        self.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, (prop, add));
     }
     pub fn signal(&mut self, address: EventAddress, event_id: EventId) {
-        self.push(address, event_id, Box::new(()));
+        self.push(address, event_id, ());
     }
 
     pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<Box<UiEventHandler>>) {

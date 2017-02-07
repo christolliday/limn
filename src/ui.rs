@@ -246,16 +246,12 @@ impl Ui {
                     if let Some(last_index) = self.find_widget(last_over) {
                         let ref mut widget = self.graph[last_index];
                         if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
-                            event_queue.push(EventAddress::Widget(last_over),
-                                             WIDGET_HOVER,
-                                             Box::new(Hover::Out));
+                            event_queue.push(EventAddress::Widget(last_over), WIDGET_HOVER, Hover::Out);
                             self.input_state.last_over.remove(&last_over);
                         }
                     }
                 }
-                event_queue.push(EventAddress::UnderMouse,
-                                 WIDGET_HOVER,
-                                 Box::new(Hover::Over));
+                event_queue.push(EventAddress::UnderMouse, WIDGET_HOVER, Hover::Over);
             }
             _ => (),
         }
@@ -263,15 +259,15 @@ impl Ui {
         let all_widgets = EventAddress::SubTree(root_widget.id);
         match event {
             glutin::Event::MouseWheel(..) => {
-                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_WHEEL, Box::new(event.clone()));
-                event_queue.push(all_widgets, MOUSE_WHEEL, Box::new(event));
+                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_WHEEL, event.clone());
+                event_queue.push(all_widgets, MOUSE_WHEEL, event);
             },
             glutin::Event::MouseInput(..) => {
-                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_BUTTON, Box::new(event.clone()));
-                event_queue.push(all_widgets, MOUSE_BUTTON, Box::new(event));
+                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_BUTTON, event.clone());
+                event_queue.push(all_widgets, MOUSE_BUTTON, event);
             },
             glutin::Event::MouseMoved(..) => {
-                event_queue.push(all_widgets, MOUSE_MOVED, Box::new(event));
+                event_queue.push(all_widgets, MOUSE_MOVED, event);
             }, _ => (),
         }
     }

@@ -89,7 +89,7 @@ fn main() {
         fn handle_event(&mut self, args: EventArgs) {
             self.count += 1;
             let address = EventAddress::SubTree(args.widget_id);
-            args.event_queue.push(address, COUNT, Box::new(self.count));
+            args.event_queue.push(address, COUNT, self.count);
         }
     }
     root_widget.event_handlers.push(Box::new(CounterHandler::new()));

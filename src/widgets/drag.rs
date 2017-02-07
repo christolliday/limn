@@ -29,13 +29,13 @@ impl EventHandler for DragInputHandler {
         match *event {
             DragInputEvent::WidgetPressed => {
                 self.dragging = true;
-                let event = Box::new((DragEvent::DragStart, self.position));
+                let event = (DragEvent::DragStart, self.position);
                 args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_DRAG, event);
             }
             DragInputEvent::MouseReleased => {
                 if self.dragging {
                     self.dragging = false;
-                    let event = Box::new((DragEvent::DragEnd, self.position));
+                    let event = (DragEvent::DragEnd, self.position);
                     args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_DRAG, event);
                 }
             }
@@ -44,7 +44,7 @@ impl EventHandler for DragInputHandler {
                     glutin::Event::MouseMoved(x, y) => {
                         self.position = (x, y);
                         if self.dragging {
-                            let event = Box::new((DragEvent::Drag, self.position));
+                            let event = (DragEvent::Drag, self.position);
                             args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_DRAG, event);
                         }
                     }, _ => ()
@@ -71,7 +71,7 @@ impl EventHandler for DragWidgetPressHandler {
             glutin::Event::MouseInput(state, button) => {
                 match state {
                     glutin::ElementState::Pressed => {
-                        args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, Box::new(DragInputEvent::WidgetPressed));
+                        args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, DragInputEvent::WidgetPressed);
                     }, _ => ()
                 }
             }, _ => ()
@@ -85,7 +85,7 @@ impl EventHandler for DragMouseCursorHandler {
     }
     fn handle_event(&mut self, args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-        args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, Box::new(DragInputEvent::MouseMoved(event.clone())));
+        args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, DragInputEvent::MouseMoved(event.clone()));
     }
 }
 pub struct DragMouseReleaseHandler {}
@@ -99,7 +99,7 @@ impl EventHandler for DragMouseReleaseHandler {
             glutin::Event::MouseInput(state, button) => {
                 match state {
                     glutin::ElementState::Released => {
-                        args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, Box::new(DragInputEvent::MouseReleased));
+                        args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, DragInputEvent::MouseReleased);
                     }, _ => ()
                 }
             }, _ => ()
