@@ -10,7 +10,8 @@ use petgraph::stable_graph::Neighbors;
 
 use glutin;
 
-use cassowary::{Solver, Constraint};
+use layout::LimnSolver;
+use cassowary::Constraint;
 use cassowary::strength::*;
 
 use graphics::Context;
@@ -72,7 +73,7 @@ pub fn get_default_event_handlers() -> Vec<Box<UiEventHandler>> {
 pub struct Ui {
     pub graph: StableGraph<Widget, ()>,
     pub root_index: Option<NodeIndex>,
-    pub solver: Solver,
+    pub solver: LimnSolver,
     pub input_state: InputState,
     pub widget_map: HashMap<WidgetId, NodeIndex>,
     pub constraint_map: HashMap<WidgetId, Vec<Constraint>>,
@@ -84,7 +85,7 @@ impl Ui {
         Ui {
             graph: StableGraph::<Widget, ()>::new(),
             root_index: None,
-            solver: Solver::new(),
+            solver: LimnSolver::new(),
             input_state: InputState::new(),
             widget_map: HashMap::new(),
             constraint_map: HashMap::new(),

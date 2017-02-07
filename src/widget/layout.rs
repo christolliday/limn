@@ -1,7 +1,8 @@
-use cassowary::{Solver, Variable, Constraint};
+use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
+use layout::LimnSolver;
 use widget::builder::WidgetBuilder;
 use resources::WidgetId;
 use util::{Point, Rectangle, Dimensions, Scalar};
@@ -104,7 +105,7 @@ impl LayoutVars {
             bottom: Variable::new(),
         }
     }
-    pub fn bounds(&self, solver: &mut Solver) -> Rectangle {
+    pub fn bounds(&self, solver: &mut LimnSolver) -> Rectangle {
         Rectangle {
             left: solver.get_value(self.left),
             top: solver.get_value(self.top),
@@ -112,7 +113,7 @@ impl LayoutVars {
             height: solver.get_value(self.bottom) - solver.get_value(self.top),
         }
     }
-    pub fn get_dims(&self, solver: &mut Solver) -> Dimensions {
+    pub fn get_dims(&self, solver: &mut LimnSolver) -> Dimensions {
         let bounds = self.bounds(solver);
         Dimensions {
             width: bounds.width,

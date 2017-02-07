@@ -7,7 +7,6 @@ use std::collections::BTreeSet;
 
 use graphics::Context;
 use graphics::types::Color;
-use cassowary::Solver;
 
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
@@ -16,6 +15,7 @@ use backend::glyph::GlyphCache;
 use event::{self, EventAddress, EventId, EventQueue};
 use event::id::*;
 use resources::WidgetId;
+use layout::LimnSolver;
 use util::{self, Point, Rectangle};
 use ui::{Ui, InputState};
 
@@ -47,7 +47,7 @@ pub struct EventArgs<'a> {
     pub drawable: &'a mut Option<Drawable>,
     pub layout: &'a mut LayoutVars,
     pub event_queue: &'a mut EventQueue,
-    pub solver: &'a mut Solver,
+    pub solver: &'a mut LimnSolver,
     pub input_state: &'a InputState,
     pub event_state: &'a mut EventState,
 }
@@ -151,7 +151,7 @@ impl Widget {
     }
     pub fn draw(&mut self,
                 crop_to: Rectangle,
-                solver: &mut Solver,
+                solver: &mut LimnSolver,
                 glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {
@@ -169,7 +169,7 @@ impl Widget {
             });
         }
     }
-    pub fn is_mouse_over(&self, solver: &mut Solver, mouse: Point) -> bool {
+    pub fn is_mouse_over(&self, solver: &mut LimnSolver, mouse: Point) -> bool {
         let bounds = self.layout.bounds(solver);
         if let Some(ref drawable) = self.drawable {
             if let Some(mouse_over_fn) = drawable.mouse_over_fn {
@@ -182,7 +182,7 @@ impl Widget {
                          event_id: EventId,
                          data: &(Any + 'static),
                          event_queue: &mut EventQueue,
-                         solver: &mut Solver,
+                         solver: &mut LimnSolver,
                          input_state: &InputState) -> bool {
 
         let mut event_state = EventState { handled: false };
