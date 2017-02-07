@@ -34,7 +34,7 @@ pub mod id {
     pub const DRAG_INPUT_EVENT: EventId = EventId("limn/drag_input");
 
     pub const REDRAW: EventId = EventId("limn/redraw");
-
+    pub const LAYOUT: EventId = EventId("limn/layout");
 }
 
 use self::id::*;

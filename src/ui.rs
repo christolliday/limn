@@ -65,9 +65,22 @@ impl UiEventHandler for RedrawHandler {
         ui.dirty_widgets.insert(ui.root_index.unwrap());
     }
 }
+pub struct LayoutHandler {}
+impl UiEventHandler for LayoutHandler {
+    fn event_id(&self) -> EventId {
+        LAYOUT
+    }
+    fn handle_event(&mut self, args: UiEventArgs) {
+        let ui = args.ui;
+        let widget_id = args.data.downcast_ref::<WidgetId>().unwrap();
+        let node_index = ui.find_widget(*widget_id).unwrap();
+        let ref mut widget = ui.graph[node_index];
+        widget.layout.update(&mut ui.solver);
+    }
+}
 
 pub fn get_default_event_handlers() -> Vec<Box<UiEventHandler>> {
-    vec!{Box::new(RedrawHandler{})}
+    vec!{Box::new(RedrawHandler{}), Box::new(LayoutHandler{})}
 }
 
 pub struct Ui {
@@ -81,11 +94,11 @@ pub struct Ui {
     pub glyph_cache: GlyphCache,
 }
 impl Ui {
-    pub fn new(window: &mut Window) -> Self {
+    pub fn new(window: &mut Window, event_queue: &EventQueue) -> Self {
         Ui {
             graph: StableGraph::<Widget, ()>::new(),
             root_index: None,
-            solver: LimnSolver::new(),
+            solver: LimnSolver::new(event_queue.clone()),
             input_state: InputState::new(),
             widget_map: HashMap::new(),
             constraint_map: HashMap::new(),
@@ -109,10 +122,12 @@ impl Ui {
     }
     pub fn get_root_dims(&mut self) -> Dimensions {
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
+        root.layout.update(&mut self.solver);
         root.layout.get_dims()
     }
     pub fn window_resized(&mut self, window_dims: Dimensions) {
-        let ref root = self.graph[self.root_index.unwrap()];
+        let ref mut root = self.graph[self.root_index.unwrap()];
+        root.layout.update(&mut self.solver);
         self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
         self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
         self.dirty_widgets.insert(self.root_index.unwrap());
@@ -124,6 +139,13 @@ impl Ui {
         self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
+    pub fn update_layout(&mut self) {
+        let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
+        while let Some(node_index) = dfs.next(&self.graph) {
+            let ref mut widget = self.graph[node_index];
+            widget.layout.update(&mut self.solver);
+        }
+    }
     pub fn draw_node(&mut self,
                      context: Context,
                      graphics: &mut G2d,
@@ -196,6 +218,8 @@ impl Ui {
             }
             self.solver.add_constraint(constraint).unwrap();
         }
+        self.solver.add_widget(&widget);
+
         let id = widget.id;
         let widget_index = self.graph.add_node(widget);
         if let Some(parent_index) = parent_index {

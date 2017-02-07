@@ -33,9 +33,11 @@ impl EventHandler for DragInputHandler {
                 args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_DRAG, event);
             }
             DragInputEvent::MouseReleased => {
-                self.dragging = false;
-                let event = Box::new((DragEvent::DragEnd, self.position));
-                args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_DRAG, event);
+                if self.dragging {
+                    self.dragging = false;
+                    let event = Box::new((DragEvent::DragEnd, self.position));
+                    args.event_queue.push(EventAddress::Widget(args.widget_id), WIDGET_DRAG, event);
+                }
             }
             DragInputEvent::MouseMoved(ref event) => {
                 match *event {

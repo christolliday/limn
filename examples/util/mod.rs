@@ -15,8 +15,8 @@ use limn::event::EventQueue;
 pub fn init_default(title: &str) -> (Window, Ui, EventQueue) {
     let window_dims = (100, 100);
     let mut window = Window::new(title, window_dims, Some(window_dims));
-    let ui = Ui::new(&mut window);
     let mut event_queue = EventQueue::new(&window);
+    let ui = Ui::new(&mut window, &event_queue);
 
     (window, ui, event_queue)
 }
@@ -56,6 +56,7 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
                             width: width as f64,
                             height: height as f64,
                         });
+                        ui.update_layout();
                     }
                     _ => (),
                 }
