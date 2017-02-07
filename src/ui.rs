@@ -76,6 +76,7 @@ impl UiEventHandler for LayoutHandler {
         let node_index = ui.find_widget(*widget_id).unwrap();
         let ref mut widget = ui.graph[node_index];
         widget.layout.update(&mut ui.solver);
+        args.event_queue.signal(EventAddress::Ui, REDRAW);
     }
 }
 

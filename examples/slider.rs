@@ -41,7 +41,6 @@ impl EventHandler for DragHandler {
             },
             _ => {
                 solver.suggest_value(layout.left, drag_pos - self.start_pos).unwrap();
-                args.event_queue.signal(EventAddress::Ui, REDRAW);
             }
         }
     }

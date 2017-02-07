@@ -77,6 +77,5 @@ impl EventHandler for WidgetScrollHandler {
             solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
             solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
         }
-        args.event_queue.signal(EventAddress::Ui, REDRAW);
     }
 }
