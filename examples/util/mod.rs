@@ -60,9 +60,8 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
                     }
                     _ => (),
                 }
-                ui.handle_event(event.clone(), &mut event_queue);
+                ui.handle_input(event.clone(), &mut event_queue);
                 event_queue.handle_events(&mut ui, &mut ui_event_handlers);
-                ui.check_layout(&mut event_queue);
             }
             WindowEvent::Render => {
                 if ui.dirty_widgets.len() > 0 {

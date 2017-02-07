@@ -72,11 +72,18 @@ impl UiEventHandler for LayoutHandler {
     }
     fn handle_event(&mut self, args: UiEventArgs) {
         let ui = args.ui;
-        let widget_id = args.data.downcast_ref::<WidgetId>().unwrap();
-        let node_index = ui.find_widget(*widget_id).unwrap();
-        let ref mut widget = ui.graph[node_index];
-        widget.layout.update(&mut ui.solver);
+        {
+            let widget_id = args.data.downcast_ref::<WidgetId>().unwrap();
+            let node_index = ui.find_widget(*widget_id).unwrap();
+            let ref mut widget = ui.graph[node_index];
+            widget.layout.update(&mut ui.solver);
+        }
+        // redraw everything when layout changes, for now
         args.event_queue.signal(EventAddress::Ui, REDRAW);
+        // send new mouse event, in case widget under mouse has shifted
+        let mouse = ui.input_state.mouse;
+        let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
+        ui.handle_input(event, args.event_queue);
     }
 }
 
@@ -225,7 +232,7 @@ impl Ui {
         });
         None
     }
-    pub fn handle_event(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
+    pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
         match event {
             glutin::Event::MouseMoved(x, y) => {
                 let mouse = Point {
@@ -266,17 +273,6 @@ impl Ui {
             glutin::Event::MouseMoved(..) => {
                 event_queue.push(all_widgets, MOUSE_MOVED, Box::new(event));
             }, _ => (),
-        }
-    }
-
-    pub fn check_layout(&mut self, event_queue: &mut EventQueue) {
-        // if layout has changed, send new mouse event, in case widget under mouse has shifted
-        let has_changes = self.solver.fetch_changes().len() > 0;
-        if has_changes {
-            //self.solver.debug_constraints();
-            let mouse = self.input_state.mouse;
-            let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
-            self.handle_event(event, event_queue);
         }
     }
     pub fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
