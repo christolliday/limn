@@ -77,9 +77,9 @@ pub struct Drawable {
     pub has_updated: bool,
 }
 impl Drawable {
-    pub fn new(state: Box<Any>, draw_fn: fn(DrawArgs)) -> Drawable {
+    pub fn new<T: Any>(state: T, draw_fn: fn(DrawArgs)) -> Drawable {
         Drawable {
-            state: state,
+            state: Box::new(state),
             draw_fn: draw_fn,
             mouse_over_fn: None,
             style: None,
@@ -114,9 +114,9 @@ pub struct WidgetStyle {
     pub style_fn: fn(StyleArgs),
 }
 impl WidgetStyle {
-    pub fn new(style: Box<Any>, style_fn: fn(StyleArgs)) -> Self {
+    pub fn new<T: Any>(style: T, style_fn: fn(StyleArgs)) -> Self {
         WidgetStyle {
-            style: style,
+            style: Box::new(style),
             style_fn: style_fn,
         }
     }

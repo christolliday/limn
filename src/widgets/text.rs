@@ -18,8 +18,8 @@ use theme::STYLE_TEXT;
 
 pub fn text_drawable(style: TextStyle) -> Drawable {
     let draw_state = TextDrawState::new(&style);
-    let mut drawable = Drawable::new(Box::new(draw_state), draw_text);
-    drawable.style = Some(WidgetStyle::new(Box::new(style), apply_text_style));
+    let mut drawable = Drawable::new(draw_state, draw_text);
+    drawable.style = Some(WidgetStyle::new(style, apply_text_style));
     drawable
 }
 

@@ -9,8 +9,8 @@ use widget::style::Value;
 
 pub fn rect_drawable(style: RectStyle) -> Drawable {
     let draw_state = RectDrawState { background: style.background.default() };
-    let mut drawable = Drawable::new(Box::new(draw_state), draw_rect);
-    drawable.style = Some(WidgetStyle::new(Box::new(style), apply_rect_style));
+    let mut drawable = Drawable::new(draw_state, draw_rect);
+    drawable.style = Some(WidgetStyle::new(style, apply_rect_style));
     drawable
 }
 
@@ -48,11 +48,8 @@ pub struct RectStyle {
 }
 
 pub fn ellipse_drawable(background: Color, border: Option<graphics::ellipse::Border>) -> Drawable {
-    let mut drawable = Drawable::new(Box::new(EllipseDrawState {
-                                         background: background,
-                                         border: border,
-                                     }),
-                                     draw_ellipse);
+    let draw_state = EllipseDrawState { background: background, border: border };
+    let mut drawable = Drawable::new(draw_state, draw_ellipse);
     drawable
 }
 pub struct EllipseDrawState {

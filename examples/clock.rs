@@ -83,7 +83,7 @@ impl ClockBuilder {
                 length: length,
                 angle: angle,
             };
-            Drawable::new(Box::new(draw_state), draw_clock_hand)
+            Drawable::new(draw_state, draw_clock_hand)
         }
 
         fn update_hour_hand(state: &mut HandDrawState) {

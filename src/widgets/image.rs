@@ -8,7 +8,7 @@ use util::Dimensions;
 
 pub fn image_drawable(image_id: ImageId) -> Drawable {
     let draw_state = ImageDrawState::new(image_id);
-    Drawable::new(Box::new(draw_state), draw_image)
+    Drawable::new(draw_state, draw_image)
 }
 pub struct ImageDrawState {
     pub image_id: ImageId,
