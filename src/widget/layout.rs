@@ -208,7 +208,7 @@ impl LayoutBuilder {
         self.constraints.push(WidgetConstraint::Relative(self.vars.bottom - widget.layout.vars.top | GE(REQUIRED) | padding.unwrap_or(0.0), widget.id));
     }
     pub fn below(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
-        self.constraints.push(WidgetConstraint::Relative(widget.layout.vars.bottom - self.vars.top | GE(REQUIRED) | padding.unwrap_or(0.0), widget.id));
+        self.constraints.push(WidgetConstraint::Relative(self.vars.top - widget.layout.vars.bottom | GE(REQUIRED) | padding.unwrap_or(0.0), widget.id));
     }
     pub fn to_left_of(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
         self.constraints.push(WidgetConstraint::Relative(widget.layout.vars.left - self.vars.right | GE(REQUIRED) | padding.unwrap_or(0.0), widget.id));
