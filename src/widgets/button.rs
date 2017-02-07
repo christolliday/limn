@@ -7,7 +7,8 @@ use graphics::types::Color;
 
 use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property,
              PropSet};
-use event::{self, EventId, EventAddress, WIDGET_PRESS};
+use event::{self, EventId, EventAddress};
+use event::id::*;
 use widgets::primitives::{self, RectStyle};
 use widgets::text::{self, TextStyle, TextStyleField};
 use widget::builder::WidgetBuilder;
@@ -22,7 +23,7 @@ use color::*;
 pub struct ButtonDownHandler {}
 impl EventHandler for ButtonDownHandler {
     fn event_id(&self) -> EventId {
-        WIDGET_PRESS
+        WIDGET_MOUSE_BUTTON
     }
     fn handle_event(&mut self, args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
@@ -43,7 +44,7 @@ impl EventHandler for ButtonDownHandler {
 pub struct ToggleEventHandler {}
 impl EventHandler for ToggleEventHandler {
     fn event_id(&self) -> EventId {
-        WIDGET_PRESS
+        WIDGET_MOUSE_BUTTON
     }
     fn handle_event(&mut self, args: EventArgs) {
         let EventArgs { widget_id, event_queue, .. } = args;
@@ -114,7 +115,7 @@ impl<F: Fn(&mut EventArgs)> ClickHandler<F> {
 }
 impl<F: Fn(&mut EventArgs)> EventHandler for ClickHandler<F> {
     fn event_id(&self) -> EventId {
-        WIDGET_PRESS
+        WIDGET_MOUSE_BUTTON
     }
     fn handle_event(&mut self, mut args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();

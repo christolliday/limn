@@ -1,5 +1,6 @@
 use widget::{EventArgs, EventHandler, Property};
-use event::{self, EventId, EventAddress, Hover, WIDGET_HOVER};
+use event::{self, EventId, EventAddress, Hover};
+use event::id::*;
 
 pub struct HoverHandler {}
 impl EventHandler for HoverHandler {

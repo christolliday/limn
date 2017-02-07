@@ -5,6 +5,7 @@ use widget::{EventArgs, EventHandler, Property, PropSet};
 use widgets::primitives::RectStyle;
 use widget::style::Value;
 use event::{self, EventId, EventAddress};
+use event::id::*;
 use resources::WidgetId;
 use color::*;
 
@@ -43,7 +44,7 @@ impl ListItemHandler {
 }
 impl EventHandler for ListItemHandler {
     fn event_id(&self) -> EventId {
-        event::WIDGET_PRESS
+        WIDGET_MOUSE_BUTTON
     }
     fn handle_event(&mut self, mut args: EventArgs) {
         if let &mut Some(ref drawable) = args.drawable {

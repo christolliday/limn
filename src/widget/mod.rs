@@ -13,7 +13,8 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
 #[macro_use]
-use event::{self, EventAddress, EventId, EventQueue, WIDGET_PROPS_CHANGED, WIDGET_CHANGE_PROP};
+use event::{self, EventAddress, EventId, EventQueue};
+use event::id::*;
 use resources::WidgetId;
 use util::{self, Point, Rectangle};
 use ui::{Ui, InputState};

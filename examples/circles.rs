@@ -14,7 +14,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::primitives;
 use limn::widget::{EventHandler, EventArgs, Property};
-use limn::event::{EventId, EventAddress, WIDGET_PRESS};
+use limn::event::{EventId, EventAddress};
 use limn::ui::{Ui, UiEventHandler, UiEventArgs};
 use limn::util::{Dimensions, Point};
 use limn::resources::WidgetId;

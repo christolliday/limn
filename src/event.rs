@@ -15,19 +15,24 @@ use widget::Property;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct EventId(pub &'static str);
 
-pub const MOUSE_SCROLL: EventId = EventId("glutin/mouse_scroll");
-pub const MOUSE_CURSOR: EventId = EventId("glutin/mouse_cursor");
-pub const MOUSE_INPUT: EventId = EventId("glutin/mouse_input");
+pub mod id {
+    use super::EventId;
 
-pub const WIDGET_HOVER: EventId = EventId("limn/widget_hover");
-pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
-pub const WIDGET_PRESS: EventId = EventId("limn/widget_press");
-pub const WIDGET_RELEASE: EventId = EventId("limn/widget_release");
+    pub const MOUSE_SCROLL: EventId = EventId("glutin/mouse_scroll");
+    pub const MOUSE_CURSOR: EventId = EventId("glutin/mouse_cursor");
+    pub const MOUSE_INPUT: EventId = EventId("glutin/mouse_input");
 
-pub const WIDGET_CHANGE_PROP: EventId = EventId("limn/widget_change_prop");
-pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props_changed");
+    pub const WIDGET_HOVER: EventId = EventId("limn/widget_hover");
+    pub const WIDGET_MOUSE_WHEEL: EventId = EventId("limn/widget_scroll");
+    pub const WIDGET_MOUSE_BUTTON: EventId = EventId("limn/widget_mouse_button");
 
-pub const WIDGET_REDRAW: EventId = EventId("limn/widget_redraw");
+    pub const WIDGET_CHANGE_PROP: EventId = EventId("limn/widget_change_prop");
+    pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props_changed");
+
+    pub const WIDGET_REDRAW: EventId = EventId("limn/widget_redraw");
+}
+
+use self::id::*;
 
 pub enum Hover {
     Over,

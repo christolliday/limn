@@ -22,8 +22,8 @@ use backend::window::Window;
 use widget::Widget;
 use widget::builder::WidgetBuilder;
 use widget::layout::{self, LayoutBuilder, WidgetConstraint};
-use event::{self, EventId, EventQueue, EventAddress, Hover, WIDGET_REDRAW, WIDGET_HOVER,
-            WIDGET_SCROLL, WIDGET_PRESS};
+use event::{self, EventId, EventQueue, EventAddress, Hover};
+use event::id::*;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
 use color::*;
@@ -301,8 +301,8 @@ impl Ui {
 // get the widget event that is received if the event occurs while mouse is over widget
 pub fn mouse_under_event(event: &glutin::Event) -> Option<EventId> {
     match *event {
-        glutin::Event::MouseWheel(..) => Some(WIDGET_SCROLL),
-        glutin::Event::MouseInput(..) => Some(WIDGET_PRESS),
+        glutin::Event::MouseWheel(..) => Some(WIDGET_MOUSE_WHEEL),
+        glutin::Event::MouseInput(..) => Some(WIDGET_MOUSE_BUTTON),
         _ => None,
     }
 }

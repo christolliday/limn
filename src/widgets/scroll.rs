@@ -3,24 +3,24 @@ use std::any::Any;
 use glutin;
 use cassowary::strength::*;
 
-use event::{self, EventId, EventAddress, WIDGET_REDRAW};
+use event::{self, EventId, EventAddress};
+use event::id::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
-pub const SCROLL_SCROLLED: EventId = EventId("limn/scroll_scrolled");
+pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
 
 pub struct ScrollHandler {}
 impl EventHandler for ScrollHandler {
     fn event_id(&self) -> EventId {
-        event::WIDGET_SCROLL
+        WIDGET_MOUSE_WHEEL
     }
     fn handle_event(&mut self, args: EventArgs) {
         let EventArgs { data, widget_id, layout, event_queue, solver, .. } = args;
         let event = data.downcast_ref::<glutin::Event>().unwrap();
         let widget_bounds = layout.bounds(solver);
-        event_queue.push(EventAddress::Child(widget_id),
-                         SCROLL_SCROLLED,
-                         Box::new((event.clone(), widget_bounds)));
+        let event = Box::new((event.clone(), widget_bounds));
+        event_queue.push(EventAddress::Child(widget_id), WIDGET_SCROLL, event);
     }
 }
 
@@ -34,7 +34,7 @@ impl WidgetScrollHandler {
 }
 impl EventHandler for WidgetScrollHandler {
     fn event_id(&self) -> EventId {
-        SCROLL_SCROLLED
+        WIDGET_SCROLL
     }
     fn handle_event(&mut self, args: EventArgs) {
         let EventArgs { layout, solver, .. } = args;
