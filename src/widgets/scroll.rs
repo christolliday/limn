@@ -8,8 +8,6 @@ use event::id::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
-pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
-
 pub struct ScrollHandler {}
 impl EventHandler for ScrollHandler {
     fn event_id(&self) -> EventId {
@@ -79,6 +77,6 @@ impl EventHandler for WidgetScrollHandler {
             solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
             solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
         }
-        args.event_queue.push(EventAddress::Ui, WIDGET_REDRAW, Box::new(()));
+        args.event_queue.signal(EventAddress::Ui, REDRAW);
     }
 }

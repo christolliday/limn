@@ -10,6 +10,7 @@ use widget::layout::{LayoutBuilder, WidgetConstraint};
 use widgets::hover::HoverHandler;
 use widgets::button::ClickHandler;
 use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
+use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCursorHandler, DragInputHandler};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
@@ -76,6 +77,12 @@ impl WidgetBuilder {
     }
     pub fn scrollable(mut self) -> Self {
         self.add_handler(Box::new(WidgetScrollHandler::new()))
+    }
+    pub fn draggable(mut self) -> Self {
+        self.add_handler(Box::new(DragWidgetPressHandler {}))
+            .add_handler(Box::new(DragMouseCursorHandler {}))
+            .add_handler(Box::new(DragMouseReleaseHandler {}))
+            .add_handler(Box::new(DragInputHandler::new()))
     }
 
     // only method that is not chainable, because usually called out of order

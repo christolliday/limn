@@ -18,18 +18,23 @@ pub struct EventId(pub &'static str);
 pub mod id {
     use super::EventId;
 
-    pub const MOUSE_SCROLL: EventId = EventId("glutin/mouse_scroll");
-    pub const MOUSE_CURSOR: EventId = EventId("glutin/mouse_cursor");
-    pub const MOUSE_INPUT: EventId = EventId("glutin/mouse_input");
+    pub const MOUSE_MOVED: EventId = EventId("glutin/mouse_moved");
+    pub const MOUSE_WHEEL: EventId = EventId("glutin/mouse_wheel");
+    pub const MOUSE_BUTTON: EventId = EventId("glutin/mouse_button");
 
     pub const WIDGET_HOVER: EventId = EventId("limn/widget_hover");
-    pub const WIDGET_MOUSE_WHEEL: EventId = EventId("limn/widget_scroll");
+    pub const WIDGET_MOUSE_WHEEL: EventId = EventId("limn/mouse_wheel");
     pub const WIDGET_MOUSE_BUTTON: EventId = EventId("limn/widget_mouse_button");
 
     pub const WIDGET_CHANGE_PROP: EventId = EventId("limn/widget_change_prop");
     pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props_changed");
 
-    pub const WIDGET_REDRAW: EventId = EventId("limn/widget_redraw");
+    pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
+    pub const WIDGET_DRAG: EventId = EventId("limn/widget_drag");
+    pub const DRAG_INPUT_EVENT: EventId = EventId("limn/drag_input");
+
+    pub const REDRAW: EventId = EventId("limn/redraw");
+
 }
 
 use self::id::*;

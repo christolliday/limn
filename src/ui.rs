@@ -57,7 +57,7 @@ pub struct UiEventArgs<'a> {
 pub struct RedrawHandler {}
 impl UiEventHandler for RedrawHandler {
     fn event_id(&self) -> EventId {
-        WIDGET_REDRAW
+        REDRAW
     }
     fn handle_event(&mut self, args: UiEventArgs) {
         let ui = args.ui;
@@ -258,8 +258,20 @@ impl Ui {
             }
             _ => (),
         }
-        if let Some(event_id) = mouse_under_event(&event) {
-            event_queue.push(EventAddress::UnderMouse, event_id, Box::new(event));
+        let ref root_widget = self.graph[self.root_index.unwrap()];
+        let all_widgets = EventAddress::SubTree(root_widget.id);
+        match event {
+            glutin::Event::MouseWheel(..) => {
+                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_WHEEL, Box::new(event.clone()));
+                event_queue.push(all_widgets, MOUSE_WHEEL, Box::new(event));
+            },
+            glutin::Event::MouseInput(..) => {
+                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_BUTTON, Box::new(event.clone()));
+                event_queue.push(all_widgets, MOUSE_BUTTON, Box::new(event));
+            },
+            glutin::Event::MouseMoved(..) => {
+                event_queue.push(all_widgets, MOUSE_MOVED, Box::new(event));
+            }, _ => (),
         }
     }
 
@@ -295,14 +307,5 @@ impl Ui {
             }
         }
         handled
-    }
-}
-
-// get the widget event that is received if the event occurs while mouse is over widget
-pub fn mouse_under_event(event: &glutin::Event) -> Option<EventId> {
-    match *event {
-        glutin::Event::MouseWheel(..) => Some(WIDGET_MOUSE_WHEEL),
-        glutin::Event::MouseInput(..) => Some(WIDGET_MOUSE_BUTTON),
-        _ => None,
     }
 }
