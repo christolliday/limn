@@ -15,7 +15,7 @@ fn main() {
         .widget;
     button.layout.center(&root_widget);
     button.layout.bound_by(&root_widget, Some(50.0));
-    root_widget.add_child(Box::new(button));
+    root_widget.add_child(button);
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

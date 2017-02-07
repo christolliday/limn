@@ -98,17 +98,17 @@ impl ClockBuilder {
 
         let hour_widget = WidgetBuilder::new()
             .set_drawable(hand_drawable(BLACK, 4.0, 60.0, hour_angle()))
-            .add_handler(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand)));
+            .add_handler(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand));
         let minute_widget = WidgetBuilder::new()
             .set_drawable(hand_drawable(BLACK, 3.0, 90.0, minute_angle()))
-            .add_handler(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand)));
+            .add_handler(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand));
         let second_widget = WidgetBuilder::new()
             .set_drawable(hand_drawable(RED, 2.0, 80.0, second_angle()))
-            .add_handler(Box::new(DrawableEventHandler::new(CLOCK_TICK, update_second_hand)));
+            .add_handler(DrawableEventHandler::new(CLOCK_TICK, update_second_hand));
 
-        widget.add_child(Box::new(hour_widget));
-        widget.add_child(Box::new(minute_widget));
-        widget.add_child(Box::new(second_widget));
+        widget.add_child(hour_widget);
+        widget.add_child(minute_widget);
+        widget.add_child(second_widget);
 
         let clock_id = widget.id;
         thread::spawn(move || loop {
@@ -127,7 +127,7 @@ fn main() {
     let mut clock = ClockBuilder::new(event_queue.clone()).widget;
     clock.layout.center(&root_widget);
     clock.layout.bound_by(&root_widget, Some(50.0));
-    root_widget.add_child(Box::new(clock));
+    root_widget.add_child(clock);
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

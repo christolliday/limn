@@ -32,7 +32,7 @@ fn main() {
     });
 
     let mut list_widget = WidgetBuilder::new()
-        .add_handler(Box::new(ListHandler::new()))
+        .add_handler(ListHandler::new())
         .scrollable();
     list_widget.layout.match_width(&scroll_widget);
 
@@ -55,7 +55,7 @@ fn main() {
                 .set_debug_name("item")
                 .props_may_change()
                 .enable_hover()
-                .add_handler(Box::new(ListItemHandler::new(list_widget.id)));
+                .add_handler(ListItemHandler::new(list_widget.id));
             list_item_widget.layout.match_width(&list_widget);
             list_item_widget.layout.height(text_dims.height);
             linear_layout.add_widget(&mut list_item_widget);
@@ -64,7 +64,7 @@ fn main() {
                 .set_drawable(text_drawable)
                 .set_debug_name("text");
             list_text_widget.layout.center(&list_item_widget);
-            list_item_widget.add_child(Box::new(list_text_widget));
+            list_item_widget.add_child(list_text_widget);
 
             list_item_widgets.push(list_item_widget);
         }
@@ -72,10 +72,10 @@ fn main() {
     };
 
     for list_item_widget in list_item_widgets {
-        list_widget.add_child(Box::new(list_item_widget));
+        list_widget.add_child(list_item_widget);
     }
-    scroll_widget.add_child(Box::new(list_widget));
-    root_widget.add_child(Box::new(scroll_widget));
+    scroll_widget.add_child(list_widget);
+    root_widget.add_child(scroll_widget);
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

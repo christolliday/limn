@@ -74,9 +74,9 @@ impl ToggleButtonBuilder {
 
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
-            .add_handler(Box::new(ButtonDownHandler {}))
-            .add_handler(Box::new(ToggleEventHandler {}))
-            .add_handler(Box::new(PropsChangeEventHandler {}));
+            .add_handler(ButtonDownHandler {})
+            .add_handler(ToggleEventHandler {})
+            .add_handler(PropsChangeEventHandler {});
         widget.layout.dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
@@ -96,11 +96,11 @@ impl ToggleButtonBuilder {
         let button_text_dims = text::measure_dims_no_wrap(&button_text_drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(button_text_drawable)
-            .add_handler(Box::new(PropsChangeEventHandler {}));
+            .add_handler(PropsChangeEventHandler {});
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget);
 
-        self.widget.add_child(Box::new(button_text_widget));
+        self.widget.add_child(button_text_widget);
         self
     }
 }
@@ -139,7 +139,7 @@ impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
-            .add_handler(Box::new(PropsChangeEventHandler {}));
+            .add_handler(PropsChangeEventHandler {});
 
         widget.layout.dimensions(Dimensions {
             width: 100.0,
@@ -156,11 +156,11 @@ impl PushButtonBuilder {
         let button_text_dims = text::measure_dims_no_wrap(&drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(drawable)
-            .add_handler(Box::new(PropsChangeEventHandler {}));
+            .add_handler(PropsChangeEventHandler {});
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget);
 
-        self.widget.add_child(Box::new(button_text_widget));
+        self.widget.add_child(button_text_widget);
         self
     }
 }

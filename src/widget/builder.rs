@@ -21,7 +21,7 @@ pub struct WidgetBuilder {
     pub event_handlers: Vec<Box<EventHandler>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
-    pub children: Vec<Box<WidgetBuilder>>,
+    pub children: Vec<WidgetBuilder>,
     pub contents_scroll: bool,
 }
 
@@ -48,8 +48,8 @@ impl WidgetBuilder {
         }
         self
     }
-    pub fn add_handler(mut self, handler: Box<EventHandler>) -> Self {
-        self.event_handlers.push(handler);
+    pub fn add_handler<T: EventHandler + 'static>(mut self, handler: T) -> Self {
+        self.event_handlers.push(Box::new(handler));
         self
     }
     pub fn set_debug_name(mut self, name: &str) -> Self {
@@ -63,30 +63,30 @@ impl WidgetBuilder {
     // common handlers
     pub fn contents_scroll(mut self) -> Self {
         self.contents_scroll = true;
-        self.add_handler(Box::new(ScrollHandler {}))
+        self.add_handler(ScrollHandler {})
     }
     pub fn on_click<F>(mut self, on_click: F) -> Self
     where F: Fn(&mut EventArgs) + 'static {
-        self.add_handler(Box::new(ClickHandler::new(on_click)))
+        self.add_handler(ClickHandler::new(on_click))
     }
     pub fn enable_hover(mut self) -> Self {
-        self.add_handler(Box::new(HoverHandler {}))
+        self.add_handler(HoverHandler {})
     }
     pub fn props_may_change(mut self) -> Self {
-        self.add_handler(Box::new(PropsChangeEventHandler {}))
+        self.add_handler(PropsChangeEventHandler {})
     }
     pub fn scrollable(mut self) -> Self {
-        self.add_handler(Box::new(WidgetScrollHandler::new()))
+        self.add_handler(WidgetScrollHandler::new())
     }
     pub fn draggable(mut self) -> Self {
-        self.add_handler(Box::new(DragWidgetPressHandler {}))
-            .add_handler(Box::new(DragMouseCursorHandler {}))
-            .add_handler(Box::new(DragMouseReleaseHandler {}))
-            .add_handler(Box::new(DragInputHandler::new()))
+        self.add_handler(DragWidgetPressHandler {})
+            .add_handler(DragMouseCursorHandler {})
+            .add_handler(DragMouseReleaseHandler {})
+            .add_handler(DragInputHandler::new())
     }
 
     // only method that is not chainable, because usually called out of order
-    pub fn add_child(&mut self, mut widget: Box<WidgetBuilder>) {
+    pub fn add_child(&mut self, mut widget: WidgetBuilder) {
         if self.contents_scroll {
             widget.layout.scroll_inside(&self);
         } else {
@@ -95,7 +95,7 @@ impl WidgetBuilder {
         self.children.push(widget);
     }
 
-    pub fn build(self) -> (Vec<Box<WidgetBuilder>>, Vec<WidgetConstraint>, Widget) {
+    pub fn build(self) -> (Vec<WidgetBuilder>, Vec<WidgetConstraint>, Widget) {
 
         if let Some(ref debug_name) = self.debug_name {
             cassowary::add_var_name(self.layout.vars.left, &format!("{}.left", debug_name));

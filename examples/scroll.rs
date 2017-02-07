@@ -69,12 +69,12 @@ fn main() {
     rect_br_widget.layout.align_bottom(&rect_container_widget, None);
     rect_br_widget.layout.align_right(&rect_container_widget, None);
 
-    rect_container_widget.add_child(Box::new(rect_tl_widget));
-    rect_container_widget.add_child(Box::new(rect_tr_widget));
-    rect_container_widget.add_child(Box::new(rect_bl_widget));
-    rect_container_widget.add_child(Box::new(rect_br_widget));
-    scroll_widget.add_child(Box::new(rect_container_widget));
-    root_widget.add_child(Box::new(scroll_widget));
+    rect_container_widget.add_child(rect_tl_widget);
+    rect_container_widget.add_child(rect_tr_widget);
+    rect_container_widget.add_child(rect_bl_widget);
+    rect_container_widget.add_child(rect_br_widget);
+    scroll_widget.add_child(rect_container_widget);
+    root_widget.add_child(scroll_widget);
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

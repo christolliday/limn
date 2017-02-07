@@ -30,7 +30,7 @@ fn main() {
     let mut left_spacer = WidgetBuilder::new();
     left_spacer.layout.width(50.0);
     linear_layout.add_widget(&mut left_spacer);
-    root_widget.add_child(Box::new(left_spacer));
+    root_widget.add_child(left_spacer);
 
     struct CountHandler {}
     impl EventHandler for CountHandler {
@@ -54,7 +54,7 @@ fn main() {
     let text_dims = text::measure_dims_no_wrap(&text_drawable);
     let mut text_widget = WidgetBuilder::new()
         .set_drawable(text_drawable)
-        .add_handler(Box::new(CountHandler {}));
+        .add_handler(CountHandler {});
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);
     text_widget.layout.center_vertical(&root_widget);
@@ -70,9 +70,9 @@ fn main() {
         });
     button_widget.layout.center(&button_container);
     button_widget.layout.bound_by(&button_container, Some(50.0));
-    button_container.add_child(Box::new(button_widget));
-    root_widget.add_child(Box::new(text_widget));
-    root_widget.add_child(Box::new(button_container));
+    button_container.add_child(button_widget);
+    root_widget.add_child(text_widget);
+    root_widget.add_child(button_container);
 
     struct CounterHandler {
         count: u32,

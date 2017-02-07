@@ -69,15 +69,15 @@ fn main() {
     let mut slider = WidgetBuilder::new()
         .set_drawable(primitives::rect_drawable(style))
         .draggable()
-        .add_handler(Box::new(DragHandler::new()));
+        .add_handler(DragHandler::new());
     slider.layout.dimensions(Dimensions {
         width: 30.0,
         height: 30.0,
     });
     slider.layout.align_top(&root_widget, Some(10.0));
 
-    slider_container.add_child(Box::new(slider));
-    root_widget.add_child(Box::new(slider_container));
+    slider_container.add_child(slider);
+    root_widget.add_child(slider_container);
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

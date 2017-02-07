@@ -213,7 +213,7 @@ impl Ui {
         self.widget_map.insert(id, widget_index);
         self.dirty_widgets.insert(widget_index);
         for child in children {
-            self.add_widget(*child, Some(widget_index));
+            self.add_widget(child, Some(widget_index));
         }
         widget_index
     }
