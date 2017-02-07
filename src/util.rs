@@ -176,6 +176,17 @@ pub fn point_inside_ellipse(point: Point, center: Point, radius: Dimensions) -> 
 }
 
 impl Rectangle {
+    pub fn new(left: Scalar, top: Scalar, width: Scalar, height: Scalar) -> Self {
+        Rectangle {
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+        }
+    }
+    pub fn new_empty() -> Self {
+        Rectangle::new(0.0, 0.0, 0.0, 0.0)
+    }
     pub fn from_ranges(x: Range, y: Range) -> Self {
         Rectangle {
             left: x.start,

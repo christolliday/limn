@@ -109,7 +109,7 @@ impl Ui {
     }
     pub fn get_root_dims(&mut self) -> Dimensions {
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
-        root.layout.get_dims(&mut self.solver)
+        root.layout.get_dims()
     }
     pub fn window_resized(&mut self, window_dims: Dimensions) {
         let ref root = self.graph[self.root_index.unwrap()];
@@ -138,7 +138,7 @@ impl Ui {
                         context,
                         graphics);
 
-            util::crop_rect(crop_to, widget.layout.bounds(&mut self.solver))
+            util::crop_rect(crop_to, widget.layout.bounds())
         };
 
         if !crop_to.no_area() {
@@ -167,7 +167,7 @@ impl Ui {
             while let Some(node_index) = dfs.next(&self.graph) {
                 let ref widget = self.graph[node_index];
                 let color = widget.debug_color.unwrap_or(GREEN);
-                let bounds = widget.layout.bounds(&mut self.solver);
+                let bounds = widget.layout.bounds();
                 util::draw_rect_outline(bounds, color, context, graphics);
             }
         }

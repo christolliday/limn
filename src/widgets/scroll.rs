@@ -16,7 +16,7 @@ impl EventHandler for ScrollHandler {
     fn handle_event(&mut self, args: EventArgs) {
         let EventArgs { data, widget_id, layout, event_queue, solver, .. } = args;
         let event = data.downcast_ref::<glutin::Event>().unwrap();
-        let widget_bounds = layout.bounds(solver);
+        let widget_bounds = layout.bounds();
         let event = Box::new((event.clone(), widget_bounds));
         event_queue.push(EventAddress::Child(widget_id), WIDGET_SCROLL, event);
     }
@@ -59,7 +59,7 @@ impl EventHandler for WidgetScrollHandler {
             _ => None,
         };
         if let Some(scroll) = scroll {
-            let widget_bounds = layout.bounds(solver);
+            let widget_bounds = layout.bounds();
 
             self.offset = self.offset + scroll * 13.0;
             self.offset.x = f64::min(0.0,

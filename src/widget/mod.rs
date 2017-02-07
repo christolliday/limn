@@ -157,7 +157,7 @@ impl Widget {
                 graphics: &mut G2d) {
 
         if let Some(drawable) = self.drawable.as_mut() {
-            let bounds = self.layout.bounds(solver);
+            let bounds = self.layout.bounds();
             let context = util::crop_context(context, crop_to);
             (drawable.draw_fn)(DrawArgs {
                 state: drawable.state.as_ref(),
@@ -170,7 +170,7 @@ impl Widget {
         }
     }
     pub fn is_mouse_over(&self, solver: &mut LimnSolver, mouse: Point) -> bool {
-        let bounds = self.layout.bounds(solver);
+        let bounds = self.layout.bounds();
         if let Some(ref drawable) = self.drawable {
             if let Some(mouse_over_fn) = drawable.mouse_over_fn {
                 return mouse_over_fn(mouse, bounds);

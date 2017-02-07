@@ -95,6 +95,7 @@ pub struct LayoutVars {
     pub top: Variable,
     pub right: Variable,
     pub bottom: Variable,
+    pub bounds: Rectangle,
 }
 impl LayoutVars {
     pub fn new() -> Self {
@@ -103,21 +104,24 @@ impl LayoutVars {
             top: Variable::new(),
             right: Variable::new(),
             bottom: Variable::new(),
+            bounds: Rectangle::new_empty(),
         }
     }
-    pub fn bounds(&self, solver: &mut LimnSolver) -> Rectangle {
-        Rectangle {
+    pub fn update(&mut self, solver: &mut LimnSolver) {
+        self.bounds = Rectangle {
             left: solver.get_value(self.left),
             top: solver.get_value(self.top),
             width: solver.get_value(self.right) - solver.get_value(self.left),
             height: solver.get_value(self.bottom) - solver.get_value(self.top),
         }
     }
-    pub fn get_dims(&self, solver: &mut LimnSolver) -> Dimensions {
-        let bounds = self.bounds(solver);
+    pub fn bounds(&self) -> Rectangle {
+        self.bounds
+    }
+    pub fn get_dims(&self) -> Dimensions {
         Dimensions {
-            width: bounds.width,
-            height: bounds.height,
+            width: self.bounds.width,
+            height: self.bounds.height,
         }
     }
 }
