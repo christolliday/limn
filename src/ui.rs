@@ -120,8 +120,10 @@ impl Ui {
         root_widget.layout.top_left(Point { x: 0.0, y: 0.0 }, None);
         self.root_index = Some(self.add_widget(root_widget, None));
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
-        self.solver.add_edit_variable(root.layout.right, STRONG).unwrap();
-        self.solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
+        self.solver.update_solver(|solver| {
+            solver.add_edit_variable(root.layout.right, STRONG).unwrap();
+            solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
+        });
     }
     pub fn get_root(&mut self) -> &Widget {
         &self.graph[self.root_index.unwrap()]
@@ -134,8 +136,10 @@ impl Ui {
     pub fn window_resized(&mut self, window_dims: Dimensions) {
         let ref mut root = self.graph[self.root_index.unwrap()];
         root.layout.update(&mut self.solver);
-        self.solver.suggest_value(root.layout.right, window_dims.width).unwrap();
-        self.solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
+        self.solver.update_solver(|solver| {
+            solver.suggest_value(root.layout.right, window_dims.width).unwrap();
+            solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
+        });
         self.dirty_widgets.insert(self.root_index.unwrap());
     }
     pub fn parents(&mut self, node_index: NodeIndex) -> Neighbors<()> {

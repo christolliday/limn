@@ -68,14 +68,16 @@ impl EventHandler for WidgetScrollHandler {
             self.offset.y = f64::min(0.0,
                                      f64::max(parent_bounds.height - widget_bounds.height,
                                               self.offset.y));
-            if !solver.has_edit_variable(&layout.left) {
-                solver.add_edit_variable(layout.left, STRONG).unwrap();
-            }
-            if !solver.has_edit_variable(&layout.top) {
-                solver.add_edit_variable(layout.top, STRONG).unwrap();
-            }
-            solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
-            solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
+            solver.update_solver(|solver| {
+                if !solver.has_edit_variable(&layout.left) {
+                    solver.add_edit_variable(layout.left, STRONG).unwrap();
+                }
+                if !solver.has_edit_variable(&layout.top) {
+                    solver.add_edit_variable(layout.top, STRONG).unwrap();
+                }
+                solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
+                solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
+            });
         }
     }
 }

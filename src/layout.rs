@@ -58,6 +58,7 @@ impl LimnSolver {
         self.var_map.insert(vars.top, widget.id);
         self.var_map.insert(vars.right, widget.id);
         self.var_map.insert(vars.bottom, widget.id);
+        self.check_changes();
     }
     pub fn remove_widget(&mut self, widget_id: &WidgetId) {
         // remove constraints that are relative to this widget from solver
@@ -70,36 +71,15 @@ impl LimnSolver {
         }
         // doesn't clean up other references to these constraints in the constraint map, but at least they won't affect the solver
         self.constraint_map.remove(&widget_id);
+        self.check_changes();
+    }
+    pub fn update_solver<F>(&mut self, f: F) where F: Fn(&mut cassowary::Solver) {
+        f(&mut self.solver);
+        self.check_changes();
     }
 
-    pub fn add_edit_variable(&mut self, v: Variable, strength: f64) -> Result<(), AddEditVariableError> {
-        let res = self.solver.add_edit_variable(v, strength);
-        self.check_changes();
-        res
-    }
-    pub fn remove_edit_variable(&mut self, v: Variable) -> Result<(), RemoveEditVariableError> {
-        let res = self.solver.remove_edit_variable(v);
-        self.check_changes();
-        res
-    }
     pub fn has_edit_variable(&mut self, v: &Variable) -> bool {
         self.solver.has_edit_variable(v)
-    }
-    pub fn suggest_value(&mut self, variable: Variable, value: f64) -> Result<(), SuggestValueError> {
-        let res = self.solver.suggest_value(variable, value);
-        self.check_changes();
-        res
-    }
-
-    pub fn add_constraint(&mut self, constraint: Constraint) -> Result<(), AddConstraintError> {
-        let res = self.solver.add_constraint(constraint);
-        self.check_changes();
-        res
-    }
-    pub fn remove_constraint(&mut self, constraint: &Constraint) -> Result<(), RemoveConstraintError> {
-        let res = self.solver.remove_constraint(constraint);
-        self.check_changes();
-        res
     }
     pub fn has_constraint(&self, constraint: &Constraint) -> bool {
         self.solver.has_constraint(constraint)
