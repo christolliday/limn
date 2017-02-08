@@ -72,11 +72,6 @@ impl EventQueue {
         queue.push((address, event_id, Box::new(data)));
         self.window_proxy.wakeup_event_loop();
     }
-    /*pub fn push(&mut self, address: EventAddress, event_id: EventId, data: Box<Any + Send>) {
-        let mut queue = self.queue.lock().unwrap();
-        queue.push((address, event_id, data));
-        self.window_proxy.wakeup_event_loop();
-    }*/
     pub fn is_empty(&mut self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.len() == 0

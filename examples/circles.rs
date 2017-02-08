@@ -30,7 +30,7 @@ fn main() {
         let mut button_container = WidgetBuilder::new();
         button_container.layout.center_horizontal(&root_widget);
         button_container.layout.align_bottom(&root_widget, Some(20.0));
-        button_container.layout.minimize();
+        button_container.layout.shrink();
 
         let mut undo_widget = PushButtonBuilder::new()
             .set_text("Undo").widget

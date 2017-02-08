@@ -158,17 +158,23 @@ impl LayoutBuilder {
     pub fn height(&mut self, height: Scalar) {
         self.constraints.push(WidgetConstraint::Local(self.vars.bottom - self.vars.top | EQ(REQUIRED) | height));
     }
+    pub fn min_width(&mut self, width: Scalar) {
+        self.constraints.push(WidgetConstraint::Local(self.vars.right - self.vars.left | GE(REQUIRED) | width));
+    }
+    pub fn min_height(&mut self, height: Scalar) {
+        self.constraints.push(WidgetConstraint::Local(self.vars.bottom - self.vars.top | GE(REQUIRED) | height));
+    }
     pub fn dimensions(&mut self, dimensions: Dimensions) {
         self.width(dimensions.width);
         self.height(dimensions.height);
     }
-    pub fn minimize(&mut self) {
+    pub fn min_dimensions(&mut self, dimensions: Dimensions) {
+        self.min_width(dimensions.width);
+        self.min_height(dimensions.height);
+    }
+    pub fn shrink(&mut self) {
         self.width_strength(0.0, WEAK);
         self.height_strength(0.0, WEAK);
-    }
-    pub fn maximize(&mut self) {
-        self.width_strength(10000.0, WEAK);
-        self.height_strength(10000.0, WEAK);
     }
     pub fn width_strength(&mut self, width: Scalar, strength: f64) {
         self.constraints.push(WidgetConstraint::Local(self.vars.right - self.vars.left | EQ(strength) | width));

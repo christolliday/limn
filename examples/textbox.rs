@@ -6,6 +6,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::ToggleButtonBuilder;
 use limn::widgets::text::{self, TextStyle, TextStyleField};
 use limn::widget::style::Value;
+use limn::util::Dimensions;
 use limn::color::*;
 
 fn main() {
@@ -13,9 +14,10 @@ fn main() {
     let font_id = util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
+    root_widget.layout.min_dimensions(Dimensions { width: 300.0, height: 300.0 });
 
     let text_fields = vec!{
-        TextStyleField::text(Value::Single("hello, can anybody hear me".to_owned())),
+        TextStyleField::text(Value::Single("I believe in reincarnation.\nThat's why I eat Jello.\nIt's good for the stomach".to_owned())),
         TextStyleField::background_color(Value::Single(WHITE)),
     };
     let text_style = TextStyle::from(text_fields);
@@ -25,8 +27,6 @@ fn main() {
     let mut text_widget = WidgetBuilder::new()
         .set_drawable(text_drawable)
         .set_debug_name("text");
-    text_widget.layout.dimensions(text_dims);
-    //text_widget.layout.center(&root_widget);
 
     let mut button = ToggleButtonBuilder::new()
         .set_text("ON", "OFF")
