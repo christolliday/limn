@@ -5,13 +5,15 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 
 [dependencies]
 backend = { path = "backend" }
-piston2d-graphics = "0.19"
 cassowary = { git = "https://github.com/christolliday/cassowary-rs", branch = "debug" }
 petgraph = { git = "https://github.com/bluss/petgraph", rev = "f58200a" }
-rusttype = "0.2.0"
-gfx_device_gl = "0.11.0"
-piston2d-gfx_graphics = "0.33.1"
+
+rusttype = "0.2.1"
+piston2d-graphics = "0.21"
+gfx_device_gl = "0.13.0"
+piston2d-gfx_graphics = "0.38.0"
 glutin = "0.7.0"
+
 lazy_static = "0.2.2"
 linked-hash-map = "0.3.0"
 maplit = "0.1.4"

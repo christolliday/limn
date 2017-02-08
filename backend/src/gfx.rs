@@ -4,9 +4,9 @@ extern crate gfx;
 
 use shader_version::OpenGL;
 use gfx_graphics::{Gfx2d, GfxGraphics};
-use gfx_core::factory::Typed;
 use self::gfx::Device;
 use self::gfx::format::{DepthStencil, Format, Formatted, Srgba8};
+use self::gfx::memory::Typed;
 
 use glutin;
 
@@ -43,7 +43,7 @@ pub struct GfxContext {
     pub factory: gfx_device_gl::Factory,
 }
 
-fn create_main_targets(dim: gfx::tex::Dimensions) ->
+fn create_main_targets(dim: gfx::texture::Dimensions) ->
     (gfx::handle::RenderTargetView<gfx_device_gl::Resources, gfx::format::Srgba8>,
      gfx::handle::DepthStencilView<gfx_device_gl::Resources, gfx::format::DepthStencil>)
  {
@@ -63,7 +63,7 @@ impl GfxContext {
 
         let draw_size: (u32, u32) = window.get_inner_size_pixels().unwrap_or((0, 0));
         let (output_color, output_stencil) = {
-            let aa = samples as gfx::tex::NumSamples;
+            let aa = samples as gfx::texture::NumSamples;
             let dim = (draw_size.0 as u16, draw_size.1 as u16, 1, aa.into());
             create_main_targets(dim)
         };
