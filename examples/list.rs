@@ -48,7 +48,7 @@ fn main() {
             let text_style = TextStyle::from(text_fields);
 
             let text_drawable = text::text_drawable(text_style);
-            let text_dims = text::measure_dims_no_wrap(&text_drawable);
+            let text_dims = text::measure(&text_drawable);
 
             let mut list_item_widget = WidgetBuilder::new()
                 .set_drawable(primitives::rect_drawable(STYLE_LIST_ITEM.clone()))

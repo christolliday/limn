@@ -268,14 +268,7 @@ impl<I> Iterator for LineRects<I>
         let LineRects { ref mut next, ref mut infos, x_align, line_height } = *self;
         next.map(|line_rect| {
             *next = infos.next().map(|info| {
-
-                let y = {
-                    // let h = line_rect.height;
-                    // let y = line_rect.top + h + line_spacing;
-                    Range::new(line_rect.bottom(), line_rect.bottom() + line_height)
-                    // Range::from_pos_and_len(y, h)
-                };
-
+                let y = Range::new(line_rect.bottom(), line_rect.bottom() + line_height);
                 let x = {
                     let range = Range::new(0.0, info.width);
                     match x_align {

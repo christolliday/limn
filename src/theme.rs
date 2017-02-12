@@ -21,6 +21,8 @@ static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
 static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
 static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
 
+use text::Wrap;
+use util::Align;
 lazy_static! {
     pub static ref STATE_DEFAULT: PropSet = btreeset!{};
     pub static ref STATE_HOVER: PropSet = btreeset!{Property::Hover};
@@ -38,17 +40,14 @@ lazy_static! {
     };
 
     pub static ref STYLE_TEXT: TextStyle = {
-        let text_style = Value::Single("".to_owned());
-        let font_id_style = Value::Single(FontId(0)); // make first font loaded default for now
-        let font_size_style = Value::Single(20.0);
-        let text_color_style = Value::Single(BLACK);
-        let background_color_style = Value::Single(TRANSPARENT);
         TextStyle {
-            text: text_style,
-            font_id: font_id_style,
-            font_size: font_size_style,
-            text_color: text_color_style,
-            background_color: background_color_style,
+            text: Value::Single("".to_owned()),
+            font_id: Value::Single(FontId(0)), // make first font loaded default for now
+            font_size: Value::Single(20.0),
+            text_color: Value::Single(BLACK),
+            background_color: Value::Single(TRANSPARENT),
+            wrap: Value::Single(Wrap::Whitespace),
+            align: Value::Single(Align::Start),
         }
     };
 

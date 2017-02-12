@@ -29,6 +29,8 @@ pub struct TextDrawState {
     pub font_size: Scalar,
     pub text_color: Color,
     pub background_color: Color,
+    pub wrap: Wrap,
+    pub align: Align,
 }
 
 pub fn apply_text_style(args: StyleArgs) {
@@ -40,6 +42,8 @@ pub fn apply_text_style(args: StyleArgs) {
     state.font_size = style.font_size.from_props(props);
     state.text_color = style.text_color.from_props(props);
     state.background_color = style.background_color.from_props(props);
+    state.wrap = style.wrap.from_props(props);
+    state.align = style.align.from_props(props);
 }
 
 #[derive(Clone)]
@@ -49,6 +53,8 @@ pub struct TextStyle {
     pub font_size: Value<Scalar>,
     pub text_color: Value<Color>,
     pub background_color: Value<Color>,
+    pub wrap: Value<Wrap>,
+    pub align: Value<Align>,
 }
 
 #[derive(Debug)]
@@ -58,6 +64,8 @@ pub enum TextStyleField {
     font_size(Value<Scalar>),
     text_color(Value<Color>),
     background_color(Value<Color>),
+    wrap(Value<Wrap>),
+    align(Value<Align>),
 }
 
 impl TextStyle {
@@ -74,14 +82,16 @@ impl TextStyle {
                 TextStyleField::font_size(val) => self.font_size = val,
                 TextStyleField::text_color(val) => self.text_color = val,
                 TextStyleField::background_color(val) => self.background_color = val,
+                TextStyleField::wrap(val) => self.wrap = val,
+                TextStyleField::align(val) => self.align = val,
             }
         }
     }
 }
 
-pub fn measure_dims_no_wrap(drawable: &Drawable) -> Dimensions {
+pub fn measure(drawable: &Drawable) -> Dimensions {
     let draw_state: &TextDrawState = drawable.state();
-    draw_state.measure_dims_no_wrap()
+    draw_state.measure()
 }
 
 impl TextDrawState {
@@ -92,29 +102,18 @@ impl TextDrawState {
             font_size: style.font_size.default(),
             text_color: style.text_color.default(),
             background_color: style.background_color.default(),
+            wrap: style.wrap.default(),
+            align: style.align.default(),
         }
     }
-    pub fn measure_dims_no_wrap(&self) -> Dimensions {
+    pub fn measure(&self) -> Dimensions {
         let res = resources();
         let font = res.fonts.get(self.font_id).unwrap();
         text::get_text_dimensions(&self.text,
                                   font,
                                   self.font_size,
                                   self.font_size * 1.25,
-                                  Align::Start,
-                                  Align::Start)
-    }
-    pub fn measure_height_wrapped(&self, width: Scalar) -> Scalar {
-        let res = resources();
-        let font = res.fonts.get(self.font_id).unwrap();
-        text::get_text_height(&self.text,
-                              font,
-                              self.font_size,
-                              self.font_size * 1.25,
-                              width,
-                              Wrap::Character,
-                              Align::Start,
-                              Align::Start)
+                                  self.wrap)
     }
 }
 
@@ -132,15 +131,14 @@ pub fn draw_text(draw_args: DrawArgs) {
 
     let res = resources();
     let font = res.fonts.get(state.font_id).unwrap();
-    let line_wrap = Wrap::Character;
 
     let positioned_glyphs = &text::get_positioned_glyphs(&state.text,
                                                          bounds,
                                                          font,
                                                          state.font_size,
                                                          state.font_size * 1.25,
-                                                         line_wrap,
-                                                         Align::Start,
+                                                         state.wrap,
+                                                         state.align,
                                                          Align::Start);
 
     // Queue the glyphs to be cached.

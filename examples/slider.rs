@@ -35,12 +35,14 @@ impl EventHandler for DragHandler {
         match *drag_event {
             DragEvent::DragStart => {
                 self.start_pos = drag_pos - solver.get_value(layout.left);
-                if !solver.has_edit_variable(&layout.left) {
-                    solver.add_edit_variable(layout.left, STRONG).unwrap();
-                }
             },
             _ => {
-                solver.suggest_value(layout.left, drag_pos - self.start_pos).unwrap();
+                solver.update_solver(|solver| {
+                    if !solver.has_edit_variable(&layout.left) {
+                        solver.add_edit_variable(layout.left, STRONG).unwrap();
+                    }
+                    solver.suggest_value(layout.left, drag_pos - self.start_pos).unwrap();
+                });
             }
         }
     }

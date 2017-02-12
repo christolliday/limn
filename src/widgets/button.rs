@@ -15,7 +15,7 @@ use widget::builder::WidgetBuilder;
 use widget::style::Value;
 use theme::{STATE_ACTIVATED};
 use theme::{STYLE_TEXT, STYLE_BUTTON};
-use util::Dimensions;
+use util::{Dimensions, Align};
 use color::*;
 
 
@@ -88,12 +88,14 @@ impl ToggleButtonBuilder {
 
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
-        let text_style_value = Value::Selector((selector, off_text.to_owned()));
-        let mut text_style = STYLE_TEXT.clone();
-        text_style.text = text_style_value;
+        let text_fields = vec!{
+            TextStyleField::text(Value::Selector((selector, off_text.to_owned()))),
+            TextStyleField::align(Value::Single(Align::Middle)),
+        };
+        let text_style = TextStyle::from(text_fields);
 
         let button_text_drawable = text::text_drawable(text_style);
-        let button_text_dims = text::measure_dims_no_wrap(&button_text_drawable);
+        let button_text_dims = text::measure(&button_text_drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(button_text_drawable)
             .add_handler(PropsChangeEventHandler {});
@@ -150,10 +152,13 @@ impl PushButtonBuilder {
     }
     pub fn set_text(mut self, text: &'static str) -> Self {
 
-        let text_fields = vec!{ TextStyleField::text(Value::Single(text.to_owned())) };
+        let text_fields = vec!{
+            TextStyleField::text(Value::Single(text.to_owned())),
+            TextStyleField::align(Value::Single(Align::Middle)),
+        };
         let text_style = TextStyle::from(text_fields);
         let drawable = text::text_drawable(text_style);
-        let button_text_dims = text::measure_dims_no_wrap(&drawable);
+        let button_text_dims = text::measure(&drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(drawable)
             .add_handler(PropsChangeEventHandler {});

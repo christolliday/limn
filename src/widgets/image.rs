@@ -24,7 +24,7 @@ impl ImageDrawState {
             },
         }
     }
-    pub fn measure_image(&self) -> Dimensions {
+    pub fn measure(&self) -> Dimensions {
         let res = resources();
         let img = res.images.get(self.image_id).unwrap();
         img.get_size().into()
@@ -34,9 +34,9 @@ impl ImageDrawState {
     }
 }
 
-pub fn measure_image(drawable: &Drawable) -> Dimensions {
+pub fn measure(drawable: &Drawable) -> Dimensions {
     let draw_state: &ImageDrawState = drawable.state();
-    draw_state.measure_image()
+    draw_state.measure()
 }
 
 pub fn draw_image(draw_args: DrawArgs) {

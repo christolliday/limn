@@ -52,7 +52,6 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
                     }
                     Event::Resized(width, height) => {
                         window.window_resized();
-                        println!("{:?} {:?}", width, height);
                         ui.window_resized(Dimensions {
                             width: width as f64,
                             height: height as f64,
