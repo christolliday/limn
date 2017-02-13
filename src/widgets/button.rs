@@ -3,14 +3,15 @@ use std::ops::Deref;
 use glutin;
 use linked_hash_map::LinkedHashMap;
 
-use widget::{EventHandler, PropsChangeEventHandler, EventArgs, Property};
+use widget::{EventHandler, PropsChangeEventHandler, EventArgs};
+use widget::property::Property;
+use widget::property::states::*;
 use event::EventId;
 use event::id::*;
 use widgets::primitives;
 use widgets::text::{self, TextStyleField};
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
-use theme::{STATE_ACTIVATED};
 use theme::STYLE_BUTTON;
 use util::{Dimensions, Align};
 

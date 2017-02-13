@@ -8,7 +8,7 @@ use cassowary::strength::*;
 
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
-use limn::widgets::primitives::{self, RectStyle, RectStyleField};
+use limn::widgets::primitives::{self, RectStyleField};
 use limn::widgets::drag::DragEvent;
 use limn::widget::style::Value;
 use limn::event::EventId;
@@ -58,7 +58,7 @@ fn main() {
     });
 
     let rect_color = [0.1, 0.1, 0.1, 1.0];
-    let style = RectStyle::from(vec!{RectStyleField::BackgroundColor(Value::Single(rect_color))});
+    let style = vec!{RectStyleField::BackgroundColor(Value::Single(rect_color))};
     let mut slider_container = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
     slider_container.layout.dimensions(Dimensions {
         width: 200.0,
@@ -68,7 +68,7 @@ fn main() {
     slider_container.layout.center_horizontal(&root_widget);
 
     let rect_color = [0.4, 0.4, 0.4, 1.0];
-    let style = RectStyle::from(vec!{RectStyleField::BackgroundColor(Value::Single(rect_color))});
+    let style = vec!{RectStyleField::BackgroundColor(Value::Single(rect_color))};
     let mut slider = WidgetBuilder::new()
         .set_drawable(primitives::rect_drawable(style))
         .draggable()

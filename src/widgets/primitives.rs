@@ -1,7 +1,8 @@
 use graphics;
 use graphics::types::Color;
 
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, PropSet};
+use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
+use widget::property::PropSet;
 use widget::style::{self, Value, StyleField};
 use util::Scalar;
 use color::*;

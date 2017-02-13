@@ -1,7 +1,7 @@
 use graphics::types::Color;
 use linked_hash_map::LinkedHashMap;
 
-use widget::{Property, PropSet};
+use widget::property::states::*;
 use widget::style::Value;
 use widgets::primitives::RectStyleField;
 use color::*;
@@ -17,14 +17,6 @@ static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
 static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
 
 lazy_static! {
-    pub static ref STATE_DEFAULT: PropSet = btreeset!{};
-    pub static ref STATE_HOVER: PropSet = btreeset!{Property::Hover};
-    pub static ref STATE_PRESSED: PropSet = btreeset!{Property::Pressed};
-    pub static ref STATE_ACTIVATED: PropSet = btreeset!{Property::Activated};
-    pub static ref STATE_ACTIVATED_PRESSED: PropSet = btreeset!{Property::Activated, Property::Pressed};
-    pub static ref STATE_SELECTED: PropSet = btreeset!{Property::Selected};
-    pub static ref STATE_INACTIVE: PropSet = btreeset!{Property::Inactive};
-
     pub static ref STYLE_LIST_ITEM: Vec<RectStyleField> = {
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);

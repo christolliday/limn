@@ -9,7 +9,7 @@ use resources::WidgetId;
 use petgraph::visit::{Dfs, DfsPostOrder};
 use ui::{Ui, UiEventArgs, UiEventHandler};
 
-use widget::Property;
+use widget::property::Property;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct EventId(pub &'static str);

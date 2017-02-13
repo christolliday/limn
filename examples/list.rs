@@ -4,7 +4,7 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{self, TextStyle, TextStyleField};
+use limn::widgets::text::{self, TextStyleField};
 use limn::widgets::primitives;
 use limn::widgets::list::{ListHandler, ListItemHandler};
 use limn::widget::style::Value;
@@ -36,11 +36,10 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &mut list_widget);
         let mut list_item_widgets = Vec::new();
         for _ in 1..15 {
-            let text_fields = vec!{
+            let text_style = vec!{
                 TextStyleField::Text(Value::Single("hello".to_owned())),
                 TextStyleField::TextColor(Value::Single(WHITE)),
             };
-            let text_style = TextStyle::from(text_fields);
 
             let text_drawable = text::text_drawable(text_style);
             let text_dims = text::measure(&text_drawable);

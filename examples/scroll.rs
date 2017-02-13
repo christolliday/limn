@@ -3,7 +3,7 @@ extern crate limn;
 mod util;
 
 use limn::widget::builder::WidgetBuilder;
-use limn::widgets::primitives::{self, RectStyle, RectStyleField};
+use limn::widgets::primitives::{self, RectStyleField};
 use limn::widget::style::Value;
 use limn::color::*;
 use limn::util::Dimensions;

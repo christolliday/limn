@@ -6,7 +6,7 @@ mod util;
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{self, TextDrawState, TextStyleField, TextStyle};
+use limn::widgets::text::{self, TextDrawState, TextStyleField};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
 use limn::event::{EventId, EventAddress};
@@ -40,11 +40,10 @@ fn main() {
         }
     }
 
-    let text_fields = vec!{
+    let text_style = vec!{
         TextStyleField::Text(Value::Single("0".to_owned())),
         TextStyleField::BackgroundColor(Value::Single(WHITE)),
     };
-    let text_style = TextStyle::from(text_fields);
     let text_drawable = text::text_drawable(text_style);
     let text_dims = text::measure(&text_drawable);
     let mut text_widget = WidgetBuilder::new()

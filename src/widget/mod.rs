@@ -1,9 +1,9 @@
 pub mod layout;
 pub mod builder;
 pub mod style;
+pub mod property;
 
 use std::any::Any;
-use std::collections::BTreeSet;
 
 use graphics::Context;
 use graphics::types::Color;
@@ -18,17 +18,8 @@ use layout::LimnSolver;
 use util::{self, Point, Rectangle};
 use ui::InputState;
 
+use self::property::{Property, PropSet};
 use self::layout::LayoutVars;
-
-#[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
-pub enum Property {
-    Hover,
-    Activated,
-    Selected,
-    Pressed,
-    Inactive,
-}
-pub type PropSet = BTreeSet<Property>;
 
 pub struct DrawArgs<'a, 'b: 'a> {
     pub state: &'a Any,
@@ -82,7 +73,7 @@ impl Drawable {
             mouse_over_fn: None,
             style: None,
             has_updated: false,
-            props: BTreeSet::new(),
+            props: PropSet::new(),
         }
     }
     fn apply_style(&mut self) {

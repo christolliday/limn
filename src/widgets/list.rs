@@ -1,4 +1,5 @@
-use widget::{EventArgs, EventHandler, Property};
+use widget::{EventArgs, EventHandler};
+use widget::property::Property;
 use event::{EventId, EventAddress};
 use event::id::*;
 use resources::WidgetId;

@@ -7,7 +7,8 @@ use backend::gfx::ImageSize;
 use text::{self, Wrap};
 use resources::{FontId, resources};
 use util::{self, Dimensions, Align, Scalar};
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, PropSet};
+use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
+use widget::property::PropSet;
 use widget::style::{self, Value, StyleField};
 use color::*;
 

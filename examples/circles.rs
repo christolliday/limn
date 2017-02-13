@@ -11,7 +11,7 @@ use cassowary::strength::*;
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::primitives;
-use limn::widget::Property;
+use limn::widget::property::Property;
 use limn::event::{EventId, EventAddress};
 use limn::ui::{Ui, UiEventHandler, UiEventArgs};
 use limn::util::{Dimensions, Point};
