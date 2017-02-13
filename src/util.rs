@@ -207,6 +207,18 @@ impl Rectangle {
     pub fn bottom(&self) -> Scalar {
         self.top + self.height
     }
+    pub fn top_left(&self) -> Point {
+        Point { x: self.left, y: self.top }
+    }
+    pub fn top_right(&self) -> Point {
+        Point { x: self.right(), y: self.top }
+    }
+    pub fn bottom_left(&self) -> Point {
+        Point { x: self.left, y: self.bottom() }
+    }
+    pub fn bottom_right(&self) -> Point {
+        Point { x: self.right(), y: self.bottom() }
+    }
     pub fn dims(&self) -> Dimensions {
         Dimensions {
             width: self.width,
