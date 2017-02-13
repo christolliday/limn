@@ -280,6 +280,7 @@ impl Mul<Scalar> for Point {
 }
 
 // Retrieve the "dots per inch" factor by dividing the window width by the view.
+#[allow(dead_code)]
 fn get_dpi(context: &Context) -> f32 {
     let view_size = context.get_view_size();
     context.viewport

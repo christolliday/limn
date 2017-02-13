@@ -11,20 +11,19 @@ use limn::color::*;
 
 fn main() {
     let (window, ui, event_queue) = util::init_default("Limn button demo");
-    let font_id = util::load_default_font();
+    util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
     root_widget.layout.min_dimensions(Dimensions { width: 300.0, height: 300.0 });
 
     let text_fields = vec!{
-        TextStyleField::text(Value::Single("I believe in reincarnation.\nThat's why I eat Jello.\nIt's good for the stomach".to_owned())),
-        TextStyleField::background_color(Value::Single(WHITE)),
+        TextStyleField::Text(Value::Single("I believe in reincarnation.\nThat's why I eat Jello.\nIt's good for the stomach".to_owned())),
+        TextStyleField::BackgroundColor(Value::Single(WHITE)),
     };
     let text_style = TextStyle::from(text_fields);
     let text_drawable = text::text_drawable(text_style);
-    let text_dims = text::measure(&text_drawable);
 
-    let mut text_widget = WidgetBuilder::new()
+    let text_widget = WidgetBuilder::new()
         .set_drawable(text_drawable)
         .set_debug_name("text");
 

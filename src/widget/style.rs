@@ -1,8 +1,5 @@
-use graphics::types::Color;
 use linked_hash_map::LinkedHashMap;
-use widget::{Property, PropSet};
-use std::collections::BTreeSet;
-use std::hash::Hash;
+use widget::PropSet;
 
 #[derive(Clone, Debug)]
 pub enum Value<T> where T: Clone {
@@ -13,7 +10,7 @@ pub enum Value<T> where T: Clone {
 impl<T> Value<T> where T: Clone {
     pub fn from_props(&self, props: &PropSet) -> T {
         match *self {
-            Value::Selector::<T>((ref sel, ref def)) => {
+            Value::Selector::<T>((ref sel, _)) => {
                 if sel.contains_key(&props) {
                     return sel.get(&props).unwrap().clone()
                 } else {
@@ -33,7 +30,7 @@ impl<T> Value<T> where T: Clone {
             Value::Single::<T>(ref val) => {
                 val.clone()
             }
-            Value::Selector::<T>((ref sel, ref def)) => {
+            Value::Selector::<T>((_, ref def)) => {
                 def.clone()
             }
         }

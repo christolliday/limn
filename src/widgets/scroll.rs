@@ -1,9 +1,7 @@
-use std::any::Any;
-
 use glutin;
 use cassowary::strength::*;
 
-use event::{self, EventId, EventAddress};
+use event::{EventId, EventAddress};
 use event::id::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};

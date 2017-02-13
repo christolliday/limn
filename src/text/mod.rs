@@ -80,19 +80,6 @@ pub struct Lines<'a, I>
     ranges: I,
 }
 
-
-/// Determine the total height of a block of text with the given number of lines, font size and
-/// `line_spacing` (the space that separates each line of text).
-pub fn height(num_lines: usize, font_size: Scalar, line_height: Scalar) -> Scalar {
-    if num_lines > 0 {
-        num_lines as Scalar * line_height
-        // num_lines as Scalar * font_size as Scalar + (num_lines - 1) as Scalar * line_spacing
-    } else {
-        0.0
-    }
-}
-
-
 /// Produce an iterator yielding each line within the given `text` as a new `&str`, where the
 /// start and end indices into each line are provided by the given iterator.
 pub fn lines<I>(text: &str, ranges: I) -> Lines<I>

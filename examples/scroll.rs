@@ -4,7 +4,6 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::primitives::{self, RectStyle};
-use limn::widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use limn::widget::style::Value;
 use limn::color::*;
 use limn::util::Dimensions;

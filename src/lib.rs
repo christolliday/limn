@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate backend;
 extern crate graphics;
 extern crate cassowary;

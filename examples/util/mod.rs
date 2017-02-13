@@ -6,7 +6,7 @@ extern crate glutin;
 use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
-use limn::ui::{self, Ui, UiEventArgs, UiEventHandler};
+use limn::ui::{self, Ui, UiEventHandler};
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
@@ -15,7 +15,7 @@ use limn::event::EventQueue;
 pub fn init_default(title: &str) -> (Window, Ui, EventQueue) {
     let window_dims = (100, 100);
     let mut window = Window::new(title, window_dims, Some(window_dims));
-    let mut event_queue = EventQueue::new(&window);
+    let event_queue = EventQueue::new(&window);
     let ui = Ui::new(&mut window, &event_queue);
 
     (window, ui, event_queue)

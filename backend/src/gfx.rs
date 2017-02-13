@@ -10,9 +10,7 @@ use self::gfx::memory::Typed;
 
 use glutin;
 
-use texture;
 use gfx_device_gl;
-use super::glyph::GlyphCache;
 use graphics::Viewport;
 
 pub use graphics::{Context, DrawState, Graphics, ImageSize, Transformed};

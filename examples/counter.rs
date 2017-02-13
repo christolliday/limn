@@ -1,10 +1,7 @@
-#[macro_use]
 extern crate limn;
 extern crate glutin;
 
 mod util;
-
-use std::any::Any;
 
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
@@ -12,17 +9,15 @@ use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widgets::text::{self, TextDrawState, TextStyleField, TextStyle};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
-use limn::event::{self, EventId, EventAddress};
-use limn::resources::WidgetId;
+use limn::event::{EventId, EventAddress};
 use limn::color::*;
-use limn::theme::STYLE_TEXT;
 
 const COUNTER: EventId = EventId("COUNTER");
 const COUNT: EventId = EventId("COUNT");
 
 fn main() {
     let (window, ui, event_queue) = util::init_default("Limn counter demo");
-    let font_id = util::load_default_font();
+    util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
 
@@ -46,8 +41,8 @@ fn main() {
     }
 
     let text_fields = vec!{
-        TextStyleField::text(Value::Single("0".to_owned())),
-        TextStyleField::background_color(Value::Single(WHITE)),
+        TextStyleField::Text(Value::Single("0".to_owned())),
+        TextStyleField::BackgroundColor(Value::Single(WHITE)),
     };
     let text_style = TextStyle::from(text_fields);
     let text_drawable = text::text_drawable(text_style);

@@ -11,16 +11,14 @@ use graphics::types::Color;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-#[macro_use]
-use event::{self, EventAddress, EventId, EventQueue};
+use event::{EventAddress, EventId, EventQueue};
 use event::id::*;
 use resources::WidgetId;
 use layout::LimnSolver;
 use util::{self, Point, Rectangle};
-use ui::{Ui, InputState};
+use ui::InputState;
 
-use self::builder::WidgetBuilder;
-use self::layout::{LayoutVars, LayoutBuilder};
+use self::layout::LayoutVars;
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum Property {
@@ -133,13 +131,13 @@ pub struct Widget {
 
 impl Widget {
     pub fn new(id: WidgetId,
-               mut drawable: Option<Drawable>,
+               drawable: Option<Drawable>,
                layout: LayoutVars,
                event_handlers: Vec<Box<EventHandler>>,
                debug_name: Option<String>,
                debug_color: Option<Color>)
-               -> Self {
-
+               -> Self
+    {
         Widget {
             id: id,
             drawable: drawable,
@@ -151,7 +149,6 @@ impl Widget {
     }
     pub fn draw(&mut self,
                 crop_to: Rectangle,
-                solver: &mut LimnSolver,
                 glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {
@@ -169,7 +166,7 @@ impl Widget {
             });
         }
     }
-    pub fn is_mouse_over(&self, solver: &mut LimnSolver, mouse: Point) -> bool {
+    pub fn is_mouse_over(&self, mouse: Point) -> bool {
         let bounds = self.layout.bounds();
         if let Some(ref drawable) = self.drawable {
             if let Some(mouse_over_fn) = drawable.mouse_over_fn {

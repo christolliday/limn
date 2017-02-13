@@ -1,7 +1,3 @@
-use std::collections::HashSet;
-use std::any::Any;
-use std::ops::{Index, IndexMut};
-
 use graphics;
 use graphics::types::Color;
 
@@ -9,10 +5,9 @@ use backend::glyph::{self, GlyphCache};
 use backend::gfx::ImageSize;
 
 use text::{self, Wrap};
-use resources::{Id, FontId, resources};
+use resources::{FontId, resources};
 use util::{self, Dimensions, Align, Scalar};
-use color::*;
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, Property, PropSet};
+use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
 use widget::style::Value;
 use theme::STYLE_TEXT;
 
@@ -59,13 +54,13 @@ pub struct TextStyle {
 
 #[derive(Debug)]
 pub enum TextStyleField {
-    text(Value<String>),
-    font_id(Value<FontId>),
-    font_size(Value<Scalar>),
-    text_color(Value<Color>),
-    background_color(Value<Color>),
-    wrap(Value<Wrap>),
-    align(Value<Align>),
+    Text(Value<String>),
+    FontId(Value<FontId>),
+    FontSize(Value<Scalar>),
+    TextColor(Value<Color>),
+    BackgroundColor(Value<Color>),
+    Wrap(Value<Wrap>),
+    Align(Value<Align>),
 }
 
 impl TextStyle {
@@ -77,13 +72,13 @@ impl TextStyle {
     pub fn extend(&mut self, mut style: Vec<TextStyleField>) {
         for field in style.drain(..) {
             match field {
-                TextStyleField::text(val) => self.text = val,
-                TextStyleField::font_id(val) => self.font_id = val,
-                TextStyleField::font_size(val) => self.font_size = val,
-                TextStyleField::text_color(val) => self.text_color = val,
-                TextStyleField::background_color(val) => self.background_color = val,
-                TextStyleField::wrap(val) => self.wrap = val,
-                TextStyleField::align(val) => self.align = val,
+                TextStyleField::Text(val) => self.text = val,
+                TextStyleField::FontId(val) => self.font_id = val,
+                TextStyleField::FontSize(val) => self.font_size = val,
+                TextStyleField::TextColor(val) => self.text_color = val,
+                TextStyleField::BackgroundColor(val) => self.background_color = val,
+                TextStyleField::Wrap(val) => self.wrap = val,
+                TextStyleField::Align(val) => self.align = val,
             }
         }
     }

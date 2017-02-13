@@ -1,23 +1,18 @@
-use std::collections::BTreeSet;
 use std::ops::Deref;
 
 use glutin;
 use linked_hash_map::LinkedHashMap;
-use graphics::types::Color;
 
-use widget::{self, EventHandler, PropsChangeEventHandler, DrawableEventHandler, EventArgs, Property,
-             PropSet};
-use event::{self, EventId, EventAddress};
+use widget::{EventHandler, PropsChangeEventHandler, EventArgs, Property};
+use event::EventId;
 use event::id::*;
-use widgets::primitives::{self, RectStyle};
+use widgets::primitives;
 use widgets::text::{self, TextStyle, TextStyleField};
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
 use theme::{STATE_ACTIVATED};
-use theme::{STYLE_TEXT, STYLE_BUTTON};
+use theme::STYLE_BUTTON;
 use util::{Dimensions, Align};
-use color::*;
-
 
 // show whether button is held down or not
 pub struct ButtonDownHandler {}
@@ -28,7 +23,7 @@ impl EventHandler for ButtonDownHandler {
     fn handle_event(&mut self, args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
-            glutin::Event::MouseInput(state, button) => {
+            glutin::Event::MouseInput(state, _) => {
                 let pressed = match state {
                     glutin::ElementState::Pressed => true,
                     glutin::ElementState::Released => false,
@@ -50,7 +45,7 @@ impl EventHandler for ToggleEventHandler {
         let EventArgs { widget_id, event_queue, .. } = args;
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
-            glutin::Event::MouseInput(state, button) => {
+            glutin::Event::MouseInput(state, _) => {
                 match state {
                     glutin::ElementState::Released => {
                         if let &mut Some(ref drawable) = args.drawable {
@@ -89,8 +84,8 @@ impl ToggleButtonBuilder {
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
         let text_fields = vec!{
-            TextStyleField::text(Value::Selector((selector, off_text.to_owned()))),
-            TextStyleField::align(Value::Single(Align::Middle)),
+            TextStyleField::Text(Value::Selector((selector, off_text.to_owned()))),
+            TextStyleField::Align(Value::Single(Align::Middle)),
         };
         let text_style = TextStyle::from(text_fields);
 
@@ -122,7 +117,7 @@ impl<F: Fn(&mut EventArgs)> EventHandler for ClickHandler<F> {
     fn handle_event(&mut self, mut args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
-            glutin::Event::MouseInput(state, button) => {
+            glutin::Event::MouseInput(state, _) => {
                 match state {
                     glutin::ElementState::Released => {
                         (self.callback)(&mut args);
@@ -153,8 +148,8 @@ impl PushButtonBuilder {
     pub fn set_text(mut self, text: &'static str) -> Self {
 
         let text_fields = vec!{
-            TextStyleField::text(Value::Single(text.to_owned())),
-            TextStyleField::align(Value::Single(Align::Middle)),
+            TextStyleField::Text(Value::Single(text.to_owned())),
+            TextStyleField::Align(Value::Single(Align::Middle)),
         };
         let text_style = TextStyle::from(text_fields);
         let drawable = text::text_drawable(text_style);

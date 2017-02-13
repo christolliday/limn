@@ -1,13 +1,7 @@
-use linked_hash_map::LinkedHashMap;
-use graphics::types::Color;
-
-use widget::{EventArgs, EventHandler, Property, PropSet};
-use widgets::primitives::RectStyle;
-use widget::style::Value;
-use event::{self, EventId, EventAddress};
+use widget::{EventArgs, EventHandler, Property};
+use event::{EventId, EventAddress};
 use event::id::*;
 use resources::WidgetId;
-use color::*;
 
 const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("limn/list_item_selected");
 

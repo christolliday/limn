@@ -238,7 +238,7 @@ impl<I> LineRects<I>
             };
 
             // Calculate the `y` `Range` of the first line `Rect`.
-            let total_text_height = super::height(num_lines, font_size, line_height);
+            let total_text_height = num_lines as Scalar * line_height;
             let total_text_y_range = Range::new(0.0, total_text_height);
             let total_text_y = match y_align {
                 Align::Start => total_text_y_range.align_start_of(bounding_y),
@@ -353,9 +353,9 @@ fn advance_width(ch: char, font: &Font, scale: Scale, last_glyph: &mut Option<Gl
     (kern + advance_width) as Scalar
 }
 
-fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char: char) -> bool {
+fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char_expected: char) -> bool {
     if let Some(&(_, next_char)) = char_indices.peek() {
-        true
+        next_char == next_char_expected
     } else {
         false
     }

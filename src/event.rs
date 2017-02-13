@@ -1,7 +1,6 @@
 use std::any::Any;
 use std::sync::{Arc, Mutex};
 
-use glutin;
 use glutin::WindowProxy;
 
 use backend::Window;

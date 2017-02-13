@@ -1,18 +1,14 @@
-use std::any::Any;
-
 use graphics::types::Color;
-use petgraph::graph::NodeIndex;
-use cassowary::{self, Constraint};
+use cassowary;
 
-use ui::{self, Ui};
-use widget::{Drawable, Widget, WidgetStyle, EventHandler, EventArgs, StyleArgs, DrawArgs, PropsChangeEventHandler};
+use widget::{Drawable, Widget, EventHandler, EventArgs, PropsChangeEventHandler};
 use widget::layout::{LayoutBuilder, WidgetConstraint};
 use widgets::hover::HoverHandler;
 use widgets::button::ClickHandler;
 use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCursorHandler, DragInputHandler};
 use resources::{resources, WidgetId};
-use util::{self, Point, Rectangle};
+use util::{Point, Rectangle};
 
 pub struct WidgetBuilder {
     pub id: WidgetId,
@@ -65,20 +61,20 @@ impl WidgetBuilder {
         self.contents_scroll = true;
         self.add_handler(ScrollHandler {})
     }
-    pub fn on_click<F>(mut self, on_click: F) -> Self
+    pub fn on_click<F>(self, on_click: F) -> Self
     where F: Fn(&mut EventArgs) + 'static {
         self.add_handler(ClickHandler::new(on_click))
     }
-    pub fn enable_hover(mut self) -> Self {
+    pub fn enable_hover(self) -> Self {
         self.add_handler(HoverHandler {})
     }
-    pub fn props_may_change(mut self) -> Self {
+    pub fn props_may_change(self) -> Self {
         self.add_handler(PropsChangeEventHandler {})
     }
-    pub fn scrollable(mut self) -> Self {
+    pub fn scrollable(self) -> Self {
         self.add_handler(WidgetScrollHandler::new())
     }
-    pub fn draggable(mut self) -> Self {
+    pub fn draggable(self) -> Self {
         self.add_handler(DragWidgetPressHandler {})
             .add_handler(DragMouseCursorHandler {})
             .add_handler(DragMouseReleaseHandler {})

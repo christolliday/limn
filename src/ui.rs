@@ -5,13 +5,12 @@ use std::any::Any;
 use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Dfs;
-use petgraph::{Direction, Directed};
+use petgraph::Direction;
 use petgraph::stable_graph::Neighbors;
 
 use glutin;
 
 use layout::LimnSolver;
-use cassowary::Constraint;
 use cassowary::strength::*;
 
 use graphics::Context;
@@ -22,8 +21,7 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use widget::layout::{self, LayoutBuilder, WidgetConstraint};
-use event::{self, EventId, EventQueue, EventAddress, Hover};
+use event::{EventId, EventQueue, EventAddress, Hover};
 use event::id::*;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
@@ -165,7 +163,6 @@ impl Ui {
         let crop_to = {
             let ref mut widget = self.graph[node_index];
             widget.draw(crop_to,
-                        &mut self.solver,
                         &mut self.glyph_cache,
                         context,
                         graphics);
@@ -204,7 +201,7 @@ impl Ui {
             }
         }
     }
-    pub fn add_widget(&mut self, mut widget: WidgetBuilder, parent_index: Option<NodeIndex>) -> NodeIndex {
+    pub fn add_widget(&mut self, widget: WidgetBuilder, parent_index: Option<NodeIndex>) -> NodeIndex {
 
         let (children, constraints, widget) = widget.build();
         self.solver.add_widget(&widget, constraints);
@@ -249,7 +246,7 @@ impl Ui {
                     let last_over = last_over.clone();
                     if let Some(last_index) = self.find_widget(last_over) {
                         let ref mut widget = self.graph[last_index];
-                        if !widget.is_mouse_over(&mut self.solver, self.input_state.mouse) {
+                        if !widget.is_mouse_over(self.input_state.mouse) {
                             event_queue.push(EventAddress::Widget(last_over), WIDGET_HOVER, Hover::Out);
                             self.input_state.last_over.remove(&last_over);
                         }
@@ -277,7 +274,7 @@ impl Ui {
     }
     pub fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
         let ref mut widget = self.graph[node_index];
-        widget.is_mouse_over(&mut self.solver, self.input_state.mouse)
+        widget.is_mouse_over(self.input_state.mouse)
     }
     pub fn find_widget(&mut self, widget_id: WidgetId) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)

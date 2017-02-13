@@ -8,11 +8,10 @@ use cassowary::strength::*;
 
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
-use limn::widgets::button::ToggleButtonBuilder;
 use limn::widgets::primitives::{self, RectStyle};
 use limn::widgets::drag::DragEvent;
 use limn::widget::style::Value;
-use limn::event::{EventAddress, EventId};
+use limn::event::EventId;
 use limn::event::id::*;
 use limn::util::Dimensions;
 
@@ -50,7 +49,7 @@ impl EventHandler for DragHandler {
 
 fn main() {
     let (window, ui, event_queue) = util::init_default("Limn slider demo");
-    let font_id = util::load_default_font();
+    util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
     root_widget.layout.dimensions(Dimensions {

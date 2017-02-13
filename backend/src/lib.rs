@@ -15,7 +15,7 @@ pub mod gfx;
 pub mod events;
 pub mod glyph;
 
-
-pub use self::window::{Window, WindowEvents};
+pub use self::window::Window;
+pub use self::events::WindowEvents;
 pub use self::shader_version::OpenGL;
 pub use gfx::GfxContext;

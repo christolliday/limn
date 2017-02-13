@@ -6,14 +6,12 @@ extern crate cassowary;
 
 mod util;
 
-use petgraph::graph::NodeIndex;
-
 use cassowary::strength::*;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::primitives;
-use limn::widget::{EventHandler, EventArgs, Property};
+use limn::widget::Property;
 use limn::event::{EventId, EventAddress};
 use limn::ui::{Ui, UiEventHandler, UiEventArgs};
 use limn::util::{Dimensions, Point};
@@ -23,16 +21,16 @@ use limn::color::*;
 const CIRCLE_EVENT: EventId = EventId("CIRCLE_EVENT");
 
 fn main() {
-    let (window, mut ui, mut event_queue) = util::init_default("Limn circles demo");
-    let font_id = util::load_default_font();
+    let (window, ui, mut event_queue) = util::init_default("Limn circles demo");
+    util::load_default_font();
 
-    fn create_undo_redo_buttons(ui: &mut Ui, root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId) {
+    fn create_undo_redo_buttons(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId) {
         let mut button_container = WidgetBuilder::new();
         button_container.layout.center_horizontal(&root_widget);
         button_container.layout.align_bottom(&root_widget, Some(20.0));
         button_container.layout.shrink();
 
-        let mut undo_widget = PushButtonBuilder::new()
+        let undo_widget = PushButtonBuilder::new()
             .set_text("Undo").widget
             .on_click(|args| {
                 args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, CircleEvent::Undo);
@@ -128,7 +126,7 @@ fn main() {
     root_widget.layout.dimensions(Dimensions {width: 300.0, height: 300.0});
 
 
-    let (undo_id, redo_id) = create_undo_redo_buttons(&mut ui, &mut root_widget);
+    let (undo_id, redo_id) = create_undo_redo_buttons(&mut root_widget);
     // todo: better way to set initial props
     event_queue.change_prop(undo_id, Property::Inactive, true);
     event_queue.change_prop(redo_id, Property::Inactive, true);

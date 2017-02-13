@@ -68,7 +68,7 @@ impl EventHandler for DragWidgetPressHandler {
     fn handle_event(&mut self, args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
-            glutin::Event::MouseInput(state, button) => {
+            glutin::Event::MouseInput(state, _) => {
                 match state {
                     glutin::ElementState::Pressed => {
                         args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, DragInputEvent::WidgetPressed);
@@ -96,7 +96,7 @@ impl EventHandler for DragMouseReleaseHandler {
     fn handle_event(&mut self, args: EventArgs) {
         let event = args.data.downcast_ref::<glutin::Event>().unwrap();
         match *event {
-            glutin::Event::MouseInput(state, button) => {
+            glutin::Event::MouseInput(state, _) => {
                 match state {
                     glutin::ElementState::Released => {
                         args.event_queue.push(EventAddress::Widget(args.widget_id), DRAG_INPUT_EVENT, DragInputEvent::MouseReleased);

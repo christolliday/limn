@@ -2,14 +2,10 @@ use std::collections::{HashMap, HashSet};
 
 use cassowary;
 use cassowary::{Variable, Constraint};
-use cassowary::{AddEditVariableError, RemoveEditVariableError, SuggestValueError};
-use cassowary::{AddConstraintError, RemoveConstraintError};
-
-use petgraph::graph::NodeIndex;
 
 use resources::WidgetId;
 use widget::Widget;
-use widget::layout::{LayoutVars, WidgetConstraint};
+use widget::layout::WidgetConstraint;
 use event::{EventAddress, EventQueue};
 use event::id::*;
 
@@ -65,7 +61,7 @@ impl LimnSolver {
         if let Some(constraint_list) = self.constraint_map.get(&widget_id) {
             for constraint in constraint_list {
                 if self.solver.has_constraint(constraint) {
-                    self.solver.remove_constraint(constraint);
+                    self.solver.remove_constraint(constraint).unwrap();
                 }
             }
         }
@@ -96,7 +92,7 @@ impl LimnSolver {
         let changes = self.solver.fetch_changes();
         if changes.len() > 0 {
             let mut widget_ids = HashSet::new();
-            for &(var, val) in changes {
+            for &(var, _) in changes {
                 if let Some(widget_id) = self.var_map.get(&var) {
                     widget_ids.insert(widget_id.clone());
                 }

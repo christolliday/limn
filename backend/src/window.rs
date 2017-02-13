@@ -1,23 +1,13 @@
-use std::time::Duration;
-use super::gfx::{GfxContext, G2d};
-use super::shader_version::OpenGL;
-
-pub use super::events::WindowEvents;
+use gfx::{GfxContext, G2d};
+use shader_version::OpenGL;
 use graphics::Viewport;
-
 use glutin;
+use gl;
 
-use super::gl;
-use glutin::ContextError;
-use std::error::Error;
+pub use graphics::Context;
 
-pub use super::graphics::Context;
-
-/// Contains everything required for controlling window, graphics, event loop.
 pub struct Window {
-    /// The window.
     pub window: glutin::Window,
-    /// Stores state associated with Gfx.
     pub context: GfxContext,
 }
 
@@ -31,7 +21,7 @@ impl Window {
             builder = builder.with_min_dimensions(min_size.0, min_size.1)
         }
         let mut window = builder.build().unwrap();
-        unsafe { window.make_current() };
+        unsafe { window.make_current().unwrap() };
         gl::load_with(|s| window.get_proc_address(s) as *const _);
 
         let context = GfxContext::new(&mut window, OpenGL::V3_2, 4);
@@ -61,7 +51,7 @@ impl Window {
         self.make_current();
         let viewport = self.viewport();
         let res = self.context.draw_2d(f, viewport);
-        self.window.swap_buffers();
+        self.window.swap_buffers().unwrap();
         self.context.after_render();
         res
     }

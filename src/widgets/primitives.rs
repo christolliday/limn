@@ -1,10 +1,9 @@
-use std::collections::BTreeSet;
 use std::any::Any;
 use std::ops::Index;
 
 use graphics;
 use graphics::types::Color;
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, PropSet};
+use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
 use widget::style::Value;
 
 pub fn rect_drawable(style: RectStyle) -> Drawable {
@@ -49,8 +48,7 @@ pub struct RectStyle {
 
 pub fn ellipse_drawable(background: Color, border: Option<graphics::ellipse::Border>) -> Drawable {
     let draw_state = EllipseDrawState { background: background, border: border };
-    let mut drawable = Drawable::new(draw_state, draw_ellipse);
-    drawable
+    Drawable::new(draw_state, draw_ellipse)
 }
 pub struct EllipseDrawState {
     pub background: Color,

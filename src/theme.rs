@@ -1,6 +1,3 @@
-use std::collections::BTreeSet;
-use std::collections::HashMap;
-
 use graphics::types::Color;
 use linked_hash_map::LinkedHashMap;
 
