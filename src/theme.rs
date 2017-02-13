@@ -3,9 +3,7 @@ use linked_hash_map::LinkedHashMap;
 
 use widget::{Property, PropSet};
 use widget::style::Value;
-use widgets::primitives::{RectStyle, RectStyleField};
-use widgets::text::TextStyle;
-use resources::FontId;
+use widgets::primitives::RectStyleField;
 use color::*;
 
 static COLOR_BUTTON_DEFAULT: Color = RED;
@@ -18,8 +16,6 @@ static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
 static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
 static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
 
-use text::Wrap;
-use util::Align;
 lazy_static! {
     pub static ref STATE_DEFAULT: PropSet = btreeset!{};
     pub static ref STATE_HOVER: PropSet = btreeset!{Property::Hover};
@@ -29,7 +25,7 @@ lazy_static! {
     pub static ref STATE_SELECTED: PropSet = btreeset!{Property::Selected};
     pub static ref STATE_INACTIVE: PropSet = btreeset!{Property::Inactive};
 
-    pub static ref STYLE_LIST_ITEM: RectStyle = {
+    pub static ref STYLE_LIST_ITEM: Vec<RectStyleField> = {
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
         selector.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
@@ -37,7 +33,7 @@ lazy_static! {
         vec!{ RectStyleField::BackgroundColor(Value::Selector((selector, COLOR_LIST_ITEM_DEFAULT))) }
     };
 
-    pub static ref STYLE_BUTTON: RectStyle = {
+    pub static ref STYLE_BUTTON: Vec<RectStyleField> = {
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED_PRESSED.deref().clone(), COLOR_BUTTON_ACTIVATED_PRESSED);
         selector.insert(STATE_ACTIVATED.deref().clone(), COLOR_BUTTON_ACTIVATED);

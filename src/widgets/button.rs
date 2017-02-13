@@ -7,7 +7,7 @@ use widget::{EventHandler, PropsChangeEventHandler, EventArgs, Property};
 use event::EventId;
 use event::id::*;
 use widgets::primitives;
-use widgets::text::{self, TextStyle, TextStyleField};
+use widgets::text::{self, TextStyleField};
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
 use theme::{STATE_ACTIVATED};
@@ -68,7 +68,7 @@ impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(vec!{}))
+            .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
             .add_handler(ButtonDownHandler {})
             .add_handler(ToggleEventHandler {})
             .add_handler(PropsChangeEventHandler {});
@@ -83,11 +83,10 @@ impl ToggleButtonBuilder {
 
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
-        let text_fields = vec!{
+        let text_style = vec!{
             TextStyleField::Text(Value::Selector((selector, off_text.to_owned()))),
             TextStyleField::Align(Value::Single(Align::Middle)),
         };
-        let text_style = TextStyle::from(text_fields);
 
         let button_text_drawable = text::text_drawable(text_style);
         let button_text_dims = text::measure(&button_text_drawable);
@@ -135,7 +134,7 @@ pub struct PushButtonBuilder {
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(vec!{}))
+            .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
             .add_handler(PropsChangeEventHandler {});
 
         widget.layout.dimensions(Dimensions {
@@ -147,11 +146,10 @@ impl PushButtonBuilder {
     }
     pub fn set_text(mut self, text: &'static str) -> Self {
 
-        let text_fields = vec!{
+        let text_style = vec!{
             TextStyleField::Text(Value::Single(text.to_owned())),
             TextStyleField::Align(Value::Single(Align::Middle)),
         };
-        let text_style = TextStyle::from(text_fields);
         let drawable = text::text_drawable(text_style);
         let button_text_dims = text::measure(&drawable);
         let mut button_text_widget = WidgetBuilder::new()

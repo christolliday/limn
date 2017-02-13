@@ -36,3 +36,12 @@ impl<T> Value<T> where T: Clone {
         }
     }
 }
+
+pub trait StyleField<D> {
+    fn apply(&self, state: &mut D, props: &PropSet);
+}
+pub fn apply_style<D, S: StyleField<D>>(state: &mut D, style: &Vec<S>, props: &PropSet) {
+    for field in style.iter() {
+        field.apply(state, props);
+    }
+}

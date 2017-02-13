@@ -8,10 +8,10 @@ use text::{self, Wrap};
 use resources::{FontId, resources};
 use util::{self, Dimensions, Align, Scalar};
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, PropSet};
-use widget::style::Value;
+use widget::style::{self, Value, StyleField};
 use color::*;
 
-pub fn text_drawable(style: TextStyle) -> Drawable {
+pub fn text_drawable(style: Vec<TextStyleField>) -> Drawable {
     let draw_state = TextDrawState::new(&style);
     let mut drawable = Drawable::new(draw_state, draw_text);
     drawable.style = Some(WidgetStyle::new(style, apply_text_style));
@@ -43,25 +43,10 @@ impl Default for TextDrawState {
 
 pub fn apply_text_style(args: StyleArgs) {
     let state: &mut TextDrawState = args.state.downcast_mut().unwrap();
-    let style: &TextStyle = args.style.downcast_ref().unwrap();
+    let style: &Vec<TextStyleField> = args.style.downcast_ref().unwrap();
     let props = args.props;
-    apply_text_style_2(state, style, props);
+    style::apply_style(state, style, props);
 }
-pub fn apply_text_style_2(state: &mut TextDrawState, style: &TextStyle, props: &PropSet) {
-    for field in style.iter() {
-        match *field {
-            TextStyleField::Text(ref val) => state.text = val.from_props(props),
-            TextStyleField::FontId(ref val) => state.font_id = val.from_props(props),
-            TextStyleField::FontSize(ref val) => state.font_size = val.from_props(props),
-            TextStyleField::TextColor(ref val) => state.text_color = val.from_props(props),
-            TextStyleField::BackgroundColor(ref val) => state.background_color = val.from_props(props),
-            TextStyleField::Wrap(ref val) => state.wrap = val.from_props(props),
-            TextStyleField::Align(ref val) => state.align = val.from_props(props),
-        }
-    }
-}
-
-pub type TextStyle = Vec<TextStyleField>;
 
 #[derive(Debug)]
 pub enum TextStyleField {
@@ -73,6 +58,19 @@ pub enum TextStyleField {
     Wrap(Value<Wrap>),
     Align(Value<Align>),
 }
+impl StyleField<TextDrawState> for TextStyleField {
+    fn apply(&self, state: &mut TextDrawState, props: &PropSet) {
+        match *self {
+            TextStyleField::Text(ref val) => state.text = val.from_props(props),
+            TextStyleField::FontId(ref val) => state.font_id = val.from_props(props),
+            TextStyleField::FontSize(ref val) => state.font_size = val.from_props(props),
+            TextStyleField::TextColor(ref val) => state.text_color = val.from_props(props),
+            TextStyleField::BackgroundColor(ref val) => state.background_color = val.from_props(props),
+            TextStyleField::Wrap(ref val) => state.wrap = val.from_props(props),
+            TextStyleField::Align(ref val) => state.align = val.from_props(props),
+        }
+    }
+}
 
 pub fn measure(drawable: &Drawable) -> Dimensions {
     let draw_state: &TextDrawState = drawable.state();
@@ -80,9 +78,9 @@ pub fn measure(drawable: &Drawable) -> Dimensions {
 }
 
 impl TextDrawState {
-    pub fn new(style: &TextStyle) -> Self {
+    pub fn new(style: &Vec<TextStyleField>) -> Self {
         let mut state = TextDrawState::default();
-        apply_text_style_2(&mut state, style, &PropSet::new());
+        style::apply_style(&mut state, style, &PropSet::new());
         state
     }
     pub fn measure(&self) -> Dimensions {
