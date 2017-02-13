@@ -7,9 +7,9 @@ use backend::gfx::ImageSize;
 use text::{self, Wrap};
 use resources::{FontId, resources};
 use util::{self, Dimensions, Align, Scalar};
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
+use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, PropSet};
 use widget::style::Value;
-use theme::STYLE_TEXT;
+use color::*;
 
 pub fn text_drawable(style: TextStyle) -> Drawable {
     let draw_state = TextDrawState::new(&style);
@@ -27,30 +27,41 @@ pub struct TextDrawState {
     pub wrap: Wrap,
     pub align: Align,
 }
+impl Default for TextDrawState {
+    fn default() -> Self {
+        TextDrawState {
+            text: "".to_owned(),
+            font_id: FontId(0),
+            font_size: 20.0,
+            text_color: BLACK,
+            background_color: TRANSPARENT,
+            wrap: Wrap::Whitespace,
+            align: Align::Start,
+        }
+    }
+}
 
 pub fn apply_text_style(args: StyleArgs) {
     let state: &mut TextDrawState = args.state.downcast_mut().unwrap();
     let style: &TextStyle = args.style.downcast_ref().unwrap();
     let props = args.props;
-    state.text = style.text.from_props(props);
-    state.font_id = style.font_id.from_props(props);
-    state.font_size = style.font_size.from_props(props);
-    state.text_color = style.text_color.from_props(props);
-    state.background_color = style.background_color.from_props(props);
-    state.wrap = style.wrap.from_props(props);
-    state.align = style.align.from_props(props);
+    apply_text_style_2(state, style, props);
+}
+pub fn apply_text_style_2(state: &mut TextDrawState, style: &TextStyle, props: &PropSet) {
+    for field in style.iter() {
+        match *field {
+            TextStyleField::Text(ref val) => state.text = val.from_props(props),
+            TextStyleField::FontId(ref val) => state.font_id = val.from_props(props),
+            TextStyleField::FontSize(ref val) => state.font_size = val.from_props(props),
+            TextStyleField::TextColor(ref val) => state.text_color = val.from_props(props),
+            TextStyleField::BackgroundColor(ref val) => state.background_color = val.from_props(props),
+            TextStyleField::Wrap(ref val) => state.wrap = val.from_props(props),
+            TextStyleField::Align(ref val) => state.align = val.from_props(props),
+        }
+    }
 }
 
-#[derive(Clone)]
-pub struct TextStyle {
-    pub text: Value<String>,
-    pub font_id: Value<FontId>,
-    pub font_size: Value<Scalar>,
-    pub text_color: Value<Color>,
-    pub background_color: Value<Color>,
-    pub wrap: Value<Wrap>,
-    pub align: Value<Align>,
-}
+pub type TextStyle = Vec<TextStyleField>;
 
 #[derive(Debug)]
 pub enum TextStyleField {
@@ -63,27 +74,6 @@ pub enum TextStyleField {
     Align(Value<Align>),
 }
 
-impl TextStyle {
-    pub fn from(fields: Vec<TextStyleField>) -> Self {
-        let mut style = STYLE_TEXT.clone();
-        style.extend(fields);
-        style
-    }
-    pub fn extend(&mut self, mut style: Vec<TextStyleField>) {
-        for field in style.drain(..) {
-            match field {
-                TextStyleField::Text(val) => self.text = val,
-                TextStyleField::FontId(val) => self.font_id = val,
-                TextStyleField::FontSize(val) => self.font_size = val,
-                TextStyleField::TextColor(val) => self.text_color = val,
-                TextStyleField::BackgroundColor(val) => self.background_color = val,
-                TextStyleField::Wrap(val) => self.wrap = val,
-                TextStyleField::Align(val) => self.align = val,
-            }
-        }
-    }
-}
-
 pub fn measure(drawable: &Drawable) -> Dimensions {
     let draw_state: &TextDrawState = drawable.state();
     draw_state.measure()
@@ -91,15 +81,9 @@ pub fn measure(drawable: &Drawable) -> Dimensions {
 
 impl TextDrawState {
     pub fn new(style: &TextStyle) -> Self {
-        TextDrawState {
-            text: style.text.default(),
-            font_id: style.font_id.default(),
-            font_size: style.font_size.default(),
-            text_color: style.text_color.default(),
-            background_color: style.background_color.default(),
-            wrap: style.wrap.default(),
-            align: style.align.default(),
-        }
+        let mut state = TextDrawState::default();
+        apply_text_style_2(&mut state, style, &PropSet::new());
+        state
     }
     pub fn measure(&self) -> Dimensions {
         let res = resources();

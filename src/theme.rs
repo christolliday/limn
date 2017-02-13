@@ -39,18 +39,6 @@ lazy_static! {
         }
     };
 
-    pub static ref STYLE_TEXT: TextStyle = {
-        TextStyle {
-            text: Value::Single("".to_owned()),
-            font_id: Value::Single(FontId(0)), // make first font loaded default for now
-            font_size: Value::Single(20.0),
-            text_color: Value::Single(BLACK),
-            background_color: Value::Single(TRANSPARENT),
-            wrap: Value::Single(Wrap::Whitespace),
-            align: Value::Single(Align::Start),
-        }
-    };
-
     pub static ref STYLE_RECT: RectStyle = {
         RectStyle {
             background_color: Value::Single(WHITE),

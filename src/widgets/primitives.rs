@@ -5,6 +5,7 @@ use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
 use widget::style::Value;
 use theme::STYLE_RECT;
 use util::Scalar;
+use color::*;
 
 pub fn rect_drawable(style: RectStyle) -> Drawable {
     let draw_state = RectDrawState {
@@ -19,6 +20,14 @@ pub fn rect_drawable(style: RectStyle) -> Drawable {
 pub struct RectDrawState {
     pub background_color: Color,
     pub corner_radius: Option<Scalar>,
+}
+impl Default for RectDrawState {
+    fn default() -> Self {
+        RectDrawState {
+            background_color: WHITE,
+            corner_radius: None,
+        }
+    }
 }
 #[derive(Clone)]
 pub struct RectStyle {
