@@ -1,10 +1,30 @@
+use linked_hash_map::LinkedHashMap;
+
 use widget::{EventArgs, EventHandler};
 use widget::property::Property;
+use widget::property::states::*;
+use widget::style::Value;
+use widgets::primitives::RectStyleField;
 use event::{EventId, EventAddress};
 use event::id::*;
 use resources::WidgetId;
+use util::Color;
 
 const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("limn/list_item_selected");
+
+static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
+static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
+static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
+
+lazy_static! {
+    pub static ref STYLE_LIST_ITEM: Vec<RectStyleField> = {
+        let mut selector = LinkedHashMap::new();
+        selector.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
+        selector.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
+
+        vec!{ RectStyleField::BackgroundColor(Value::Selector((selector, COLOR_LIST_ITEM_DEFAULT))) }
+    };
+}
 
 pub struct ListHandler {
     selected: Option<WidgetId>,

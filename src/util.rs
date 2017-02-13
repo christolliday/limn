@@ -2,9 +2,9 @@ use std::ops::{Mul, Div, Add, Sub};
 
 use rusttype;
 use graphics::{self, Context};
-use graphics::types::{self, Color};
+use graphics::types;
 
-pub use graphics::types::Scalar;
+pub use graphics::types::{Color, Scalar};
 
 use backend::gfx::G2d;
 

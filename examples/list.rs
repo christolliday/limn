@@ -6,11 +6,10 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widgets::text::{self, TextStyleField};
 use limn::widgets::primitives;
-use limn::widgets::list::{ListHandler, ListItemHandler};
+use limn::widgets::list::{ListHandler, ListItemHandler, STYLE_LIST_ITEM};
 use limn::widget::style::Value;
 use limn::util::Dimensions;
 use limn::color::*;
-use limn::theme::STYLE_LIST_ITEM;
 
 fn main() {
     let (window, ui, event_queue) = util::init_default("Limn list demo");

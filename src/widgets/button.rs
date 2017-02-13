@@ -8,12 +8,31 @@ use widget::property::Property;
 use widget::property::states::*;
 use event::EventId;
 use event::id::*;
-use widgets::primitives;
+use widgets::primitives::{self, RectStyleField};
 use widgets::text::{self, TextStyleField};
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
-use theme::STYLE_BUTTON;
-use util::{Dimensions, Align};
+use util::{Dimensions, Align, Color};
+use color::*;
+
+static COLOR_BUTTON_DEFAULT: Color = RED;
+static COLOR_BUTTON_PRESSED: Color = [0.8, 0.0, 0.0, 1.0];
+static COLOR_BUTTON_ACTIVATED: Color = WHITE;
+static COLOR_BUTTON_ACTIVATED_PRESSED: Color = [0.9, 0.9, 0.9, 1.0];
+static COLOR_BUTTON_INACTIVE: Color = [0.3, 0.3, 0.3, 1.0];
+
+lazy_static! {
+    pub static ref STYLE_BUTTON: Vec<RectStyleField> = {
+        let mut selector = LinkedHashMap::new();
+        selector.insert(STATE_ACTIVATED_PRESSED.deref().clone(), COLOR_BUTTON_ACTIVATED_PRESSED);
+        selector.insert(STATE_ACTIVATED.deref().clone(), COLOR_BUTTON_ACTIVATED);
+        selector.insert(STATE_PRESSED.deref().clone(), COLOR_BUTTON_PRESSED);
+        selector.insert(STATE_INACTIVE.deref().clone(), COLOR_BUTTON_INACTIVE);
+        selector.insert(STATE_DEFAULT.deref().clone(), COLOR_BUTTON_DEFAULT);
+
+        vec!{ RectStyleField::BackgroundColor(Value::Selector((selector, COLOR_BUTTON_DEFAULT))), RectStyleField::CornerRadius(Value::Single(Some(8.0))) }
+    };
+}
 
 // show whether button is held down or not
 pub struct ButtonDownHandler {}
