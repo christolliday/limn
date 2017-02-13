@@ -1,18 +1,15 @@
 use graphics;
 use graphics::types::Color;
 
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
+use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs, PropSet};
 use widget::style::Value;
-use theme::STYLE_RECT;
 use util::Scalar;
 use color::*;
 
 pub fn rect_drawable(style: RectStyle) -> Drawable {
-    let draw_state = RectDrawState {
-        background_color: style.background_color.default(),
-        corner_radius: style.corner_radius.default(),
-    };
-    let mut drawable = Drawable::new(draw_state, draw_rect);
+    let mut state = RectDrawState::default();
+    apply_rect_style_2(&mut state, &style, &PropSet::new());
+    let mut drawable = Drawable::new(state, draw_rect);
     drawable.style = Some(WidgetStyle::new(style, apply_rect_style));
     drawable
 }
@@ -29,30 +26,27 @@ impl Default for RectDrawState {
         }
     }
 }
+pub type RectStyle = Vec<RectStyleField>;
 #[derive(Clone)]
-pub struct RectStyle {
-    pub background_color: Value<Color>,
-    pub corner_radius: Value<Option<Scalar>>,
-}
 pub enum RectStyleField {
     BackgroundColor(Value<Color>),
     CornerRadius(Value<Option<Scalar>>),
 }
-impl RectStyle {
-    pub fn from(fields: Vec<RectStyleField>) -> Self {
-        let mut style = STYLE_RECT.clone();
-        style.extend(fields);
-        style
-    }
-    pub fn extend(&mut self, mut style: Vec<RectStyleField>) {
-        for field in style.drain(..) {
-            match field {
-                RectStyleField::BackgroundColor(val) => self.background_color = val,
-                RectStyleField::CornerRadius(val) => self.corner_radius = val,
-            }
+
+pub fn apply_rect_style(args: StyleArgs) {
+    let state: &mut RectDrawState = args.state.downcast_mut().unwrap();
+    let style: &RectStyle = args.style.downcast_ref().unwrap();
+    apply_rect_style_2(state, style, &args.props);
+}
+pub fn apply_rect_style_2(state: &mut RectDrawState, style: &RectStyle, props: &PropSet) {
+    for field in style.iter() {
+        match *field {
+            RectStyleField::BackgroundColor(ref val) => state.background_color = val.from_props(props),
+            RectStyleField::CornerRadius(ref val) => state.corner_radius = val.from_props(props),
         }
     }
 }
+
 use std::f64::consts::PI;
 use util::{Rectangle, Point};
 pub fn draw_rect(args: DrawArgs) {
@@ -92,13 +86,6 @@ pub fn draw_rect(args: DrawArgs) {
         graphics::Rectangle::new(state.background_color)
             .draw(bounds, &context.draw_state, context.transform, graphics);
     }
-}
-
-pub fn apply_rect_style(args: StyleArgs) {
-    let state: &mut RectDrawState = args.state.downcast_mut().unwrap();
-    let style: &RectStyle = args.style.downcast_ref().unwrap();
-    state.background_color = style.background_color.from_props(&args.props);
-    state.corner_radius = style.corner_radius.from_props(&args.props);
 }
 
 pub fn ellipse_drawable(background_color: Color, border: Option<graphics::ellipse::Border>) -> Drawable {

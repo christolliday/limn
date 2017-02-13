@@ -3,7 +3,7 @@ use linked_hash_map::LinkedHashMap;
 
 use widget::{Property, PropSet};
 use widget::style::Value;
-use widgets::primitives::RectStyle;
+use widgets::primitives::{RectStyle, RectStyleField};
 use widgets::text::TextStyle;
 use resources::FontId;
 use color::*;
@@ -33,17 +33,8 @@ lazy_static! {
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
         selector.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
-        RectStyle {
-            background_color: Value::Selector((selector, COLOR_LIST_ITEM_DEFAULT)),
-            corner_radius: Value::Single(None),
-        }
-    };
 
-    pub static ref STYLE_RECT: RectStyle = {
-        RectStyle {
-            background_color: Value::Single(WHITE),
-            corner_radius: Value::Single(None),
-        }
+        vec!{ RectStyleField::BackgroundColor(Value::Selector((selector, COLOR_LIST_ITEM_DEFAULT))) }
     };
 
     pub static ref STYLE_BUTTON: RectStyle = {
@@ -53,9 +44,7 @@ lazy_static! {
         selector.insert(STATE_PRESSED.deref().clone(), COLOR_BUTTON_PRESSED);
         selector.insert(STATE_INACTIVE.deref().clone(), COLOR_BUTTON_INACTIVE);
         selector.insert(STATE_DEFAULT.deref().clone(), COLOR_BUTTON_DEFAULT);
-        RectStyle {
-            background_color: Value::Selector((selector, COLOR_BUTTON_DEFAULT)),
-            corner_radius: Value::Single(Some(8.0)),
-        }
+
+        vec!{ RectStyleField::BackgroundColor(Value::Selector((selector, COLOR_BUTTON_DEFAULT))), RectStyleField::CornerRadius(Value::Single(Some(8.0))) }
     };
 }

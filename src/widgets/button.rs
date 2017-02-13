@@ -68,7 +68,7 @@ impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
+            .set_drawable(primitives::rect_drawable(vec!{}))
             .add_handler(ButtonDownHandler {})
             .add_handler(ToggleEventHandler {})
             .add_handler(PropsChangeEventHandler {});
@@ -135,7 +135,7 @@ pub struct PushButtonBuilder {
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
+            .set_drawable(primitives::rect_drawable(vec!{}))
             .add_handler(PropsChangeEventHandler {});
 
         widget.layout.dimensions(Dimensions {
