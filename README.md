@@ -4,15 +4,15 @@ WIP
 
 todo:
 
+make eventqueue typesafe
+optimize event dispatch to widgets
 improve layout api, create/modify
-cache widget bounds, detect changes, associate with state
-extend styles to be 'cascading', sort of. add themes
+themes
+macro for styleable types
+make groups of widgets styleable as one
 animation
 scroll bars
-dragging
 resizing
 high level events, eg. double click
 tabs
-
-make event queue more general, ie. make undermouse events handled by a UiEventHandler instance
-allow event handlers to register other handlers
+declarative format for layout, styles (json?)
