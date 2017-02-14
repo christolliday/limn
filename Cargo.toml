@@ -2,6 +2,7 @@
 name = "limn"
 version = "0.1.0"
 authors = ["Chris Tolliday <ctolliday@gmail.com>"]
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 backend = { path = "backend" }

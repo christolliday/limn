@@ -2,6 +2,7 @@
 name = "text_layout"
 version = "0.1.0"
 authors = ["Chris Tolliday <ctolliday@gmail.com>", "Conrod Developers"]
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 rusttype = "0.2.1"
