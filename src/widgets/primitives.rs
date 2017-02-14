@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use graphics;
 use graphics::types::Color;
 
-use widget::drawable::{Drawable, DrawableStyle, StyleArgs, DrawArgs};
+use widget::drawable::{Drawable, DrawableStyle, StyleArgs, DrawArgs, DrawArgs2};
 use widget::property::PropSet;
 use widget::style::{self, Value, StyleField};
 use util::{Scalar, Rectangle, Point};
@@ -12,7 +12,7 @@ use color::*;
 pub fn rect_drawable(style: Vec<RectStyleField>) -> Drawable {
     let mut state = RectDrawState::default();
     style::apply_style(&mut state, &style, &PropSet::new());
-    let mut drawable = Drawable::new(state, draw_rect);
+    let mut drawable = Drawable::new2(state, draw_rect);
     drawable.style = Some(DrawableStyle::new(style, apply_rect_style));
     drawable
 }
@@ -50,9 +50,8 @@ pub fn apply_rect_style(args: StyleArgs) {
     style::apply_style(state, style, &args.props);
 }
 
-pub fn draw_rect(args: DrawArgs) {
-    let DrawArgs { state, bounds, context, graphics, .. } = args;
-    let state: &RectDrawState = state.downcast_ref().unwrap();
+pub fn draw_rect(state: &RectDrawState, args: DrawArgs2) {
+    let DrawArgs2 { bounds, context, graphics, .. } = args;
     if let Some(radius) = state.corner_radius {
         let points_per_corner = 8;
         let angle_per_step = 2.0 * PI / (points_per_corner * 4) as Scalar;
