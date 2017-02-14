@@ -12,7 +12,7 @@ use std::f64;
 use chrono::*;
 use graphics::types::Color;
 
-use limn::widget::{Drawable, DrawArgs, DrawableEventHandler};
+use limn::widget::drawable::{Drawable, DrawArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::primitives;
 use limn::event::{EventId, EventAddress, EventQueue};

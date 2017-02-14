@@ -7,7 +7,7 @@ use backend::gfx::ImageSize;
 use text_layout::{self, Wrap, Align};
 use resources::{FontId, resources};
 use util::{self, Dimensions, Scalar};
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
+use widget::drawable::{Drawable, DrawableStyle, StyleArgs, DrawArgs};
 use widget::property::PropSet;
 use widget::style::{self, Value, StyleField};
 use color::*;
@@ -15,7 +15,7 @@ use color::*;
 pub fn text_drawable(style: Vec<TextStyleField>) -> Drawable {
     let draw_state = TextDrawState::new(&style);
     let mut drawable = Drawable::new(draw_state, draw_text);
-    drawable.style = Some(WidgetStyle::new(style, apply_text_style));
+    drawable.style = Some(DrawableStyle::new(style, apply_text_style));
     drawable
 }
 

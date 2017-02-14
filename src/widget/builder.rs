@@ -1,8 +1,9 @@
 use graphics::types::Color;
 use cassowary;
 
-use widget::{Drawable, Widget, EventHandler, EventArgs, PropsChangeEventHandler};
+use widget::{Drawable, Widget, EventHandler, EventArgs};
 use widget::layout::{LayoutBuilder, WidgetConstraint};
+use widget::property::PropsChangeEventHandler;
 use widgets::hover::HoverHandler;
 use widgets::button::ClickHandler;
 use widgets::scroll::{ScrollHandler, WidgetScrollHandler};

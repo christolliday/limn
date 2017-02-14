@@ -3,7 +3,7 @@ use graphics::{self, Transformed};
 use backend::gfx::ImageSize;
 
 use resources::{ImageId, resources};
-use widget::{Drawable, DrawArgs};
+use widget::drawable::{Drawable, DrawArgs};
 use util::Dimensions;
 
 pub fn image_drawable(image_id: ImageId) -> Drawable {

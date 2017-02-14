@@ -5,8 +5,8 @@ use linked_hash_map::LinkedHashMap;
 
 use text_layout::Align;
 
-use widget::{EventHandler, PropsChangeEventHandler, EventArgs};
-use widget::property::Property;
+use widget::{EventHandler, EventArgs};
+use widget::property::{Property, PropsChangeEventHandler};
 use widget::property::states::*;
 use event::EventId;
 use event::id::*;

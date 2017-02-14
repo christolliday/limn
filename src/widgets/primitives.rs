@@ -1,17 +1,19 @@
+use std::f64::consts::PI;
+
 use graphics;
 use graphics::types::Color;
 
-use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
+use widget::drawable::{Drawable, DrawableStyle, StyleArgs, DrawArgs};
 use widget::property::PropSet;
 use widget::style::{self, Value, StyleField};
-use util::Scalar;
+use util::{Scalar, Rectangle, Point};
 use color::*;
 
 pub fn rect_drawable(style: Vec<RectStyleField>) -> Drawable {
     let mut state = RectDrawState::default();
     style::apply_style(&mut state, &style, &PropSet::new());
     let mut drawable = Drawable::new(state, draw_rect);
-    drawable.style = Some(WidgetStyle::new(style, apply_rect_style));
+    drawable.style = Some(DrawableStyle::new(style, apply_rect_style));
     drawable
 }
 
@@ -48,8 +50,6 @@ pub fn apply_rect_style(args: StyleArgs) {
     style::apply_style(state, style, &args.props);
 }
 
-use std::f64::consts::PI;
-use util::{Rectangle, Point};
 pub fn draw_rect(args: DrawArgs) {
     let DrawArgs { state, bounds, context, graphics, .. } = args;
     let state: &RectDrawState = state.downcast_ref().unwrap();

@@ -2,6 +2,7 @@ pub mod layout;
 pub mod builder;
 pub mod style;
 pub mod property;
+pub mod drawable;
 
 use std::any::Any;
 
@@ -11,24 +12,15 @@ use graphics::types::Color;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use event::{EventAddress, EventId, EventQueue};
-use event::id::*;
+use event::{EventId, EventQueue};
 use resources::WidgetId;
 use layout::LimnSolver;
 use util::{self, Point, Rectangle};
 use ui::InputState;
 
-use self::property::{Property, PropSet};
+use self::property::PropSet;
 use self::layout::LayoutVars;
-
-pub struct DrawArgs<'a, 'b: 'a> {
-    pub state: &'a Any,
-    pub bounds: Rectangle,
-    pub parent_bounds: Rectangle,
-    pub glyph_cache: &'a mut GlyphCache,
-    pub context: Context,
-    pub graphics: &'a mut G2d<'b>,
-}
+use self::drawable::{Drawable, DrawArgs};
 
 pub struct EventArgs<'a> {
     pub data: &'a (Any + 'static),
@@ -46,69 +38,9 @@ pub struct EventState {
     pub handled: bool,
 }
 
-pub struct StyleArgs<'a> {
-    pub state: &'a mut Any,
-    pub style: &'a Any,
-    pub props: &'a PropSet,
-}
-
 pub trait EventHandler {
     fn event_id(&self) -> EventId;
     fn handle_event(&mut self, args: EventArgs);
-}
-
-pub struct Drawable {
-    state: Box<Any>,
-    pub draw_fn: fn(DrawArgs),
-    pub mouse_over_fn: Option<fn(Point, Rectangle) -> bool>,
-    pub style: Option<WidgetStyle>,
-    pub props: PropSet,
-    pub has_updated: bool,
-}
-impl Drawable {
-    pub fn new<T: Any>(state: T, draw_fn: fn(DrawArgs)) -> Drawable {
-        Drawable {
-            state: Box::new(state),
-            draw_fn: draw_fn,
-            mouse_over_fn: None,
-            style: None,
-            has_updated: false,
-            props: PropSet::new(),
-        }
-    }
-    fn apply_style(&mut self) {
-        if let Some(ref style) = self.style {
-            (style.style_fn)(StyleArgs {
-                state: self.state.as_mut(),
-                style: style.style.as_ref(),
-                props: &self.props,
-            });
-            self.has_updated = true;
-        }
-    }
-    pub fn update<F, T: 'static>(&mut self, f: F)
-        where F: FnOnce(&mut T)
-    {
-        self.has_updated = true;
-        let state = self.state.as_mut().downcast_mut::<T>().unwrap();
-        f(state);
-    }
-    pub fn state<T: 'static>(&self) -> &T {
-        self.state.as_ref().downcast_ref::<T>().unwrap()
-    }
-}
-
-pub struct WidgetStyle {
-    pub style: Box<Any>,
-    pub style_fn: fn(StyleArgs),
-}
-impl WidgetStyle {
-    pub fn new<T: Any>(style: T, style_fn: fn(StyleArgs)) -> Self {
-        WidgetStyle {
-            style: Box::new(style),
-            style_fn: style_fn,
-        }
-    }
 }
 
 pub struct Widget {
@@ -148,7 +80,7 @@ impl Widget {
             let bounds = self.layout.bounds();
             let context = util::crop_context(context, crop_to);
             (drawable.draw_fn)(DrawArgs {
-                state: drawable.state.as_ref(),
+                state: drawable.state_any(),
                 bounds: bounds,
                 parent_bounds: crop_to,
                 glyph_cache: glyph_cache,
@@ -189,47 +121,5 @@ impl Widget {
             }
         }
         event_state.handled
-    }
-}
-
-pub struct PropsChangeEventHandler {}
-impl EventHandler for PropsChangeEventHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_CHANGE_PROP
-    }
-    fn handle_event(&mut self, mut args: EventArgs) {
-        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap();
-        if let &mut Some(ref mut drawable) = args.drawable {
-            if add {
-                drawable.props.insert(prop.clone());
-            } else {
-                drawable.props.remove(prop);
-            }
-            drawable.apply_style();
-        }
-        args.event_queue.signal(EventAddress::Widget(args.widget_id), WIDGET_PROPS_CHANGED);
-    }
-}
-
-pub struct DrawableEventHandler<T> {
-    event_id: EventId,
-    drawable_callback: Box<Fn(&mut T)>,
-}
-impl<T: 'static> DrawableEventHandler<T> {
-    pub fn new<F: Fn(&mut T) + 'static>(event_id: EventId, drawable_callback: F) -> Self {
-        DrawableEventHandler {
-            event_id: event_id,
-            drawable_callback: Box::new(drawable_callback),
-        }
-    }
-}
-impl<T: 'static> EventHandler for DrawableEventHandler<T> {
-    fn event_id(&self) -> EventId {
-        self.event_id
-    }
-    fn handle_event(&mut self, args: EventArgs) {
-        if let Some(drawable) = args.drawable.as_mut() {
-            drawable.update(|state: &mut T| (self.drawable_callback)(state));
-        }
     }
 }
