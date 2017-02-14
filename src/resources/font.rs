@@ -28,7 +28,6 @@ impl Map<FontId, Font> {
     }
 }
 
-
 /// Load a `FontCollection` from a file at a given path.
 pub fn collection_from_file<P>(path: P) -> Result<FontCollection, io::Error>
     where P: AsRef<Path>

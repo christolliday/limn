@@ -1,4 +1,5 @@
 extern crate backend;
+extern crate text_layout;
 extern crate graphics;
 extern crate cassowary;
 extern crate petgraph;
@@ -16,7 +17,6 @@ pub mod widget;
 pub mod widgets;
 pub mod ui;
 pub mod util;
-pub mod text;
 pub mod resources;
 pub mod event;
 pub mod color;

@@ -3,6 +3,8 @@ use std::ops::Deref;
 use glutin;
 use linked_hash_map::LinkedHashMap;
 
+use text_layout::Align;
+
 use widget::{EventHandler, PropsChangeEventHandler, EventArgs};
 use widget::property::Property;
 use widget::property::states::*;
@@ -12,7 +14,7 @@ use widgets::primitives::{self, RectStyleField};
 use widgets::text::{self, TextStyleField};
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
-use util::{Dimensions, Align, Color};
+use util::{Dimensions, Color};
 use color::*;
 
 static COLOR_BUTTON_DEFAULT: Color = RED;

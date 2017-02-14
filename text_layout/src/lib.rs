@@ -1,20 +1,23 @@
 //! Text layout logic.
 
+extern crate rusttype;
+
+pub mod types;
 pub mod cursor;
 pub mod glyph;
 pub mod line;
 
-use std;
 use std::f64;
-use util::*;
-use rusttype;
 use rusttype::Scale;
-use super::resources::font::Font;
 use self::line::{LineRects, LineInfo, LineInfos};
 
 pub type FontSize = u32;
 /// The RustType `PositionedGlyph` type used by conrod.
 pub type PositionedGlyph = rusttype::PositionedGlyph<'static>;
+
+pub type Font = rusttype::Font<'static>;
+
+pub use types::{Align, Scalar, Rectangle, Dimensions};
 
 /// The way in which text should wrap around the width.
 #[derive(Copy, Clone, Debug, PartialEq)]

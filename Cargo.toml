@@ -5,6 +5,7 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 
 [dependencies]
 backend = { path = "backend" }
+text_layout = { path = "text_layout" }
 cassowary = { git = "https://github.com/christolliday/cassowary-rs", branch = "debug" }
 petgraph = { git = "https://github.com/bluss/petgraph", rev = "f58200a" }
 

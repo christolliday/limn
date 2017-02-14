@@ -4,9 +4,9 @@ use graphics::types::Color;
 use backend::glyph::{self, GlyphCache};
 use backend::gfx::ImageSize;
 
-use text::{self, Wrap};
+use text_layout::{self, Wrap, Align};
 use resources::{FontId, resources};
-use util::{self, Dimensions, Align, Scalar};
+use util::{self, Dimensions, Scalar};
 use widget::{Drawable, WidgetStyle, StyleArgs, DrawArgs};
 use widget::property::PropSet;
 use widget::style::{self, Value, StyleField};
@@ -87,11 +87,11 @@ impl TextDrawState {
     pub fn measure(&self) -> Dimensions {
         let res = resources();
         let font = res.fonts.get(self.font_id).unwrap();
-        text::get_text_dimensions(&self.text,
-                                  font,
-                                  self.font_size,
-                                  self.font_size * 1.25,
-                                  self.wrap)
+        text_layout::get_text_dimensions(&self.text,
+                                         font,
+                                         self.font_size,
+                                         self.font_size * 1.25,
+                                         self.wrap).into()
     }
 }
 
@@ -110,14 +110,14 @@ pub fn draw_text(draw_args: DrawArgs) {
     let res = resources();
     let font = res.fonts.get(state.font_id).unwrap();
 
-    let positioned_glyphs = &text::get_positioned_glyphs(&state.text,
-                                                         bounds,
-                                                         font,
-                                                         state.font_size,
-                                                         state.font_size * 1.25,
-                                                         state.wrap,
-                                                         state.align,
-                                                         Align::Start);
+    let positioned_glyphs = &text_layout::get_positioned_glyphs(&state.text,
+                                                                bounds.into(),
+                                                                font,
+                                                                state.font_size,
+                                                                state.font_size * 1.25,
+                                                                state.wrap,
+                                                                state.align,
+                                                                Align::Start);
 
     // Queue the glyphs to be cached.
     for glyph in positioned_glyphs.iter() {

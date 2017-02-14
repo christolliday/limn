@@ -3,9 +3,9 @@
 ///
 /// This module is the core of multi-line text handling.
 use rusttype;
-use super::super::resources::font::Font;
+use super::Font;
 use rusttype::Scale;
-use util::{Rectangle, Scalar, Range, Align};
+use types::{Rectangle, Scalar, Range, Align};
 use std;
 use rusttype::GlyphId;
 use std::str::CharIndices;

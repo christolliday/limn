@@ -1,7 +1,7 @@
 /// Logic and types specific to individual glyph layout.
 
-use super::super::resources::font::Font;
-use util::{Range, Rectangle, Scalar};
+use super::Font;
+use types::{Range, Rectangle, Scalar};
 use std;
 use rusttype;
 use rusttype::LayoutIter;

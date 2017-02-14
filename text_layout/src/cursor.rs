@@ -1,13 +1,12 @@
-
-
 /// Logic related to the positioning of the cursor within text.
-// use {FontSize, Range, Rect, Scalar, Point, Align};
+
 use std;
-use util::{Range, Align, Rectangle, Point, Scalar};
-use super::super::resources::font::Font;
+use types::{Range, Align, Rectangle, Point, Scalar};
 use rusttype;
 use rusttype::LayoutIter;
+
 use super::line::{LineRects, LineInfo};
+use super::Font;
 
 /// Every possible cursor position within each line of text yielded by the given iterator.
 ///
