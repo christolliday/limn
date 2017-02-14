@@ -39,9 +39,8 @@ pub fn measure(drawable: &Drawable) -> Dimensions {
     draw_state.measure()
 }
 
-pub fn draw_image(draw_args: DrawArgs) {
-    let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
-    let state: &ImageDrawState = state.downcast_ref().unwrap();
+pub fn draw_image(args: DrawArgs<ImageDrawState>) {
+    let DrawArgs { state, bounds, context, graphics, .. } = args;
 
     let res = resources();
     let img = res.images.get(state.image_id).unwrap();

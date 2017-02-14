@@ -20,7 +20,7 @@ use ui::InputState;
 
 use self::property::PropSet;
 use self::layout::LayoutVars;
-use self::drawable::{Drawable, DrawArgs};
+use self::drawable::Drawable;
 
 pub struct EventArgs<'a> {
     pub data: &'a (Any + 'static),
@@ -78,15 +78,7 @@ impl Widget {
 
         if let Some(drawable) = self.drawable.as_mut() {
             let bounds = self.layout.bounds();
-            let context = util::crop_context(context, crop_to);
-            (drawable.draw_fn)(DrawArgs {
-                state: drawable.state_any(),
-                bounds: bounds,
-                parent_bounds: crop_to,
-                glyph_cache: glyph_cache,
-                context: context,
-                graphics: graphics,
-            });
+            drawable.draw(bounds, crop_to, glyph_cache, context, graphics);
         }
     }
     pub fn is_mouse_over(&self, mouse: Point) -> bool {

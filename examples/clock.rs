@@ -43,15 +43,14 @@ impl ClockBuilder {
             height: 200.0,
         });
 
-        struct HandDrawState {
+        pub struct HandDrawState {
             color: Color,
             width: Scalar,
             length: Scalar,
             angle: Scalar, // radians
         }
-        pub fn draw_clock_hand(draw_args: DrawArgs) {
+        pub fn draw_clock_hand(draw_args: DrawArgs<HandDrawState>) {
             let DrawArgs { state, bounds, context, graphics, .. } = draw_args;
-            let state: &HandDrawState = state.downcast_ref().unwrap();
 
             let cos = state.angle.cos();
             let sin = state.angle.sin();

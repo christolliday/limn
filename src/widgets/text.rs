@@ -95,10 +95,9 @@ impl TextDrawState {
     }
 }
 
-pub fn draw_text(draw_args: DrawArgs) {
+pub fn draw_text(args: DrawArgs<TextDrawState>) {
 
-    let DrawArgs { state, bounds, glyph_cache, context, graphics, .. } = draw_args;
-    let state: &TextDrawState = state.downcast_ref().unwrap();
+    let DrawArgs { state, bounds, glyph_cache, context, graphics, .. } = args;
 
     graphics::Rectangle::new(state.background_color)
         .draw(bounds, &context.draw_state, context.transform, graphics);

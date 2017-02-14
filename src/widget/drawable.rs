@@ -9,18 +9,10 @@ use widget::{EventHandler, EventArgs};
 use widget::property::PropSet;
 use event::EventId;
 
-use util::{Point, Rectangle};
+use util::{self, Point, Rectangle};
 
-pub struct DrawArgs<'a, 'b: 'a> {
-    pub state: &'a Any,
-    pub bounds: Rectangle,
-    pub parent_bounds: Rectangle,
-    pub glyph_cache: &'a mut GlyphCache,
-    pub context: Context,
-    pub graphics: &'a mut G2d<'b>,
-}
-
-pub struct DrawArgs2<'a, 'b: 'a> {
+pub struct DrawArgs<'a, 'b: 'a, T: 'static> {
+    pub state: &'a T,
     pub bounds: Rectangle,
     pub parent_bounds: Rectangle,
     pub glyph_cache: &'a mut GlyphCache,
@@ -30,7 +22,7 @@ pub struct DrawArgs2<'a, 'b: 'a> {
 
 pub struct Drawable {
     state: Box<Any>,
-    pub draw_fn: Box<Fn(DrawArgs)>,
+    pub draw_fn: Box<Fn(DrawArgs<Box<Any>>)>,
     pub mouse_over_fn: Option<fn(Point, Rectangle) -> bool>,
     pub style: Option<DrawableStyle>,
     pub props: PropSet,
@@ -38,11 +30,12 @@ pub struct Drawable {
 }
 
 impl Drawable {
-    pub fn new2<T: Any>(state: T, draw_fn: fn(&T, DrawArgs2)) -> Drawable {
-        let draw_fn = move |args: DrawArgs| {
-            let DrawArgs { state, bounds, parent_bounds, glyph_cache, context, graphics, .. } = args;
+    pub fn new<T: Any>(state: T, draw_fn: fn(DrawArgs<T>)) -> Drawable {
+        let draw_fn = move |args: DrawArgs<Box<Any>>| {
+            let DrawArgs { state, bounds, parent_bounds, glyph_cache, context, graphics } = args;
             let state: &T = state.downcast_ref().unwrap();
-            draw_fn(state, DrawArgs2 {
+            draw_fn(DrawArgs {
+                state: state,
                 bounds: bounds,
                 parent_bounds: parent_bounds,
                 glyph_cache: glyph_cache,
@@ -59,15 +52,22 @@ impl Drawable {
             props: PropSet::new(),
         }
     }
-    pub fn new<T: Any>(state: T, draw_fn: fn(DrawArgs)) -> Drawable {
-        Drawable {
-            state: Box::new(state),
-            draw_fn: Box::new(draw_fn),
-            mouse_over_fn: None,
-            style: None,
-            has_updated: false,
-            props: PropSet::new(),
-        }
+    pub fn draw(&mut self,
+                bounds: Rectangle,
+                crop_to: Rectangle,
+                glyph_cache: &mut GlyphCache,
+                context: Context,
+                graphics: &mut G2d)
+    {
+        let context = util::crop_context(context, crop_to);
+        (self.draw_fn)(DrawArgs {
+            state: &self.state,
+            bounds: bounds,
+            parent_bounds: crop_to,
+            glyph_cache: glyph_cache,
+            context: context,
+            graphics: graphics,
+        });
     }
     pub fn apply_style(&mut self) {
         if let Some(ref style) = self.style {
