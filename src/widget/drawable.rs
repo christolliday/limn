@@ -114,25 +114,23 @@ impl DrawableStyle {
     }
 }
 
-pub struct DrawableEventHandler<T> {
-    event_id: EventId,
+use std::marker::PhantomData;
+pub struct DrawableEventHandler<T, E> {
     drawable_callback: Box<Fn(&mut T)>,
+    phantom: PhantomData<E>,
 }
 
-impl<T: 'static> DrawableEventHandler<T> {
-    pub fn new<F: Fn(&mut T) + 'static>(event_id: EventId, drawable_callback: F) -> Self {
+impl<T: 'static, E> DrawableEventHandler<T, E> {
+    pub fn new<F: Fn(&mut T) + 'static>(event_type: E, drawable_callback: F) -> Self {
         DrawableEventHandler {
-            event_id: event_id,
             drawable_callback: Box::new(drawable_callback),
+            phantom: PhantomData,
         }
     }
 }
 
-impl<T: 'static> EventHandler for DrawableEventHandler<T> {
-    fn event_id(&self) -> EventId {
-        self.event_id
-    }
-    fn handle_event(&mut self, args: EventArgs) {
+impl<T: 'static, E> EventHandler<E> for DrawableEventHandler<T, E> {
+    fn handle(&mut self, args: EventArgs<E>) {
         if let Some(drawable) = args.drawable.as_mut() {
             drawable.update(|state: &mut T| (self.drawable_callback)(state));
         }

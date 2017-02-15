@@ -22,41 +22,25 @@ use self::property::PropSet;
 use self::layout::LayoutVars;
 use self::drawable::Drawable;
 
-pub struct EventArgs<'a> {
-    pub data: &'a (Any + 'static),
-    pub widget_id: WidgetId,
-    pub drawable: &'a mut Option<Drawable>,
-    pub layout: &'a mut LayoutVars,
-    pub event_queue: &'a mut EventQueue,
-    pub solver: &'a mut LimnSolver,
-    pub input_state: &'a InputState,
-    pub event_state: &'a mut EventState,
-}
-
 // allows event handlers to communicate with event dispatcher
 pub struct EventState {
     pub handled: bool,
 }
 
-pub trait EventHandler {
-    fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, args: EventArgs);
-}
-
 pub struct HandlerWrapper {
     type_id: TypeId,
     handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, EventArgs2<Box<Any + Send>>)>,
+    handle_fn: Box<Fn(&mut Box<Any>, EventArgs<Box<Any + Send>>)>,
 }
 impl HandlerWrapper {
     pub fn new<H, E>(handler: H) -> Self
-        where H: EventHandler2<E> + 'static,
+        where H: EventHandler<E> + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, args: EventArgs2<Box<Any + Send>>| {
-            let EventArgs2 { event, widget_id, drawable, layout, event_queue, solver, input_state, event_state } = args;
+        let handle_fn = |handler: &mut Box<Any>, args: EventArgs<Box<Any + Send>>| {
+            let EventArgs { event, widget_id, drawable, layout, event_queue, solver, input_state, event_state } = args;
             let event: &E = event.downcast_ref().unwrap();
-            let args = EventArgs2 {
+            let args = EventArgs {
                 event: event,
                 widget_id: widget_id,
                 drawable: drawable,
@@ -78,12 +62,12 @@ impl HandlerWrapper {
     pub fn handles(&self, type_id: TypeId) -> bool {
         self.type_id == type_id
     }
-    pub fn handle(&mut self, args: EventArgs2<Box<Any + Send>>) {
+    pub fn handle(&mut self, args: EventArgs<Box<Any + Send>>) {
         (self.handle_fn)(&mut self.handler, args);
     }
 }
 
-pub struct EventArgs2<'a, T: 'static> {
+pub struct EventArgs<'a, T: 'static> {
     pub event: &'a T,
     pub widget_id: WidgetId,
     pub drawable: &'a mut Option<Drawable>,
@@ -94,16 +78,15 @@ pub struct EventArgs2<'a, T: 'static> {
     pub event_state: &'a mut EventState,
 }
 
-pub trait EventHandler2<T> {
-    fn handle(&mut self, args: EventArgs2<T>);
+pub trait EventHandler<T> {
+    fn handle(&mut self, args: EventArgs<T>);
 }
 
 pub struct Widget {
     pub id: WidgetId,
     pub drawable: Option<Drawable>,
     pub layout: LayoutVars,
-    pub event_handlers: Vec<Box<EventHandler>>,
-    pub event_handlers2: Vec<HandlerWrapper>,
+    pub event_handlers: Vec<HandlerWrapper>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
 }
@@ -112,8 +95,7 @@ impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<Drawable>,
                layout: LayoutVars,
-               event_handlers: Vec<Box<EventHandler>>,
-               event_handlers2: Vec<HandlerWrapper>,
+               event_handlers: Vec<HandlerWrapper>,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self
@@ -123,7 +105,6 @@ impl Widget {
             drawable: drawable,
             layout: layout,
             event_handlers: event_handlers,
-            event_handlers2: event_handlers2,
             debug_name: debug_name,
             debug_color: debug_color,
         }
@@ -149,31 +130,16 @@ impl Widget {
         util::point_inside_rect(mouse, bounds)
     }
     pub fn trigger_event(&mut self,
-                         event_id: EventId,
-                         event: &Box<Any + Send>,
                          type_id: TypeId,
+                         event: &Box<Any + Send>,
                          event_queue: &mut EventQueue,
                          solver: &mut LimnSolver,
                          input_state: &InputState) -> bool {
 
         let mut event_state = EventState { handled: false };
         for ref mut event_handler in self.event_handlers.iter_mut() {
-            if event_handler.event_id() == event_id {
-                event_handler.handle_event(EventArgs {
-                    data: &**event,
-                    widget_id: self.id,
-                    drawable: &mut self.drawable,
-                    layout: &mut self.layout,
-                    event_queue: event_queue,
-                    solver: solver,
-                    input_state: input_state,
-                    event_state: &mut event_state,
-                });
-            }
-        }
-        for ref mut event_handler in self.event_handlers2.iter_mut() {
             if event_handler.handles(type_id) {
-                event_handler.handle(EventArgs2 {
+                event_handler.handle(EventArgs {
                     event: event,
                     widget_id: self.id,
                     drawable: &mut self.drawable,

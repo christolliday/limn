@@ -9,11 +9,12 @@ use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widgets::text::{self, TextDrawState, TextStyleField};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
-use limn::event::{EventId, EventAddress};
+use limn::event::EventAddress;
 use limn::color::*;
+use limn::event::id::*;
 
-const COUNTER: EventId = EventId("COUNTER");
-const COUNT: EventId = EventId("COUNT");
+struct CounterEvent(());
+struct CountEvent(u32);
 
 fn main() {
     let (window, ui, event_queue) = util::init_default("Limn counter demo");
@@ -28,13 +29,10 @@ fn main() {
     root_widget.add_child(left_spacer);
 
     struct CountHandler {}
-    impl EventHandler for CountHandler {
-        fn event_id(&self) -> EventId {
-            COUNT
-        }
-        fn handle_event(&mut self, args: EventArgs) {
+    impl EventHandler<CountEvent> for CountHandler {
+        fn handle(&mut self, args: EventArgs<CountEvent>) {
             if let Some(drawable) = args.drawable.as_mut() {
-                let count = args.data.downcast_ref::<u32>().unwrap();
+                let count = args.event.0;
                 drawable.update(|state: &mut TextDrawState| state.text = format!("{}", count));
             }
         }
@@ -60,7 +58,7 @@ fn main() {
     let mut button_widget = PushButtonBuilder::new()
         .set_text("Count").widget
         .on_click(move |args| {
-            args.event_queue.signal(EventAddress::Widget(root_id), COUNTER);
+            args.event_queue.push(EventAddress::Widget(root_id), NONE, CounterEvent(()));
         });
     button_widget.layout.center(&button_container);
     button_widget.layout.bound_by(&button_container, Some(50.0));
@@ -76,17 +74,14 @@ fn main() {
             CounterHandler { count: 0 }
         }
     }
-    impl EventHandler for CounterHandler {
-        fn event_id(&self) -> EventId {
-            COUNTER
-        }
-        fn handle_event(&mut self, args: EventArgs) {
+    impl EventHandler<CounterEvent> for CounterHandler {
+        fn handle(&mut self, args: EventArgs<CounterEvent>) {
             self.count += 1;
             let address = EventAddress::SubTree(args.widget_id);
-            args.event_queue.push(address, COUNT, self.count);
+            args.event_queue.push(address, NONE, CountEvent(self.count));
         }
     }
-    root_widget.event_handlers.push(Box::new(CounterHandler::new()));
+    let root_widget = root_widget.add_handler(CounterHandler::new());
 
     util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
 }

@@ -21,7 +21,8 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::{EventId, EventQueue, EventAddress, Hover};
+use event::{EventId, EventQueue, EventAddress};
+use widgets::hover::Hover;
 use event::events::*;
 use event::id::*;
 use util::{self, Point, Rectangle, Dimensions};
@@ -246,10 +247,12 @@ impl Ui {
                 for last_over in last_over {
                     let last_over = last_over.clone();
                     if let Some(last_index) = self.find_widget(last_over) {
-                        let ref mut widget = self.graph[last_index];
-                        if !widget.is_mouse_over(self.input_state.mouse) {
-                            event_queue.push(EventAddress::Widget(last_over), WIDGET_HOVER, Hover::Out);
-                            self.input_state.last_over.remove(&last_over);
+                        if self.graph.contains_node(last_index) {
+                            let ref mut widget = self.graph[last_index];
+                            if !widget.is_mouse_over(self.input_state.mouse) {
+                                event_queue.push(EventAddress::Widget(last_over), WIDGET_HOVER, Hover::Out);
+                                self.input_state.last_over.remove(&last_over);
+                            }
                         }
                     }
                 }
@@ -261,17 +264,15 @@ impl Ui {
         let all_widgets = EventAddress::SubTree(root_widget.id);
         match event {
             glutin::Event::MouseWheel(..) => {
-                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_WHEEL, event.clone());
-                event_queue.push(all_widgets, MOUSE_WHEEL, event);
+                event_queue.push(EventAddress::UnderMouse, NONE, WidgetMouseWheel(event.clone()));
+                event_queue.push(all_widgets, NONE, MouseWheel(event.clone()));
             },
             glutin::Event::MouseInput(..) => {
-                event_queue.push(EventAddress::UnderMouse, NONE, ButtonDownEvent(event.clone()));
-
-                event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_BUTTON, event.clone());
-                event_queue.push(all_widgets, MOUSE_BUTTON, event);
+                event_queue.push(EventAddress::UnderMouse, NONE, WidgetMouseButton(event.clone()));
+                event_queue.push(all_widgets, NONE, MouseButton(event.clone()));
             },
             glutin::Event::MouseMoved(..) => {
-                event_queue.push(all_widgets, MOUSE_MOVED, event);
+                event_queue.push(all_widgets, NONE, MouseMoved(event.clone()));
             }, _ => (),
         }
     }
@@ -285,12 +286,11 @@ impl Ui {
 
     pub fn trigger_widget_event(&mut self,
                             node_index: NodeIndex,
-                            event_id: EventId,
-                            data: &Box<Any + Send>,
                             type_id: TypeId,
+                            data: &Box<Any + Send>,
                             event_queue: &mut EventQueue) -> bool {
         let ref mut widget = self.graph[node_index];
-        let handled = widget.trigger_event(event_id, data, type_id, event_queue, &mut self.solver, &self.input_state);
+        let handled = widget.trigger_event(type_id, data, event_queue, &mut self.solver, &self.input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
                 self.dirty_widgets.insert(node_index);

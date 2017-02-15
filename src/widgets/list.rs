@@ -6,11 +6,12 @@ use widget::property::states::*;
 use widget::style::Value;
 use widgets::primitives::RectStyleField;
 use event::{EventId, EventAddress};
+use event::events::*;
 use event::id::*;
 use resources::WidgetId;
 use util::Color;
 
-const WIDGET_LIST_ITEM_SELECTED: EventId = EventId("limn/list_item_selected");
+pub struct WidgetListItemSelected(WidgetId);
 
 static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
 static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
@@ -34,18 +35,15 @@ impl ListHandler {
         ListHandler { selected: None }
     }
 }
-impl EventHandler for ListHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_LIST_ITEM_SELECTED
-    }
-    fn handle_event(&mut self, mut args: EventArgs) {
-        let selected = args.data.downcast_ref::<WidgetId>().unwrap();
+impl EventHandler<WidgetListItemSelected> for ListHandler {
+    fn handle(&mut self, mut args: EventArgs<WidgetListItemSelected>) {
+        let selected: WidgetId = args.event.0;
         if let Some(old_selected) = self.selected {
-            if selected != &old_selected {
+            if selected != old_selected {
                 args.event_queue.change_prop(old_selected, Property::Selected, false);
             }
         }
-        self.selected = Some(*selected);
+        self.selected = Some(selected);
     }
 }
 
@@ -57,17 +55,14 @@ impl ListItemHandler {
         ListItemHandler { list_id: list_id }
     }
 }
-impl EventHandler for ListItemHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_MOUSE_BUTTON
-    }
-    fn handle_event(&mut self, mut args: EventArgs) {
+impl EventHandler<WidgetMouseButton> for ListItemHandler {
+    fn handle(&mut self, mut args: EventArgs<WidgetMouseButton>) {
         if let &mut Some(ref drawable) = args.drawable {
             if !drawable.props.contains(&Property::Selected) {
                 args.event_queue.change_prop(args.widget_id, Property::Selected, true);
                 args.event_queue.push(EventAddress::Widget(self.list_id),
-                                      WIDGET_LIST_ITEM_SELECTED,
-                                      args.widget_id);
+                                      NONE,
+                                      WidgetListItemSelected(args.widget_id));
             }
         }
     }

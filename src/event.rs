@@ -1,6 +1,7 @@
 use std::any::{Any, TypeId};
 use std::sync::{Arc, Mutex};
 
+use glutin;
 use glutin::WindowProxy;
 
 use backend::Window;
@@ -9,13 +10,24 @@ use resources::WidgetId;
 use petgraph::visit::{Dfs, DfsPostOrder};
 use ui::{Ui, UiEventArgs, UiEventHandler};
 
-use widget::property::Property;
+use widget::property::{Property, WidgetChangeProp};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct EventId(pub &'static str);
 
 pub mod events {
-    pub struct ButtonDownEvent(pub glutin::Event);
+    use util::Rectangle;
+    use glutin;
+
+    pub struct MouseMoved(pub glutin::Event);
+    pub struct MouseWheel(pub glutin::Event);
+    pub struct MouseButton(pub glutin::Event);
+
+    pub struct WidgetMouseWheel(pub glutin::Event);
+    pub struct WidgetMouseButton(pub glutin::Event);
+
+    pub struct Redraw();
+    pub struct Layout();
 }
 
 pub mod id {
@@ -44,10 +56,6 @@ pub mod id {
 
 use self::id::*;
 
-pub enum Hover {
-    Over,
-    Out,
-}
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {
@@ -88,7 +96,7 @@ impl EventQueue {
     }
     // common events
     pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
-        self.push(EventAddress::SubTree(widget_id), WIDGET_CHANGE_PROP, (prop, add));
+        self.push(EventAddress::SubTree(widget_id), NONE, WidgetChangeProp((prop, add)));
     }
     pub fn signal(&mut self, address: EventAddress, event_id: EventId) {
         self.push(address, event_id, ());
@@ -101,13 +109,13 @@ impl EventQueue {
             match event_address {
                 EventAddress::Widget(id) => {
                     if let Some(node_index) = ui.find_widget(id) {
-                        ui.trigger_widget_event(node_index, event_id, data, type_id, self);
+                        ui.trigger_widget_event(node_index, type_id, data, self);
                     }
                 }
                 EventAddress::Child(id) => {
                     if let Some(node_index) = ui.find_widget(id) {
                         if let Some(child_index) = ui.children(node_index).next() {
-                            ui.trigger_widget_event(child_index, event_id, data, type_id, self);
+                            ui.trigger_widget_event(child_index, type_id, data, self);
                         }
                     }
                 }
@@ -115,7 +123,7 @@ impl EventQueue {
                     if let Some(node_index) = ui.find_widget(id) {
                         let mut dfs = Dfs::new(&ui.graph, node_index);
                         while let Some(node_index) = dfs.next(&ui.graph) {
-                            ui.trigger_widget_event(node_index, event_id, data, type_id, self);
+                            ui.trigger_widget_event(node_index, type_id, data, self);
                         }
                     }
                 }
@@ -124,7 +132,7 @@ impl EventQueue {
                     while let Some(node_index) = dfs.next(&ui.graph) {
                         let is_mouse_over = ui.is_mouse_over(node_index);
                         if is_mouse_over {
-                            let handled = ui.trigger_widget_event(node_index, event_id, data, type_id, self);
+                            let handled = ui.trigger_widget_event(node_index, type_id, data, self);
                             let ref mut widget = ui.graph[node_index];
                             ui.input_state.last_over.insert(widget.id);
                             // for now just one widget can handle an event, later, just don't send to parents

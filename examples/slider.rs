@@ -9,10 +9,8 @@ use cassowary::strength::*;
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::primitives::{self, RectStyleField};
-use limn::widgets::drag::DragEvent;
+use limn::widgets::drag::{DragEvent, WidgetDrag};
 use limn::widget::style::Value;
-use limn::event::EventId;
-use limn::event::id::*;
 use limn::util::Dimensions;
 
 struct DragHandler {
@@ -23,13 +21,10 @@ impl DragHandler {
         DragHandler { start_pos: 0.0 }
     }
 }
-impl EventHandler for DragHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_DRAG
-    }
-    fn handle_event(&mut self, args: EventArgs) {
-        let EventArgs { data, solver, layout, .. } = args;
-        let &(ref drag_event, pos) = data.downcast_ref::<(DragEvent, (i32, i32))>().unwrap();
+impl EventHandler<WidgetDrag> for DragHandler {
+    fn handle(&mut self, args: EventArgs<WidgetDrag>) {
+        let EventArgs { solver, layout, .. } = args;
+        let (ref drag_event, pos) = args.event.0;
         let drag_pos = pos.0 as f64;
         match *drag_event {
             DragEvent::DragStart => {

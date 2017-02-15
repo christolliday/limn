@@ -2,21 +2,21 @@ use glutin;
 use cassowary::strength::*;
 
 use event::{EventId, EventAddress};
+use event::events::*;
 use event::id::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
+pub struct WidgetScroll(pub (glutin::Event, Rectangle));
+
 pub struct ScrollHandler {}
-impl EventHandler for ScrollHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_MOUSE_WHEEL
-    }
-    fn handle_event(&mut self, args: EventArgs) {
-        let EventArgs { data, widget_id, layout, event_queue, .. } = args;
-        let event = data.downcast_ref::<glutin::Event>().unwrap();
+impl EventHandler<WidgetMouseWheel> for ScrollHandler {
+    fn handle(&mut self, args: EventArgs<WidgetMouseWheel>) {
+        let EventArgs { widget_id, layout, event_queue, .. } = args;
+        let ref event = args.event.0;
         let widget_bounds = layout.bounds();
-        let event = (event.clone(), widget_bounds);
-        event_queue.push(EventAddress::Child(widget_id), WIDGET_SCROLL, event);
+        let event = WidgetScroll((event.clone(), widget_bounds));
+        event_queue.push(EventAddress::Child(widget_id), NONE, event);
     }
 }
 
@@ -28,14 +28,11 @@ impl WidgetScrollHandler {
         WidgetScrollHandler { offset: Point { x: 0.0, y: 0.0 } }
     }
 }
-impl EventHandler for WidgetScrollHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_SCROLL
-    }
-    fn handle_event(&mut self, args: EventArgs) {
+impl EventHandler<WidgetScroll> for WidgetScrollHandler {
+    fn handle(&mut self, args: EventArgs<WidgetScroll>) {
         let EventArgs { layout, solver, .. } = args;
-        let &(ref event, parent_bounds) =
-            args.data.downcast_ref::<(glutin::Event, Rectangle)>().unwrap();
+
+        let (ref event, parent_bounds) = args.event.0;
 
         let scroll = match *event {
             glutin::Event::MouseWheel(delta, _) => {

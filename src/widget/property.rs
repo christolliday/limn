@@ -2,7 +2,11 @@ use std::collections::BTreeSet;
 
 use widget::{EventHandler, EventArgs};
 use event::{EventAddress, EventId};
+use event::events::*;
 use event::id::*;
+
+pub struct WidgetChangeProp(pub (Property, bool));
+//pub struct WidgetPropsChanged(pub glutin::Event);
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum Property {
@@ -28,12 +32,9 @@ pub mod states {
 }
 
 pub struct PropsChangeEventHandler {}
-impl EventHandler for PropsChangeEventHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_CHANGE_PROP
-    }
-    fn handle_event(&mut self, mut args: EventArgs) {
-        let &(ref prop, add) = args.data.downcast_ref::<(Property, bool)>().unwrap();
+impl EventHandler<WidgetChangeProp> for PropsChangeEventHandler {
+    fn handle(&mut self, mut args: EventArgs<WidgetChangeProp>) {
+        let (ref prop, add) = args.event.0;
         if let &mut Some(ref mut drawable) = args.drawable {
             if add {
                 drawable.props.insert(prop.clone());

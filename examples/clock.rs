@@ -18,6 +18,7 @@ use limn::widgets::primitives;
 use limn::event::{EventId, EventAddress, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Dimensions, Scalar};
+use limn::event::id::*;
 
 fn hour_angle() -> f64 {
     2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0
@@ -28,7 +29,8 @@ fn minute_angle() -> f64 {
 fn second_angle() -> f64 {
     2.0 * f64::consts::PI * Local::now().second() as f64 / 60.0
 }
-const CLOCK_TICK: EventId = EventId("CLOCK_TICK");
+struct ClockTick(());
+
 struct ClockBuilder {
     widget: WidgetBuilder,
 }
@@ -96,13 +98,13 @@ impl ClockBuilder {
 
         let hour_widget = WidgetBuilder::new()
             .set_drawable(hand_drawable(BLACK, 4.0, 60.0, hour_angle()))
-            .add_handler(DrawableEventHandler::new(CLOCK_TICK, update_hour_hand));
+            .add_handler(DrawableEventHandler::new(ClockTick(()), update_hour_hand));
         let minute_widget = WidgetBuilder::new()
             .set_drawable(hand_drawable(BLACK, 3.0, 90.0, minute_angle()))
-            .add_handler(DrawableEventHandler::new(CLOCK_TICK, update_minute_hand));
+            .add_handler(DrawableEventHandler::new(ClockTick(()), update_minute_hand));
         let second_widget = WidgetBuilder::new()
             .set_drawable(hand_drawable(RED, 2.0, 80.0, second_angle()))
-            .add_handler(DrawableEventHandler::new(CLOCK_TICK, update_second_hand));
+            .add_handler(DrawableEventHandler::new(ClockTick(()), update_second_hand));
 
         widget.add_child(hour_widget);
         widget.add_child(minute_widget);
@@ -111,7 +113,7 @@ impl ClockBuilder {
         let clock_id = widget.id;
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
-            event_queue.signal(EventAddress::SubTree(clock_id), CLOCK_TICK);
+            event_queue.push(EventAddress::SubTree(clock_id), NONE, ClockTick(()));
         });
 
         ClockBuilder { widget: widget }

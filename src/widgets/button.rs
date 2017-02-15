@@ -6,7 +6,6 @@ use linked_hash_map::LinkedHashMap;
 use text_layout::Align;
 
 use widget::{EventHandler, EventArgs};
-use widget::{EventHandler2, EventArgs2};
 use widget::property::{Property, PropsChangeEventHandler};
 use widget::property::states::*;
 use event::EventId;
@@ -40,8 +39,8 @@ lazy_static! {
 
 // show whether button is held down or not
 pub struct ButtonDownHandler {}
-impl EventHandler2<ButtonDownEvent> for ButtonDownHandler {
-    fn handle(&mut self, args: EventArgs2<ButtonDownEvent>) {
+impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
+    fn handle(&mut self, args: EventArgs<WidgetMouseButton>) {
         match args.event.0 {
             glutin::Event::MouseInput(state, _) => {
                 let pressed = match state {
@@ -57,14 +56,10 @@ impl EventHandler2<ButtonDownEvent> for ButtonDownHandler {
 
 // show whether toggle button is activated
 pub struct ToggleEventHandler {}
-impl EventHandler for ToggleEventHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_MOUSE_BUTTON
-    }
-    fn handle_event(&mut self, args: EventArgs) {
+impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
+    fn handle(&mut self, args: EventArgs<WidgetMouseButton>) {
         let EventArgs { widget_id, event_queue, .. } = args;
-        let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-        match *event {
+        match args.event.0 {
             glutin::Event::MouseInput(state, _) => {
                 match state {
                     glutin::ElementState::Released => {
@@ -89,7 +84,7 @@ impl ToggleButtonBuilder {
 
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
-            .add_handler2(ButtonDownHandler {})
+            .add_handler(ButtonDownHandler {})
             .add_handler(ToggleEventHandler {})
             .add_handler(PropsChangeEventHandler {});
         widget.layout.dimensions(Dimensions {
@@ -121,21 +116,17 @@ impl ToggleButtonBuilder {
     }
 }
 
-pub struct ClickHandler<F> where F: Fn(&mut EventArgs) {
+pub struct ClickHandler<F> where F: Fn(&mut EventArgs<WidgetMouseButton>) {
     callback: F
 }
-impl<F: Fn(&mut EventArgs)> ClickHandler<F> {
+impl<F: Fn(&mut EventArgs<WidgetMouseButton>)> ClickHandler<F> {
     pub fn new(callback: F) -> Self {
         ClickHandler { callback: callback }
     }
 }
-impl<F: Fn(&mut EventArgs)> EventHandler for ClickHandler<F> {
-    fn event_id(&self) -> EventId {
-        WIDGET_MOUSE_BUTTON
-    }
-    fn handle_event(&mut self, mut args: EventArgs) {
-        let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-        match *event {
+impl<F: Fn(&mut EventArgs<WidgetMouseButton>)> EventHandler<WidgetMouseButton> for ClickHandler<F> {
+    fn handle(&mut self, mut args: EventArgs<WidgetMouseButton>) {
+        match args.event.0 {
             glutin::Event::MouseInput(state, _) => {
                 match state {
                     glutin::ElementState::Released => {
