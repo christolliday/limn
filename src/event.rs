@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::sync::{Arc, Mutex};
 
 use glutin::WindowProxy;
@@ -14,8 +14,14 @@ use widget::property::Property;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct EventId(pub &'static str);
 
+pub mod events {
+    pub struct ButtonDownEvent(pub glutin::Event);
+}
+
 pub mod id {
     use super::EventId;
+
+    pub const NONE: EventId = EventId("");
 
     pub const MOUSE_MOVED: EventId = EventId("glutin/mouse_moved");
     pub const MOUSE_WHEEL: EventId = EventId("glutin/mouse_wheel");
@@ -54,7 +60,7 @@ pub enum EventAddress {
 
 #[derive(Clone)]
 pub struct EventQueue {
-    queue: Arc<Mutex<Vec<(EventAddress, EventId, Box<Any + Send>)>>>,
+    queue: Arc<Mutex<Vec<(EventAddress, EventId, TypeId, Box<Any + Send>)>>>,
     window_proxy: WindowProxy,
 }
 
@@ -68,14 +74,15 @@ impl EventQueue {
     pub fn push<T>(&mut self, address: EventAddress, event_id: EventId, data: T)
     where T: Send + 'static {
         let mut queue = self.queue.lock().unwrap();
-        queue.push((address, event_id, Box::new(data)));
+        let type_id = TypeId::of::<T>();
+        queue.push((address, event_id, type_id, Box::new(data)));
         self.window_proxy.wakeup_event_loop();
     }
     pub fn is_empty(&mut self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.len() == 0
     }
-    pub fn next(&mut self) -> (EventAddress, EventId, Box<Any + Send>) {
+    pub fn next(&mut self) -> (EventAddress, EventId, TypeId, Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.pop().unwrap()
     }
@@ -89,18 +96,18 @@ impl EventQueue {
 
     pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<Box<UiEventHandler>>) {
         while !self.is_empty() {
-            let (event_address, event_id, data) = self.next();
-            let data = &*data;
+            let (event_address, event_id, type_id, data) = self.next();
+            let data = &data;
             match event_address {
                 EventAddress::Widget(id) => {
                     if let Some(node_index) = ui.find_widget(id) {
-                        ui.trigger_widget_event(node_index, event_id, data, self);
+                        ui.trigger_widget_event(node_index, event_id, data, type_id, self);
                     }
                 }
                 EventAddress::Child(id) => {
                     if let Some(node_index) = ui.find_widget(id) {
                         if let Some(child_index) = ui.children(node_index).next() {
-                            ui.trigger_widget_event(child_index, event_id, data, self);
+                            ui.trigger_widget_event(child_index, event_id, data, type_id, self);
                         }
                     }
                 }
@@ -108,7 +115,7 @@ impl EventQueue {
                     if let Some(node_index) = ui.find_widget(id) {
                         let mut dfs = Dfs::new(&ui.graph, node_index);
                         while let Some(node_index) = dfs.next(&ui.graph) {
-                            ui.trigger_widget_event(node_index, event_id, data, self);
+                            ui.trigger_widget_event(node_index, event_id, data, type_id, self);
                         }
                     }
                 }
@@ -117,7 +124,7 @@ impl EventQueue {
                     while let Some(node_index) = dfs.next(&ui.graph) {
                         let is_mouse_over = ui.is_mouse_over(node_index);
                         if is_mouse_over {
-                            let handled = ui.trigger_widget_event(node_index, event_id, data, self);
+                            let handled = ui.trigger_widget_event(node_index, event_id, data, type_id, self);
                             let ref mut widget = ui.graph[node_index];
                             ui.input_state.last_over.insert(widget.id);
                             // for now just one widget can handle an event, later, just don't send to parents
@@ -132,7 +139,7 @@ impl EventQueue {
                     for ref mut event_handler in ui_event_handlers.iter_mut() {
                         if event_handler.event_id() == event_id {
                             event_handler.handle_event(UiEventArgs {
-                                data: data,
+                                data: &**data,
                                 ui: ui,
                                 event_queue: self,
                             });

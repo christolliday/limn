@@ -1,7 +1,7 @@
 use graphics::types::Color;
 use cassowary;
 
-use widget::{Drawable, Widget, EventHandler, EventArgs};
+use widget::{Drawable, Widget, EventHandler, HandlerWrapper, EventHandler2, EventArgs};
 use widget::layout::{LayoutBuilder, WidgetConstraint};
 use widget::property::PropsChangeEventHandler;
 use widgets::hover::HoverHandler;
@@ -16,6 +16,7 @@ pub struct WidgetBuilder {
     pub drawable: Option<Drawable>,
     pub layout: LayoutBuilder,
     pub event_handlers: Vec<Box<EventHandler>>,
+    pub event_handlers2: Vec<HandlerWrapper>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<WidgetBuilder>,
@@ -29,6 +30,7 @@ impl WidgetBuilder {
             drawable: None,
             layout: LayoutBuilder::new(),
             event_handlers: Vec::new(),
+            event_handlers2: Vec::new(),
             debug_name: None,
             debug_color: None,
             children: Vec::new(),
@@ -47,6 +49,10 @@ impl WidgetBuilder {
     }
     pub fn add_handler<T: EventHandler + 'static>(mut self, handler: T) -> Self {
         self.event_handlers.push(Box::new(handler));
+        self
+    }
+    pub fn add_handler2<E: 'static, T: EventHandler2<E> + 'static>(mut self, handler: T) -> Self {
+        self.event_handlers2.push(HandlerWrapper::new(handler));
         self
     }
     pub fn set_debug_name(mut self, name: &str) -> Self {
@@ -108,6 +114,7 @@ impl WidgetBuilder {
                         self.drawable,
                         self.layout.vars,
                         self.event_handlers,
+                        self.event_handlers2,
                         self.debug_name,
                         self.debug_color)
         )

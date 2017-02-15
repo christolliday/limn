@@ -6,10 +6,12 @@ use linked_hash_map::LinkedHashMap;
 use text_layout::Align;
 
 use widget::{EventHandler, EventArgs};
+use widget::{EventHandler2, EventArgs2};
 use widget::property::{Property, PropsChangeEventHandler};
 use widget::property::states::*;
 use event::EventId;
 use event::id::*;
+use event::events::*;
 use widgets::primitives::{self, RectStyleField};
 use widgets::text::{self, TextStyleField};
 use widget::builder::WidgetBuilder;
@@ -38,13 +40,9 @@ lazy_static! {
 
 // show whether button is held down or not
 pub struct ButtonDownHandler {}
-impl EventHandler for ButtonDownHandler {
-    fn event_id(&self) -> EventId {
-        WIDGET_MOUSE_BUTTON
-    }
-    fn handle_event(&mut self, args: EventArgs) {
-        let event = args.data.downcast_ref::<glutin::Event>().unwrap();
-        match *event {
+impl EventHandler2<ButtonDownEvent> for ButtonDownHandler {
+    fn handle(&mut self, args: EventArgs2<ButtonDownEvent>) {
+        match args.event.0 {
             glutin::Event::MouseInput(state, _) => {
                 let pressed = match state {
                     glutin::ElementState::Pressed => true,
@@ -91,7 +89,7 @@ impl ToggleButtonBuilder {
 
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
-            .add_handler(ButtonDownHandler {})
+            .add_handler2(ButtonDownHandler {})
             .add_handler(ToggleEventHandler {})
             .add_handler(PropsChangeEventHandler {});
         widget.layout.dimensions(Dimensions {

@@ -1,6 +1,6 @@
 use std::collections::{HashSet, HashMap};
 use std::f64;
-use std::any::Any;
+use std::any::{Any, TypeId};
 
 use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
@@ -22,6 +22,7 @@ use backend::window::Window;
 use widget::Widget;
 use widget::builder::WidgetBuilder;
 use event::{EventId, EventQueue, EventAddress, Hover};
+use event::events::*;
 use event::id::*;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
@@ -264,6 +265,8 @@ impl Ui {
                 event_queue.push(all_widgets, MOUSE_WHEEL, event);
             },
             glutin::Event::MouseInput(..) => {
+                event_queue.push(EventAddress::UnderMouse, NONE, ButtonDownEvent(event.clone()));
+
                 event_queue.push(EventAddress::UnderMouse, WIDGET_MOUSE_BUTTON, event.clone());
                 event_queue.push(all_widgets, MOUSE_BUTTON, event);
             },
@@ -283,10 +286,11 @@ impl Ui {
     pub fn trigger_widget_event(&mut self,
                             node_index: NodeIndex,
                             event_id: EventId,
-                            data: &(Any + 'static),
+                            data: &Box<Any + Send>,
+                            type_id: TypeId,
                             event_queue: &mut EventQueue) -> bool {
         let ref mut widget = self.graph[node_index];
-        let handled = widget.trigger_event(event_id, data, event_queue, &mut self.solver, &self.input_state);
+        let handled = widget.trigger_event(event_id, data, type_id, event_queue, &mut self.solver, &self.input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
                 self.dirty_widgets.insert(node_index);
