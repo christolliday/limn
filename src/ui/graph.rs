@@ -212,7 +212,7 @@ impl WidgetGraph {
             }
             glutin::Event::MouseInput(state, button) => {
                 event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
-                event_queue.push(all_widgets, WidgetMouseButton(state, button));
+                event_queue.push(all_widgets, MouseButton(state, button));
             }
             glutin::Event::MouseMoved(x, y) => {
                 event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
