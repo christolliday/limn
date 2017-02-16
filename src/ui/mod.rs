@@ -1,6 +1,7 @@
 pub mod graph;
 pub mod queue;
 pub mod event;
+pub mod layout;
 
 pub use self::graph::WidgetGraph;
 pub use self::queue::{EventQueue, EventAddress};

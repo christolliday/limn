@@ -14,7 +14,7 @@ use backend::glyph::GlyphCache;
 
 use ui::queue::{EventAddress, EventQueue};
 use resources::WidgetId;
-use layout::LimnSolver;
+use ui::layout::LimnSolver;
 use util::{self, Point, Rectangle};
 use ui::InputState;
 

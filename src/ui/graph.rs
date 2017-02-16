@@ -10,7 +10,6 @@ use petgraph::stable_graph::Neighbors;
 
 use glutin;
 
-use layout::LimnSolver;
 use cassowary::strength::*;
 
 use graphics::Context;
@@ -26,6 +25,7 @@ use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
 use color::*;
 
+use super::layout::LimnSolver;
 use super::queue::{EventAddress, EventQueue};
 use super::InputState;
 

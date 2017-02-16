@@ -2,7 +2,7 @@ use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use layout::LimnSolver;
+use ui::layout::LimnSolver;
 use widget::builder::WidgetBuilder;
 use resources::WidgetId;
 use util::{Point, Rectangle, Dimensions, Scalar};
