@@ -128,16 +128,16 @@ impl Widget {
         for ref mut event_handler in self.event_handlers.iter_mut() {
             let event_handler: &mut HandlerWrapper = event_handler;
             if event_handler.handles(type_id) {
-                event_handler.handle(event,
-                                     EventArgs {
-                                         widget_id: self.id,
-                                         drawable: &mut self.drawable,
-                                         layout: &mut self.layout,
-                                         event_queue: event_queue,
-                                         solver: solver,
-                                         input_state: input_state,
-                                         event_state: &mut event_state,
-                                     });
+                let event_args = EventArgs {
+                    widget_id: self.id,
+                    drawable: &mut self.drawable,
+                    layout: &mut self.layout,
+                    event_queue: event_queue,
+                    solver: solver,
+                    input_state: input_state,
+                    event_state: &mut event_state,
+                };
+                event_handler.handle(event, event_args);
             }
         }
         event_state.handled

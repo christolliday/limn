@@ -13,7 +13,7 @@ use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::primitives;
 use limn::widget::property::Property;
 use limn::event::EventAddress;
-use limn::ui::{self, Ui};
+use limn::ui::{self, WidgetGraph};
 use limn::util::{Dimensions, Point};
 use limn::resources::WidgetId;
 use limn::color::*;
@@ -25,7 +25,7 @@ enum CircleEvent {
 }
 
 fn main() {
-    let (window, ui, mut event_queue) = util::init_default("Limn circles demo");
+    let (window, graph, mut event_queue) = util::init_default("Limn circles demo");
     util::load_default_font();
 
     fn create_undo_redo_buttons(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId) {
@@ -52,7 +52,7 @@ fn main() {
         (undo_id, redo_id)
     }
 
-    fn create_circle(ui: &mut Ui, center: &Point) -> WidgetId {
+    fn create_circle(graph: &mut WidgetGraph, center: &Point) -> WidgetId {
         let border = graphics::ellipse::Border {
             color: BLACK,
             radius: 2.0,
@@ -70,8 +70,8 @@ fn main() {
 
         widget.layout.top_left(top_left, Some(STRONG));
         let id = widget.id;
-        let root_index = ui.root_index.unwrap();
-        ui.add_widget(widget, Some(root_index));
+        let root_index = graph.root_index.unwrap();
+        graph.add_widget(widget, Some(root_index));
         id
     }
 
@@ -95,7 +95,7 @@ fn main() {
         fn handle(&mut self, event: &CircleEvent, args: ui::EventArgs) {
             match *event {
                 CircleEvent::Add(point) => {
-                    self.circles.push((point, create_circle(args.ui, &point)));
+                    self.circles.push((point, create_circle(args.graph, &point)));
                     self.undo.clear();
 
                     args.event_queue.change_prop(self.undo_id, Property::Inactive, false);
@@ -104,7 +104,7 @@ fn main() {
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
                         let (point, node_index) = self.circles.pop().unwrap();
-                        args.ui.remove_widget(node_index);
+                        args.graph.remove_widget(node_index);
                         self.undo.push(point);
                         args.event_queue.change_prop(self.redo_id, Property::Inactive, false);
                         if self.circles.len() == 0 {
@@ -115,7 +115,7 @@ fn main() {
                 CircleEvent::Redo => {
                     if self.undo.len() > 0 {
                         let point = self.undo.pop().unwrap();
-                        self.circles.push((point, create_circle(args.ui, &point)));
+                        self.circles.push((point, create_circle(args.graph, &point)));
                         if self.undo.len() == 0 {
                             args.event_queue.change_prop(self.redo_id, Property::Inactive, true);
                         }
@@ -141,5 +141,5 @@ fn main() {
 
     let ui_event_handlers: Vec<ui::HandlerWrapper> =
         vec![ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id))];
-    util::set_root_and_loop(window, ui, root_widget, event_queue, ui_event_handlers);
+    util::set_root_and_loop(window, graph, root_widget, event_queue, ui_event_handlers);
 }

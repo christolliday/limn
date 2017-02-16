@@ -7,7 +7,7 @@ use backend::Window;
 
 use resources::WidgetId;
 use petgraph::visit::{Dfs, DfsPostOrder};
-use ui::{self, Ui};
+use ui::{self, WidgetGraph};
 use widget::property::{Property, WidgetChangeProp};
 
 pub mod events {
@@ -70,39 +70,39 @@ impl EventQueue {
                   });
     }
 
-    pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<ui::HandlerWrapper>) {
+    pub fn handle_events(&mut self, graph: &mut WidgetGraph, ui_event_handlers: &mut Vec<ui::HandlerWrapper>) {
         while !self.is_empty() {
             let (event_address, type_id, data) = self.next();
             let data = &data;
             match event_address {
                 EventAddress::Widget(id) => {
-                    if let Some(node_index) = ui.find_widget(id) {
-                        ui.trigger_widget_event(node_index, type_id, data, self);
+                    if let Some(node_index) = graph.find_widget(id) {
+                        graph.trigger_widget_event(node_index, type_id, data, self);
                     }
                 }
                 EventAddress::Child(id) => {
-                    if let Some(node_index) = ui.find_widget(id) {
-                        if let Some(child_index) = ui.children(node_index).next() {
-                            ui.trigger_widget_event(child_index, type_id, data, self);
+                    if let Some(node_index) = graph.find_widget(id) {
+                        if let Some(child_index) = graph.children(node_index).next() {
+                            graph.trigger_widget_event(child_index, type_id, data, self);
                         }
                     }
                 }
                 EventAddress::SubTree(id) => {
-                    if let Some(node_index) = ui.find_widget(id) {
-                        let mut dfs = Dfs::new(&ui.graph, node_index);
-                        while let Some(node_index) = dfs.next(&ui.graph) {
-                            ui.trigger_widget_event(node_index, type_id, data, self);
+                    if let Some(node_index) = graph.find_widget(id) {
+                        let mut dfs = Dfs::new(&graph.graph, node_index);
+                        while let Some(node_index) = dfs.next(&graph.graph) {
+                            graph.trigger_widget_event(node_index, type_id, data, self);
                         }
                     }
                 }
                 EventAddress::UnderMouse => {
-                    let mut dfs = DfsPostOrder::new(&ui.graph, ui.root_index.unwrap());
-                    while let Some(node_index) = dfs.next(&ui.graph) {
-                        let is_mouse_over = ui.is_mouse_over(node_index);
+                    let mut dfs = DfsPostOrder::new(&graph.graph, graph.root_index.unwrap());
+                    while let Some(node_index) = dfs.next(&graph.graph) {
+                        let is_mouse_over = graph.is_mouse_over(node_index);
                         if is_mouse_over {
-                            let handled = ui.trigger_widget_event(node_index, type_id, data, self);
-                            let ref mut widget = ui.graph[node_index];
-                            ui.input_state.last_over.insert(widget.id);
+                            let handled = graph.trigger_widget_event(node_index, type_id, data, self);
+                            let ref mut widget = graph.graph[node_index];
+                            graph.input_state.last_over.insert(widget.id);
                             // for now just one widget can handle an event, later, just don't send to parents
                             // not no other widgets
                             if handled {
@@ -116,7 +116,7 @@ impl EventQueue {
                         if event_handler.handles(type_id) {
                             event_handler.handle(data,
                                                  ui::EventArgs {
-                                                     ui: ui,
+                                                     graph: graph,
                                                      event_queue: self,
                                                  });
                         }
