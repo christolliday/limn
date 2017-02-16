@@ -92,6 +92,11 @@ pub fn point_inside_ellipse(point: Point, center: Point, radius: Dimensions) -> 
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
 }
 
+impl Point {
+    pub fn new(x: f64, y: f64) -> Self {
+        Point { x: x, y: y }
+    }
+}
 impl Rectangle {
     pub fn new(left: Scalar, top: Scalar, width: Scalar, height: Scalar) -> Self {
         Rectangle {

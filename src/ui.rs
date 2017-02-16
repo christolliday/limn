@@ -285,16 +285,16 @@ impl Ui {
         let ref root_widget = self.graph[self.root_index.unwrap()];
         let all_widgets = EventAddress::SubTree(root_widget.id);
         match event {
-            glutin::Event::MouseWheel(..) => {
-                event_queue.push(EventAddress::UnderMouse, WidgetMouseWheel(event.clone()));
-                event_queue.push(all_widgets, MouseWheel(event.clone()));
+            glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
+                event_queue.push(EventAddress::UnderMouse, WidgetMouseWheel(mouse_scroll_delta));
+                event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
             },
-            glutin::Event::MouseInput(..) => {
-                event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(event.clone()));
-                event_queue.push(all_widgets, MouseButton(event.clone()));
+            glutin::Event::MouseInput(state, button) => {
+                event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
+                event_queue.push(all_widgets, WidgetMouseButton(state, button));
             },
-            glutin::Event::MouseMoved(..) => {
-                event_queue.push(all_widgets, MouseMoved(event.clone()));
+            glutin::Event::MouseMoved(x, y) => {
+                event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
             }, _ => (),
         }
     }

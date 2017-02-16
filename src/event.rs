@@ -12,13 +12,14 @@ use widget::property::{Property, WidgetChangeProp};
 
 pub mod events {
     use glutin;
+    use util::Point;
 
-    pub struct MouseMoved(pub glutin::Event);
-    pub struct MouseWheel(pub glutin::Event);
-    pub struct MouseButton(pub glutin::Event);
+    pub struct MouseMoved(pub Point);
+    pub struct MouseWheel(pub glutin::MouseScrollDelta);
+    pub struct MouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
-    pub struct WidgetMouseWheel(pub glutin::Event);
-    pub struct WidgetMouseButton(pub glutin::Event);
+    pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
+    pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 }
 
 

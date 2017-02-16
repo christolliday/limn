@@ -39,16 +39,12 @@ lazy_static! {
 pub struct ButtonDownHandler {}
 impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
-        match event.0 {
-            glutin::Event::MouseInput(state, _) => {
-                let pressed = match state {
-                    glutin::ElementState::Pressed => true,
-                    glutin::ElementState::Released => false,
-                };
-                args.event_queue.change_prop(args.widget_id, Property::Pressed, pressed);
-            }
-            _ => (),
-        }
+        let &WidgetMouseButton(state, _) = event;
+        let pressed = match state {
+            glutin::ElementState::Pressed => true,
+            glutin::ElementState::Released => false,
+        };
+        args.event_queue.change_prop(args.widget_id, Property::Pressed, pressed);
     }
 }
 
@@ -57,16 +53,12 @@ pub struct ToggleEventHandler {}
 impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
         let EventArgs { widget_id, event_queue, .. } = args;
-        match event.0 {
-            glutin::Event::MouseInput(state, _) => {
-                match state {
-                    glutin::ElementState::Released => {
-                        if let &mut Some(ref drawable) = args.drawable {
-                            let activated = drawable.props.contains(&Property::Activated);
-                            event_queue.change_prop(widget_id, Property::Activated, !activated);
-                        }
-                    }
-                    _ => (),
+        let &WidgetMouseButton(state, _) = event;
+        match state {
+            glutin::ElementState::Released => {
+                if let &mut Some(ref drawable) = args.drawable {
+                    let activated = drawable.props.contains(&Property::Activated);
+                    event_queue.change_prop(widget_id, Property::Activated, !activated);
                 }
             }
             _ => (),
@@ -124,14 +116,11 @@ impl<F: Fn(&WidgetMouseButton, &mut EventArgs)> ClickHandler<F> {
 }
 impl<F: Fn(&WidgetMouseButton, &mut EventArgs)> EventHandler<WidgetMouseButton> for ClickHandler<F> {
     fn handle(&mut self, event: &WidgetMouseButton, mut args: EventArgs) {
-        match event.0 {
-            glutin::Event::MouseInput(state, _) => {
-                match state {
-                    glutin::ElementState::Released => {
-                        (self.callback)(event, &mut args);
-                        args.event_state.handled = true;
-                    }, _ => ()
-                }
+        let &WidgetMouseButton(state, _) = event;
+        match state {
+            glutin::ElementState::Released => {
+                (self.callback)(event, &mut args);
+                args.event_state.handled = true;
             }, _ => ()
         }
     }
