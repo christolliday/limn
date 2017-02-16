@@ -18,7 +18,6 @@ use limn::widgets::primitives;
 use limn::event::{EventAddress, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Dimensions, Scalar};
-use limn::event::id::*;
 
 fn hour_angle() -> f64 {
     2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0
@@ -113,7 +112,7 @@ impl ClockBuilder {
         let clock_id = widget.id;
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
-            event_queue.push(EventAddress::SubTree(clock_id), NONE, ClockTick(()));
+            event_queue.push(EventAddress::SubTree(clock_id), ClockTick(()));
         });
 
         ClockBuilder { widget: widget }

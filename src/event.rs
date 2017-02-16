@@ -10,12 +10,8 @@ use petgraph::visit::{Dfs, DfsPostOrder};
 use ui::{self, Ui};
 use widget::property::{Property, WidgetChangeProp};
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub struct EventId(pub &'static str);
-
 pub mod events {
     use glutin;
-    use resources::WidgetId;
 
     pub struct MouseMoved(pub glutin::Event);
     pub struct MouseWheel(pub glutin::Event);
@@ -23,36 +19,7 @@ pub mod events {
 
     pub struct WidgetMouseWheel(pub glutin::Event);
     pub struct WidgetMouseButton(pub glutin::Event);
-
-    pub struct Redraw();
-    pub struct Layout(pub WidgetId);
 }
-
-pub mod id {
-    use super::EventId;
-
-    pub const NONE: EventId = EventId("");
-
-    pub const MOUSE_MOVED: EventId = EventId("glutin/mouse_moved");
-    pub const MOUSE_WHEEL: EventId = EventId("glutin/mouse_wheel");
-    pub const MOUSE_BUTTON: EventId = EventId("glutin/mouse_button");
-
-    pub const WIDGET_HOVER: EventId = EventId("limn/widget_hover");
-    pub const WIDGET_MOUSE_WHEEL: EventId = EventId("limn/mouse_wheel");
-    pub const WIDGET_MOUSE_BUTTON: EventId = EventId("limn/widget_mouse_button");
-
-    pub const WIDGET_CHANGE_PROP: EventId = EventId("limn/widget_change_prop");
-    pub const WIDGET_PROPS_CHANGED: EventId = EventId("limn/widget_props_changed");
-
-    pub const WIDGET_SCROLL: EventId = EventId("limn/widget_scroll");
-    pub const WIDGET_DRAG: EventId = EventId("limn/widget_drag");
-    pub const DRAG_INPUT_EVENT: EventId = EventId("limn/drag_input");
-
-    pub const REDRAW: EventId = EventId("limn/redraw");
-    pub const LAYOUT: EventId = EventId("limn/layout");
-}
-
-use self::id::*;
 
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
@@ -66,7 +33,7 @@ pub enum EventAddress {
 
 #[derive(Clone)]
 pub struct EventQueue {
-    queue: Arc<Mutex<Vec<(EventAddress, EventId, TypeId, Box<Any + Send>)>>>,
+    queue: Arc<Mutex<Vec<(EventAddress, TypeId, Box<Any + Send>)>>>,
     window_proxy: WindowProxy,
 }
 
@@ -77,32 +44,29 @@ impl EventQueue {
             window_proxy: window.window.create_window_proxy(),
         }
     }
-    pub fn push<T>(&mut self, address: EventAddress, event_id: EventId, data: T)
+    pub fn push<T>(&mut self, address: EventAddress, data: T)
     where T: Send + 'static {
         let mut queue = self.queue.lock().unwrap();
         let type_id = TypeId::of::<T>();
-        queue.push((address, event_id, type_id, Box::new(data)));
+        queue.push((address, type_id, Box::new(data)));
         self.window_proxy.wakeup_event_loop();
     }
     pub fn is_empty(&mut self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.len() == 0
     }
-    pub fn next(&mut self) -> (EventAddress, EventId, TypeId, Box<Any + Send>) {
+    pub fn next(&mut self) -> (EventAddress, TypeId, Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.pop().unwrap()
     }
     // common events
     pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
-        self.push(EventAddress::SubTree(widget_id), NONE, WidgetChangeProp { property: prop, add: add });
-    }
-    pub fn signal(&mut self, address: EventAddress, event_id: EventId) {
-        self.push(address, event_id, ());
+        self.push(EventAddress::SubTree(widget_id), WidgetChangeProp { property: prop, add: add });
     }
 
     pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<ui::HandlerWrapper>) {
         while !self.is_empty() {
-            let (event_address, event_id, type_id, data) = self.next();
+            let (event_address, type_id, data) = self.next();
             let data = &data;
             match event_address {
                 EventAddress::Widget(id) => {
@@ -145,7 +109,6 @@ impl EventQueue {
                     for event_handler in ui_event_handlers.iter_mut() {
                         if event_handler.handles(type_id) {
                             event_handler.handle(data, ui::EventArgs {
-                                //data: &**data,
                                 ui: ui,
                                 event_queue: self,
                             });

@@ -24,12 +24,14 @@ use widget::builder::WidgetBuilder;
 use event::{EventQueue, EventAddress};
 use widgets::hover::Hover;
 use event::events::*;
-use event::id::*;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
 use color::*;
 
 const DEBUG_BOUNDS: bool = false;
+
+pub struct Redraw(());
+pub struct Layout(pub WidgetId);
 
 pub struct InputState {
     pub mouse: Point,
@@ -77,7 +79,6 @@ pub trait EventHandler<T> {
     fn handle(&mut self, event: &T, args: EventArgs);
 }
 pub struct EventArgs<'a> {
-    //pub data: &'a (Any + 'static),
     pub ui: &'a mut Ui,
     pub event_queue: &'a mut EventQueue,
 }
@@ -94,13 +95,13 @@ impl EventHandler<Layout> for LayoutHandler {
     fn handle(&mut self, event: &Layout, args: EventArgs) {
         let ui = args.ui;
         {
-            let &Layout(widget_id) = event;//args.data.downcast_ref::<WidgetId>().unwrap();
+            let &Layout(widget_id) = event;
             let node_index = ui.find_widget(widget_id).unwrap();
             let ref mut widget = ui.graph[node_index];
             widget.layout.update(&mut ui.solver);
         }
         // redraw everything when layout changes, for now
-        args.event_queue.signal(EventAddress::Ui, REDRAW);
+        args.event_queue.push(EventAddress::Ui, Redraw(()));
         // send new mouse event, in case widget under mouse has shifted
         let mouse = ui.input_state.mouse;
         let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
@@ -271,13 +272,13 @@ impl Ui {
                         if self.graph.contains_node(last_index) {
                             let ref mut widget = self.graph[last_index];
                             if !widget.is_mouse_over(self.input_state.mouse) {
-                                event_queue.push(EventAddress::Widget(last_over), WIDGET_HOVER, Hover::Out);
+                                event_queue.push(EventAddress::Widget(last_over), Hover::Out);
                                 self.input_state.last_over.remove(&last_over);
                             }
                         }
                     }
                 }
-                event_queue.push(EventAddress::UnderMouse, WIDGET_HOVER, Hover::Over);
+                event_queue.push(EventAddress::UnderMouse, Hover::Over);
             }
             _ => (),
         }
@@ -285,15 +286,15 @@ impl Ui {
         let all_widgets = EventAddress::SubTree(root_widget.id);
         match event {
             glutin::Event::MouseWheel(..) => {
-                event_queue.push(EventAddress::UnderMouse, NONE, WidgetMouseWheel(event.clone()));
-                event_queue.push(all_widgets, NONE, MouseWheel(event.clone()));
+                event_queue.push(EventAddress::UnderMouse, WidgetMouseWheel(event.clone()));
+                event_queue.push(all_widgets, MouseWheel(event.clone()));
             },
             glutin::Event::MouseInput(..) => {
-                event_queue.push(EventAddress::UnderMouse, NONE, WidgetMouseButton(event.clone()));
-                event_queue.push(all_widgets, NONE, MouseButton(event.clone()));
+                event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(event.clone()));
+                event_queue.push(all_widgets, MouseButton(event.clone()));
             },
             glutin::Event::MouseMoved(..) => {
-                event_queue.push(all_widgets, NONE, MouseMoved(event.clone()));
+                event_queue.push(all_widgets, MouseMoved(event.clone()));
             }, _ => (),
         }
     }

@@ -11,7 +11,6 @@ use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
 use limn::event::EventAddress;
 use limn::color::*;
-use limn::event::id::*;
 
 struct CounterEvent(());
 struct CountEvent(u32);
@@ -58,7 +57,7 @@ fn main() {
     let mut button_widget = PushButtonBuilder::new()
         .set_text("Count").widget
         .on_click(move |_, args| {
-            args.event_queue.push(EventAddress::Widget(root_id), NONE, CounterEvent(()));
+            args.event_queue.push(EventAddress::Widget(root_id), CounterEvent(()));
         });
     button_widget.layout.center(&button_container);
     button_widget.layout.bound_by(&button_container, Some(50.0));
@@ -78,7 +77,7 @@ fn main() {
         fn handle(&mut self, _: &CounterEvent, args: EventArgs) {
             self.count += 1;
             let address = EventAddress::SubTree(args.widget_id);
-            args.event_queue.push(address, NONE, CountEvent(self.count));
+            args.event_queue.push(address, CountEvent(self.count));
         }
     }
     let root_widget = root_widget.add_handler(CounterHandler::new());

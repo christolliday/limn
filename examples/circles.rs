@@ -12,13 +12,17 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::primitives;
 use limn::widget::property::Property;
-use limn::event::{EventId, EventAddress};
-use limn::ui::{Ui, UiEventHandler, UiEventArgs};
+use limn::event::EventAddress;
+use limn::ui::{self, Ui};
 use limn::util::{Dimensions, Point};
 use limn::resources::WidgetId;
 use limn::color::*;
 
-const CIRCLE_EVENT: EventId = EventId("CIRCLE_EVENT");
+enum CircleEvent {
+    Add(Point),
+    Undo,
+    Redo,
+}
 
 fn main() {
     let (window, ui, mut event_queue) = util::init_default("Limn circles demo");
@@ -33,12 +37,12 @@ fn main() {
         let undo_widget = PushButtonBuilder::new()
             .set_text("Undo").widget
             .on_click(|_, args| {
-                args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, CircleEvent::Undo);
+                args.event_queue.push(EventAddress::Ui, CircleEvent::Undo);
             });
         let mut redo_widget = PushButtonBuilder::new()
             .set_text("Redo").widget
             .on_click(|_, args| {
-                args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, CircleEvent::Redo);
+                args.event_queue.push(EventAddress::Ui, CircleEvent::Redo);
             });
         redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
 
@@ -64,12 +68,6 @@ fn main() {
         id
     }
 
-    enum CircleEvent {
-        Add(Point),
-        Undo,
-        Redo,
-    }
-
     struct CircleEventHandler {
         undo_id: WidgetId,
         redo_id: WidgetId,
@@ -81,12 +79,8 @@ fn main() {
             CircleEventHandler { circles: Vec::new(), undo: Vec::new(), undo_id: undo_id, redo_id: redo_id }
         }
     }
-    impl UiEventHandler for CircleEventHandler {
-        fn event_id(&self) -> EventId {
-            CIRCLE_EVENT
-        }
-        fn handle_event(&mut self, args: UiEventArgs) {
-            let event = args.data.downcast_ref::<CircleEvent>().unwrap();
+    impl ui::EventHandler<CircleEvent> for CircleEventHandler {
+        fn handle(&mut self, event: &CircleEvent, args: ui::EventArgs) {
             match *event {
                 CircleEvent::Add(point) => {
                     self.circles.push((point, create_circle(args.ui, &point)));
@@ -121,7 +115,7 @@ fn main() {
     let mut root_widget = WidgetBuilder::new()
         .on_click(|_, args| {
             let event = CircleEvent::Add(args.input_state.mouse);
-            args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, event);
+            args.event_queue.push(EventAddress::Ui, event);
         });
     root_widget.layout.dimensions(Dimensions {width: 300.0, height: 300.0});
 
@@ -131,6 +125,6 @@ fn main() {
     event_queue.change_prop(undo_id, Property::Inactive, true);
     event_queue.change_prop(redo_id, Property::Inactive, true);
 
-    let ui_event_handlers: Vec<Box<UiEventHandler>> = vec!{Box::new(CircleEventHandler::new(undo_id, redo_id))};
+    let ui_event_handlers: Vec<ui::HandlerWrapper> = vec!{ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id))};
     util::set_root_and_loop(window, ui, root_widget, event_queue, ui_event_handlers);
 }

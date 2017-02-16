@@ -3,7 +3,6 @@ use cassowary::strength::*;
 
 use event::EventAddress;
 use event::events::*;
-use event::id::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
@@ -18,7 +17,7 @@ impl EventHandler<WidgetMouseWheel> for ScrollHandler {
         let EventArgs { widget_id, layout, event_queue, .. } = args;
         let widget_bounds = layout.bounds();
         let event = WidgetScroll { event: event.0.clone(), parent_bounds: widget_bounds };
-        event_queue.push(EventAddress::Child(widget_id), NONE, event);
+        event_queue.push(EventAddress::Child(widget_id), event);
     }
 }
 

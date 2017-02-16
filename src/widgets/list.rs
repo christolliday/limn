@@ -7,7 +7,6 @@ use widget::style::Value;
 use widgets::primitives::RectStyleField;
 use event::EventAddress;
 use event::events::*;
-use event::id::*;
 use resources::WidgetId;
 use util::Color;
 
@@ -60,9 +59,8 @@ impl EventHandler<WidgetMouseButton> for ListItemHandler {
         if let &mut Some(ref drawable) = args.drawable {
             if !drawable.props.contains(&Property::Selected) {
                 args.event_queue.change_prop(args.widget_id, Property::Selected, true);
-                args.event_queue.push(EventAddress::Widget(self.list_id),
-                                      NONE,
-                                      WidgetListItemSelected { widget: args.widget_id });
+                let event = WidgetListItemSelected { widget: args.widget_id };
+                args.event_queue.push(EventAddress::Widget(self.list_id), event);
             }
         }
     }

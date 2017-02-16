@@ -2,7 +2,6 @@ use std::collections::BTreeSet;
 
 use widget::{EventHandler, EventArgs};
 use event::EventAddress;
-use event::id::*;
 
 pub struct WidgetChangeProp {
     pub property: Property,
@@ -45,6 +44,6 @@ impl EventHandler<WidgetChangeProp> for PropsChangeEventHandler {
             }
             drawable.apply_style();
         }
-        args.event_queue.push(EventAddress::Widget(args.widget_id), NONE, WidgetPropsChanged(()));
+        args.event_queue.push(EventAddress::Widget(args.widget_id), WidgetPropsChanged(()));
     }
 }
