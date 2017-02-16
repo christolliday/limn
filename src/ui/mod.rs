@@ -1,6 +1,12 @@
 pub mod graph;
+pub mod queue;
+pub mod event;
 
 pub use self::graph::WidgetGraph;
+pub use self::queue::{EventQueue, EventAddress};
+pub use self::event::*;
+
+use petgraph::visit::{Dfs, DfsPostOrder};
 
 use backend::Window;
 
@@ -9,13 +15,15 @@ use std::collections::HashSet;
 
 use glutin;
 
-use event::{EventQueue, EventAddress};
 use util::Point;
 use resources::WidgetId;
+
+use widgets::hover::Hover;
 
 pub struct Ui {
     pub event_queue: EventQueue,
     pub graph: WidgetGraph,
+    pub input_state: InputState,
     pub event_handlers: Vec<HandlerWrapper>,
 }
 
@@ -26,7 +34,108 @@ impl Ui {
         Ui {
             event_queue: event_queue,
             graph: graph,
+            input_state: InputState::new(),
             event_handlers: get_default_event_handlers(),
+        }
+    }
+
+    pub fn handle_input(&mut self, event: glutin::Event) {
+        match event {
+            glutin::Event::MouseMoved(x, y) => {
+                let mouse = Point {
+                    x: x as f64,
+                    y: y as f64,
+                };
+                self.input_state.mouse = mouse;
+                let last_over = self.input_state.last_over.clone();
+                for last_over in last_over {
+                    let last_over = last_over.clone();
+                    if let Some(last_index) = self.graph.find_widget(last_over) {
+                        if self.graph.graph.contains_node(last_index) {
+                            let ref mut widget = self.graph.graph[last_index];
+                            if !widget.is_mouse_over(self.input_state.mouse) {
+                                self.event_queue.push(EventAddress::Widget(last_over), Hover::Out);
+                                self.input_state.last_over.remove(&last_over);
+                            }
+                        }
+                    }
+                }
+                self.event_queue.push(EventAddress::UnderMouse, Hover::Over);
+            }
+            _ => (),
+        }
+        let ref root_widget = self.graph.graph[self.graph.root_index.unwrap()];
+        let all_widgets = EventAddress::SubTree(root_widget.id);
+        match event {
+            glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
+                self.event_queue.push(EventAddress::UnderMouse,
+                                 WidgetMouseWheel(mouse_scroll_delta));
+                self.event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
+            }
+            glutin::Event::MouseInput(state, button) => {
+                self.event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
+                self.event_queue.push(all_widgets, MouseButton(state, button));
+            }
+            glutin::Event::MouseMoved(x, y) => {
+                self.event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
+            }
+            _ => (),
+        }
+    }
+
+    pub fn handle_events(&mut self) {
+        while !self.event_queue.is_empty() {
+            let (event_address, type_id, data) = self.event_queue.next();
+            let data = &data;
+            match event_address {
+                EventAddress::Widget(id) => {
+                    if let Some(node_index) = self.graph.find_widget(id) {
+                        self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state);
+                    }
+                }
+                EventAddress::Child(id) => {
+                    if let Some(node_index) = self.graph.find_widget(id) {
+                        if let Some(child_index) = self.graph.children(node_index).next() {
+                            self.graph.trigger_widget_event(child_index, type_id, data, &mut self.event_queue, &self.input_state);
+                        }
+                    }
+                }
+                EventAddress::SubTree(id) => {
+                    if let Some(node_index) = self.graph.find_widget(id) {
+                        let mut dfs = Dfs::new(&self.graph.graph, node_index);
+                        while let Some(node_index) = dfs.next(&self.graph.graph) {
+                            self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state);
+                        }
+                    }
+                }
+                EventAddress::UnderMouse => {
+                    let mut dfs = DfsPostOrder::new(&self.graph.graph, self.graph.root_index.unwrap());
+                    while let Some(node_index) = dfs.next(&self.graph.graph) {
+                        let is_mouse_over = self.graph.is_mouse_over(node_index, self.input_state.mouse);
+                        if is_mouse_over {
+                            let handled = self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state);
+                            let ref mut widget = self.graph.graph[node_index];
+                            self.input_state.last_over.insert(widget.id);
+                            // for now just one widget can handle an event, later, just don't send to parents
+                            // not no other widgets
+                            if handled {
+                                return;
+                            }
+                        }
+                    }
+                }
+                EventAddress::Ui => {
+                    for event_handler in self.event_handlers.iter_mut() {
+                        if event_handler.handles(type_id) {
+                            event_handler.handle(data,
+                                                 EventArgs {
+                                                     graph: &mut self.graph,
+                                                     event_queue: &mut self.event_queue,
+                                                 });
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -106,9 +215,10 @@ impl EventHandler<Layout> for LayoutHandler {
         // redraw everything when layout changes, for now
         args.event_queue.push(EventAddress::Ui, Redraw(()));
         // send new mouse event, in case widget under mouse has shifted
+        /* TODO
         let mouse = graph.input_state.mouse;
         let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
-        graph.handle_input(event, args.event_queue);
+        graph.handle_input(event, args.event_queue);*/
     }
 }
 

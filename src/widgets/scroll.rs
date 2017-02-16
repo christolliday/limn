@@ -1,8 +1,8 @@
 use glutin;
 use cassowary::strength::*;
 
-use event::EventAddress;
-use event::events::*;
+use ui::queue::EventAddress;
+use ui::event::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 

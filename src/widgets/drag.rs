@@ -1,8 +1,8 @@
 use glutin;
 
 use widget::{EventArgs, EventHandler};
-use event::EventAddress;
-use event::events::*;
+use ui::queue::EventAddress;
+use ui::event::*;
 use util::Point;
 
 pub struct WidgetDrag {

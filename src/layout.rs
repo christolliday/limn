@@ -6,7 +6,7 @@ use cassowary::{Variable, Constraint};
 use resources::WidgetId;
 use widget::Widget;
 use widget::layout::WidgetConstraint;
-use event::{EventAddress, EventQueue};
+use ui::queue::{EventAddress, EventQueue};
 use ui::Layout;
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen

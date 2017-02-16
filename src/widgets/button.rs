@@ -8,7 +8,7 @@ use text_layout::Align;
 use widget::{EventHandler, EventArgs};
 use widget::property::{Property, PropsChangeEventHandler};
 use widget::property::states::*;
-use event::events::*;
+use ui::event::*;
 use widgets::primitives::{self, RectStyleField};
 use widgets::text::{self, TextStyleField};
 use widget::builder::WidgetBuilder;

@@ -12,7 +12,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::primitives;
 use limn::widget::property::Property;
-use limn::event::EventAddress;
+use limn::ui::queue::EventAddress;
 use limn::ui::{self, WidgetGraph};
 use limn::util::{Dimensions, Point};
 use limn::resources::WidgetId;

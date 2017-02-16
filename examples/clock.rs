@@ -15,7 +15,7 @@ use graphics::types::Color;
 use limn::widget::drawable::{Drawable, DrawArgs, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::primitives;
-use limn::event::{EventAddress, EventQueue};
+use limn::ui::queue::{EventAddress, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Dimensions, Scalar};
 

@@ -21,13 +21,12 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::{EventQueue, EventAddress};
 use widgets::hover::Hover;
-use event::events::*;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
 use color::*;
 
+use super::queue::{EventAddress, EventQueue};
 use super::InputState;
 
 const DEBUG_BOUNDS: bool = false;
@@ -36,7 +35,6 @@ pub struct WidgetGraph {
     pub graph: StableGraph<Widget, ()>,
     pub root_index: Option<NodeIndex>,
     pub solver: LimnSolver,
-    pub input_state: InputState,
     pub widget_map: HashMap<WidgetId, NodeIndex>,
     pub dirty_widgets: HashSet<NodeIndex>,
     pub glyph_cache: GlyphCache,
@@ -48,7 +46,6 @@ impl WidgetGraph {
             graph: StableGraph::<Widget, ()>::new(),
             root_index: None,
             solver: LimnSolver::new(event_queue.clone()),
-            input_state: InputState::new(),
             widget_map: HashMap::new(),
             dirty_widgets: HashSet::new(),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
@@ -177,52 +174,9 @@ impl WidgetGraph {
         });
         None
     }
-    pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
-        match event {
-            glutin::Event::MouseMoved(x, y) => {
-                let mouse = Point {
-                    x: x as f64,
-                    y: y as f64,
-                };
-                self.input_state.mouse = mouse;
-                let last_over = self.input_state.last_over.clone();
-                for last_over in last_over {
-                    let last_over = last_over.clone();
-                    if let Some(last_index) = self.find_widget(last_over) {
-                        if self.graph.contains_node(last_index) {
-                            let ref mut widget = self.graph[last_index];
-                            if !widget.is_mouse_over(self.input_state.mouse) {
-                                event_queue.push(EventAddress::Widget(last_over), Hover::Out);
-                                self.input_state.last_over.remove(&last_over);
-                            }
-                        }
-                    }
-                }
-                event_queue.push(EventAddress::UnderMouse, Hover::Over);
-            }
-            _ => (),
-        }
-        let ref root_widget = self.graph[self.root_index.unwrap()];
-        let all_widgets = EventAddress::SubTree(root_widget.id);
-        match event {
-            glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                event_queue.push(EventAddress::UnderMouse,
-                                 WidgetMouseWheel(mouse_scroll_delta));
-                event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
-            }
-            glutin::Event::MouseInput(state, button) => {
-                event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
-                event_queue.push(all_widgets, MouseButton(state, button));
-            }
-            glutin::Event::MouseMoved(x, y) => {
-                event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
-            }
-            _ => (),
-        }
-    }
-    pub fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
+    pub fn is_mouse_over(&mut self, node_index: NodeIndex, mouse: Point) -> bool {
         let ref mut widget = self.graph[node_index];
-        widget.is_mouse_over(self.input_state.mouse)
+        widget.is_mouse_over(mouse)
     }
     pub fn find_widget(&mut self, widget_id: WidgetId) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
@@ -232,14 +186,15 @@ impl WidgetGraph {
                                 node_index: NodeIndex,
                                 type_id: TypeId,
                                 data: &Box<Any + Send>,
-                                event_queue: &mut EventQueue)
+                                event_queue: &mut EventQueue,
+                                input_state: &InputState)
                                 -> bool {
         let ref mut widget = self.graph[node_index];
         let handled = widget.trigger_event(type_id,
                                            data,
                                            event_queue,
                                            &mut self.solver,
-                                           &self.input_state);
+                                           input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
                 self.dirty_widgets.insert(node_index);

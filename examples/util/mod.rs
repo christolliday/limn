@@ -58,8 +58,8 @@ pub fn set_root_and_loop(mut window: Window,
                     }
                     _ => (),
                 }
-                ui.graph.handle_input(event.clone(), &mut ui.event_queue);
-                ui.event_queue.handle_events(&mut ui.graph, &mut ui.event_handlers);
+                ui.handle_input(event.clone());
+                ui.handle_events();
             }
             WindowEvent::Render => {
                 if ui.graph.dirty_widgets.len() > 0 {

@@ -11,7 +11,7 @@ use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCu
                     DragInputHandler};
 use resources::{resources, WidgetId};
 use util::{Point, Rectangle};
-use event::events::*;
+use ui::event::*;
 
 pub struct WidgetBuilder {
     pub id: WidgetId,

@@ -5,8 +5,8 @@ use widget::property::Property;
 use widget::property::states::*;
 use widget::style::Value;
 use widgets::primitives::RectStyleField;
-use event::EventAddress;
-use event::events::*;
+use ui::queue::EventAddress;
+use ui::event::*;
 use resources::WidgetId;
 use util::Color;
 

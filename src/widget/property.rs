@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use widget::{EventHandler, EventArgs};
-use event::EventAddress;
+use ui::queue::EventAddress;
 
 pub struct WidgetChangeProp {
     pub property: Property,

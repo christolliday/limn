@@ -18,6 +18,5 @@ pub mod widgets;
 pub mod ui;
 pub mod util;
 pub mod resources;
-pub mod event;
 pub mod color;
 pub mod layout;
