@@ -5,13 +5,13 @@ use widget::property::Property;
 use widget::property::states::*;
 use widget::style::Value;
 use widgets::primitives::RectStyleField;
-use event::{EventId, EventAddress};
+use event::EventAddress;
 use event::events::*;
 use event::id::*;
 use resources::WidgetId;
 use util::Color;
 
-pub struct WidgetListItemSelected(WidgetId);
+pub struct WidgetListItemSelected { widget: WidgetId }
 
 static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
 static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
@@ -36,8 +36,8 @@ impl ListHandler {
     }
 }
 impl EventHandler<WidgetListItemSelected> for ListHandler {
-    fn handle(&mut self, mut args: EventArgs<WidgetListItemSelected>) {
-        let selected: WidgetId = args.event.0;
+    fn handle(&mut self, event: &WidgetListItemSelected, mut args: EventArgs) {
+        let selected = event.widget;
         if let Some(old_selected) = self.selected {
             if selected != old_selected {
                 args.event_queue.change_prop(old_selected, Property::Selected, false);
@@ -56,13 +56,13 @@ impl ListItemHandler {
     }
 }
 impl EventHandler<WidgetMouseButton> for ListItemHandler {
-    fn handle(&mut self, mut args: EventArgs<WidgetMouseButton>) {
+    fn handle(&mut self, _: &WidgetMouseButton, mut args: EventArgs) {
         if let &mut Some(ref drawable) = args.drawable {
             if !drawable.props.contains(&Property::Selected) {
                 args.event_queue.change_prop(args.widget_id, Property::Selected, true);
                 args.event_queue.push(EventAddress::Widget(self.list_id),
                                       NONE,
-                                      WidgetListItemSelected(args.widget_id));
+                                      WidgetListItemSelected { widget: args.widget_id });
             }
         }
     }

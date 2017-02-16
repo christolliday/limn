@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::marker::PhantomData;
 
 use graphics::Context;
 
@@ -7,7 +8,6 @@ use backend::glyph::GlyphCache;
 
 use widget::{EventHandler, EventArgs};
 use widget::property::PropSet;
-use event::EventId;
 
 use util::{self, Point, Rectangle};
 
@@ -114,14 +114,13 @@ impl DrawableStyle {
     }
 }
 
-use std::marker::PhantomData;
 pub struct DrawableEventHandler<T, E> {
     drawable_callback: Box<Fn(&mut T)>,
     phantom: PhantomData<E>,
 }
 
 impl<T: 'static, E> DrawableEventHandler<T, E> {
-    pub fn new<F: Fn(&mut T) + 'static>(event_type: E, drawable_callback: F) -> Self {
+    pub fn new<F: Fn(&mut T) + 'static>(_: E, drawable_callback: F) -> Self {
         DrawableEventHandler {
             drawable_callback: Box::new(drawable_callback),
             phantom: PhantomData,
@@ -130,7 +129,7 @@ impl<T: 'static, E> DrawableEventHandler<T, E> {
 }
 
 impl<T: 'static, E> EventHandler<E> for DrawableEventHandler<T, E> {
-    fn handle(&mut self, args: EventArgs<E>) {
+    fn handle(&mut self, _: &E, args: EventArgs) {
         if let Some(drawable) = args.drawable.as_mut() {
             drawable.update(|state: &mut T| (self.drawable_callback)(state));
         }

@@ -22,11 +22,11 @@ impl DragHandler {
     }
 }
 impl EventHandler<WidgetDrag> for DragHandler {
-    fn handle(&mut self, args: EventArgs<WidgetDrag>) {
+    fn handle(&mut self, event: &WidgetDrag, args: EventArgs) {
         let EventArgs { solver, layout, .. } = args;
-        let (ref drag_event, pos) = args.event.0;
-        let drag_pos = pos.0 as f64;
-        match *drag_event {
+        let &WidgetDrag { ref drag_type, position } = event;
+        let drag_pos = position.0 as f64;
+        match *drag_type {
             DragEvent::DragStart => {
                 self.start_pos = drag_pos - solver.get_value(layout.left);
             },

@@ -32,12 +32,12 @@ fn main() {
 
         let undo_widget = PushButtonBuilder::new()
             .set_text("Undo").widget
-            .on_click(|args| {
+            .on_click(|_, args| {
                 args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, CircleEvent::Undo);
             });
         let mut redo_widget = PushButtonBuilder::new()
             .set_text("Redo").widget
-            .on_click(|args| {
+            .on_click(|_, args| {
                 args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, CircleEvent::Redo);
             });
         redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
@@ -119,7 +119,7 @@ fn main() {
         }
     }
     let mut root_widget = WidgetBuilder::new()
-        .on_click(|args| {
+        .on_click(|_, args| {
             let event = CircleEvent::Add(args.input_state.mouse);
             args.event_queue.push(EventAddress::Ui, CIRCLE_EVENT, event);
         });

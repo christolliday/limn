@@ -12,7 +12,7 @@ use graphics::types::Color;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use event::{EventId, EventQueue};
+use event::EventQueue;
 use resources::WidgetId;
 use layout::LimnSolver;
 use util::{self, Point, Rectangle};
@@ -30,28 +30,17 @@ pub struct EventState {
 pub struct HandlerWrapper {
     type_id: TypeId,
     handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, EventArgs<Box<Any + Send>>)>,
+    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, EventArgs)>,
 }
 impl HandlerWrapper {
     pub fn new<H, E>(handler: H) -> Self
         where H: EventHandler<E> + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, args: EventArgs<Box<Any + Send>>| {
-            let EventArgs { event, widget_id, drawable, layout, event_queue, solver, input_state, event_state } = args;
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: EventArgs| {
             let event: &E = event.downcast_ref().unwrap();
-            let args = EventArgs {
-                event: event,
-                widget_id: widget_id,
-                drawable: drawable,
-                layout: layout,
-                event_queue: event_queue,
-                solver: solver,
-                input_state: input_state,
-                event_state: event_state,
-            };
             let handler: &mut H = handler.downcast_mut().unwrap();
-            handler.handle(args);
+            handler.handle(event, args);
         };
         HandlerWrapper {
             type_id: TypeId::of::<E>(),
@@ -62,13 +51,12 @@ impl HandlerWrapper {
     pub fn handles(&self, type_id: TypeId) -> bool {
         self.type_id == type_id
     }
-    pub fn handle(&mut self, args: EventArgs<Box<Any + Send>>) {
-        (self.handle_fn)(&mut self.handler, args);
+    pub fn handle(&mut self, event: &Box<Any + Send>, args: EventArgs) {
+        (self.handle_fn)(&mut self.handler, event, args);
     }
 }
 
-pub struct EventArgs<'a, T: 'static> {
-    pub event: &'a T,
+pub struct EventArgs<'a> {
     pub widget_id: WidgetId,
     pub drawable: &'a mut Option<Drawable>,
     pub layout: &'a mut LayoutVars,
@@ -79,7 +67,7 @@ pub struct EventArgs<'a, T: 'static> {
 }
 
 pub trait EventHandler<T> {
-    fn handle(&mut self, args: EventArgs<T>);
+    fn handle(&mut self, event: &T, args: EventArgs);
 }
 
 pub struct Widget {
@@ -138,9 +126,9 @@ impl Widget {
 
         let mut event_state = EventState { handled: false };
         for ref mut event_handler in self.event_handlers.iter_mut() {
+            let event_handler: &mut HandlerWrapper = event_handler;
             if event_handler.handles(type_id) {
-                event_handler.handle(EventArgs {
-                    event: event,
+                event_handler.handle(event, EventArgs {
                     widget_id: self.id,
                     drawable: &mut self.drawable,
                     layout: &mut self.layout,

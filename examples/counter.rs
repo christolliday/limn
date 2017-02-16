@@ -30,9 +30,9 @@ fn main() {
 
     struct CountHandler {}
     impl EventHandler<CountEvent> for CountHandler {
-        fn handle(&mut self, args: EventArgs<CountEvent>) {
+        fn handle(&mut self, event: &CountEvent, args: EventArgs) {
             if let Some(drawable) = args.drawable.as_mut() {
-                let count = args.event.0;
+                let &CountEvent(count) = event;
                 drawable.update(|state: &mut TextDrawState| state.text = format!("{}", count));
             }
         }
@@ -57,7 +57,7 @@ fn main() {
     let root_id = root_widget.id;
     let mut button_widget = PushButtonBuilder::new()
         .set_text("Count").widget
-        .on_click(move |args| {
+        .on_click(move |_, args| {
             args.event_queue.push(EventAddress::Widget(root_id), NONE, CounterEvent(()));
         });
     button_widget.layout.center(&button_container);
@@ -75,7 +75,7 @@ fn main() {
         }
     }
     impl EventHandler<CounterEvent> for CounterHandler {
-        fn handle(&mut self, args: EventArgs<CounterEvent>) {
+        fn handle(&mut self, _: &CounterEvent, args: EventArgs) {
             self.count += 1;
             let address = EventAddress::SubTree(args.widget_id);
             args.event_queue.push(address, NONE, CountEvent(self.count));

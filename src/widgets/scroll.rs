@@ -1,21 +1,23 @@
 use glutin;
 use cassowary::strength::*;
 
-use event::{EventId, EventAddress};
+use event::EventAddress;
 use event::events::*;
 use event::id::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
-pub struct WidgetScroll(pub (glutin::Event, Rectangle));
+pub struct WidgetScroll {
+    event: glutin::Event,
+    parent_bounds: Rectangle,
+}
 
 pub struct ScrollHandler {}
 impl EventHandler<WidgetMouseWheel> for ScrollHandler {
-    fn handle(&mut self, args: EventArgs<WidgetMouseWheel>) {
+    fn handle(&mut self, event: &WidgetMouseWheel, args: EventArgs) {
         let EventArgs { widget_id, layout, event_queue, .. } = args;
-        let ref event = args.event.0;
         let widget_bounds = layout.bounds();
-        let event = WidgetScroll((event.clone(), widget_bounds));
+        let event = WidgetScroll { event: event.0.clone(), parent_bounds: widget_bounds };
         event_queue.push(EventAddress::Child(widget_id), NONE, event);
     }
 }
@@ -29,10 +31,9 @@ impl WidgetScrollHandler {
     }
 }
 impl EventHandler<WidgetScroll> for WidgetScrollHandler {
-    fn handle(&mut self, args: EventArgs<WidgetScroll>) {
+    fn handle(&mut self, event: &WidgetScroll, args: EventArgs) {
         let EventArgs { layout, solver, .. } = args;
-
-        let (ref event, parent_bounds) = args.event.0;
+        let &WidgetScroll { ref event, parent_bounds } = event;
 
         let scroll = match *event {
             glutin::Event::MouseWheel(delta, _) => {

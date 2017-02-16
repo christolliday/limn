@@ -1,7 +1,6 @@
 use std::any::{Any, TypeId};
 use std::sync::{Arc, Mutex};
 
-use glutin;
 use glutin::WindowProxy;
 
 use backend::Window;
@@ -16,7 +15,6 @@ use widget::property::{Property, WidgetChangeProp};
 pub struct EventId(pub &'static str);
 
 pub mod events {
-    use util::Rectangle;
     use glutin;
 
     pub struct MouseMoved(pub glutin::Event);
@@ -96,7 +94,7 @@ impl EventQueue {
     }
     // common events
     pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
-        self.push(EventAddress::SubTree(widget_id), NONE, WidgetChangeProp((prop, add)));
+        self.push(EventAddress::SubTree(widget_id), NONE, WidgetChangeProp { property: prop, add: add });
     }
     pub fn signal(&mut self, address: EventAddress, event_id: EventId) {
         self.push(address, event_id, ());

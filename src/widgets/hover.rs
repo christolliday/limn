@@ -1,8 +1,5 @@
 use widget::{EventArgs, EventHandler};
 use widget::property::Property;
-use event::EventId;
-use event::events::*;
-use event::id::*;
 
 pub enum Hover {
     Over,
@@ -11,9 +8,8 @@ pub enum Hover {
 
 pub struct HoverHandler {}
 impl EventHandler<Hover> for HoverHandler {
-    fn handle(&mut self, mut args: EventArgs<Hover>) {
-        let hover = args.event;
-        let hover = match *hover {
+    fn handle(&mut self, event: &Hover, mut args: EventArgs) {
+        let hover = match *event {
             Hover::Over => true,
             Hover::Out => false,
         };

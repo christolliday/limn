@@ -64,7 +64,7 @@ impl WidgetBuilder {
         self.add_handler(ScrollHandler {})
     }
     pub fn on_click<F>(self, on_click: F) -> Self
-    where F: Fn(&mut EventArgs<WidgetMouseButton>) + 'static {
+    where F: Fn(&WidgetMouseButton, &mut EventArgs) + 'static {
         self.add_handler(ClickHandler::new(on_click))
     }
     pub fn enable_hover(self) -> Self {
