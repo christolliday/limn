@@ -2,6 +2,8 @@ pub mod graph;
 
 pub use self::graph::WidgetGraph;
 
+use backend::Window;
+
 use std::any::{Any, TypeId};
 use std::collections::HashSet;
 
@@ -10,6 +12,22 @@ use glutin;
 use event::{EventQueue, EventAddress};
 use util::Point;
 use resources::WidgetId;
+
+pub struct Ui {
+    pub event_queue: EventQueue,
+    pub graph: WidgetGraph,
+}
+
+impl Ui {
+    pub fn new(window: &mut Window) -> Self {
+        let event_queue = EventQueue::new(window);
+        let graph = WidgetGraph::new(window, &event_queue);
+        Ui {
+            event_queue: event_queue,
+            graph: graph,
+        }
+    }
+}
 
 pub struct EventArgs<'a> {
     pub graph: &'a mut WidgetGraph,

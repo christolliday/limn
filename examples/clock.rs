@@ -123,13 +123,13 @@ impl ClockBuilder {
 }
 
 fn main() {
-    let (window, graph, event_queue) = util::init_default("Limn clock demo");
+    let (window, ui) = util::init_default("Limn clock demo");
 
     let mut root_widget = WidgetBuilder::new();
-    let mut clock = ClockBuilder::new(event_queue.clone()).widget;
+    let mut clock = ClockBuilder::new(ui.event_queue.clone()).widget;
     clock.layout.center(&root_widget);
     clock.layout.bound_by(&root_widget, Some(50.0));
     root_widget.add_child(clock);
 
-    util::set_root_and_loop(window, graph, root_widget, event_queue, vec![]);
+    util::set_root_and_loop(window, ui, root_widget, vec![]);
 }

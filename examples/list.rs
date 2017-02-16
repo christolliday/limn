@@ -12,7 +12,7 @@ use limn::util::Dimensions;
 use limn::color::*;
 
 fn main() {
-    let (window, ui, event_queue) = util::init_default("Limn list demo");
+    let (window, ui) = util::init_default("Limn list demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -67,5 +67,5 @@ fn main() {
     scroll_widget.add_child(list_widget);
     root_widget.add_child(scroll_widget);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
+    util::set_root_and_loop(window, ui, root_widget, vec![]);
 }

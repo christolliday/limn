@@ -6,19 +6,16 @@ extern crate glutin;
 use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
-use limn::ui::{self, WidgetGraph};
+use limn::ui::{self, Ui};
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
-use limn::event::EventQueue;
 
-pub fn init_default(title: &str) -> (Window, WidgetGraph, EventQueue) {
+pub fn init_default(title: &str) -> (Window, Ui) {
     let window_dims = (100, 100);
     let mut window = Window::new(title, window_dims, Some(window_dims));
-    let event_queue = EventQueue::new(&window);
-    let graph = WidgetGraph::new(&mut window, &event_queue);
-
-    (window, graph, event_queue)
+    let ui = Ui::new(&mut window);
+    (window, ui)
 }
 
 #[allow(dead_code)]
@@ -37,12 +34,11 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
 }
 
 pub fn set_root_and_loop(mut window: Window,
-                         mut graph: WidgetGraph,
+                         mut ui: Ui,
                          root_widget: WidgetBuilder,
-                         mut event_queue: EventQueue,
                          mut event_handlers: Vec<ui::HandlerWrapper>) {
-    graph.set_root(root_widget);
-    graph.resize_window_to_fit(&window);
+    ui.graph.set_root(root_widget);
+    ui.graph.resize_window_to_fit(&window);
 
     event_handlers.append(&mut ui::get_default_event_handlers());
     let mut events = WindowEvents::new();
@@ -56,24 +52,24 @@ pub fn set_root_and_loop(mut window: Window,
                     }
                     Event::Resized(width, height) => {
                         window.window_resized();
-                        graph.window_resized(Dimensions {
+                        ui.graph.window_resized(Dimensions {
                             width: width as f64,
                             height: height as f64,
                         });
-                        graph.update_layout();
+                        ui.graph.update_layout();
                     }
                     _ => (),
                 }
-                graph.handle_input(event.clone(), &mut event_queue);
-                event_queue.handle_events(&mut graph, &mut event_handlers);
+                ui.graph.handle_input(event.clone(), &mut ui.event_queue);
+                ui.event_queue.handle_events(&mut ui.graph, &mut event_handlers);
             }
             WindowEvent::Render => {
-                if graph.dirty_widgets.len() > 0 {
+                if ui.graph.dirty_widgets.len() > 0 {
                     window.draw_2d(|context, graphics| {
                         graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                        graph.draw(context, graphics);
+                        ui.graph.draw(context, graphics);
                     });
-                    graph.dirty_widgets.clear();
+                    ui.graph.dirty_widgets.clear();
                 }
             }
         }

@@ -43,7 +43,7 @@ impl EventHandler<WidgetDrag> for DragHandler {
 }
 
 fn main() {
-    let (window, ui, event_queue) = util::init_default("Limn slider demo");
+    let (window, ui) = util::init_default("Limn slider demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -77,5 +77,5 @@ fn main() {
     slider_container.add_child(slider);
     root_widget.add_child(slider_container);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
+    util::set_root_and_loop(window, ui, root_widget, vec![]);
 }

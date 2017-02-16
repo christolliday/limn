@@ -25,7 +25,7 @@ enum CircleEvent {
 }
 
 fn main() {
-    let (window, graph, mut event_queue) = util::init_default("Limn circles demo");
+    let (window, mut ui) = util::init_default("Limn circles demo");
     util::load_default_font();
 
     fn create_undo_redo_buttons(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId) {
@@ -136,10 +136,10 @@ fn main() {
 
     let (undo_id, redo_id) = create_undo_redo_buttons(&mut root_widget);
     // todo: better way to set initial props
-    event_queue.change_prop(undo_id, Property::Inactive, true);
-    event_queue.change_prop(redo_id, Property::Inactive, true);
+    ui.event_queue.change_prop(undo_id, Property::Inactive, true);
+    ui.event_queue.change_prop(redo_id, Property::Inactive, true);
 
     let ui_event_handlers: Vec<ui::HandlerWrapper> =
         vec![ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id))];
-    util::set_root_and_loop(window, graph, root_widget, event_queue, ui_event_handlers);
+    util::set_root_and_loop(window, ui, root_widget, ui_event_handlers);
 }
