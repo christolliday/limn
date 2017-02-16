@@ -45,11 +45,14 @@ impl Id for ImageId {
 
 pub struct IdGen<I> {
     id: usize,
-    phantom: PhantomData<I>
+    phantom: PhantomData<I>,
 }
 impl<I: Id> IdGen<I> {
     pub fn new() -> Self {
-        IdGen { id: 0, phantom: PhantomData }
+        IdGen {
+            id: 0,
+            phantom: PhantomData,
+        }
     }
     pub fn next(&mut self) -> I {
         let id = self.id;

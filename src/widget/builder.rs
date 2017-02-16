@@ -7,7 +7,8 @@ use widget::property::PropsChangeEventHandler;
 use widgets::hover::HoverHandler;
 use widgets::button::ClickHandler;
 use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
-use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCursorHandler, DragInputHandler};
+use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCursorHandler,
+                    DragInputHandler};
 use resources::{resources, WidgetId};
 use util::{Point, Rectangle};
 use event::events::*;
@@ -64,7 +65,8 @@ impl WidgetBuilder {
         self.add_handler(ScrollHandler {})
     }
     pub fn on_click<F>(self, on_click: F) -> Self
-    where F: Fn(&WidgetMouseButton, &mut EventArgs) + 'static {
+        where F: Fn(&WidgetMouseButton, &mut EventArgs) + 'static
+    {
         self.add_handler(ClickHandler::new(on_click))
     }
     pub fn enable_hover(self) -> Self {
@@ -102,15 +104,13 @@ impl WidgetBuilder {
             cassowary::add_var_name(self.layout.vars.bottom, &format!("{}.bottom", debug_name));
         }
 
-        (
-            self.children,
-            self.layout.constraints,
-            Widget::new(self.id,
-                        self.drawable,
-                        self.layout.vars,
-                        self.event_handlers,
-                        self.debug_name,
-                        self.debug_color)
-        )
+        (self.children,
+         self.layout.constraints,
+         Widget::new(self.id,
+                     self.drawable,
+                     self.layout.vars,
+                     self.event_handlers,
+                     self.debug_name,
+                     self.debug_color))
     }
 }

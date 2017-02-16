@@ -110,7 +110,7 @@ impl EventHandler<Layout> for LayoutHandler {
 }
 
 pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
-    vec!{HandlerWrapper::new(RedrawHandler{}), HandlerWrapper::new(LayoutHandler{})}
+    vec![HandlerWrapper::new(RedrawHandler {}), HandlerWrapper::new(LayoutHandler {})]
 }
 
 pub struct Ui {
@@ -186,10 +186,7 @@ impl Ui {
 
         let crop_to = {
             let ref mut widget = self.graph[node_index];
-            widget.draw(crop_to,
-                        &mut self.glyph_cache,
-                        context,
-                        graphics);
+            widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
 
             util::crop_rect(crop_to, widget.layout.bounds())
         };
@@ -225,7 +222,10 @@ impl Ui {
             }
         }
     }
-    pub fn add_widget(&mut self, widget: WidgetBuilder, parent_index: Option<NodeIndex>) -> NodeIndex {
+    pub fn add_widget(&mut self,
+                      widget: WidgetBuilder,
+                      parent_index: Option<NodeIndex>)
+                      -> NodeIndex {
 
         let (children, constraints, widget) = widget.build();
         self.solver.add_widget(&widget, constraints);
@@ -286,16 +286,18 @@ impl Ui {
         let all_widgets = EventAddress::SubTree(root_widget.id);
         match event {
             glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                event_queue.push(EventAddress::UnderMouse, WidgetMouseWheel(mouse_scroll_delta));
+                event_queue.push(EventAddress::UnderMouse,
+                                 WidgetMouseWheel(mouse_scroll_delta));
                 event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
-            },
+            }
             glutin::Event::MouseInput(state, button) => {
                 event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
                 event_queue.push(all_widgets, WidgetMouseButton(state, button));
-            },
+            }
             glutin::Event::MouseMoved(x, y) => {
                 event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
-            }, _ => (),
+            }
+            _ => (),
         }
     }
     pub fn is_mouse_over(&mut self, node_index: NodeIndex) -> bool {
@@ -307,12 +309,17 @@ impl Ui {
     }
 
     pub fn trigger_widget_event(&mut self,
-                            node_index: NodeIndex,
-                            type_id: TypeId,
-                            data: &Box<Any + Send>,
-                            event_queue: &mut EventQueue) -> bool {
+                                node_index: NodeIndex,
+                                type_id: TypeId,
+                                data: &Box<Any + Send>,
+                                event_queue: &mut EventQueue)
+                                -> bool {
         let ref mut widget = self.graph[node_index];
-        let handled = widget.trigger_event(type_id, data, event_queue, &mut self.solver, &self.input_state);
+        let handled = widget.trigger_event(type_id,
+                                           data,
+                                           event_queue,
+                                           &mut self.solver,
+                                           &self.input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
                 self.dirty_widgets.insert(node_index);

@@ -46,7 +46,8 @@ impl EventQueue {
         }
     }
     pub fn push<T>(&mut self, address: EventAddress, data: T)
-    where T: Send + 'static {
+        where T: Send + 'static
+    {
         let mut queue = self.queue.lock().unwrap();
         let type_id = TypeId::of::<T>();
         queue.push((address, type_id, Box::new(data)));
@@ -62,7 +63,11 @@ impl EventQueue {
     }
     // common events
     pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
-        self.push(EventAddress::SubTree(widget_id), WidgetChangeProp { property: prop, add: add });
+        self.push(EventAddress::SubTree(widget_id),
+                  WidgetChangeProp {
+                      property: prop,
+                      add: add,
+                  });
     }
 
     pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<ui::HandlerWrapper>) {
@@ -109,10 +114,11 @@ impl EventQueue {
                 EventAddress::Ui => {
                     for event_handler in ui_event_handlers.iter_mut() {
                         if event_handler.handles(type_id) {
-                            event_handler.handle(data, ui::EventArgs {
-                                ui: ui,
-                                event_queue: self,
-                            });
+                            event_handler.handle(data,
+                                                 ui::EventArgs {
+                                                     ui: ui,
+                                                     event_queue: self,
+                                                 });
                         }
                     }
                 }

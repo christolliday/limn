@@ -18,5 +18,5 @@ fn main() {
     image_widget.layout.bound_by(&root_widget, Some(50.0));
     root_widget.add_child(image_widget);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
 }

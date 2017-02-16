@@ -10,7 +10,9 @@ use event::events::*;
 use resources::WidgetId;
 use util::Color;
 
-pub struct WidgetListItemSelected { widget: WidgetId }
+pub struct WidgetListItemSelected {
+    widget: WidgetId,
+}
 
 static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
 static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];

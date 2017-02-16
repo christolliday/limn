@@ -35,15 +35,13 @@ fn main() {
         button_container.layout.shrink();
 
         let undo_widget = PushButtonBuilder::new()
-            .set_text("Undo").widget
-            .on_click(|_, args| {
-                args.event_queue.push(EventAddress::Ui, CircleEvent::Undo);
-            });
+            .set_text("Undo")
+            .widget
+            .on_click(|_, args| { args.event_queue.push(EventAddress::Ui, CircleEvent::Undo); });
         let mut redo_widget = PushButtonBuilder::new()
-            .set_text("Redo").widget
-            .on_click(|_, args| {
-                args.event_queue.push(EventAddress::Ui, CircleEvent::Redo);
-            });
+            .set_text("Redo")
+            .widget
+            .on_click(|_, args| { args.event_queue.push(EventAddress::Ui, CircleEvent::Redo); });
         redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
 
         let (undo_id, redo_id) = (undo_widget.id, redo_widget.id);
@@ -55,11 +53,20 @@ fn main() {
     }
 
     fn create_circle(ui: &mut Ui, center: &Point) -> WidgetId {
-        let border = graphics::ellipse::Border { color: BLACK, radius: 2.0 };
+        let border = graphics::ellipse::Border {
+            color: BLACK,
+            radius: 2.0,
+        };
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::ellipse_drawable(RED, Some(border)));
-        widget.layout.dimensions(Dimensions {width: 30.0, height: 30.0});
-        let top_left = Point { x: center.x - 15.0, y: center.y - 15.0 };
+        widget.layout.dimensions(Dimensions {
+            width: 30.0,
+            height: 30.0,
+        });
+        let top_left = Point {
+            x: center.x - 15.0,
+            y: center.y - 15.0,
+        };
 
         widget.layout.top_left(top_left, Some(STRONG));
         let id = widget.id;
@@ -76,7 +83,12 @@ fn main() {
     }
     impl CircleEventHandler {
         fn new(undo_id: WidgetId, redo_id: WidgetId) -> Self {
-            CircleEventHandler { circles: Vec::new(), undo: Vec::new(), undo_id: undo_id, redo_id: redo_id }
+            CircleEventHandler {
+                circles: Vec::new(),
+                undo: Vec::new(),
+                undo_id: undo_id,
+                redo_id: redo_id,
+            }
         }
     }
     impl ui::EventHandler<CircleEvent> for CircleEventHandler {
@@ -112,12 +124,14 @@ fn main() {
             }
         }
     }
-    let mut root_widget = WidgetBuilder::new()
-        .on_click(|_, args| {
-            let event = CircleEvent::Add(args.input_state.mouse);
-            args.event_queue.push(EventAddress::Ui, event);
-        });
-    root_widget.layout.dimensions(Dimensions {width: 300.0, height: 300.0});
+    let mut root_widget = WidgetBuilder::new().on_click(|_, args| {
+        let event = CircleEvent::Add(args.input_state.mouse);
+        args.event_queue.push(EventAddress::Ui, event);
+    });
+    root_widget.layout.dimensions(Dimensions {
+        width: 300.0,
+        height: 300.0,
+    });
 
 
     let (undo_id, redo_id) = create_undo_redo_buttons(&mut root_widget);
@@ -125,6 +139,7 @@ fn main() {
     event_queue.change_prop(undo_id, Property::Inactive, true);
     event_queue.change_prop(redo_id, Property::Inactive, true);
 
-    let ui_event_handlers: Vec<ui::HandlerWrapper> = vec!{ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id))};
+    let ui_event_handlers: Vec<ui::HandlerWrapper> =
+        vec![ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id))];
     util::set_root_and_loop(window, ui, root_widget, event_queue, ui_event_handlers);
 }

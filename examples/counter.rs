@@ -37,10 +37,8 @@ fn main() {
         }
     }
 
-    let text_style = vec!{
-        TextStyleField::Text(Value::Single("0".to_owned())),
-        TextStyleField::BackgroundColor(Value::Single(WHITE)),
-    };
+    let text_style = vec![TextStyleField::Text(Value::Single("0".to_owned())),
+                          TextStyleField::BackgroundColor(Value::Single(WHITE))];
     let text_drawable = text::text_drawable(text_style);
     let text_dims = text::measure(&text_drawable);
     let mut text_widget = WidgetBuilder::new()
@@ -55,7 +53,8 @@ fn main() {
     linear_layout.add_widget(&mut button_container);
     let root_id = root_widget.id;
     let mut button_widget = PushButtonBuilder::new()
-        .set_text("Count").widget
+        .set_text("Count")
+        .widget
         .on_click(move |_, args| {
             args.event_queue.push(EventAddress::Widget(root_id), CounterEvent(()));
         });
@@ -82,5 +81,5 @@ fn main() {
     }
     let root_widget = root_widget.add_handler(CounterHandler::new());
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
 }

@@ -116,16 +116,28 @@ impl Rectangle {
         self.top + self.height
     }
     pub fn top_left(&self) -> Point {
-        Point { x: self.left, y: self.top }
+        Point {
+            x: self.left,
+            y: self.top,
+        }
     }
     pub fn top_right(&self) -> Point {
-        Point { x: self.right(), y: self.top }
+        Point {
+            x: self.right(),
+            y: self.top,
+        }
     }
     pub fn bottom_left(&self) -> Point {
-        Point { x: self.left, y: self.bottom() }
+        Point {
+            x: self.left,
+            y: self.bottom(),
+        }
     }
     pub fn bottom_right(&self) -> Point {
-        Point { x: self.right(), y: self.bottom() }
+        Point {
+            x: self.right(),
+            y: self.bottom(),
+        }
     }
     pub fn dims(&self) -> Dimensions {
         Dimensions {
@@ -248,10 +260,7 @@ pub fn draw_rect_outline(rect: Rectangle, color: Color, context: Context, graphi
 }
 
 pub fn crop_context(context: Context, rect: Rectangle) -> Context {
-    let scissor_bounds = [rect.left as u32,
-                          rect.top as u32,
-                          rect.width as u32,
-                          rect.height as u32];
+    let scissor_bounds = [rect.left as u32, rect.top as u32, rect.width as u32, rect.height as u32];
     Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
 }
 

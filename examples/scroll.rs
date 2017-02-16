@@ -12,8 +12,7 @@ use limn::util::Dimensions;
 fn main() {
     let (window, ui, event_queue) = util::init_default("Limn scroll demo");
 
-    let mut root_widget = WidgetBuilder::new()
-        .set_debug_name("root");
+    let mut root_widget = WidgetBuilder::new().set_debug_name("root");
 
     let mut scroll_widget = WidgetBuilder::new()
         .set_debug_name("scroll")
@@ -32,7 +31,7 @@ fn main() {
         height: 400.0,
     });
 
-    let style = vec!{RectStyleField::BackgroundColor(Value::Single(RED))};
+    let style = vec![RectStyleField::BackgroundColor(Value::Single(RED))];
     let mut rect_tl_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
     rect_tl_widget.layout.dimensions(Dimensions {
         width: 200.0,
@@ -41,7 +40,7 @@ fn main() {
     rect_tl_widget.layout.align_top(&rect_container_widget, None);
     rect_tl_widget.layout.align_left(&rect_container_widget, None);
 
-    let style = vec!{RectStyleField::BackgroundColor(Value::Single(GREEN))};
+    let style = vec![RectStyleField::BackgroundColor(Value::Single(GREEN))];
     let mut rect_tr_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
     rect_tr_widget.layout.dimensions(Dimensions {
         width: 200.0,
@@ -50,7 +49,7 @@ fn main() {
     rect_tr_widget.layout.align_top(&rect_container_widget, None);
     rect_tr_widget.layout.align_right(&rect_container_widget, None);
 
-    let style = vec!{RectStyleField::BackgroundColor(Value::Single(BLUE))};
+    let style = vec![RectStyleField::BackgroundColor(Value::Single(BLUE))];
     let mut rect_bl_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
     rect_bl_widget.layout.dimensions(Dimensions {
         width: 200.0,
@@ -59,7 +58,7 @@ fn main() {
     rect_bl_widget.layout.align_bottom(&rect_container_widget, None);
     rect_bl_widget.layout.align_left(&rect_container_widget, None);
 
-    let style = vec!{RectStyleField::BackgroundColor(Value::Single(FUSCHIA))};
+    let style = vec![RectStyleField::BackgroundColor(Value::Single(FUSCHIA))];
     let mut rect_br_widget = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
     rect_br_widget.layout.dimensions(Dimensions {
         width: 200.0,
@@ -75,5 +74,5 @@ fn main() {
     scroll_widget.add_child(rect_container_widget);
     root_widget.add_child(scroll_widget);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
 }

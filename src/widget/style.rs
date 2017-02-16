@@ -2,17 +2,21 @@ use linked_hash_map::LinkedHashMap;
 use widget::PropSet;
 
 #[derive(Clone, Debug)]
-pub enum Value<T> where T: Clone {
+pub enum Value<T>
+    where T: Clone
+{
     Single(T),
     Selector((LinkedHashMap<PropSet, T>, T)),
 }
 
-impl<T> Value<T> where T: Clone {
+impl<T> Value<T>
+    where T: Clone
+{
     pub fn from_props(&self, props: &PropSet) -> T {
         match *self {
             Value::Selector::<T>((ref sel, _)) => {
                 if sel.contains_key(&props) {
-                    return sel.get(&props).unwrap().clone()
+                    return sel.get(&props).unwrap().clone();
                 } else {
                     for (style_props, style_val) in sel.iter() {
                         // props matches all in style props
@@ -21,18 +25,15 @@ impl<T> Value<T> where T: Clone {
                         }
                     }
                 }
-            }, _ => ()
+            }
+            _ => (),
         }
         self.default()
     }
     pub fn default(&self) -> T {
         match *self {
-            Value::Single::<T>(ref val) => {
-                val.clone()
-            }
-            Value::Selector::<T>((_, ref def)) => {
-                def.clone()
-            }
+            Value::Single::<T>(ref val) => val.clone(),
+            Value::Selector::<T>((_, ref def)) => def.clone(),
         }
     }
 }

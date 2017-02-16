@@ -29,7 +29,7 @@ impl EventHandler<WidgetDrag> for DragHandler {
         match *drag_type {
             DragEvent::DragStart => {
                 self.start_pos = drag_pos - solver.get_value(layout.left);
-            },
+            }
             _ => {
                 solver.update_solver(|solver| {
                     if !solver.has_edit_variable(&layout.left) {
@@ -53,7 +53,7 @@ fn main() {
     });
 
     let rect_color = [0.1, 0.1, 0.1, 1.0];
-    let style = vec!{RectStyleField::BackgroundColor(Value::Single(rect_color))};
+    let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
     let mut slider_container = WidgetBuilder::new().set_drawable(primitives::rect_drawable(style));
     slider_container.layout.dimensions(Dimensions {
         width: 200.0,
@@ -63,7 +63,7 @@ fn main() {
     slider_container.layout.center_horizontal(&root_widget);
 
     let rect_color = [0.4, 0.4, 0.4, 1.0];
-    let style = vec!{RectStyleField::BackgroundColor(Value::Single(rect_color))};
+    let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
     let mut slider = WidgetBuilder::new()
         .set_drawable(primitives::rect_drawable(style))
         .draggable()
@@ -77,5 +77,5 @@ fn main() {
     slider_container.add_child(slider);
     root_widget.add_child(slider_container);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
 }

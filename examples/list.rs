@@ -17,8 +17,7 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
 
-    let mut scroll_widget = WidgetBuilder::new()
-        .contents_scroll();
+    let mut scroll_widget = WidgetBuilder::new().contents_scroll();
     scroll_widget.layout.bound_by(&root_widget, Some(50.0));
     scroll_widget.layout.dimensions(Dimensions {
         width: 300.0,
@@ -35,10 +34,8 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &mut list_widget);
         let mut list_item_widgets = Vec::new();
         for _ in 1..15 {
-            let text_style = vec!{
-                TextStyleField::Text(Value::Single("hello".to_owned())),
-                TextStyleField::TextColor(Value::Single(WHITE)),
-            };
+            let text_style = vec![TextStyleField::Text(Value::Single("hello".to_owned())),
+                                  TextStyleField::TextColor(Value::Single(WHITE))];
 
             let text_drawable = text::text_drawable(text_style);
             let text_dims = text::measure(&text_drawable);
@@ -70,5 +67,5 @@ fn main() {
     scroll_widget.add_child(list_widget);
     root_widget.add_child(scroll_widget);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
 }

@@ -86,8 +86,7 @@ impl Widget {
                event_handlers: Vec<HandlerWrapper>,
                debug_name: Option<String>,
                debug_color: Option<Color>)
-               -> Self
-    {
+               -> Self {
         Widget {
             id: id,
             drawable: drawable,
@@ -122,21 +121,23 @@ impl Widget {
                          event: &Box<Any + Send>,
                          event_queue: &mut EventQueue,
                          solver: &mut LimnSolver,
-                         input_state: &InputState) -> bool {
+                         input_state: &InputState)
+                         -> bool {
 
         let mut event_state = EventState { handled: false };
         for ref mut event_handler in self.event_handlers.iter_mut() {
             let event_handler: &mut HandlerWrapper = event_handler;
             if event_handler.handles(type_id) {
-                event_handler.handle(event, EventArgs {
-                    widget_id: self.id,
-                    drawable: &mut self.drawable,
-                    layout: &mut self.layout,
-                    event_queue: event_queue,
-                    solver: solver,
-                    input_state: input_state,
-                    event_state: &mut event_state,
-                });
+                event_handler.handle(event,
+                                     EventArgs {
+                                         widget_id: self.id,
+                                         drawable: &mut self.drawable,
+                                         layout: &mut self.layout,
+                                         event_queue: event_queue,
+                                         solver: solver,
+                                         input_state: input_state,
+                                         event_state: &mut event_state,
+                                     });
             }
         }
         event_state.handled

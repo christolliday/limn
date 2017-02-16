@@ -36,7 +36,11 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
     resources().images.insert_from_file(&mut window.context.factory, image_path)
 }
 
-pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuilder, mut event_queue: EventQueue, mut event_handlers: Vec<ui::HandlerWrapper>) {
+pub fn set_root_and_loop(mut window: Window,
+                         mut ui: Ui,
+                         root_widget: WidgetBuilder,
+                         mut event_queue: EventQueue,
+                         mut event_handlers: Vec<ui::HandlerWrapper>) {
     ui.set_root(root_widget);
     ui.resize_window_to_fit(&window);
 

@@ -66,7 +66,9 @@ impl StyleField<TextDrawState> for TextStyleField {
             TextStyleField::FontId(ref val) => state.font_id = val.from_props(props),
             TextStyleField::FontSize(ref val) => state.font_size = val.from_props(props),
             TextStyleField::TextColor(ref val) => state.text_color = val.from_props(props),
-            TextStyleField::BackgroundColor(ref val) => state.background_color = val.from_props(props),
+            TextStyleField::BackgroundColor(ref val) => {
+                state.background_color = val.from_props(props)
+            }
             TextStyleField::Wrap(ref val) => state.wrap = val.from_props(props),
             TextStyleField::Align(ref val) => state.align = val.from_props(props),
         }
@@ -91,7 +93,8 @@ impl TextDrawState {
                                          font,
                                          self.font_size,
                                          self.font_size * 1.25,
-                                         self.wrap).into()
+                                         self.wrap)
+            .into()
     }
 }
 

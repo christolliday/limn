@@ -57,8 +57,7 @@ impl Drawable {
                 crop_to: Rectangle,
                 glyph_cache: &mut GlyphCache,
                 context: Context,
-                graphics: &mut G2d)
-    {
+                graphics: &mut G2d) {
         let context = util::crop_context(context, crop_to);
         (self.draw_fn)(DrawArgs {
             state: &self.state,

@@ -69,7 +69,9 @@ impl LimnSolver {
         self.constraint_map.remove(&widget_id);
         self.check_changes();
     }
-    pub fn update_solver<F>(&mut self, f: F) where F: Fn(&mut cassowary::Solver) {
+    pub fn update_solver<F>(&mut self, f: F)
+        where F: Fn(&mut cassowary::Solver)
+    {
         f(&mut self.solver);
         self.check_changes();
     }

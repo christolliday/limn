@@ -88,10 +88,9 @@ impl ToggleButtonBuilder {
 
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
-        let text_style = vec!{
-            TextStyleField::Text(Value::Selector((selector, off_text.to_owned()))),
-            TextStyleField::Align(Value::Single(Align::Middle)),
-        };
+        let text_style = vec![TextStyleField::Text(Value::Selector((selector,
+                                                                    off_text.to_owned()))),
+                              TextStyleField::Align(Value::Single(Align::Middle))];
 
         let button_text_drawable = text::text_drawable(text_style);
         let button_text_dims = text::measure(&button_text_drawable);
@@ -106,22 +105,26 @@ impl ToggleButtonBuilder {
     }
 }
 
-pub struct ClickHandler<F> where F: Fn(&WidgetMouseButton, &mut EventArgs) {
-    callback: F
+pub struct ClickHandler<F>
+    where F: Fn(&WidgetMouseButton, &mut EventArgs)
+{
+    callback: F,
 }
 impl<F: Fn(&WidgetMouseButton, &mut EventArgs)> ClickHandler<F> {
     pub fn new(callback: F) -> Self {
         ClickHandler { callback: callback }
     }
 }
-impl<F: Fn(&WidgetMouseButton, &mut EventArgs)> EventHandler<WidgetMouseButton> for ClickHandler<F> {
+impl<F: Fn(&WidgetMouseButton, &mut EventArgs)> EventHandler<WidgetMouseButton>
+    for ClickHandler<F> {
     fn handle(&mut self, event: &WidgetMouseButton, mut args: EventArgs) {
         let &WidgetMouseButton(state, _) = event;
         match state {
             glutin::ElementState::Released => {
                 (self.callback)(event, &mut args);
                 args.event_state.handled = true;
-            }, _ => ()
+            }
+            _ => (),
         }
     }
 }
@@ -144,10 +147,8 @@ impl PushButtonBuilder {
     }
     pub fn set_text(mut self, text: &'static str) -> Self {
 
-        let text_style = vec!{
-            TextStyleField::Text(Value::Single(text.to_owned())),
-            TextStyleField::Align(Value::Single(Align::Middle)),
-        };
+        let text_style = vec![TextStyleField::Text(Value::Single(text.to_owned())),
+                              TextStyleField::Align(Value::Single(Align::Middle))];
         let drawable = text::text_drawable(text_style);
         let button_text_dims = text::measure(&drawable);
         let mut button_text_widget = WidgetBuilder::new()

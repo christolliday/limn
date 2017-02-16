@@ -38,7 +38,9 @@ pub enum RectStyleField {
 impl StyleField<RectDrawState> for RectStyleField {
     fn apply(&self, state: &mut RectDrawState, props: &PropSet) {
         match *self {
-            RectStyleField::BackgroundColor(ref val) => state.background_color = val.from_props(props),
+            RectStyleField::BackgroundColor(ref val) => {
+                state.background_color = val.from_props(props)
+            }
             RectStyleField::CornerRadius(ref val) => state.corner_radius = val.from_props(props),
         }
     }
@@ -65,21 +67,23 @@ pub fn draw_rect(args: DrawArgs<RectDrawState>) {
             width: bounds.width - 2.0 * radius,
             height: bounds.height - 2.0 * radius,
         };
-        let points: Vec<[f64; 2]> = (0..4).flat_map(|corner| {
-            let center: Point = match corner {
-                0 => inner_rect.bottom_right(),
-                1 => inner_rect.bottom_left(),
-                2 => inner_rect.top_left(),
-                3 => inner_rect.top_right(),
-                _ => unreachable!(),
-            };
-            let step_offset: u32 = corner * points_per_corner;
-            (0..points_per_corner + 1).map(move |corner_step| {
-                let circle_step = step_offset + corner_step;
-                let circle_offset = circle_coords(radius, circle_step as f64, angle_per_step);
-                [center.x + circle_offset[0], center.y + circle_offset[1]]
+        let points: Vec<[f64; 2]> = (0..4)
+            .flat_map(|corner| {
+                let center: Point = match corner {
+                    0 => inner_rect.bottom_right(),
+                    1 => inner_rect.bottom_left(),
+                    2 => inner_rect.top_left(),
+                    3 => inner_rect.top_right(),
+                    _ => unreachable!(),
+                };
+                let step_offset: u32 = corner * points_per_corner;
+                (0..points_per_corner + 1).map(move |corner_step| {
+                    let circle_step = step_offset + corner_step;
+                    let circle_offset = circle_coords(radius, circle_step as f64, angle_per_step);
+                    [center.x + circle_offset[0], center.y + circle_offset[1]]
+                })
             })
-        }).collect();
+            .collect();
         graphics::Polygon::new(state.background_color)
             .draw(&points, &context.draw_state, context.transform, graphics);
     } else {
@@ -88,8 +92,13 @@ pub fn draw_rect(args: DrawArgs<RectDrawState>) {
     }
 }
 
-pub fn ellipse_drawable(background_color: Color, border: Option<graphics::ellipse::Border>) -> Drawable {
-    let draw_state = EllipseDrawState { background_color: background_color, border: border };
+pub fn ellipse_drawable(background_color: Color,
+                        border: Option<graphics::ellipse::Border>)
+                        -> Drawable {
+    let draw_state = EllipseDrawState {
+        background_color: background_color,
+        border: border,
+    };
     Drawable::new(draw_state, draw_ellipse)
 }
 pub struct EllipseDrawState {

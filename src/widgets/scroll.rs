@@ -16,7 +16,10 @@ impl EventHandler<WidgetMouseWheel> for ScrollHandler {
     fn handle(&mut self, event: &WidgetMouseWheel, args: EventArgs) {
         let EventArgs { widget_id, layout, event_queue, .. } = args;
         let widget_bounds = layout.bounds();
-        let event = WidgetScroll { event: event.0, parent_bounds: widget_bounds };
+        let event = WidgetScroll {
+            event: event.0,
+            parent_bounds: widget_bounds,
+        };
         event_queue.push(EventAddress::Child(widget_id), event);
     }
 }

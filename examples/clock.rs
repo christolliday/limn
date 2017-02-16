@@ -36,7 +36,10 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new(mut event_queue: EventQueue) -> Self {
 
-        let border = graphics::ellipse::Border { color: BLACK, radius: 2.0 };
+        let border = graphics::ellipse::Border {
+            color: BLACK,
+            radius: 2.0,
+        };
         let drawable = primitives::ellipse_drawable(WHITE, Some(border));
         let mut widget = WidgetBuilder::new().set_drawable(drawable);
         widget.layout.dimensions(Dimensions {
@@ -128,5 +131,5 @@ fn main() {
     clock.layout.bound_by(&root_widget, Some(50.0));
     root_widget.add_child(clock);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
 }

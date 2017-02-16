@@ -14,12 +14,16 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    root_widget.layout.min_dimensions(Dimensions { width: 300.0, height: 300.0 });
+    root_widget.layout.min_dimensions(Dimensions {
+        width: 300.0,
+        height: 300.0,
+    });
 
-    let text_style = vec!{
-        TextStyleField::Text(Value::Single("I believe in reincarnation.\nThat's why I eat Jello.\nIt's good for the stomach".to_owned())),
-        TextStyleField::BackgroundColor(Value::Single(WHITE)),
-    };
+    let text_style = vec![TextStyleField::Text(Value::Single("I believe in \
+                                                              reincarnation.\nThat's why I eat \
+                                                              Jello.\nIt's good for the stomach"
+                              .to_owned())),
+                          TextStyleField::BackgroundColor(Value::Single(WHITE))];
     let text_drawable = text::text_drawable(text_style);
 
     let text_widget = WidgetBuilder::new()
@@ -36,5 +40,5 @@ fn main() {
     root_widget.add_child(text_widget);
     root_widget.add_child(button);
 
-    util::set_root_and_loop(window, ui, root_widget, event_queue, vec!{});
+    util::set_root_and_loop(window, ui, root_widget, event_queue, vec![]);
 }
