@@ -7,8 +7,7 @@ use backend::Window;
 
 use resources::WidgetId;
 use petgraph::visit::{Dfs, DfsPostOrder};
-use ui::{Ui, UiEventArgs, UiEventHandler};
-
+use ui::{self, Ui};
 use widget::property::{Property, WidgetChangeProp};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -16,6 +15,7 @@ pub struct EventId(pub &'static str);
 
 pub mod events {
     use glutin;
+    use resources::WidgetId;
 
     pub struct MouseMoved(pub glutin::Event);
     pub struct MouseWheel(pub glutin::Event);
@@ -25,7 +25,7 @@ pub mod events {
     pub struct WidgetMouseButton(pub glutin::Event);
 
     pub struct Redraw();
-    pub struct Layout();
+    pub struct Layout(pub WidgetId);
 }
 
 pub mod id {
@@ -100,7 +100,7 @@ impl EventQueue {
         self.push(address, event_id, ());
     }
 
-    pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<Box<UiEventHandler>>) {
+    pub fn handle_events(&mut self, ui: &mut Ui, ui_event_handlers: &mut Vec<ui::HandlerWrapper>) {
         while !self.is_empty() {
             let (event_address, event_id, type_id, data) = self.next();
             let data = &data;
@@ -142,10 +142,10 @@ impl EventQueue {
                     }
                 }
                 EventAddress::Ui => {
-                    for ref mut event_handler in ui_event_handlers.iter_mut() {
-                        if event_handler.event_id() == event_id {
-                            event_handler.handle_event(UiEventArgs {
-                                data: &**data,
+                    for event_handler in ui_event_handlers.iter_mut() {
+                        if event_handler.handles(type_id) {
+                            event_handler.handle(data, ui::EventArgs {
+                                //data: &**data,
                                 ui: ui,
                                 event_queue: self,
                             });

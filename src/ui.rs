@@ -21,7 +21,7 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use event::{EventId, EventQueue, EventAddress};
+use event::{EventQueue, EventAddress};
 use widgets::hover::Hover;
 use event::events::*;
 use event::id::*;
@@ -44,37 +44,58 @@ impl InputState {
     }
 }
 
-// special event handler for access to Ui
-pub trait UiEventHandler {
-    fn event_id(&self) -> EventId;
-    fn handle_event(&mut self, args: UiEventArgs);
+pub struct HandlerWrapper {
+    type_id: TypeId,
+    handler: Box<Any>,
+    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, EventArgs)>,
 }
-pub struct UiEventArgs<'a> {
-    pub data: &'a (Any + 'static),
+impl HandlerWrapper {
+    pub fn new<H, E>(handler: H) -> Self
+        where H: EventHandler<E> + 'static,
+              E: 'static
+    {
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: EventArgs| {
+            let event: &E = event.downcast_ref().unwrap();
+            let handler: &mut H = handler.downcast_mut().unwrap();
+            handler.handle(event, args);
+        };
+        HandlerWrapper {
+            type_id: TypeId::of::<E>(),
+            handler: Box::new(handler),
+            handle_fn: Box::new(handle_fn),
+        }
+    }
+    pub fn handles(&self, type_id: TypeId) -> bool {
+        self.type_id == type_id
+    }
+    pub fn handle(&mut self, event: &Box<Any + Send>, args: EventArgs) {
+        (self.handle_fn)(&mut self.handler, event, args);
+    }
+}
+
+pub trait EventHandler<T> {
+    fn handle(&mut self, event: &T, args: EventArgs);
+}
+pub struct EventArgs<'a> {
+    //pub data: &'a (Any + 'static),
     pub ui: &'a mut Ui,
     pub event_queue: &'a mut EventQueue,
 }
 
 pub struct RedrawHandler {}
-impl UiEventHandler for RedrawHandler {
-    fn event_id(&self) -> EventId {
-        REDRAW
-    }
-    fn handle_event(&mut self, args: UiEventArgs) {
+impl EventHandler<Redraw> for RedrawHandler {
+    fn handle(&mut self, _: &Redraw, args: EventArgs) {
         let ui = args.ui;
         ui.dirty_widgets.insert(ui.root_index.unwrap());
     }
 }
 pub struct LayoutHandler {}
-impl UiEventHandler for LayoutHandler {
-    fn event_id(&self) -> EventId {
-        LAYOUT
-    }
-    fn handle_event(&mut self, args: UiEventArgs) {
+impl EventHandler<Layout> for LayoutHandler {
+    fn handle(&mut self, event: &Layout, args: EventArgs) {
         let ui = args.ui;
         {
-            let widget_id = args.data.downcast_ref::<WidgetId>().unwrap();
-            let node_index = ui.find_widget(*widget_id).unwrap();
+            let &Layout(widget_id) = event;//args.data.downcast_ref::<WidgetId>().unwrap();
+            let node_index = ui.find_widget(widget_id).unwrap();
             let ref mut widget = ui.graph[node_index];
             widget.layout.update(&mut ui.solver);
         }
@@ -87,8 +108,8 @@ impl UiEventHandler for LayoutHandler {
     }
 }
 
-pub fn get_default_event_handlers() -> Vec<Box<UiEventHandler>> {
-    vec!{Box::new(RedrawHandler{}), Box::new(LayoutHandler{})}
+pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
+    vec!{HandlerWrapper::new(RedrawHandler{}), HandlerWrapper::new(LayoutHandler{})}
 }
 
 pub struct Ui {

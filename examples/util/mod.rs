@@ -6,7 +6,7 @@ extern crate glutin;
 use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
-use limn::ui::{self, Ui, UiEventHandler};
+use limn::ui::{self, Ui};
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
@@ -36,11 +36,11 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
     resources().images.insert_from_file(&mut window.context.factory, image_path)
 }
 
-pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuilder, mut event_queue: EventQueue, mut ui_event_handlers: Vec<Box<UiEventHandler>>) {
+pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuilder, mut event_queue: EventQueue, mut event_handlers: Vec<ui::HandlerWrapper>) {
     ui.set_root(root_widget);
     ui.resize_window_to_fit(&window);
 
-    ui_event_handlers.append(&mut ui::get_default_event_handlers());
+    event_handlers.append(&mut ui::get_default_event_handlers());
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window.window) {
         match event {
@@ -61,7 +61,7 @@ pub fn set_root_and_loop(mut window: Window, mut ui: Ui, root_widget: WidgetBuil
                     _ => (),
                 }
                 ui.handle_input(event.clone(), &mut event_queue);
-                event_queue.handle_events(&mut ui, &mut ui_event_handlers);
+                event_queue.handle_events(&mut ui, &mut event_handlers);
             }
             WindowEvent::Render => {
                 if ui.dirty_widgets.len() > 0 {
