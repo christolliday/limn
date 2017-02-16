@@ -7,7 +7,7 @@ use resources::WidgetId;
 use widget::Widget;
 use widget::layout::WidgetConstraint;
 use ui::queue::{EventAddress, EventQueue};
-use ui::Layout;
+use ui::LayoutChanged;
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
@@ -100,7 +100,7 @@ impl LimnSolver {
                 }
             }
             for widget_id in widget_ids {
-                self.event_queue.push(EventAddress::Ui, Layout(widget_id));
+                self.event_queue.push(EventAddress::Ui, LayoutChanged(widget_id));
             }
         }
     }

@@ -6,7 +6,8 @@ extern crate glutin;
 use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
-use limn::ui::Ui;
+use limn::ui::{Ui, InputEvent};
+use limn::ui::queue::EventAddress;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
@@ -56,10 +57,12 @@ pub fn set_root_and_loop(mut window: Window,
                         });
                         ui.graph.update_layout();
                     }
-                    _ => (),
+                    Event::Awakened => {}
+                    _ => {
+                        ui.event_queue.push(EventAddress::Ui, InputEvent(event));
+                        ui.handle_events();
+                    },
                 }
-                ui.handle_input(event.clone());
-                ui.handle_events();
             }
             WindowEvent::Render => {
                 if ui.graph.dirty_widgets.len() > 0 {
