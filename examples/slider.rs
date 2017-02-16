@@ -77,5 +77,5 @@ fn main() {
     slider_container.add_child(slider);
     root_widget.add_child(slider_container);
 
-    util::set_root_and_loop(window, ui, root_widget, vec![]);
+    util::set_root_and_loop(window, ui, root_widget);
 }

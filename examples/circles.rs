@@ -139,7 +139,8 @@ fn main() {
     ui.event_queue.change_prop(undo_id, Property::Inactive, true);
     ui.event_queue.change_prop(redo_id, Property::Inactive, true);
 
-    let ui_event_handlers: Vec<ui::HandlerWrapper> =
-        vec![ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id))];
-    util::set_root_and_loop(window, ui, root_widget, ui_event_handlers);
+    let circle_handler = ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id));
+    ui.event_handlers.push(circle_handler);
+
+    util::set_root_and_loop(window, ui, root_widget);
 }

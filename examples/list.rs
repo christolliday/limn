@@ -67,5 +67,5 @@ fn main() {
     scroll_widget.add_child(list_widget);
     root_widget.add_child(scroll_widget);
 
-    util::set_root_and_loop(window, ui, root_widget, vec![]);
+    util::set_root_and_loop(window, ui, root_widget);
 }

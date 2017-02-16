@@ -40,5 +40,5 @@ fn main() {
     root_widget.add_child(text_widget);
     root_widget.add_child(button);
 
-    util::set_root_and_loop(window, ui, root_widget, vec![]);
+    util::set_root_and_loop(window, ui, root_widget);
 }

@@ -6,7 +6,7 @@ extern crate glutin;
 use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
-use limn::ui::{self, Ui};
+use limn::ui::Ui;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
@@ -35,12 +35,10 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
 
 pub fn set_root_and_loop(mut window: Window,
                          mut ui: Ui,
-                         root_widget: WidgetBuilder,
-                         mut event_handlers: Vec<ui::HandlerWrapper>) {
+                         root_widget: WidgetBuilder) {
     ui.graph.set_root(root_widget);
     ui.graph.resize_window_to_fit(&window);
 
-    event_handlers.append(&mut ui::get_default_event_handlers());
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window.window) {
         match event {
@@ -61,7 +59,7 @@ pub fn set_root_and_loop(mut window: Window,
                     _ => (),
                 }
                 ui.graph.handle_input(event.clone(), &mut ui.event_queue);
-                ui.event_queue.handle_events(&mut ui.graph, &mut event_handlers);
+                ui.event_queue.handle_events(&mut ui.graph, &mut ui.event_handlers);
             }
             WindowEvent::Render => {
                 if ui.graph.dirty_widgets.len() > 0 {

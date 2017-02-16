@@ -16,6 +16,7 @@ use resources::WidgetId;
 pub struct Ui {
     pub event_queue: EventQueue,
     pub graph: WidgetGraph,
+    pub event_handlers: Vec<HandlerWrapper>,
 }
 
 impl Ui {
@@ -25,6 +26,7 @@ impl Ui {
         Ui {
             event_queue: event_queue,
             graph: graph,
+            event_handlers: get_default_event_handlers(),
         }
     }
 }

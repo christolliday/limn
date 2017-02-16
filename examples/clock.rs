@@ -131,5 +131,5 @@ fn main() {
     clock.layout.bound_by(&root_widget, Some(50.0));
     root_widget.add_child(clock);
 
-    util::set_root_and_loop(window, ui, root_widget, vec![]);
+    util::set_root_and_loop(window, ui, root_widget);
 }

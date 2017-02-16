@@ -81,5 +81,5 @@ fn main() {
     }
     let root_widget = root_widget.add_handler(CounterHandler::new());
 
-    util::set_root_and_loop(window, ui, root_widget, vec![]);
+    util::set_root_and_loop(window, ui, root_widget);
 }
