@@ -70,7 +70,7 @@ pub enum DragInputEvent {
     MouseMoved(Point),
 }
 
-pub struct DragWidgetPressHandler {}
+pub struct DragWidgetPressHandler;
 impl EventHandler<WidgetMouseButton> for DragWidgetPressHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
         let &WidgetMouseButton(state, _) = event;
@@ -83,14 +83,14 @@ impl EventHandler<WidgetMouseButton> for DragWidgetPressHandler {
         }
     }
 }
-pub struct DragMouseCursorHandler {}
+pub struct DragMouseCursorHandler;
 impl EventHandler<MouseMoved> for DragMouseCursorHandler {
     fn handle(&mut self, event: &MouseMoved, args: EventArgs) {
         args.event_queue.push(EventAddress::Widget(args.widget_id),
                               DragInputEvent::MouseMoved(event.0));
     }
 }
-pub struct DragMouseReleaseHandler {}
+pub struct DragMouseReleaseHandler;
 impl EventHandler<MouseButton> for DragMouseReleaseHandler {
     fn handle(&mut self, event: &MouseButton, args: EventArgs) {
         let &MouseButton(state, _) = event;

@@ -7,7 +7,7 @@ pub struct WidgetChangeProp {
     pub property: Property,
     pub add: bool,
 }
-pub struct WidgetPropsChanged(());
+pub struct WidgetPropsChanged;
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum Property {
@@ -32,7 +32,7 @@ pub mod states {
     }
 }
 
-pub struct PropsChangeEventHandler {}
+pub struct PropsChangeEventHandler;
 impl EventHandler<WidgetChangeProp> for PropsChangeEventHandler {
     fn handle(&mut self, event: &WidgetChangeProp, mut args: EventArgs) {
         let &WidgetChangeProp { ref property, add } = event;
@@ -44,6 +44,6 @@ impl EventHandler<WidgetChangeProp> for PropsChangeEventHandler {
             }
             drawable.apply_style();
         }
-        args.event_queue.push(EventAddress::Widget(args.widget_id), WidgetPropsChanged(()));
+        args.event_queue.push(EventAddress::Widget(args.widget_id), WidgetPropsChanged);
     }
 }

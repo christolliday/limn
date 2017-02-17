@@ -62,7 +62,7 @@ impl WidgetBuilder {
     // common handlers
     pub fn contents_scroll(mut self) -> Self {
         self.contents_scroll = true;
-        self.add_handler(ScrollHandler {})
+        self.add_handler(ScrollHandler)
     }
     pub fn on_click<F>(self, on_click: F) -> Self
         where F: Fn(&WidgetMouseButton, &mut EventArgs) + 'static
@@ -70,18 +70,18 @@ impl WidgetBuilder {
         self.add_handler(ClickHandler::new(on_click))
     }
     pub fn enable_hover(self) -> Self {
-        self.add_handler(HoverHandler {})
+        self.add_handler(HoverHandler)
     }
     pub fn props_may_change(self) -> Self {
-        self.add_handler(PropsChangeEventHandler {})
+        self.add_handler(PropsChangeEventHandler)
     }
     pub fn scrollable(self) -> Self {
         self.add_handler(WidgetScrollHandler::new())
     }
     pub fn draggable(self) -> Self {
-        self.add_handler(DragWidgetPressHandler {})
-            .add_handler(DragMouseCursorHandler {})
-            .add_handler(DragMouseReleaseHandler {})
+        self.add_handler(DragWidgetPressHandler)
+            .add_handler(DragMouseCursorHandler)
+            .add_handler(DragMouseReleaseHandler)
             .add_handler(DragInputHandler::new())
     }
 

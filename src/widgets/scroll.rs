@@ -11,7 +11,7 @@ pub struct WidgetScroll {
     parent_bounds: Rectangle,
 }
 
-pub struct ScrollHandler {}
+pub struct ScrollHandler;
 impl EventHandler<WidgetMouseWheel> for ScrollHandler {
     fn handle(&mut self, event: &WidgetMouseWheel, args: EventArgs) {
         let EventArgs { widget_id, layout, event_queue, .. } = args;

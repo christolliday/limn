@@ -183,7 +183,7 @@ impl HandlerWrapper {
 
 
 pub struct InputEvent(pub glutin::Event);
-pub struct RedrawEvent(());
+pub struct RedrawEvent;
 pub struct LayoutChanged(pub WidgetId);
 
 pub struct InputState {
@@ -199,21 +199,21 @@ impl InputState {
     }
 }
 
-pub struct InputHandler {}
+pub struct InputHandler;
 impl EventHandler<InputEvent> for InputHandler {
     fn handle(&mut self, event: &InputEvent, args: EventArgs) {
         handle_input(event.0.clone(), args);
     }
 }
 
-pub struct RedrawHandler {}
+pub struct RedrawHandler;
 impl EventHandler<RedrawEvent> for RedrawHandler {
     fn handle(&mut self, _: &RedrawEvent, args: EventArgs) {
         let graph = args.graph;
         graph.dirty_widgets.insert(graph.root_index.unwrap());
     }
 }
-pub struct LayoutChangeHandler {}
+pub struct LayoutChangeHandler;
 impl EventHandler<LayoutChanged> for LayoutChangeHandler {
     fn handle(&mut self, event: &LayoutChanged, args: EventArgs) {
         let graph = args.graph;
@@ -224,7 +224,7 @@ impl EventHandler<LayoutChanged> for LayoutChangeHandler {
             widget.layout.update(&mut graph.solver);
         }
         // redraw everything when layout changes, for now
-        args.event_queue.push(EventAddress::Ui, RedrawEvent(()));
+        args.event_queue.push(EventAddress::Ui, RedrawEvent);
         // send new mouse event, in case widget under mouse has shifted
         let mouse = args.input_state.mouse;
         let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
@@ -234,8 +234,8 @@ impl EventHandler<LayoutChanged> for LayoutChangeHandler {
 
 pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
     vec![
-        HandlerWrapper::new(RedrawHandler {}),
-        HandlerWrapper::new(LayoutChangeHandler {}),
-        HandlerWrapper::new(InputHandler {}),
+        HandlerWrapper::new(RedrawHandler),
+        HandlerWrapper::new(LayoutChangeHandler),
+        HandlerWrapper::new(InputHandler),
     ]
 }

@@ -6,7 +6,7 @@ pub enum Hover {
     Out,
 }
 
-pub struct HoverHandler {}
+pub struct HoverHandler;
 impl EventHandler<Hover> for HoverHandler {
     fn handle(&mut self, event: &Hover, mut args: EventArgs) {
         let hover = match *event {

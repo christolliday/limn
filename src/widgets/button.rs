@@ -36,7 +36,7 @@ lazy_static! {
 }
 
 // show whether button is held down or not
-pub struct ButtonDownHandler {}
+pub struct ButtonDownHandler;
 impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
         let &WidgetMouseButton(state, _) = event;
@@ -49,7 +49,7 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
 }
 
 // show whether toggle button is activated
-pub struct ToggleEventHandler {}
+pub struct ToggleEventHandler;
 impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
         let EventArgs { widget_id, event_queue, .. } = args;
@@ -74,9 +74,9 @@ impl ToggleButtonBuilder {
 
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
-            .add_handler(ButtonDownHandler {})
-            .add_handler(ToggleEventHandler {})
-            .add_handler(PropsChangeEventHandler {});
+            .add_handler(ButtonDownHandler)
+            .add_handler(ToggleEventHandler)
+            .add_handler(PropsChangeEventHandler);
         widget.layout.dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
@@ -96,7 +96,7 @@ impl ToggleButtonBuilder {
         let button_text_dims = text::measure(&button_text_drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(button_text_drawable)
-            .add_handler(PropsChangeEventHandler {});
+            .add_handler(PropsChangeEventHandler);
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget);
 
@@ -136,7 +136,7 @@ impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new()
             .set_drawable(primitives::rect_drawable(STYLE_BUTTON.clone()))
-            .add_handler(PropsChangeEventHandler {});
+            .add_handler(PropsChangeEventHandler);
 
         widget.layout.dimensions(Dimensions {
             width: 100.0,
@@ -153,7 +153,7 @@ impl PushButtonBuilder {
         let button_text_dims = text::measure(&drawable);
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable(drawable)
-            .add_handler(PropsChangeEventHandler {});
+            .add_handler(PropsChangeEventHandler);
         button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget);
 
