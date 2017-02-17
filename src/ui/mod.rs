@@ -6,6 +6,7 @@ pub mod layout;
 pub use self::graph::WidgetGraph;
 pub use self::queue::{EventQueue, EventAddress};
 pub use self::event::*;
+use self::layout::LimnSolver;
 
 use petgraph::visit::{Dfs, DfsPostOrder};
 
@@ -24,6 +25,7 @@ use widgets::hover::Hover;
 pub struct Ui {
     pub event_queue: EventQueue,
     pub graph: WidgetGraph,
+    pub solver: LimnSolver,
     pub input_state: InputState,
     pub event_handlers: Vec<HandlerWrapper>,
 }
@@ -31,10 +33,12 @@ pub struct Ui {
 impl Ui {
     pub fn new(window: &mut Window) -> Self {
         let event_queue = EventQueue::new(window);
-        let graph = WidgetGraph::new(window, &event_queue);
+        let graph = WidgetGraph::new(window);
+        let solver = LimnSolver::new(event_queue.clone());
         Ui {
             event_queue: event_queue,
             graph: graph,
+            solver: solver,
             input_state: InputState::new(),
             event_handlers: get_default_event_handlers(),
         }
@@ -47,13 +51,13 @@ impl Ui {
             match event_address {
                 EventAddress::Widget(id) => {
                     if let Some(node_index) = self.graph.find_widget(id) {
-                        self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state);
+                        self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
                     }
                 }
                 EventAddress::Child(id) => {
                     if let Some(node_index) = self.graph.find_widget(id) {
                         if let Some(child_index) = self.graph.children(node_index).next() {
-                            self.graph.trigger_widget_event(child_index, type_id, data, &mut self.event_queue, &self.input_state);
+                            self.graph.trigger_widget_event(child_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
                         }
                     }
                 }
@@ -61,7 +65,7 @@ impl Ui {
                     if let Some(node_index) = self.graph.find_widget(id) {
                         let mut dfs = Dfs::new(&self.graph.graph, node_index);
                         while let Some(node_index) = dfs.next(&self.graph.graph) {
-                            self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state);
+                            self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
                         }
                     }
                 }
@@ -70,7 +74,7 @@ impl Ui {
                     while let Some(node_index) = dfs.next(&self.graph.graph) {
                         let is_mouse_over = self.graph.is_mouse_over(node_index, self.input_state.mouse);
                         if is_mouse_over {
-                            let handled = self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state);
+                            let handled = self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
                             let ref mut widget = self.graph.graph[node_index];
                             self.input_state.last_over.insert(widget.id);
                             // for now just one widget can handle an event, later, just don't send to parents
@@ -88,6 +92,7 @@ impl Ui {
                                 graph: &mut self.graph,
                                 event_queue: &mut self.event_queue,
                                 input_state: &mut self.input_state,
+                                solver: &mut self.solver,
                             };
                             event_handler.handle(data, args);
                         }
@@ -98,7 +103,7 @@ impl Ui {
     }
 }
 pub fn handle_input(event: glutin::Event, args: EventArgs) {
-    let EventArgs { graph, event_queue, input_state } = args;
+    let EventArgs { graph, event_queue, input_state, .. } = args;
     match event {
         glutin::Event::MouseMoved(x, y) => {
             let mouse = Point {
@@ -146,6 +151,7 @@ pub struct EventArgs<'a> {
     pub graph: &'a mut WidgetGraph,
     pub event_queue: &'a mut EventQueue,
     pub input_state: &'a mut InputState,
+    pub solver:&'a mut LimnSolver,
 }
 
 pub trait EventHandler<T> {
@@ -221,7 +227,7 @@ impl EventHandler<LayoutChanged> for LayoutChangeHandler {
             let &LayoutChanged(widget_id) = event;
             let node_index = graph.find_widget(widget_id).unwrap();
             let ref mut widget = graph.graph[node_index];
-            widget.layout.update(&mut graph.solver);
+            widget.layout.update(args.solver);
         }
         // redraw everything when layout changes, for now
         args.event_queue.push(EventAddress::Ui, RedrawEvent);

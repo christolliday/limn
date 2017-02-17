@@ -31,32 +31,30 @@ const DEBUG_BOUNDS: bool = false;
 pub struct WidgetGraph {
     pub graph: StableGraph<Widget, ()>,
     pub root_index: Option<NodeIndex>,
-    pub solver: LimnSolver,
     pub widget_map: HashMap<WidgetId, NodeIndex>,
     pub dirty_widgets: HashSet<NodeIndex>,
     pub glyph_cache: GlyphCache,
 }
 
 impl WidgetGraph {
-    pub fn new(window: &mut Window, event_queue: &EventQueue) -> Self {
+    pub fn new(window: &mut Window) -> Self {
         WidgetGraph {
             graph: StableGraph::<Widget, ()>::new(),
             root_index: None,
-            solver: LimnSolver::new(event_queue.clone()),
             widget_map: HashMap::new(),
             dirty_widgets: HashSet::new(),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
         }
     }
-    pub fn resize_window_to_fit(&mut self, window: &Window) {
-        let window_dims = self.get_root_dims();
+    pub fn resize_window_to_fit(&mut self, window: &Window, solver: &mut LimnSolver) {
+        let window_dims = self.get_root_dims(solver);
         window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
-    pub fn set_root(&mut self, mut root_widget: WidgetBuilder) {
+    pub fn set_root(&mut self, mut root_widget: WidgetBuilder, solver: &mut LimnSolver) {
         root_widget.layout.top_left(Point { x: 0.0, y: 0.0 }, None);
-        self.root_index = Some(self.add_widget(root_widget, None));
+        self.root_index = Some(self.add_widget(root_widget, None, solver));
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
-        self.solver.update_solver(|solver| {
+        solver.update_solver(|solver| {
             solver.add_edit_variable(root.layout.right, STRONG).unwrap();
             solver.add_edit_variable(root.layout.bottom, STRONG).unwrap();
         });
@@ -64,15 +62,15 @@ impl WidgetGraph {
     pub fn get_root(&mut self) -> &Widget {
         &self.graph[self.root_index.unwrap()]
     }
-    pub fn get_root_dims(&mut self) -> Dimensions {
+    pub fn get_root_dims(&mut self, solver: &mut LimnSolver) -> Dimensions {
         let ref mut root = &mut self.graph[self.root_index.unwrap()];
-        root.layout.update(&mut self.solver);
+        root.layout.update(solver);
         root.layout.get_dims()
     }
-    pub fn window_resized(&mut self, window_dims: Dimensions) {
+    pub fn window_resized(&mut self, window_dims: Dimensions, solver: &mut LimnSolver) {
         let ref mut root = self.graph[self.root_index.unwrap()];
-        root.layout.update(&mut self.solver);
-        self.solver.update_solver(|solver| {
+        root.layout.update(solver);
+        solver.update_solver(|solver| {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
             solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
         });
@@ -85,11 +83,11 @@ impl WidgetGraph {
         self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
-    pub fn update_layout(&mut self) {
+    pub fn update_layout(&mut self, solver: &mut LimnSolver) {
         let mut dfs = Dfs::new(&self.graph, self.root_index.unwrap());
         while let Some(node_index) = dfs.next(&self.graph) {
             let ref mut widget = self.graph[node_index];
-            widget.layout.update(&mut self.solver);
+            widget.layout.update(solver);
         }
     }
     pub fn draw_node(&mut self,
@@ -138,11 +136,12 @@ impl WidgetGraph {
     }
     pub fn add_widget(&mut self,
                       widget: WidgetBuilder,
-                      parent_index: Option<NodeIndex>)
+                      parent_index: Option<NodeIndex>,
+                      solver: &mut LimnSolver)
                       -> NodeIndex {
 
         let (children, constraints, widget) = widget.build();
-        self.solver.add_widget(&widget, constraints);
+        solver.add_widget(&widget, constraints);
 
         let id = widget.id;
         let widget_index = self.graph.add_node(widget);
@@ -152,16 +151,16 @@ impl WidgetGraph {
         self.widget_map.insert(id, widget_index);
         self.dirty_widgets.insert(widget_index);
         for child in children {
-            self.add_widget(child, Some(widget_index));
+            self.add_widget(child, Some(widget_index), solver);
         }
         widget_index
     }
 
-    pub fn remove_widget(&mut self, widget_id: WidgetId) {
+    pub fn remove_widget(&mut self, widget_id: WidgetId, solver: &mut LimnSolver) {
         if let Some(node_index) = self.find_widget(widget_id) {
             self.graph.remove_node(node_index);
             self.dirty_widgets.insert(self.root_index.unwrap());
-            self.solver.remove_widget(&widget_id);
+            solver.remove_widget(&widget_id);
         }
     }
     pub fn get_widget(&self, widget_id: WidgetId) -> Option<&Widget> {
@@ -184,13 +183,14 @@ impl WidgetGraph {
                                 type_id: TypeId,
                                 data: &Box<Any + Send>,
                                 event_queue: &mut EventQueue,
-                                input_state: &InputState)
+                                input_state: &InputState,
+                                solver: &mut LimnSolver)
                                 -> bool {
         let ref mut widget = self.graph[node_index];
         let handled = widget.trigger_event(type_id,
                                            data,
                                            event_queue,
-                                           &mut self.solver,
+                                           solver,
                                            input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {

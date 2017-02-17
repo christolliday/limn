@@ -37,8 +37,8 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
 pub fn set_root_and_loop(mut window: Window,
                          mut ui: Ui,
                          root_widget: WidgetBuilder) {
-    ui.graph.set_root(root_widget);
-    ui.graph.resize_window_to_fit(&window);
+    ui.graph.set_root(root_widget, &mut ui.solver);
+    ui.graph.resize_window_to_fit(&window, &mut ui.solver);
 
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window.window) {
@@ -54,8 +54,8 @@ pub fn set_root_and_loop(mut window: Window,
                         ui.graph.window_resized(Dimensions {
                             width: width as f64,
                             height: height as f64,
-                        });
-                        ui.graph.update_layout();
+                        }, &mut ui.solver);
+                        ui.graph.update_layout(&mut ui.solver);
                     }
                     Event::Awakened => {}
                     _ => {
