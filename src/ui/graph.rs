@@ -4,7 +4,7 @@ use std::any::{Any, TypeId};
 
 use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::Dfs;
+use petgraph::visit::{Dfs, DfsPostOrder};
 use petgraph::Direction;
 use petgraph::stable_graph::Neighbors;
 
@@ -29,7 +29,7 @@ use super::InputState;
 const DEBUG_BOUNDS: bool = false;
 
 pub struct WidgetGraph {
-    pub graph: StableGraph<Widget, ()>,
+    graph: StableGraph<Widget, ()>,
     pub root_index: Option<NodeIndex>,
     pub widget_map: HashMap<WidgetId, NodeIndex>,
     pub dirty_widgets: HashSet<NodeIndex>,
@@ -163,7 +163,7 @@ impl WidgetGraph {
             solver.remove_widget(&widget_id);
         }
     }
-    pub fn get_widget(&self, widget_id: WidgetId) -> Option<&Widget> {
+    pub fn get_widget(&self, widget_id: WidgetId) -> Option<&mut Widget> {
         self.widget_map.get(&widget_id).and_then(|node_index| {
             let ref widget = self.graph[NodeIndex::new(node_index.index())];
             return Some(widget);
@@ -176,6 +176,9 @@ impl WidgetGraph {
     }
     pub fn find_widget(&mut self, widget_id: WidgetId) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
+    }
+    pub fn get_widget_index(&mut self, index: NodeIndex) -> Option<&Widget> {
+        self.graph.node_weight(index)
     }
 
     pub fn trigger_widget_event(&mut self,
@@ -199,5 +202,33 @@ impl WidgetGraph {
             }
         }
         handled
+    }
+
+    pub fn handle_subtree_event(&mut self, id: WidgetId, type_id: TypeId, data: &Box<Any + Send>, event_queue: &mut EventQueue, input_state: &InputState,
+                                solver: &mut LimnSolver) {
+        if let Some(node_index) = self.find_widget(id) {
+            let mut dfs = Dfs::new(&self.graph, node_index);
+            while let Some(node_index) = dfs.next(&self.graph) {
+                self.trigger_widget_event(node_index, type_id, data, event_queue, input_state, solver);
+            }
+        }
+    }
+
+    pub fn handle_undermouse_event(&mut self, type_id: TypeId, data: &Box<Any + Send>, event_queue: &mut EventQueue, input_state: &mut InputState,
+                                solver: &mut LimnSolver) {
+        let mut dfs = DfsPostOrder::new(&self.graph, self.root_index.unwrap());
+        while let Some(node_index) = dfs.next(&self.graph) {
+            let is_mouse_over = self.is_mouse_over(node_index, input_state.mouse);
+            if is_mouse_over {
+                let handled = self.trigger_widget_event(node_index, type_id, data, event_queue, input_state, solver);
+                let ref mut widget = self.graph[node_index];
+                input_state.last_over.insert(widget.id);
+                // for now just one widget can handle an event, later, just don't send to parents
+                // not no other widgets
+                if handled {
+                    return;
+                }
+            }
+        }
     }
 }

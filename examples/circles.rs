@@ -13,7 +13,8 @@ use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::primitives;
 use limn::widget::property::Property;
 use limn::ui::queue::EventAddress;
-use limn::ui::{self, WidgetGraph};
+use limn::ui::LimnSolver;
+use limn::ui::{self, WidgetGraph, Ui};
 use limn::util::{Dimensions, Point};
 use limn::resources::WidgetId;
 use limn::color::*;
@@ -52,7 +53,7 @@ fn main() {
         (undo_id, redo_id)
     }
 
-    fn create_circle(graph: &mut WidgetGraph, center: &Point) -> WidgetId {
+    fn create_circle(graph: &mut WidgetGraph, solver: &mut LimnSolver, center: &Point) -> WidgetId {
         let border = graphics::ellipse::Border {
             color: BLACK,
             radius: 2.0,
@@ -71,7 +72,7 @@ fn main() {
         widget.layout.top_left(top_left, Some(STRONG));
         let id = widget.id;
         let root_index = graph.root_index.unwrap();
-        graph.add_widget(widget, Some(root_index));
+        graph.add_widget(widget, Some(root_index), solver);
         id
     }
 
@@ -95,7 +96,7 @@ fn main() {
         fn handle(&mut self, event: &CircleEvent, args: ui::EventArgs) {
             match *event {
                 CircleEvent::Add(point) => {
-                    self.circles.push((point, create_circle(args.graph, &point)));
+                    self.circles.push((point, create_circle(args.graph, args.solver, &point)));
                     self.undo.clear();
 
                     args.event_queue.change_prop(self.undo_id, Property::Inactive, false);
@@ -104,7 +105,7 @@ fn main() {
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
                         let (point, node_index) = self.circles.pop().unwrap();
-                        args.graph.remove_widget(node_index);
+                        args.graph.remove_widget(node_index, args.solver);
                         self.undo.push(point);
                         args.event_queue.change_prop(self.redo_id, Property::Inactive, false);
                         if self.circles.len() == 0 {
@@ -115,7 +116,7 @@ fn main() {
                 CircleEvent::Redo => {
                     if self.undo.len() > 0 {
                         let point = self.undo.pop().unwrap();
-                        self.circles.push((point, create_circle(args.graph, &point)));
+                        self.circles.push((point, create_circle(args.graph, args.solver, &point)));
                         if self.undo.len() == 0 {
                             args.event_queue.change_prop(self.redo_id, Property::Inactive, true);
                         }

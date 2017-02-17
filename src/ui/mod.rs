@@ -6,9 +6,7 @@ pub mod layout;
 pub use self::graph::WidgetGraph;
 pub use self::queue::{EventQueue, EventAddress};
 pub use self::event::*;
-use self::layout::LimnSolver;
-
-use petgraph::visit::{Dfs, DfsPostOrder};
+pub use self::layout::LimnSolver;
 
 use backend::Window;
 
@@ -62,28 +60,10 @@ impl Ui {
                     }
                 }
                 EventAddress::SubTree(id) => {
-                    if let Some(node_index) = self.graph.find_widget(id) {
-                        let mut dfs = Dfs::new(&self.graph.graph, node_index);
-                        while let Some(node_index) = dfs.next(&self.graph.graph) {
-                            self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
-                        }
-                    }
+                    self.graph.handle_subtree_event(id, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
                 }
                 EventAddress::UnderMouse => {
-                    let mut dfs = DfsPostOrder::new(&self.graph.graph, self.graph.root_index.unwrap());
-                    while let Some(node_index) = dfs.next(&self.graph.graph) {
-                        let is_mouse_over = self.graph.is_mouse_over(node_index, self.input_state.mouse);
-                        if is_mouse_over {
-                            let handled = self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
-                            let ref mut widget = self.graph.graph[node_index];
-                            self.input_state.last_over.insert(widget.id);
-                            // for now just one widget can handle an event, later, just don't send to parents
-                            // not no other widgets
-                            if handled {
-                                return;
-                            }
-                        }
-                    }
+                    self.graph.handle_undermouse_event(type_id, data, &mut self.event_queue, &mut self.input_state, &mut self.solver);
                 }
                 EventAddress::Ui => {
                     for event_handler in self.event_handlers.iter_mut() {
@@ -115,8 +95,7 @@ pub fn handle_input(event: glutin::Event, args: EventArgs) {
             for last_over in last_over {
                 let last_over = last_over.clone();
                 if let Some(last_index) = graph.find_widget(last_over) {
-                    if graph.graph.contains_node(last_index) {
-                        let ref mut widget = graph.graph[last_index];
+                    if let Some(widget) = graph.get_widget_index(last_index) {
                         if !widget.is_mouse_over(input_state.mouse) {
                             event_queue.push(EventAddress::Widget(last_over), Hover::Out);
                             input_state.last_over.remove(&last_over);
@@ -128,7 +107,7 @@ pub fn handle_input(event: glutin::Event, args: EventArgs) {
         }
         _ => (),
     }
-    let ref root_widget = graph.graph[graph.root_index.unwrap()];
+    let ref root_widget = graph.get_root();
     let all_widgets = EventAddress::SubTree(root_widget.id);
     match event {
         glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
@@ -225,9 +204,9 @@ impl EventHandler<LayoutChanged> for LayoutChangeHandler {
         let graph = args.graph;
         {
             let &LayoutChanged(widget_id) = event;
-            let node_index = graph.find_widget(widget_id).unwrap();
-            let ref mut widget = graph.graph[node_index];
-            widget.layout.update(args.solver);
+            if let Some(widget) = graph.get_widget(widget_id) {
+                widget.layout.update(args.solver);
+            }
         }
         // redraw everything when layout changes, for now
         args.event_queue.push(EventAddress::Ui, RedrawEvent);
