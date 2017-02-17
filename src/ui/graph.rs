@@ -8,8 +8,6 @@ use petgraph::visit::Dfs;
 use petgraph::Direction;
 use petgraph::stable_graph::Neighbors;
 
-use glutin;
-
 use cassowary::strength::*;
 
 use graphics::Context;
@@ -20,13 +18,12 @@ use backend::window::Window;
 
 use widget::Widget;
 use widget::builder::WidgetBuilder;
-use widgets::hover::Hover;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
 use color::*;
 
 use super::layout::LimnSolver;
-use super::queue::{EventAddress, EventQueue};
+use super::queue::EventQueue;
 use super::InputState;
 
 const DEBUG_BOUNDS: bool = false;

@@ -12,7 +12,7 @@ use graphics::types::Color;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use ui::queue::{EventAddress, EventQueue};
+use ui::queue::EventQueue;
 use resources::WidgetId;
 use ui::layout::LimnSolver;
 use util::{self, Point, Rectangle};
