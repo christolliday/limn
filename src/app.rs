@@ -48,10 +48,8 @@ impl App {
                     for event_handler in self.event_handlers.iter_mut() {
                         if event_handler.handles(type_id) {
                             let args = EventArgs {
-                                graph: &mut self.ui.graph,
+                                ui: &mut self.ui,
                                 event_queue: &mut self.event_queue,
-                                input_state: &mut self.ui.input_state,
-                                solver: &mut self.ui.solver,
                             };
                             event_handler.handle(data, args);
                         }

@@ -36,56 +36,72 @@ impl Ui {
             input_state: InputState::new(),
         }
     }
-}
-pub fn handle_input(event: glutin::Event, args: EventArgs) {
-    let EventArgs { graph, event_queue, input_state, .. } = args;
-    match event {
-        glutin::Event::MouseMoved(x, y) => {
-            let mouse = Point {
-                x: x as f64,
-                y: y as f64,
-            };
-            input_state.mouse = mouse;
-            let last_over = input_state.last_over.clone();
-            for last_over in last_over {
-                let last_over = last_over.clone();
-                if let Some(last_index) = graph.find_widget(last_over) {
-                    if let Some(widget) = graph.get_widget_index(last_index) {
-                        if !widget.is_mouse_over(input_state.mouse) {
-                            event_queue.push(EventAddress::Widget(last_over), Hover::Out);
-                            input_state.last_over.remove(&last_over);
+
+    pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
+        match event {
+            glutin::Event::MouseMoved(x, y) => {
+                let mouse = Point {
+                    x: x as f64,
+                    y: y as f64,
+                };
+                self.input_state.mouse = mouse;
+                let last_over = self.input_state.last_over.clone();
+                for last_over in last_over {
+                    let last_over = last_over.clone();
+                    if let Some(last_index) = self.graph.find_widget(last_over) {
+                        if let Some(widget) = self.graph.get_widget_index(last_index) {
+                            if !widget.is_mouse_over(self.input_state.mouse) {
+                                event_queue.push(EventAddress::Widget(last_over), Hover::Out);
+                                self.input_state.last_over.remove(&last_over);
+                            }
                         }
                     }
                 }
+                event_queue.push(EventAddress::UnderMouse, Hover::Over);
             }
-            event_queue.push(EventAddress::UnderMouse, Hover::Over);
+            _ => (),
         }
-        _ => (),
+        let ref root_widget = self.graph.get_root();
+        let all_widgets = EventAddress::SubTree(root_widget.id);
+        match event {
+            glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
+                event_queue.push(EventAddress::UnderMouse,
+                                WidgetMouseWheel(mouse_scroll_delta));
+                event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
+            }
+            glutin::Event::MouseInput(state, button) => {
+                event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
+                event_queue.push(all_widgets, MouseButton(state, button));
+            }
+            glutin::Event::MouseMoved(x, y) => {
+                event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
+            }
+            _ => (),
+        }
     }
-    let ref root_widget = graph.get_root();
-    let all_widgets = EventAddress::SubTree(root_widget.id);
-    match event {
-        glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-            event_queue.push(EventAddress::UnderMouse,
-                             WidgetMouseWheel(mouse_scroll_delta));
-            event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
+
+    pub fn layout_changed(&mut self, event: &LayoutChanged, event_queue: &mut EventQueue) {
+        {
+            let &LayoutChanged(widget_id) = event;
+            if let Some(widget) = self.graph.get_widget(widget_id) {
+                widget.layout.update(&mut self.solver);
+            }
         }
-        glutin::Event::MouseInput(state, button) => {
-            event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
-            event_queue.push(all_widgets, MouseButton(state, button));
-        }
-        glutin::Event::MouseMoved(x, y) => {
-            event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
-        }
-        _ => (),
+        // redraw everything when layout changes, for now
+        event_queue.push(EventAddress::Ui, RedrawEvent);
+        // send new mouse event, in case widget under mouse has shifted
+        let mouse = self.input_state.mouse;
+        let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
+        event_queue.push(EventAddress::Ui, InputEvent(event));
+    }
+    pub fn redraw(&mut self) {
+        self.graph.dirty_widgets.insert(self.graph.root_index.unwrap());
     }
 }
 
 pub struct EventArgs<'a> {
-    pub graph: &'a mut WidgetGraph,
+    pub ui: &'a mut Ui,
     pub event_queue: &'a mut EventQueue,
-    pub input_state: &'a mut InputState,
-    pub solver:&'a mut LimnSolver,
 }
 
 pub trait EventHandler<T> {
@@ -141,34 +157,21 @@ impl InputState {
 
 pub struct InputHandler;
 impl EventHandler<InputEvent> for InputHandler {
-    fn handle(&mut self, event: &InputEvent, args: EventArgs) {
-        handle_input(event.0.clone(), args);
+    fn handle(&mut self, event: &InputEvent, mut args: EventArgs) {
+        args.ui.handle_input(event.0.clone(), &mut args.event_queue);
     }
 }
 
 pub struct RedrawHandler;
 impl EventHandler<RedrawEvent> for RedrawHandler {
     fn handle(&mut self, _: &RedrawEvent, args: EventArgs) {
-        let graph = args.graph;
-        graph.dirty_widgets.insert(graph.root_index.unwrap());
+        args.ui.redraw();
     }
 }
 pub struct LayoutChangeHandler;
 impl EventHandler<LayoutChanged> for LayoutChangeHandler {
     fn handle(&mut self, event: &LayoutChanged, args: EventArgs) {
-        let graph = args.graph;
-        {
-            let &LayoutChanged(widget_id) = event;
-            if let Some(widget) = graph.get_widget(widget_id) {
-                widget.layout.update(args.solver);
-            }
-        }
-        // redraw everything when layout changes, for now
-        args.event_queue.push(EventAddress::Ui, RedrawEvent);
-        // send new mouse event, in case widget under mouse has shifted
-        let mouse = args.input_state.mouse;
-        let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
-        args.event_queue.push(EventAddress::Ui, InputEvent(event));
+        args.ui.layout_changed(event, args.event_queue);
     }
 }
 
