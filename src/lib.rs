@@ -13,6 +13,7 @@ extern crate linked_hash_map;
 #[macro_use]
 extern crate maplit;
 
+pub mod app;
 pub mod widget;
 pub mod widgets;
 pub mod ui;

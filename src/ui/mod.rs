@@ -21,64 +21,19 @@ use resources::WidgetId;
 use widgets::hover::Hover;
 
 pub struct Ui {
-    pub event_queue: EventQueue,
     pub graph: WidgetGraph,
     pub solver: LimnSolver,
     pub input_state: InputState,
-    pub event_handlers: Vec<HandlerWrapper>,
 }
 
 impl Ui {
-    pub fn new(window: &mut Window) -> Self {
-        let event_queue = EventQueue::new(window);
+    pub fn new(window: &mut Window, event_queue: &EventQueue) -> Self {
         let graph = WidgetGraph::new(window);
         let solver = LimnSolver::new(event_queue.clone());
         Ui {
-            event_queue: event_queue,
             graph: graph,
             solver: solver,
             input_state: InputState::new(),
-            event_handlers: get_default_event_handlers(),
-        }
-    }
-
-    pub fn handle_events(&mut self) {
-        while !self.event_queue.is_empty() {
-            let (event_address, type_id, data) = self.event_queue.next();
-            let data = &data;
-            match event_address {
-                EventAddress::Widget(id) => {
-                    if let Some(node_index) = self.graph.find_widget(id) {
-                        self.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
-                    }
-                }
-                EventAddress::Child(id) => {
-                    if let Some(node_index) = self.graph.find_widget(id) {
-                        if let Some(child_index) = self.graph.children(node_index).next() {
-                            self.graph.trigger_widget_event(child_index, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
-                        }
-                    }
-                }
-                EventAddress::SubTree(id) => {
-                    self.graph.handle_subtree_event(id, type_id, data, &mut self.event_queue, &self.input_state, &mut self.solver);
-                }
-                EventAddress::UnderMouse => {
-                    self.graph.handle_undermouse_event(type_id, data, &mut self.event_queue, &mut self.input_state, &mut self.solver);
-                }
-                EventAddress::Ui => {
-                    for event_handler in self.event_handlers.iter_mut() {
-                        if event_handler.handles(type_id) {
-                            let args = EventArgs {
-                                graph: &mut self.graph,
-                                event_queue: &mut self.event_queue,
-                                input_state: &mut self.input_state,
-                                solver: &mut self.solver,
-                            };
-                            event_handler.handle(data, args);
-                        }
-                    }
-                }
-            }
         }
     }
 }

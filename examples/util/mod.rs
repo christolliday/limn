@@ -6,17 +6,18 @@ extern crate glutin;
 use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
+use limn::app::App;
 use limn::ui::{Ui, InputEvent};
 use limn::ui::queue::EventAddress;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
 
-pub fn init_default(title: &str) -> (Window, Ui) {
+pub fn init_default(title: &str) -> (Window, App) {
     let window_dims = (100, 100);
     let mut window = Window::new(title, window_dims, Some(window_dims));
-    let ui = Ui::new(&mut window);
-    (window, ui)
+    let app = App::new(&mut window);
+    (window, app)
 }
 
 #[allow(dead_code)]
@@ -35,10 +36,11 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
 }
 
 pub fn set_root_and_loop(mut window: Window,
-                         mut ui: Ui,
+                         mut app: App,
                          root_widget: WidgetBuilder) {
-    ui.graph.set_root(root_widget, &mut ui.solver);
-    ui.graph.resize_window_to_fit(&window, &mut ui.solver);
+
+    app.ui.graph.set_root(root_widget, &mut app.ui.solver);
+    app.ui.graph.resize_window_to_fit(&window, &mut app.ui.solver);
 
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window.window) {
@@ -51,26 +53,26 @@ pub fn set_root_and_loop(mut window: Window,
                     }
                     Event::Resized(width, height) => {
                         window.window_resized();
-                        ui.graph.window_resized(Dimensions {
+                        app.ui.graph.window_resized(Dimensions {
                             width: width as f64,
                             height: height as f64,
-                        }, &mut ui.solver);
-                        ui.graph.update_layout(&mut ui.solver);
+                        }, &mut app.ui.solver);
+                        app.ui.graph.update_layout(&mut app.ui.solver);
                     }
                     Event::Awakened => {}
                     _ => {
-                        ui.event_queue.push(EventAddress::Ui, InputEvent(event));
-                        ui.handle_events();
+                        app.event_queue.push(EventAddress::Ui, InputEvent(event));
+                        app.handle_events();
                     },
                 }
             }
             WindowEvent::Render => {
-                if ui.graph.dirty_widgets.len() > 0 {
+                if app.ui.graph.dirty_widgets.len() > 0 {
                     window.draw_2d(|context, graphics| {
                         graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                        ui.graph.draw(context, graphics);
+                        app.ui.graph.draw(context, graphics);
                     });
-                    ui.graph.dirty_widgets.clear();
+                    app.ui.graph.dirty_widgets.clear();
                 }
             }
         }
