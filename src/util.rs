@@ -1,4 +1,5 @@
 use std::ops::{Mul, Div, Add, Sub};
+use std::f64;
 
 use rusttype;
 use graphics::{self, Context};
@@ -96,6 +97,14 @@ impl Point {
     pub fn new(x: f64, y: f64) -> Self {
         Point { x: x, y: y }
     }
+    pub fn zero() -> Self {
+        Point { x: 0.0, y: 0.0 }
+    }
+}
+impl Dimensions {
+    pub fn max() -> Self {
+        Dimensions { width: f64::MAX, height: f64::MAX }
+    }
 }
 impl Rectangle {
     pub fn new(left: Scalar, top: Scalar, width: Scalar, height: Scalar) -> Self {
@@ -104,6 +113,14 @@ impl Rectangle {
             top: top,
             width: width,
             height: height,
+        }
+    }
+    pub fn new_from_pos_dim(point: Point, dims: Dimensions) -> Self {
+        Rectangle {
+            left: point.x,
+            top: point.y,
+            width: dims.width,
+            height: dims.height,
         }
     }
     pub fn new_empty() -> Self {

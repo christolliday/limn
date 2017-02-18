@@ -1,5 +1,3 @@
-use graphics;
-
 use backend::Window;
 
 use ui::{self, Ui};
@@ -24,13 +22,7 @@ impl App {
     }
 
     pub fn render(&mut self, window: &mut Window) {
-        if self.ui.graph.dirty_widgets.len() > 0 {
-            window.draw_2d(|context, graphics| {
-                graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                self.ui.graph.draw(context, graphics);
-            });
-            self.ui.graph.dirty_widgets.clear();
-        }
+        self.ui.graph.draw_if_needed(window);
     }
 
     pub fn handle_events(&mut self) {
@@ -38,24 +30,6 @@ impl App {
             let (event_address, type_id, data) = self.event_queue.next();
             let data = &data;
             match event_address {
-                EventAddress::Widget(id) => {
-                    if let Some(node_index) = self.ui.graph.find_widget(id) {
-                        self.ui.graph.trigger_widget_event(node_index, type_id, data, &mut self.event_queue, &self.ui.input_state, &mut self.ui.solver);
-                    }
-                }
-                EventAddress::Child(id) => {
-                    if let Some(node_index) = self.ui.graph.find_widget(id) {
-                        if let Some(child_index) = self.ui.graph.children(node_index).next() {
-                            self.ui.graph.trigger_widget_event(child_index, type_id, data, &mut self.event_queue, &self.ui.input_state, &mut self.ui.solver);
-                        }
-                    }
-                }
-                EventAddress::SubTree(id) => {
-                    self.ui.graph.handle_subtree_event(id, type_id, data, &mut self.event_queue, &self.ui.input_state, &mut self.ui.solver);
-                }
-                EventAddress::UnderMouse => {
-                    self.ui.graph.handle_undermouse_event(type_id, data, &mut self.event_queue, &mut self.ui.input_state, &mut self.ui.solver);
-                }
                 EventAddress::Ui => {
                     for event_handler in self.event_handlers.iter_mut() {
                         if event_handler.handles(type_id) {
@@ -66,6 +40,9 @@ impl App {
                             event_handler.handle(data, args);
                         }
                     }
+                }
+                _ => {
+                    self.ui.graph.handle_event(event_address, type_id, data, &mut self.event_queue, &mut self.ui.input_state, &mut self.ui.solver);
                 }
             }
         }

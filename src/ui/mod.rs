@@ -53,13 +53,10 @@ impl Ui {
                 self.input_state.mouse = mouse;
                 let last_over = self.input_state.last_over.clone();
                 for last_over in last_over {
-                    let last_over = last_over.clone();
-                    if let Some(last_index) = self.graph.find_widget(last_over) {
-                        if let Some(widget) = self.graph.get_widget_index(last_index) {
-                            if !widget.is_mouse_over(self.input_state.mouse) {
-                                event_queue.push(EventAddress::Widget(last_over), Hover::Out);
-                                self.input_state.last_over.remove(&last_over);
-                            }
+                    if let Some(widget) = self.graph.get_widget(last_over) {
+                        if !widget.is_mouse_over(self.input_state.mouse) {
+                            event_queue.push(EventAddress::Widget(last_over), Hover::Out);
+                            self.input_state.last_over.remove(&last_over);
                         }
                     }
                 }
@@ -99,9 +96,6 @@ impl Ui {
         let mouse = self.input_state.mouse;
         let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
         event_queue.push(EventAddress::Ui, InputEvent(event));
-    }
-    pub fn redraw(&mut self) {
-        self.graph.dirty_widgets.insert(self.graph.root_index.unwrap());
     }
 }
 
@@ -171,7 +165,7 @@ impl EventHandler<InputEvent> for InputHandler {
 pub struct RedrawHandler;
 impl EventHandler<RedrawEvent> for RedrawHandler {
     fn handle(&mut self, _: &RedrawEvent, args: EventArgs) {
-        args.ui.redraw();
+        args.ui.graph.redraw();
     }
 }
 pub struct LayoutChangeHandler;
