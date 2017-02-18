@@ -19,6 +19,7 @@ use util::Point;
 use resources::WidgetId;
 
 use widgets::hover::Hover;
+use widget::WidgetBuilder;
 
 pub struct Ui {
     pub graph: WidgetGraph,
@@ -35,6 +36,11 @@ impl Ui {
             solver: solver,
             input_state: InputState::new(),
         }
+    }
+
+    pub fn set_root(&mut self, root_widget: WidgetBuilder, window: &mut Window) {
+        self.graph.set_root(root_widget, &mut self.solver);
+        self.graph.resize_window_to_fit(&window, &mut self.solver);
     }
 
     pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {

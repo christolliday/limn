@@ -22,6 +22,8 @@ use self::property::PropSet;
 use self::layout::LayoutVars;
 use self::drawable::Drawable;
 
+pub use self::builder::WidgetBuilder;
+
 // allows event handlers to communicate with event dispatcher
 pub struct EventState {
     pub handled: bool,

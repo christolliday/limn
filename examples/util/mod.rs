@@ -7,7 +7,7 @@ use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
 use limn::app::App;
-use limn::ui::{Ui, InputEvent};
+use limn::ui::InputEvent;
 use limn::ui::queue::EventAddress;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
@@ -39,8 +39,7 @@ pub fn set_root_and_loop(mut window: Window,
                          mut app: App,
                          root_widget: WidgetBuilder) {
 
-    app.ui.graph.set_root(root_widget, &mut app.ui.solver);
-    app.ui.graph.resize_window_to_fit(&window, &mut app.ui.solver);
+    app.ui.set_root(root_widget, &mut window);
 
     let mut events = WindowEvents::new();
     while let Some(event) = events.next(&mut window.window) {
@@ -67,13 +66,7 @@ pub fn set_root_and_loop(mut window: Window,
                 }
             }
             WindowEvent::Render => {
-                if app.ui.graph.dirty_widgets.len() > 0 {
-                    window.draw_2d(|context, graphics| {
-                        graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                        app.ui.graph.draw(context, graphics);
-                    });
-                    app.ui.graph.dirty_widgets.clear();
-                }
+                app.render(&mut window);
             }
         }
     }

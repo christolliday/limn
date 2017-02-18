@@ -1,3 +1,5 @@
+use graphics;
+
 use backend::Window;
 
 use ui::{self, Ui};
@@ -18,6 +20,16 @@ impl App {
             ui: ui,
             event_queue: event_queue,
             event_handlers: ui::get_default_event_handlers(),
+        }
+    }
+
+    pub fn render(&mut self, window: &mut Window) {
+        if self.ui.graph.dirty_widgets.len() > 0 {
+            window.draw_2d(|context, graphics| {
+                graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
+                self.ui.graph.draw(context, graphics);
+            });
+            self.ui.graph.dirty_widgets.clear();
         }
     }
 
