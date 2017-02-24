@@ -57,6 +57,7 @@ pub fn set_root_and_loop(mut window: Window,
                             height: height as f64,
                         }, &mut app.ui.solver);
                         app.ui.graph.update_layout(&mut app.ui.solver);
+                        events.update();
                     }
                     Event::Awakened => {}
                     _ => {

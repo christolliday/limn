@@ -34,7 +34,7 @@ pub struct WidgetGraph {
     graph: StableGraph<Widget, ()>,
     pub root_id: WidgetId,
     widget_map: HashMap<WidgetId, NodeIndex>,
-    dirty_widgets: HashSet<WidgetId>,
+    redraw: u32,
     glyph_cache: GlyphCache,
 }
 
@@ -44,7 +44,7 @@ impl WidgetGraph {
             graph: StableGraph::<Widget, ()>::new(),
             root_id: resources().widget_id(),
             widget_map: HashMap::new(),
-            dirty_widgets: HashSet::new(),
+            redraw: 2,
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
         }
     }
@@ -83,7 +83,7 @@ impl WidgetGraph {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
             solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
         });
-        self.dirty_widgets.insert(self.root_id);
+        self.redraw = 2;
     }
     pub fn parents(&mut self, node_index: NodeIndex) -> Neighbors<()> {
         self.graph.neighbors_directed(node_index, Direction::Incoming)
@@ -100,15 +100,15 @@ impl WidgetGraph {
         }
     }
     pub fn redraw(&mut self) {
-        self.dirty_widgets.insert(self.root_id);
+        self.redraw = 2;
     }
     pub fn draw_if_needed(&mut self, window: &mut Window) {
-        if self.dirty_widgets.len() > 0 {
+        if self.redraw > 0 {
             window.draw_2d(|context, graphics| {
                 graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
                 self.draw(context, graphics);
             });
-            self.dirty_widgets.clear();
+            self.redraw -= 1;
         }
     }
     pub fn draw(&mut self, context: Context, graphics: &mut G2d) {
@@ -163,7 +163,7 @@ impl WidgetGraph {
             self.graph.add_edge(parent_index, widget_index, ());
         }
         self.widget_map.insert(id, widget_index);
-        self.dirty_widgets.insert(id);
+        self.redraw();
         for child in children {
             self.add_widget(child, Some(widget_index), solver);
         }
@@ -173,7 +173,7 @@ impl WidgetGraph {
     pub fn remove_widget(&mut self, widget_id: WidgetId, solver: &mut LimnSolver) {
         if let Some(node_index) = self.find_widget(widget_id) {
             self.graph.remove_node(node_index);
-            self.dirty_widgets.insert(self.root_id);
+            self.redraw();
             solver.remove_widget(&widget_id);
         }
     }
@@ -208,7 +208,7 @@ impl WidgetGraph {
                                            input_state);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
-                self.dirty_widgets.insert(widget.id);
+                self.redraw = 2;
                 drawable.has_updated = false;
             }
         }
