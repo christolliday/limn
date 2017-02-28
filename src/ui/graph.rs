@@ -30,8 +30,10 @@ use super::InputState;
 
 const DEBUG_BOUNDS: bool = false;
 
+type Graph = StableGraph<Widget, ()>;
+
 pub struct WidgetGraph {
-    graph: StableGraph<Widget, ()>,
+    pub graph: Graph,
     pub root_id: WidgetId,
     widget_map: HashMap<WidgetId, NodeIndex>,
     redraw: u32,
@@ -41,7 +43,7 @@ pub struct WidgetGraph {
 impl WidgetGraph {
     pub fn new(window: &mut Window) -> Self {
         WidgetGraph {
-            graph: StableGraph::<Widget, ()>::new(),
+            graph: StableGraph::new(),
             root_id: resources().widget_id(),
             widget_map: HashMap::new(),
             redraw: 2,
@@ -184,7 +186,7 @@ impl WidgetGraph {
             None
         }
     }
-    pub fn is_mouse_over(&mut self, node_index: NodeIndex, mouse: Point) -> bool {
+    fn is_mouse_over(&mut self, node_index: NodeIndex, mouse: Point) -> bool {
         let ref mut widget = self.graph[node_index];
         widget.is_mouse_over(mouse)
     }
@@ -192,7 +194,7 @@ impl WidgetGraph {
         self.widget_map.get(&widget_id).map(|index| *index)
     }
 
-    pub fn trigger_widget_event(&mut self,
+    fn trigger_widget_event(&mut self,
                                 node_index: NodeIndex,
                                 type_id: TypeId,
                                 data: &Box<Any + Send>,
@@ -213,6 +215,10 @@ impl WidgetGraph {
             }
         }
         handled
+    }
+
+    pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetIter {
+        CursorWidgetIter::new(point, &self.graph, self.root_index())
     }
 
     pub fn handle_event(&mut self,
@@ -244,22 +250,40 @@ impl WidgetGraph {
                 }
             }
             EventAddress::UnderMouse => {
-                let mut dfs = DfsPostOrder::new(&self.graph, self.root_index());
-                while let Some(node_index) = dfs.next(&self.graph) {
-                    let is_mouse_over = self.is_mouse_over(node_index, input_state.mouse);
-                    if is_mouse_over {
-                        let handled = self.trigger_widget_event(node_index, type_id, data, event_queue, input_state, solver);
-                        let ref mut widget = self.graph[node_index];
-                        input_state.last_over.insert(widget.id);
-                        // for now just one widget can handle an event, later, just don't send to parents
-                        // not no other widgets
-                        if handled {
-                            return;
-                        }
+                let mut widgets_under_cursor = self.widgets_under_cursor(input_state.mouse);
+                while let Some(widget_id) = widgets_under_cursor.next(&self.graph) {
+                    let node_index = self.widget_map[&widget_id];
+                    let handled = self.trigger_widget_event(node_index, type_id, data, event_queue, input_state, solver);
+                    // for now just one widget can handle an event, later, just don't send to parents
+                    // not no other widgets
+                    if handled {
+                        return;
                     }
                 }
             }
             _ => ()
         }
+    }
+}
+use petgraph::visit::Visitable;
+pub struct CursorWidgetIter {
+    point: Point,
+    dfs: DfsPostOrder<NodeIndex, <Graph as Visitable>::Map>,
+}
+impl CursorWidgetIter {
+    pub fn new(point: Point, graph: &Graph, root_index: NodeIndex) -> Self {
+        CursorWidgetIter {
+            point: point,
+            dfs: DfsPostOrder::new(graph, root_index),
+        }
+    }
+    pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
+        while let Some(node_index) = self.dfs.next(graph) {
+            let ref widget = graph[node_index];
+            if widget.is_mouse_over(self.point) {
+                return Some(widget.id);
+            }
+        }
+        None
     }
 }

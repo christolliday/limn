@@ -18,7 +18,7 @@ use glutin;
 use util::Point;
 use resources::WidgetId;
 
-use widgets::hover::Hover;
+use widgets::hover::CursorOverHandler;
 use widget::WidgetBuilder;
 
 pub struct Ui {
@@ -44,26 +44,6 @@ impl Ui {
     }
 
     pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
-        match event {
-            glutin::Event::MouseMoved(x, y) => {
-                let mouse = Point {
-                    x: x as f64,
-                    y: y as f64,
-                };
-                self.input_state.mouse = mouse;
-                let last_over = self.input_state.last_over.clone();
-                for last_over in last_over {
-                    if let Some(widget) = self.graph.get_widget(last_over) {
-                        if !widget.is_mouse_over(self.input_state.mouse) {
-                            event_queue.push(EventAddress::Widget(last_over), Hover::Out);
-                            self.input_state.last_over.remove(&last_over);
-                        }
-                    }
-                }
-                event_queue.push(EventAddress::UnderMouse, Hover::Over);
-            }
-            _ => (),
-        }
         let ref root_widget = self.graph.get_root();
         let all_widgets = EventAddress::SubTree(root_widget.id);
         match event {
@@ -71,13 +51,17 @@ impl Ui {
                 event_queue.push(EventAddress::UnderMouse,
                                 WidgetMouseWheel(mouse_scroll_delta));
                 event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
+                event_queue.push(EventAddress::Ui, MouseWheel(mouse_scroll_delta));
             }
             glutin::Event::MouseInput(state, button) => {
                 event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
                 event_queue.push(all_widgets, MouseButton(state, button));
+                event_queue.push(EventAddress::Ui, MouseButton(state, button));
             }
             glutin::Event::MouseMoved(x, y) => {
-                event_queue.push(all_widgets, MouseMoved(Point::new(x as f64, y as f64)));
+                let point = Point::new(x as f64, y as f64);
+                event_queue.push(all_widgets, MouseMoved(point));
+                event_queue.push(EventAddress::Ui, MouseMoved(point));
             }
             _ => (),
         }
@@ -96,6 +80,7 @@ impl Ui {
         let mouse = self.input_state.mouse;
         let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
         event_queue.push(EventAddress::Ui, InputEvent(event));
+        self.graph.redraw();
     }
 }
 
@@ -144,13 +129,11 @@ pub struct LayoutChanged(pub WidgetId);
 
 pub struct InputState {
     pub mouse: Point,
-    pub last_over: HashSet<WidgetId>,
 }
 impl InputState {
     fn new() -> Self {
         InputState {
             mouse: Point { x: 0.0, y: 0.0 },
-            last_over: HashSet::new(),
         }
     }
 }
@@ -180,5 +163,6 @@ pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
         HandlerWrapper::new(RedrawHandler),
         HandlerWrapper::new(LayoutChangeHandler),
         HandlerWrapper::new(InputHandler),
+        HandlerWrapper::new(CursorOverHandler::new()),
     ]
 }

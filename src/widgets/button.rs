@@ -35,6 +35,17 @@ lazy_static! {
     };
 }
 
+use resources::WidgetId;
+pub enum WidgetMouseEvent {
+    MouseButton,
+    WidgetsOver(Vec<WidgetId>),
+}
+pub struct WidgetMouseHandler {
+
+}
+
+
+
 // show whether button is held down or not
 pub struct ButtonDownHandler;
 impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
@@ -44,6 +55,7 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
             glutin::ElementState::Pressed => true,
             glutin::ElementState::Released => false,
         };
+        println!("ButtonDownHandler");
         args.event_queue.change_prop(args.widget_id, Property::Pressed, pressed);
     }
 }
