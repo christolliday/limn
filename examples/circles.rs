@@ -71,8 +71,8 @@ fn main() {
 
         widget.layout.top_left(top_left, Some(STRONG));
         let id = widget.id;
-        let root_index = graph.root_index.unwrap();
-        graph.add_widget(widget, Some(root_index), solver);
+        let root_id = graph.root_id;
+        graph.add_widget(widget, Some(root_id), solver);
         id
     }
 
@@ -94,9 +94,11 @@ fn main() {
     }
     impl ui::EventHandler<CircleEvent> for CircleEventHandler {
         fn handle(&mut self, event: &CircleEvent, args: ui::EventArgs) {
+            let graph = &mut args.ui.graph;
+            let solver = &mut args.ui.solver;
             match *event {
                 CircleEvent::Add(point) => {
-                    self.circles.push((point, create_circle(args.graph, args.solver, &point)));
+                    self.circles.push((point, create_circle(graph, solver, &point)));
                     self.undo.clear();
 
                     args.event_queue.change_prop(self.undo_id, Property::Inactive, false);
@@ -105,7 +107,7 @@ fn main() {
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
                         let (point, node_index) = self.circles.pop().unwrap();
-                        args.graph.remove_widget(node_index, args.solver);
+                        graph.remove_widget(node_index, solver);
                         self.undo.push(point);
                         args.event_queue.change_prop(self.redo_id, Property::Inactive, false);
                         if self.circles.len() == 0 {
@@ -116,7 +118,7 @@ fn main() {
                 CircleEvent::Redo => {
                     if self.undo.len() > 0 {
                         let point = self.undo.pop().unwrap();
-                        self.circles.push((point, create_circle(args.graph, args.solver, &point)));
+                        self.circles.push((point, create_circle(graph, solver, &point)));
                         if self.undo.len() == 0 {
                             args.event_queue.change_prop(self.redo_id, Property::Inactive, true);
                         }
@@ -125,8 +127,8 @@ fn main() {
             }
         }
     }
-    let mut root_widget = WidgetBuilder::new().on_click(|_, args| {
-        let event = CircleEvent::Add(args.input_state.mouse);
+    let mut root_widget = WidgetBuilder::new().on_click(|event, args| {
+        let event = CircleEvent::Add(event.position);
         args.event_queue.push(EventAddress::Ui, event);
     });
     root_widget.layout.dimensions(Dimensions {

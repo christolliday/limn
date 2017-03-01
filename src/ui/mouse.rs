@@ -46,7 +46,7 @@ pub enum MouseInputEvent {
     MouseWheel(glutin::MouseScrollDelta),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug)]
 pub struct ClickEvent {
     pub position: Point,
 }
@@ -102,7 +102,7 @@ impl ui::EventHandler<MouseInputEvent> for MouseController {
             };
             for widget in &self.widgets_over {
                 event_queue.push(EventAddress::Widget(widget.clone()), WidgetMouseButton(state, button));
-                if click_event.is_some() {
+                if let Some(click_event) = click_event {
                     event_queue.push(EventAddress::Widget(widget.clone()), click_event.clone());
                 }
             }
