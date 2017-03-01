@@ -11,6 +11,7 @@ use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCu
                     DragInputHandler};
 use resources::{resources, WidgetId};
 use util::{Point, Rectangle};
+use ui::mouse::ClickEvent;
 use ui::event::*;
 
 pub struct WidgetBuilder {
@@ -65,7 +66,7 @@ impl WidgetBuilder {
         self.add_handler(ScrollHandler)
     }
     pub fn on_click<F>(self, on_click: F) -> Self
-        where F: Fn(&WidgetMouseButton, &mut EventArgs) + 'static
+        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
     {
         self.add_handler(ClickHandler::new(on_click))
     }

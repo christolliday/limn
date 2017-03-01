@@ -9,6 +9,7 @@ use widget::{EventHandler, EventArgs};
 use widget::property::{Property, PropsChangeEventHandler};
 use widget::property::states::*;
 use ui::event::*;
+use ui::mouse::ClickEvent;
 use widgets::primitives::{self, RectStyleField};
 use widgets::text::{self, TextStyleField};
 use widget::builder::WidgetBuilder;
@@ -35,17 +36,6 @@ lazy_static! {
     };
 }
 
-use resources::WidgetId;
-pub enum WidgetMouseEvent {
-    MouseButton,
-    WidgetsOver(Vec<WidgetId>),
-}
-pub struct WidgetMouseHandler {
-
-}
-
-
-
 // show whether button is held down or not
 pub struct ButtonDownHandler;
 impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
@@ -55,7 +45,6 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
             glutin::ElementState::Pressed => true,
             glutin::ElementState::Released => false,
         };
-        println!("ButtonDownHandler");
         args.event_queue.change_prop(args.widget_id, Property::Pressed, pressed);
     }
 }
@@ -118,26 +107,20 @@ impl ToggleButtonBuilder {
 }
 
 pub struct ClickHandler<F>
-    where F: Fn(&WidgetMouseButton, &mut EventArgs)
+    where F: Fn(&ClickEvent, &mut EventArgs)
 {
     callback: F,
 }
-impl<F: Fn(&WidgetMouseButton, &mut EventArgs)> ClickHandler<F> {
+impl<F: Fn(&ClickEvent, &mut EventArgs)> ClickHandler<F> {
     pub fn new(callback: F) -> Self {
         ClickHandler { callback: callback }
     }
 }
-impl<F: Fn(&WidgetMouseButton, &mut EventArgs)> EventHandler<WidgetMouseButton>
+impl<F: Fn(&ClickEvent, &mut EventArgs)> EventHandler<ClickEvent>
     for ClickHandler<F> {
-    fn handle(&mut self, event: &WidgetMouseButton, mut args: EventArgs) {
-        let &WidgetMouseButton(state, _) = event;
-        match state {
-            glutin::ElementState::Released => {
-                (self.callback)(event, &mut args);
-                args.event_state.handled = true;
-            }
-            _ => (),
-        }
+    fn handle(&mut self, event: &ClickEvent, mut args: EventArgs) {
+        (self.callback)(event, &mut args);
+        args.event_state.handled = true;
     }
 }
 

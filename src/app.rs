@@ -42,7 +42,7 @@ impl App {
                     }
                 }
                 _ => {
-                    self.ui.graph.handle_event(event_address, type_id, data, &mut self.event_queue, &mut self.ui.input_state, &mut self.ui.solver);
+                    self.ui.graph.handle_event(event_address, type_id, data, &mut self.event_queue, &mut self.ui.solver);
                 }
             }
         }

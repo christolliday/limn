@@ -2,29 +2,30 @@ pub mod graph;
 pub mod queue;
 pub mod event;
 pub mod layout;
+pub mod mouse;
 
 pub use self::graph::WidgetGraph;
 pub use self::queue::{EventQueue, EventAddress};
 pub use self::event::*;
 pub use self::layout::LimnSolver;
 
+use self::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
+
+
 use backend::Window;
 
 use std::any::{Any, TypeId};
-use std::collections::HashSet;
 
 use glutin;
 
 use util::Point;
 use resources::WidgetId;
 
-use widgets::hover::CursorOverHandler;
 use widget::WidgetBuilder;
 
 pub struct Ui {
     pub graph: WidgetGraph,
     pub solver: LimnSolver,
-    pub input_state: InputState,
 }
 
 impl Ui {
@@ -34,7 +35,6 @@ impl Ui {
         Ui {
             graph: graph,
             solver: solver,
-            input_state: InputState::new(),
         }
     }
 
@@ -48,13 +48,10 @@ impl Ui {
         let all_widgets = EventAddress::SubTree(root_widget.id);
         match event {
             glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                event_queue.push(EventAddress::UnderMouse,
-                                WidgetMouseWheel(mouse_scroll_delta));
                 event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
                 event_queue.push(EventAddress::Ui, MouseWheel(mouse_scroll_delta));
             }
             glutin::Event::MouseInput(state, button) => {
-                event_queue.push(EventAddress::UnderMouse, WidgetMouseButton(state, button));
                 event_queue.push(all_widgets, MouseButton(state, button));
                 event_queue.push(EventAddress::Ui, MouseButton(state, button));
             }
@@ -68,18 +65,12 @@ impl Ui {
     }
 
     pub fn layout_changed(&mut self, event: &LayoutChanged, event_queue: &mut EventQueue) {
-        {
-            let &LayoutChanged(widget_id) = event;
-            if let Some(widget) = self.graph.get_widget(widget_id) {
-                widget.layout.update(&mut self.solver);
-            }
+        let &LayoutChanged(widget_id) = event;
+        if let Some(widget) = self.graph.get_widget(widget_id) {
+            widget.layout.update(&mut self.solver);
         }
         // redraw everything when layout changes, for now
         event_queue.push(EventAddress::Ui, RedrawEvent);
-        // send new mouse event, in case widget under mouse has shifted
-        let mouse = self.input_state.mouse;
-        let event = glutin::Event::MouseMoved(mouse.x as i32, mouse.y as i32);
-        event_queue.push(EventAddress::Ui, InputEvent(event));
         self.graph.redraw();
     }
 }
@@ -127,17 +118,6 @@ pub struct InputEvent(pub glutin::Event);
 pub struct RedrawEvent;
 pub struct LayoutChanged(pub WidgetId);
 
-pub struct InputState {
-    pub mouse: Point,
-}
-impl InputState {
-    fn new() -> Self {
-        InputState {
-            mouse: Point { x: 0.0, y: 0.0 },
-        }
-    }
-}
-
 pub struct InputHandler;
 impl EventHandler<InputEvent> for InputHandler {
     fn handle(&mut self, event: &InputEvent, mut args: EventArgs) {
@@ -157,12 +137,15 @@ impl EventHandler<LayoutChanged> for LayoutChangeHandler {
         args.ui.layout_changed(event, args.event_queue);
     }
 }
-
 pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
     vec![
         HandlerWrapper::new(RedrawHandler),
         HandlerWrapper::new(LayoutChangeHandler),
         HandlerWrapper::new(InputHandler),
-        HandlerWrapper::new(CursorOverHandler::new()),
+        HandlerWrapper::new(MouseController::new()),
+        HandlerWrapper::new(MouseLayoutChangeHandler),
+        HandlerWrapper::new(MouseMoveHandler),
+        HandlerWrapper::new(MouseButtonHandler),
+        HandlerWrapper::new(MouseWheelHandler),
     ]
 }

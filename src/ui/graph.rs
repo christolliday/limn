@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
 use std::f64;
 use std::any::{Any, TypeId};
 
@@ -26,7 +26,6 @@ use ui::EventAddress;
 
 use super::layout::LimnSolver;
 use super::queue::EventQueue;
-use super::InputState;
 
 const DEBUG_BOUNDS: bool = false;
 
@@ -152,7 +151,7 @@ impl WidgetGraph {
 
     pub fn add_widget(&mut self,
                       widget: WidgetBuilder,
-                      parent_index: Option<NodeIndex>,
+                      parent_id: Option<WidgetId>,
                       solver: &mut LimnSolver)
                       -> NodeIndex {
 
@@ -161,13 +160,15 @@ impl WidgetGraph {
 
         let id = widget.id;
         let widget_index = self.graph.add_node(widget);
-        if let Some(parent_index) = parent_index {
-            self.graph.add_edge(parent_index, widget_index, ());
+        if let Some(parent_id) = parent_id {
+            if let Some(parent_index) = self.find_widget(parent_id) {
+                self.graph.add_edge(parent_index, widget_index, ());
+            }
         }
         self.widget_map.insert(id, widget_index);
         self.redraw();
         for child in children {
-            self.add_widget(child, Some(widget_index), solver);
+            self.add_widget(child, Some(id), solver);
         }
         widget_index
     }
@@ -186,10 +187,6 @@ impl WidgetGraph {
             None
         }
     }
-    fn is_mouse_over(&mut self, node_index: NodeIndex, mouse: Point) -> bool {
-        let ref mut widget = self.graph[node_index];
-        widget.is_mouse_over(mouse)
-    }
     pub fn find_widget(&mut self, widget_id: WidgetId) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
     }
@@ -199,15 +196,13 @@ impl WidgetGraph {
                                 type_id: TypeId,
                                 data: &Box<Any + Send>,
                                 event_queue: &mut EventQueue,
-                                input_state: &InputState,
                                 solver: &mut LimnSolver)
                                 -> bool {
         let ref mut widget = self.graph[node_index];
         let handled = widget.trigger_event(type_id,
                                            data,
                                            event_queue,
-                                           solver,
-                                           input_state);
+                                           solver);
         if let Some(ref mut drawable) = widget.drawable {
             if drawable.has_updated {
                 self.redraw = 2;
@@ -226,18 +221,17 @@ impl WidgetGraph {
                         type_id: TypeId,
                         data: &Box<Any + Send>,
                         event_queue: &mut EventQueue,
-                        input_state: &mut InputState,
                         solver: &mut LimnSolver) {
         match address {
             EventAddress::Widget(id) => {
                 if let Some(node_index) = self.find_widget(id) {
-                    self.trigger_widget_event(node_index, type_id, data, event_queue, input_state, solver);
+                    self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
                 }
             }
             EventAddress::Child(id) => {
                 if let Some(node_index) = self.find_widget(id) {
                     if let Some(child_index) = self.children(node_index).next() {
-                        self.trigger_widget_event(child_index, type_id, data, event_queue, input_state, solver);
+                        self.trigger_widget_event(child_index, type_id, data, event_queue, solver);
                     }
                 }
             }
@@ -245,19 +239,7 @@ impl WidgetGraph {
                 if let Some(node_index) = self.find_widget(id) {
                     let mut dfs = Dfs::new(&self.graph, node_index);
                     while let Some(node_index) = dfs.next(&self.graph) {
-                        self.trigger_widget_event(node_index, type_id, data, event_queue, input_state, solver);
-                    }
-                }
-            }
-            EventAddress::UnderMouse => {
-                let mut widgets_under_cursor = self.widgets_under_cursor(input_state.mouse);
-                while let Some(widget_id) = widgets_under_cursor.next(&self.graph) {
-                    let node_index = self.widget_map[&widget_id];
-                    let handled = self.trigger_widget_event(node_index, type_id, data, event_queue, input_state, solver);
-                    // for now just one widget can handle an event, later, just don't send to parents
-                    // not no other widgets
-                    if handled {
-                        return;
+                        self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
                     }
                 }
             }

@@ -16,7 +16,6 @@ use ui::queue::EventQueue;
 use resources::WidgetId;
 use ui::layout::LimnSolver;
 use util::{self, Point, Rectangle};
-use ui::InputState;
 
 use self::property::PropSet;
 use self::layout::LayoutVars;
@@ -64,7 +63,6 @@ pub struct EventArgs<'a> {
     pub layout: &'a mut LayoutVars,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut LimnSolver,
-    pub input_state: &'a InputState,
     pub event_state: &'a mut EventState,
 }
 
@@ -122,8 +120,7 @@ impl Widget {
                          type_id: TypeId,
                          event: &Box<Any + Send>,
                          event_queue: &mut EventQueue,
-                         solver: &mut LimnSolver,
-                         input_state: &InputState)
+                         solver: &mut LimnSolver)
                          -> bool {
 
         let mut event_state = EventState { handled: false };
@@ -136,7 +133,6 @@ impl Widget {
                     layout: &mut self.layout,
                     event_queue: event_queue,
                     solver: solver,
-                    input_state: input_state,
                     event_state: &mut event_state,
                 };
                 event_handler.handle(event, event_args);

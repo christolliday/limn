@@ -1,5 +1,6 @@
 use std::any::{Any, TypeId};
 use std::sync::{Arc, Mutex};
+use std::collections::VecDeque;
 
 use glutin::WindowProxy;
 
@@ -13,20 +14,19 @@ pub enum EventAddress {
     Widget(WidgetId),
     Child(WidgetId),
     SubTree(WidgetId),
-    UnderMouse,
     Ui,
 }
 
 #[derive(Clone)]
 pub struct EventQueue {
-    queue: Arc<Mutex<Vec<(EventAddress, TypeId, Box<Any + Send>)>>>,
+    queue: Arc<Mutex<VecDeque<(EventAddress, TypeId, Box<Any + Send>)>>>,
     window_proxy: WindowProxy,
 }
 
 impl EventQueue {
     pub fn new(window: &Window) -> Self {
         EventQueue {
-            queue: Arc::new(Mutex::new(Vec::new())),
+            queue: Arc::new(Mutex::new(VecDeque::new())),
             window_proxy: window.window.create_window_proxy(),
         }
     }
@@ -35,7 +35,7 @@ impl EventQueue {
     {
         let mut queue = self.queue.lock().unwrap();
         let type_id = TypeId::of::<T>();
-        queue.push((address, type_id, Box::new(data)));
+        queue.push_back((address, type_id, Box::new(data)));
         self.window_proxy.wakeup_event_loop();
     }
     pub fn is_empty(&mut self) -> bool {
@@ -44,7 +44,7 @@ impl EventQueue {
     }
     pub fn next(&mut self) -> (EventAddress, TypeId, Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
-        queue.pop().unwrap()
+        queue.pop_front().unwrap()
     }
     // common events
     pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
