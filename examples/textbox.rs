@@ -37,8 +37,14 @@ fn main() {
     button.layout.align_bottom(&root_widget, Some(20.0));
     button.layout.below(&text_widget, Some(20.0));
 
+
+    let text_widget_2 = WidgetBuilder::new()
+        .set_drawable(text_drawable)
+        .set_debug_name("text2");
+
     root_widget.add_child(text_widget);
     root_widget.add_child(button);
+    root_widget.add_child(text_widget_2);
 
     util::set_root_and_loop(window, ui, root_widget);
 }

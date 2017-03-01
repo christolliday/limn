@@ -104,6 +104,7 @@ impl ui::EventHandler<MouseInputEvent> for MouseController {
                 event_queue.push(EventAddress::Widget(widget.clone()), WidgetMouseButton(state, button));
                 if let Some(click_event) = click_event {
                     event_queue.push(EventAddress::Widget(widget.clone()), click_event.clone());
+                    //event_queue.push(EventAddress::Widget(widget.clone()), click_event.clone());
                 }
             }
         }
