@@ -53,13 +53,13 @@ pub struct ClickEvent {
 
 pub struct MouseController {
     pub mouse: Point,
-    pub widgets_over: Vec<WidgetId>,
+    pub widget_under_mouse: Option<WidgetId>,
 }
 impl MouseController {
     pub fn new() -> Self {
         MouseController {
             mouse: Point { x: 0.0, y: 0.0 },
-            widgets_over: Vec::new(),
+            widget_under_mouse: None,
         }
     }
 }
@@ -74,43 +74,30 @@ impl ui::EventHandler<MouseInputEvent> for MouseController {
         }
         if let &MouseInputEvent::MouseMoved(mouse) = event {
             self.mouse = mouse;
-            self.widgets_over.retain(|id| {
-                let id = id.clone();
-                if let Some(widget) = ui.graph.get_widget(id) {
-                    if !widget.is_mouse_over(mouse) {
-                        event_queue.push(EventAddress::Widget(id), Hover::Out);
-                        return false;
-                    }
+
+            let widget_under_cursor = ui.graph.widget_under_cursor(mouse);
+            if widget_under_cursor != self.widget_under_mouse {
+                if let Some(old_widget) = self.widget_under_mouse {
+                    event_queue.push(EventAddress::BubbleUp(old_widget), Hover::Out);
                 }
-                true
-            });
-            let mut widgets_under_cursor = ui.graph.widgets_under_cursor(mouse);
-            while let Some(widget_id) = widgets_under_cursor.next(&ui.graph.graph) {
-                if !self.widgets_over.contains(&widget_id) {
-                    self.widgets_over.push(widget_id);
-                    event_queue.push(EventAddress::Widget(widget_id), Hover::Over);
+                if let Some(widget_under_cursor) = widget_under_cursor {
+                    event_queue.push(EventAddress::BubbleUp(widget_under_cursor), Hover::Over);
                 }
             }
+            self.widget_under_mouse = widget_under_cursor;
         }
         if let &MouseInputEvent::MouseButton(state, button) = event {
-            let click_event = {
+            if let Some(widget_under) = self.widget_under_mouse {
+                event_queue.push(EventAddress::BubbleUp(widget_under), WidgetMouseButton(state, button));
                 if (state == glutin::ElementState::Released) && (button == glutin::MouseButton::Left) {
-                    Some(ClickEvent { position: self.mouse })
-                } else {
-                    None
-                }
-            };
-            for widget in &self.widgets_over {
-                event_queue.push(EventAddress::Widget(widget.clone()), WidgetMouseButton(state, button));
-                if let Some(click_event) = click_event {
-                    event_queue.push(EventAddress::Widget(widget.clone()), click_event.clone());
-                    //event_queue.push(EventAddress::Widget(widget.clone()), click_event.clone());
+                    let event = ClickEvent { position: self.mouse };
+                    event_queue.push(EventAddress::BubbleUp(widget_under), event);
                 }
             }
         }
         if let &MouseInputEvent::MouseWheel(mouse_scroll_delta) = event {
-            for widget in &self.widgets_over {
-                event_queue.push(EventAddress::Widget(widget.clone()), WidgetMouseWheel(mouse_scroll_delta));
+            if let Some(widget_under) = self.widget_under_mouse {
+                event_queue.push(EventAddress::BubbleUp(widget_under), WidgetMouseWheel(mouse_scroll_delta));
             }
         }
     }

@@ -14,6 +14,7 @@ pub enum EventAddress {
     Widget(WidgetId),
     Child(WidgetId),
     SubTree(WidgetId),
+    BubbleUp(WidgetId),
     Ui,
 }
 

@@ -86,10 +86,10 @@ impl WidgetGraph {
         });
         self.redraw = 2;
     }
-    pub fn parents(&mut self, node_index: NodeIndex) -> Neighbors<()> {
-        self.graph.neighbors_directed(node_index, Direction::Incoming)
+    fn parent(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
+        self.graph.neighbors_directed(node_index, Direction::Incoming).next()
     }
-    pub fn children(&mut self, node_index: NodeIndex) -> Neighbors<()> {
+    fn children(&mut self, node_index: NodeIndex) -> Neighbors<()> {
         self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
@@ -216,6 +216,11 @@ impl WidgetGraph {
         CursorWidgetIter::new(point, &self.graph, self.root_index())
     }
 
+    pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetId> {
+        // first widget found is the deepest, later will need to have z order as ordering
+        CursorWidgetIter::new(point, &self.graph, self.root_index()).next(&mut self.graph)
+    }
+
     pub fn handle_event(&mut self,
                         address: EventAddress,
                         type_id: TypeId,
@@ -241,6 +246,14 @@ impl WidgetGraph {
                     while let Some(node_index) = dfs.next(&self.graph) {
                         self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
                     }
+                }
+            }
+            EventAddress::BubbleUp(id) => {
+                // bubble up event from widget, until either it reaches the root, or some widget handles it
+                let mut maybe_node_index = self.find_widget(id);
+                while let Some(node_index) = maybe_node_index {
+                    let handled = self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
+                    maybe_node_index = if handled { None } else { self.parent(node_index) };
                 }
             }
             _ => ()
