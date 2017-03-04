@@ -5,6 +5,7 @@ mod util;
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::ToggleButtonBuilder;
 use limn::widgets::text::{self, TextStyleField};
+use limn::widgets::edit_text::EditTextBuilder;
 use limn::widget::style::Value;
 use limn::util::Dimensions;
 use limn::color::*;
@@ -24,7 +25,7 @@ fn main() {
                                                               Jello.\nIt's good for the stomach"
                               .to_owned())),
                           TextStyleField::BackgroundColor(Value::Single(WHITE))];
-    let text_drawable = text::text_drawable(text_style);
+    let text_drawable = text::text_drawable(text_style.clone());
 
     let text_widget = WidgetBuilder::new()
         .set_drawable(text_drawable)
@@ -34,17 +35,16 @@ fn main() {
         .set_text("ON", "OFF")
         .widget;
     button.layout.center_horizontal(&root_widget);
-    button.layout.align_bottom(&root_widget, Some(20.0));
     button.layout.below(&text_widget, Some(20.0));
 
-
-    let text_widget_2 = WidgetBuilder::new()
-        .set_drawable(text_drawable)
-        .set_debug_name("text2");
+    let mut edit_text = EditTextBuilder::new().widget;
+    edit_text.layout.below(&button, Some(20.0));
+    edit_text.layout.align_bottom(&root_widget, Some(20.0));
+    edit_text.layout.height(100.0);
 
     root_widget.add_child(text_widget);
     root_widget.add_child(button);
-    root_widget.add_child(text_widget_2);
+    root_widget.add_child(edit_text);
 
     util::set_root_and_loop(window, ui, root_widget);
 }

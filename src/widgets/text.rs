@@ -49,7 +49,7 @@ pub fn apply_text_style(args: StyleArgs) {
     style::apply_style(state, style, props);
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TextStyleField {
     Text(Value<String>),
     FontId(Value<FontId>),

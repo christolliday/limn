@@ -7,3 +7,4 @@ pub mod hover;
 pub mod drag;
 pub mod list;
 pub mod slider;
+pub mod edit_text;

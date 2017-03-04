@@ -3,6 +3,7 @@ pub mod queue;
 pub mod event;
 pub mod layout;
 pub mod mouse;
+pub mod keyboard;
 
 pub use self::graph::WidgetGraph;
 pub use self::queue::{EventQueue, EventAddress};
@@ -10,7 +11,7 @@ pub use self::event::*;
 pub use self::layout::LimnSolver;
 
 use self::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
-
+use self::keyboard::{FocusHandler, KeyboardForwarder};
 
 use backend::Window;
 
@@ -59,6 +60,10 @@ impl Ui {
                 let point = Point::new(x as f64, y as f64);
                 event_queue.push(all_widgets, MouseMoved(point));
                 event_queue.push(EventAddress::Ui, MouseMoved(point));
+            }
+            glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
+                let key_input = KeyboardInput(state, scan_code, maybe_keycode);
+                event_queue.push(EventAddress::Ui, key_input);
             }
             _ => (),
         }
@@ -147,5 +152,7 @@ pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
         HandlerWrapper::new(MouseMoveHandler),
         HandlerWrapper::new(MouseButtonHandler),
         HandlerWrapper::new(MouseWheelHandler),
+        HandlerWrapper::new(KeyboardForwarder),
+        HandlerWrapper::new(FocusHandler::new()),
     ]
 }
