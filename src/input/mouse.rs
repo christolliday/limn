@@ -1,13 +1,18 @@
+use glutin;
+
 use ui;
 use ui::queue::EventAddress;
-use ui::event::{MouseMoved, MouseButton, MouseWheel};
-use ui::event::{WidgetMouseButton, WidgetMouseWheel};
 use util::Point;
-use glutin;
 use resources::WidgetId;
 use widgets::hover::Hover;
 
-// This contains UI event handlers used to generate events typical to a mouse controlled UI
+pub struct MouseMoved(pub Point);
+pub struct MouseWheel(pub glutin::MouseScrollDelta);
+pub struct MouseButton(pub glutin::ElementState, pub glutin::MouseButton);
+
+pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
+pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
+
 
 // adapters
 pub struct MouseLayoutChangeHandler;

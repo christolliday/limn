@@ -1,10 +1,15 @@
 use widget::{EventArgs, EventHandler};
 use resources::WidgetId;
-use ui::mouse::ClickEvent;
+use input::mouse::ClickEvent;
 use ui::queue::EventAddress;
 use ui;
-use ui::event::*;
 
+use glutin;
+
+#[derive(Clone, Debug)]
+pub struct KeyboardInput(pub glutin::ElementState, pub glutin::ScanCode, pub Option<glutin::VirtualKeyCode>);
+#[derive(Debug)]
+pub struct WidgetKeyboardInput(pub glutin::ElementState, pub glutin::ScanCode, pub Option<glutin::VirtualKeyCode>);
 
 pub struct FocusHandler {
     focused: Option<WidgetId>,

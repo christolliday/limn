@@ -2,8 +2,10 @@ use glutin;
 
 use widget::{EventArgs, EventHandler};
 use ui::queue::EventAddress;
-use ui::event::*;
 use util::Point;
+use input::mouse::MouseMoved;
+use input::mouse::MouseButton;
+use input::mouse::WidgetMouseButton;
 
 pub struct WidgetDrag {
     pub drag_type: DragEvent,

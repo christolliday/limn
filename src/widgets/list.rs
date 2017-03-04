@@ -6,9 +6,9 @@ use widget::property::states::*;
 use widget::style::Value;
 use widgets::primitives::RectStyleField;
 use ui::queue::EventAddress;
-use ui::event::*;
 use resources::WidgetId;
 use util::Color;
+use input::mouse::WidgetMouseButton;
 
 pub struct WidgetListItemSelected {
     widget: WidgetId,

@@ -1,17 +1,15 @@
 pub mod graph;
 pub mod queue;
-pub mod event;
 pub mod layout;
-pub mod mouse;
-pub mod keyboard;
 
 pub use self::graph::WidgetGraph;
 pub use self::queue::{EventQueue, EventAddress};
-pub use self::event::*;
 pub use self::layout::LimnSolver;
 
-use self::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
-use self::keyboard::{FocusHandler, KeyboardForwarder};
+use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
+use input::mouse::{MouseMoved, MouseButton, MouseWheel};
+use input::keyboard::{FocusHandler, KeyboardForwarder};
+use input::keyboard::{KeyboardInput};
 
 use backend::Window;
 

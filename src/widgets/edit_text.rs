@@ -1,9 +1,8 @@
 use widget::{EventHandler, EventArgs};
-use ui::keyboard::WidgetFocusHandler;
+use input::keyboard::{WidgetFocusHandler, WidgetKeyboardInput};
 use widget::property::PropsChangeEventHandler;
 use widget::builder::WidgetBuilder;
 use widgets::{primitives, text};
-use ui::event::*;
 
 pub struct EditTextKeyboardHandler;
 impl EventHandler<WidgetKeyboardInput> for EditTextKeyboardHandler {

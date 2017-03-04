@@ -2,9 +2,10 @@ use glutin;
 use cassowary::strength::*;
 
 use ui::queue::EventAddress;
-use ui::event::*;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
+
+use input::mouse::WidgetMouseWheel;
 
 pub struct WidgetScroll {
     event: glutin::MouseScrollDelta,
