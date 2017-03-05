@@ -36,7 +36,7 @@ pub struct PropsChangeEventHandler;
 impl EventHandler<WidgetChangeProp> for PropsChangeEventHandler {
     fn handle(&mut self, event: &WidgetChangeProp, mut args: EventArgs) {
         let &WidgetChangeProp { ref property, add } = event;
-        if let &mut Some(ref mut drawable) = args.drawable {
+        if let Some(ref mut drawable) = args.widget.drawable {
             if add {
                 drawable.props.insert(property.clone());
             } else {
@@ -44,6 +44,6 @@ impl EventHandler<WidgetChangeProp> for PropsChangeEventHandler {
             }
             drawable.apply_style();
         }
-        args.event_queue.push(EventAddress::Widget(args.widget_id), WidgetPropsChanged);
+        args.event_queue.push(EventAddress::Widget(args.widget.id), WidgetPropsChanged);
     }
 }

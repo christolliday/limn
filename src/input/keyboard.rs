@@ -71,6 +71,6 @@ impl ui::EventHandler<ReceivedCharacter> for KeyboardCharForwarder {
 pub struct WidgetFocusHandler;
 impl EventHandler<ClickEvent> for WidgetFocusHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
-        args.event_queue.push(EventAddress::Ui, KeyboardInputEvent::FocusChange(Some(args.widget_id)));
+        args.event_queue.push(EventAddress::Ui, KeyboardInputEvent::FocusChange(Some(args.widget.id)));
     }
 }

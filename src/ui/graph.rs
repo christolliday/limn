@@ -17,7 +17,7 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
 
-use widget::Widget;
+use widget::{Widget, WidgetContainer};
 use widget::builder::WidgetBuilder;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::{resources, WidgetId};
@@ -29,7 +29,7 @@ use super::queue::EventQueue;
 
 const DEBUG_BOUNDS: bool = false;
 
-type Graph = StableGraph<Widget, ()>;
+type Graph = StableGraph<WidgetContainer, ()>;
 
 pub struct WidgetGraph {
     pub graph: Graph,
@@ -69,7 +69,7 @@ impl WidgetGraph {
     }
     pub fn get_root_dims(&mut self, solver: &mut LimnSolver) -> Dimensions {
         let root_index = self.root_index();
-        let ref mut root = &mut self.graph[root_index];
+        let ref mut root = &mut self.graph[root_index].widget;
         root.layout.update(solver);
         root.layout.get_dims()
     }
@@ -78,7 +78,7 @@ impl WidgetGraph {
     }
     pub fn window_resized(&mut self, window_dims: Dimensions, solver: &mut LimnSolver) {
         let root_index = self.root_index();
-        let ref mut root = self.graph[root_index];
+        let ref mut root = self.graph[root_index].widget;
         root.layout.update(solver);
         solver.update_solver(|solver| {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
@@ -96,7 +96,7 @@ impl WidgetGraph {
     pub fn update_layout(&mut self, solver: &mut LimnSolver) {
         let mut dfs = Dfs::new(&self.graph, self.root_index());
         while let Some(node_index) = dfs.next(&self.graph) {
-            let ref mut widget = self.graph[node_index];
+            let ref mut widget = self.graph[node_index].widget;
             widget.layout.update(solver);
         }
     }
@@ -119,7 +119,7 @@ impl WidgetGraph {
         if DEBUG_BOUNDS {
             let mut dfs = Dfs::new(&self.graph, self.root_index());
             while let Some(node_index) = dfs.next(&self.graph) {
-                let ref widget = self.graph[node_index];
+                let ref widget = self.graph[node_index].widget;
                 let color = widget.debug_color.unwrap_or(GREEN);
                 let bounds = widget.layout.bounds();
                 util::draw_rect_outline(bounds, color, context, graphics);
@@ -133,7 +133,7 @@ impl WidgetGraph {
                      crop_to: Rectangle) {
 
         let crop_to = {
-            let ref mut widget = self.graph[node_index];
+            let ref mut widget = self.graph[node_index].widget;
             widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
             util::crop_rect(crop_to, widget.layout.bounds())
         };
@@ -156,9 +156,9 @@ impl WidgetGraph {
                       -> NodeIndex {
 
         let (children, constraints, widget) = widget.build();
-        solver.add_widget(&widget, constraints);
+        solver.add_widget(&widget.widget, constraints);
 
-        let id = widget.id;
+        let id = widget.widget.id;
         let widget_index = self.graph.add_node(widget);
         if let Some(parent_id) = parent_id {
             if let Some(parent_index) = self.find_widget(parent_id) {
@@ -182,10 +182,11 @@ impl WidgetGraph {
     }
     pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<&mut Widget> {
         if let Some(node_index) = self.widget_map.get(&widget_id) {
-            self.graph.node_weight_mut(node_index.clone())
-        } else {
-            None
+            if let Some(widget_container) = self.graph.node_weight_mut(node_index.clone()) {
+                return Some(&mut widget_container.widget)
+            }
         }
+        None
     }
     pub fn find_widget(&mut self, widget_id: WidgetId) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
@@ -199,11 +200,12 @@ impl WidgetGraph {
                                 solver: &mut LimnSolver)
                                 -> bool {
         let ref mut widget = self.graph[node_index];
-        let handled = widget.trigger_event(type_id,
-                                           data,
-                                           event_queue,
-                                           solver);
-        if let Some(ref mut drawable) = widget.drawable {
+        let handled = true;
+        widget.trigger_event(type_id,
+                             data,
+                             event_queue,
+                             solver);
+        if let Some(ref mut drawable) = widget.widget.drawable {
             if drawable.has_updated {
                 self.redraw = 2;
                 drawable.has_updated = false;
@@ -274,7 +276,7 @@ impl CursorWidgetIter {
     }
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
         while let Some(node_index) = self.dfs.next(graph) {
-            let ref widget = graph[node_index];
+            let ref widget = graph[node_index].widget;
             if widget.is_mouse_over(self.point) {
                 return Some(widget.id);
             }

@@ -27,7 +27,7 @@ impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
                 self.text.push(char);
             }
         }
-        if let Some(drawable) = args.drawable.as_mut() {
+        if let Some(drawable) = args.widget.drawable.as_mut() {
             drawable.update(|state: &mut TextDrawState| state.text = self.text.clone());
         }
     }

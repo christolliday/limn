@@ -1,7 +1,7 @@
 use graphics::types::Color;
 use cassowary;
 
-use widget::{Drawable, Widget, EventHandler, HandlerWrapper, EventArgs};
+use widget::{Drawable, Widget, WidgetContainer, EventHandler, HandlerWrapper, EventArgs};
 use widget::layout::{LayoutBuilder, WidgetConstraint};
 use widget::property::PropsChangeEventHandler;
 use widgets::hover::HoverHandler;
@@ -95,7 +95,7 @@ impl WidgetBuilder {
         self.children.push(widget);
     }
 
-    pub fn build(self) -> (Vec<WidgetBuilder>, Vec<WidgetConstraint>, Widget) {
+    pub fn build(self) -> (Vec<WidgetBuilder>, Vec<WidgetConstraint>, WidgetContainer) {
 
         if let Some(ref debug_name) = self.debug_name {
             cassowary::add_var_name(self.layout.vars.left, &format!("{}.left", debug_name));
@@ -103,14 +103,16 @@ impl WidgetBuilder {
             cassowary::add_var_name(self.layout.vars.right, &format!("{}.right", debug_name));
             cassowary::add_var_name(self.layout.vars.bottom, &format!("{}.bottom", debug_name));
         }
-
+        let widget = Widget::new(self.id,
+                                 self.drawable,
+                                 self.layout.vars,
+                                 self.debug_name,
+                                 self.debug_color);
         (self.children,
          self.layout.constraints,
-         Widget::new(self.id,
-                     self.drawable,
-                     self.layout.vars,
-                     self.event_handlers,
-                     self.debug_name,
-                     self.debug_color))
+         WidgetContainer {
+             widget: widget,
+             event_handlers: self.event_handlers,
+         })
     }
 }

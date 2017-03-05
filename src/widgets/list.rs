@@ -58,10 +58,10 @@ impl ListItemHandler {
 }
 impl EventHandler<WidgetMouseButton> for ListItemHandler {
     fn handle(&mut self, _: &WidgetMouseButton, mut args: EventArgs) {
-        if let &mut Some(ref drawable) = args.drawable {
+        if let Some(ref drawable) = args.widget.drawable {
             if !drawable.props.contains(&Property::Selected) {
-                args.event_queue.change_prop(args.widget_id, Property::Selected, true);
-                let event = WidgetListItemSelected { widget: args.widget_id };
+                args.event_queue.change_prop(args.widget.id, Property::Selected, true);
+                let event = WidgetListItemSelected { widget: args.widget.id };
                 args.event_queue.push(EventAddress::Widget(self.list_id), event);
             }
         }

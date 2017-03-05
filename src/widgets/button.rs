@@ -44,7 +44,7 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
             glutin::ElementState::Pressed => true,
             glutin::ElementState::Released => false,
         };
-        args.event_queue.change_prop(args.widget_id, Property::Pressed, pressed);
+        args.event_queue.change_prop(args.widget.id, Property::Pressed, pressed);
     }
 }
 
@@ -52,13 +52,13 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
 pub struct ToggleEventHandler;
 impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
-        let EventArgs { widget_id, event_queue, .. } = args;
+        let EventArgs { event_queue, .. } = args;
         let &WidgetMouseButton(state, _) = event;
         match state {
             glutin::ElementState::Released => {
-                if let &mut Some(ref drawable) = args.drawable {
+                if let Some(ref drawable) = args.widget.drawable {
                     let activated = drawable.props.contains(&Property::Activated);
-                    event_queue.change_prop(widget_id, Property::Activated, !activated);
+                    event_queue.change_prop(args.widget.id, Property::Activated, !activated);
                 }
             }
             _ => (),

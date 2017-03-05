@@ -58,9 +58,7 @@ impl HandlerWrapper {
 }
 
 pub struct EventArgs<'a> {
-    pub widget_id: WidgetId,
-    pub drawable: &'a mut Option<Drawable>,
-    pub layout: &'a mut LayoutVars,
+    pub widget: &'a mut Widget,
     pub event_queue: &'a mut EventQueue,
     pub solver: &'a mut LimnSolver,
     pub event_state: &'a mut EventState,
@@ -70,11 +68,38 @@ pub trait EventHandler<T> {
     fn handle(&mut self, event: &T, args: EventArgs);
 }
 
+pub struct WidgetContainer {
+    pub widget: Widget,
+    pub event_handlers: Vec<HandlerWrapper>,
+}
+impl WidgetContainer {
+    pub fn trigger_event(&mut self,
+                         type_id: TypeId,
+                         event: &Box<Any + Send>,
+                         event_queue: &mut EventQueue,
+                         solver: &mut LimnSolver)
+                         -> bool {
+
+        let mut event_state = EventState { handled: false };
+        for ref mut event_handler in self.event_handlers.iter_mut() {
+            let event_handler: &mut HandlerWrapper = event_handler;
+            if event_handler.handles(type_id) {
+                let event_args = EventArgs {
+                    widget: &mut self.widget,
+                    event_queue: event_queue,
+                    solver: solver,
+                    event_state: &mut event_state,
+                };
+                event_handler.handle(event, event_args);
+            }
+        }
+        event_state.handled
+    }
+}
 pub struct Widget {
     pub id: WidgetId,
     pub drawable: Option<Drawable>,
     pub layout: LayoutVars,
-    pub event_handlers: Vec<HandlerWrapper>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
 }
@@ -83,7 +108,6 @@ impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<Drawable>,
                layout: LayoutVars,
-               event_handlers: Vec<HandlerWrapper>,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
@@ -91,7 +115,6 @@ impl Widget {
             id: id,
             drawable: drawable,
             layout: layout,
-            event_handlers: event_handlers,
             debug_name: debug_name,
             debug_color: debug_color,
         }
@@ -115,29 +138,5 @@ impl Widget {
             }
         }
         util::point_inside_rect(mouse, bounds)
-    }
-    pub fn trigger_event(&mut self,
-                         type_id: TypeId,
-                         event: &Box<Any + Send>,
-                         event_queue: &mut EventQueue,
-                         solver: &mut LimnSolver)
-                         -> bool {
-
-        let mut event_state = EventState { handled: false };
-        for ref mut event_handler in self.event_handlers.iter_mut() {
-            let event_handler: &mut HandlerWrapper = event_handler;
-            if event_handler.handles(type_id) {
-                let event_args = EventArgs {
-                    widget_id: self.id,
-                    drawable: &mut self.drawable,
-                    layout: &mut self.layout,
-                    event_queue: event_queue,
-                    solver: solver,
-                    event_state: &mut event_state,
-                };
-                event_handler.handle(event, event_args);
-            }
-        }
-        event_state.handled
     }
 }

@@ -15,6 +15,6 @@ impl EventHandler<Hover> for HoverHandler {
             Hover::Out => false,
         };
 
-        args.event_queue.change_prop(args.widget_id, Property::Hover, hover);
+        args.event_queue.change_prop(args.widget.id, Property::Hover, hover);
     }
 }

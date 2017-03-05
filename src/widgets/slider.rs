@@ -60,8 +60,8 @@ impl<F: Fn(f64)> SliderHandler<F> {
 impl<F> EventHandler<MovedSliderWidgetEvent> for SliderHandler<F>
     where F: Fn(f64) {
     fn handle(&mut self, event: &MovedSliderWidgetEvent, mut args: EventArgs) {
-        let range = args.layout.bounds.width - (event.slider_right - event.slider_left);
-        let val = (event.slider_left - args.layout.bounds.left) / range;
+        let range = args.widget.layout.bounds.width - (event.slider_right - event.slider_left);
+        let val = (event.slider_left - args.widget.layout.bounds.left) / range;
         (self.callback)(val);
         args.event_state.handled = true;
     }
@@ -82,7 +82,8 @@ impl DragHandler {
 }
 impl EventHandler<WidgetDrag> for DragHandler {
     fn handle(&mut self, event: &WidgetDrag, args: EventArgs) {
-        let EventArgs { solver, layout, .. } = args;
+        let EventArgs { solver, widget, .. } = args;
+        let ref layout = widget.layout;
         let &WidgetDrag { ref drag_type, position } = event;
         let drag_pos = position.x;
         match *drag_type {

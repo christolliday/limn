@@ -129,7 +129,7 @@ impl<T: 'static, E> DrawableEventHandler<T, E> {
 
 impl<T: 'static, E> EventHandler<E> for DrawableEventHandler<T, E> {
     fn handle(&mut self, _: &E, args: EventArgs) {
-        if let Some(drawable) = args.drawable.as_mut() {
+        if let Some(drawable) = args.widget.drawable.as_mut() {
             drawable.update(|state: &mut T| (self.drawable_callback)(state));
         }
     }
