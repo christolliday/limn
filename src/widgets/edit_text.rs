@@ -3,7 +3,8 @@ use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter};
 use widget::property::PropsChangeEventHandler;
 use widget::builder::WidgetBuilder;
 use widgets::{primitives, text};
-use widgets::text::TextDrawState;
+use widgets::primitives::RectDrawable;
+use widgets::text::TextDrawable;
 
 pub struct EditTextKeyboardHandler {
     text: String,
@@ -27,9 +28,7 @@ impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
                 self.text.push(char);
             }
         }
-        if let Some(drawable) = args.widget.drawable.as_mut() {
-            drawable.update(|state: &mut TextDrawState| state.text = self.text.clone());
-        }
+        args.widget.update(|state: &mut TextDrawable| state.text = self.text.clone());
     }
 }
 
@@ -41,12 +40,12 @@ impl EditTextBuilder {
     pub fn new() -> Self {
 
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(vec![]))
+            .set_drawable(RectDrawable::new(vec![]))
             .add_handler(WidgetFocusHandler)
             .add_handler(PropsChangeEventHandler);
 
         let text_widget = WidgetBuilder::new()
-            .set_drawable(text::text_drawable(vec![]))
+            .set_drawable(TextDrawable::new(vec![]))
             .add_handler(EditTextKeyboardHandler::new())
             .add_handler(PropsChangeEventHandler);
         

@@ -4,8 +4,8 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{self, TextStyleField};
-use limn::widgets::primitives;
+use limn::widgets::text::{TextDrawable, TextStyleField};
+use limn::widgets::primitives::RectDrawable;
 use limn::widgets::list::{ListHandler, ListItemHandler, STYLE_LIST_ITEM};
 use limn::widget::style::Value;
 use limn::util::Dimensions;
@@ -37,11 +37,11 @@ fn main() {
             let text_style = vec![TextStyleField::Text(Value::Single("hello".to_owned())),
                                   TextStyleField::TextColor(Value::Single(WHITE))];
 
-            let text_drawable = text::text_drawable(text_style);
-            let text_dims = text::measure(&text_drawable);
+            let text_drawable = TextDrawable::new(text_style);
+            let text_dims = text_drawable.measure();
 
             let mut list_item_widget = WidgetBuilder::new()
-                .set_drawable(primitives::rect_drawable(STYLE_LIST_ITEM.clone()))
+                .set_drawable_with_style(RectDrawable::new(STYLE_LIST_ITEM.clone()), STYLE_LIST_ITEM.clone())
                 .set_debug_name("item")
                 .props_may_change()
                 .enable_hover()

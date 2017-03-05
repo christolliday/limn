@@ -1,22 +1,19 @@
-use graphics::{self, Transformed};
+use graphics::{self, Context, Transformed};
 
-use backend::gfx::ImageSize;
+use backend::gfx::{ImageSize, G2d};
+use backend::glyph::GlyphCache;
 
 use resources::{ImageId, resources};
 use widget::drawable::{Drawable, DrawArgs};
-use util::Dimensions;
+use util::{Dimensions, Rectangle};
 
-pub fn image_drawable(image_id: ImageId) -> Drawable {
-    let draw_state = ImageDrawState::new(image_id);
-    Drawable::new(draw_state, draw_image)
-}
-pub struct ImageDrawState {
+pub struct ImageDrawable {
     pub image_id: ImageId,
     pub scale: Dimensions,
 }
-impl ImageDrawState {
+impl ImageDrawable {
     pub fn new(image_id: ImageId) -> Self {
-        ImageDrawState {
+        ImageDrawable {
             image_id: image_id,
             scale: Dimensions {
                 width: 1.0,
@@ -33,22 +30,16 @@ impl ImageDrawState {
         self.scale = scale;
     }
 }
+impl Drawable for ImageDrawable {
+    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+        let res = resources();
+        let img = res.images.get(self.image_id).unwrap();
+        let dims: Dimensions = img.get_size().into();
+        let scale = bounds.dims() / dims;
+        let image = graphics::image::Image::new();
+        image.rect(bounds);
+        let context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
 
-pub fn measure(drawable: &Drawable) -> Dimensions {
-    let draw_state: &ImageDrawState = drawable.state();
-    draw_state.measure()
-}
-
-pub fn draw_image(args: DrawArgs<ImageDrawState>) {
-    let DrawArgs { state, bounds, context, graphics, .. } = args;
-
-    let res = resources();
-    let img = res.images.get(state.image_id).unwrap();
-    let dims: Dimensions = img.get_size().into();
-    let scale = bounds.dims() / dims;
-    let image = graphics::image::Image::new();
-    image.rect(bounds);
-    let context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
-
-    image.draw(img, &context.draw_state, context.transform, graphics);
+        image.draw(img, &context.draw_state, context.transform, graphics);
+    }
 }

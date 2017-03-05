@@ -19,7 +19,8 @@ use util::{self, Point, Rectangle};
 
 use self::property::PropSet;
 use self::layout::LayoutVars;
-use self::drawable::Drawable;
+use self::drawable::{Drawable, DrawableWrapper};
+use self::drawable::StyleArgs;
 
 pub use self::builder::WidgetBuilder;
 
@@ -98,7 +99,9 @@ impl WidgetContainer {
 }
 pub struct Widget {
     pub id: WidgetId,
-    pub drawable: Option<Drawable>,
+    pub drawable: Option<DrawableWrapper>,
+    pub props: PropSet,
+    pub has_updated: bool,
     pub layout: LayoutVars,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -106,7 +109,7 @@ pub struct Widget {
 
 impl Widget {
     pub fn new(id: WidgetId,
-               drawable: Option<Drawable>,
+               drawable: Option<DrawableWrapper>,
                layout: LayoutVars,
                debug_name: Option<String>,
                debug_color: Option<Color>)
@@ -114,6 +117,8 @@ impl Widget {
         Widget {
             id: id,
             drawable: drawable,
+            props: PropSet::new(),
+            has_updated: false,
             layout: layout,
             debug_name: debug_name,
             debug_color: debug_color,
@@ -127,16 +132,30 @@ impl Widget {
 
         if let Some(drawable) = self.drawable.as_mut() {
             let bounds = self.layout.bounds();
-            drawable.draw(bounds, crop_to, glyph_cache, context, graphics);
+            let context = util::crop_context(context, crop_to);
+            drawable.drawable.draw(bounds, crop_to, glyph_cache, context, graphics);
         }
     }
+
     pub fn is_mouse_over(&self, mouse: Point) -> bool {
-        let bounds = self.layout.bounds();
-        if let Some(ref drawable) = self.drawable {
-            if let Some(mouse_over_fn) = drawable.mouse_over_fn {
-                return mouse_over_fn(mouse, bounds);
+        util::point_inside_rect(mouse, self.layout.bounds())
+    }
+
+    pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
+        where F: FnOnce(&mut T)
+    {
+        if let Some(ref mut drawable) = self.drawable {
+            self.has_updated = true;
+            let state = drawable.drawable.as_mut().downcast_mut::<T>().unwrap();
+            f(state);
+        }
+    }
+
+    pub fn apply_style(&mut self) {
+        if let Some(ref mut drawable) = self.drawable {
+            if drawable.apply_style(&self.props) {
+                self.has_updated = true;
             }
         }
-        util::point_inside_rect(mouse, bounds)
     }
 }

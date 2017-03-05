@@ -6,7 +6,7 @@ mod util;
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{self, TextDrawState, TextStyleField};
+use limn::widgets::text::{TextDrawable, TextStyleField};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
 use limn::ui::queue::EventAddress;
@@ -30,17 +30,15 @@ fn main() {
     struct CountHandler {}
     impl EventHandler<CountEvent> for CountHandler {
         fn handle(&mut self, event: &CountEvent, args: EventArgs) {
-            if let Some(drawable) = args.widget.drawable.as_mut() {
-                let &CountEvent(count) = event;
-                drawable.update(|state: &mut TextDrawState| state.text = format!("{}", count));
-            }
+            let &CountEvent(count) = event;
+            args.widget.update(|state: &mut TextDrawable| state.text = format!("{}", count));
         }
     }
 
     let text_style = vec![TextStyleField::Text(Value::Single("0".to_owned())),
                           TextStyleField::BackgroundColor(Value::Single(WHITE))];
-    let text_drawable = text::text_drawable(text_style);
-    let text_dims = text::measure(&text_drawable);
+    let text_drawable = TextDrawable::new(text_style);
+    let text_dims = text_drawable.measure();
     let mut text_widget = WidgetBuilder::new()
         .set_drawable(text_drawable)
         .add_handler(CountHandler {});

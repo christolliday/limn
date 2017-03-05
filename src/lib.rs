@@ -12,6 +12,8 @@ extern crate lazy_static;
 extern crate linked_hash_map;
 #[macro_use]
 extern crate maplit;
+#[macro_use]
+extern crate downcast_rs;
 
 pub mod app;
 pub mod widget;

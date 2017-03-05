@@ -19,6 +19,7 @@ glutin = "0.7.0"
 lazy_static = "0.2.2"
 linked-hash-map = "0.3.0"
 maplit = "0.1.4"
+downcast-rs = "1.0.0"
 
 [dev-dependencies]
 find_folder = "0.3.0"

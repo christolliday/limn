@@ -1,7 +1,11 @@
+use std::any::Any;
+
 use graphics::types::Color;
 use cassowary;
 
-use widget::{Drawable, Widget, WidgetContainer, EventHandler, HandlerWrapper, EventArgs};
+use widget::{Widget, WidgetContainer, EventHandler, HandlerWrapper, EventArgs};
+use widget::drawable::{Drawable, DrawableWrapper};
+use widget::style::Style;
 use widget::layout::{LayoutBuilder, WidgetConstraint};
 use widget::property::PropsChangeEventHandler;
 use widgets::hover::HoverHandler;
@@ -15,7 +19,7 @@ use input::mouse::ClickEvent;
 
 pub struct WidgetBuilder {
     pub id: WidgetId,
-    pub drawable: Option<Drawable>,
+    pub drawable: Option<DrawableWrapper>,
     pub layout: LayoutBuilder,
     pub event_handlers: Vec<HandlerWrapper>,
     pub debug_name: Option<String>,
@@ -37,14 +41,12 @@ impl WidgetBuilder {
             contents_scroll: false,
         }
     }
-    pub fn set_drawable(mut self, drawable: Drawable) -> Self {
-        self.drawable = Some(drawable);
+    pub fn set_drawable<T: Drawable + 'static>(mut self, drawable: T) -> Self {
+        self.drawable = Some(DrawableWrapper::new(drawable));
         self
     }
-    pub fn set_mouse_over_fn(mut self, mouse_over_fn: fn(Point, Rectangle) -> bool) -> Self {
-        if let Some(ref mut drawable) = self.drawable {
-            drawable.mouse_over_fn = Some(mouse_over_fn);
-        }
+    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(mut self, drawable: T, style: S) -> Self {
+        self.drawable = Some(DrawableWrapper::new_with_style(drawable, style));
         self
     }
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(mut self, handler: T) -> Self {

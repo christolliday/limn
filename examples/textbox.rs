@@ -4,7 +4,7 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::ToggleButtonBuilder;
-use limn::widgets::text::{self, TextStyleField};
+use limn::widgets::text::{TextDrawable, TextStyleField};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::widget::style::Value;
 use limn::util::Dimensions;
@@ -25,7 +25,7 @@ fn main() {
                                                               Jello.\nIt's good for the stomach"
                               .to_owned())),
                           TextStyleField::BackgroundColor(Value::Single(WHITE))];
-    let text_drawable = text::text_drawable(text_style.clone());
+    let text_drawable = TextDrawable::new(text_style.clone());
 
     let text_widget = WidgetBuilder::new()
         .set_drawable(text_drawable)

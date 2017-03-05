@@ -4,7 +4,7 @@ use widget::builder::WidgetBuilder;
 use widget::style::Value;
 use widget::{EventHandler, EventArgs, HandlerWrapper};
 use ui::queue::EventAddress;
-use widgets::primitives::{self, RectStyleField};
+use widgets::primitives::{self, RectDrawable, RectStyleField};
 use widgets::drag::{DragEvent, WidgetDrag};
 use resources::WidgetId;
 use util::Dimensions;
@@ -17,7 +17,7 @@ impl SliderBuilder {
         let rect_color = [0.1, 0.1, 0.1, 1.0];
         let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(style));
+            .set_drawable(RectDrawable::new(style));
         widget.layout.dimensions(Dimensions {
             width: 200.0,
             height: 30.0,
@@ -26,7 +26,7 @@ impl SliderBuilder {
         let rect_color = [0.4, 0.4, 0.4, 1.0];
         let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
         let mut slider_handle = WidgetBuilder::new()
-            .set_drawable(primitives::rect_drawable(style))
+            .set_drawable(RectDrawable::new(style))
             .draggable()
             .add_handler(DragHandler::new(widget.id));
         slider_handle.layout.dimensions(Dimensions {

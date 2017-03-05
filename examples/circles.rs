@@ -10,7 +10,7 @@ use cassowary::strength::*;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
-use limn::widgets::primitives;
+use limn::widgets::primitives::EllipseDrawable;
 use limn::widget::property::Property;
 use limn::ui::queue::EventAddress;
 use limn::ui::LimnSolver;
@@ -59,7 +59,7 @@ fn main() {
             radius: 2.0,
         };
         let mut widget = WidgetBuilder::new()
-            .set_drawable(primitives::ellipse_drawable(RED, Some(border)));
+            .set_drawable(EllipseDrawable::new(RED, Some(border)));
         widget.layout.dimensions(Dimensions {
             width: 30.0,
             height: 30.0,

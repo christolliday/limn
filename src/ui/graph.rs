@@ -199,17 +199,14 @@ impl WidgetGraph {
                                 event_queue: &mut EventQueue,
                                 solver: &mut LimnSolver)
                                 -> bool {
-        let ref mut widget = self.graph[node_index];
-        let handled = true;
-        widget.trigger_event(type_id,
-                             data,
-                             event_queue,
-                             solver);
-        if let Some(ref mut drawable) = widget.widget.drawable {
-            if drawable.has_updated {
-                self.redraw = 2;
-                drawable.has_updated = false;
-            }
+        let ref mut widget_container = self.graph[node_index];
+        let handled = widget_container.trigger_event(type_id,
+                                                     data,
+                                                     event_queue,
+                                                     solver);
+        if widget_container.widget.has_updated {
+            self.redraw = 2;
+            widget_container.widget.has_updated = false;
         }
         handled
     }
