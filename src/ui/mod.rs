@@ -8,8 +8,8 @@ pub use self::layout::LimnSolver;
 
 use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
 use input::mouse::{MouseMoved, MouseButton, MouseWheel};
-use input::keyboard::{FocusHandler, KeyboardForwarder};
-use input::keyboard::{KeyboardInput};
+use input::keyboard::{FocusHandler, KeyboardForwarder, KeyboardCharForwarder};
+use input::keyboard::{KeyboardInput, ReceivedCharacter};
 
 use backend::Window;
 
@@ -62,6 +62,9 @@ impl Ui {
             glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
                 let key_input = KeyboardInput(state, scan_code, maybe_keycode);
                 event_queue.push(EventAddress::Ui, key_input);
+            }
+            glutin::Event::ReceivedCharacter(char) => {
+                event_queue.push(EventAddress::Ui, ReceivedCharacter(char));
             }
             _ => (),
         }
@@ -151,6 +154,7 @@ pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
         HandlerWrapper::new(MouseButtonHandler),
         HandlerWrapper::new(MouseWheelHandler),
         HandlerWrapper::new(KeyboardForwarder),
+        HandlerWrapper::new(KeyboardCharForwarder),
         HandlerWrapper::new(FocusHandler::new()),
     ]
 }

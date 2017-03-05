@@ -7,9 +7,13 @@ use ui;
 use glutin;
 
 #[derive(Clone, Debug)]
+pub struct ReceivedCharacter(pub char);
+#[derive(Clone, Debug)]
 pub struct KeyboardInput(pub glutin::ElementState, pub glutin::ScanCode, pub Option<glutin::VirtualKeyCode>);
 #[derive(Debug)]
 pub struct WidgetKeyboardInput(pub glutin::ElementState, pub glutin::ScanCode, pub Option<glutin::VirtualKeyCode>);
+#[derive(Debug)]
+pub struct WidgetReceivedCharacter(pub char);
 
 pub struct FocusHandler {
     focused: Option<WidgetId>,
@@ -31,7 +35,14 @@ impl ui::EventHandler<KeyboardInputEvent> for FocusHandler {
                 if let Some(focused) = self.focused {
                     let &KeyboardInput(state, scan_code, maybe_keycode) = key_input;
                     let event = WidgetKeyboardInput(state, scan_code, maybe_keycode);
-                    args.event_queue.push(EventAddress::Widget(focused), event);
+                    args.event_queue.push(EventAddress::SubTree(focused), event);
+                }
+            }
+            &KeyboardInputEvent::ReceivedCharacter(ref received_char) => {
+                if let Some(focused) = self.focused {
+                    let &ReceivedCharacter(char) = received_char;
+                    let event = WidgetReceivedCharacter(char);
+                    args.event_queue.push(EventAddress::SubTree(focused), event);
                 }
             }
         }
@@ -41,12 +52,19 @@ impl ui::EventHandler<KeyboardInputEvent> for FocusHandler {
 enum KeyboardInputEvent {
     FocusChange(Option<WidgetId>),
     KeyboardInput(KeyboardInput),
+    ReceivedCharacter(ReceivedCharacter),
 }
 
 pub struct KeyboardForwarder;
 impl ui::EventHandler<KeyboardInput> for KeyboardForwarder {
     fn handle(&mut self, event: &KeyboardInput, mut args: ui::EventArgs) {
         args.event_queue.push(EventAddress::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
+    }
+}
+pub struct KeyboardCharForwarder;
+impl ui::EventHandler<ReceivedCharacter> for KeyboardCharForwarder {
+    fn handle(&mut self, event: &ReceivedCharacter, mut args: ui::EventArgs) {
+        args.event_queue.push(EventAddress::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
     }
 }
 
