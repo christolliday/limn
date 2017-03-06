@@ -1,7 +1,7 @@
 use glutin;
 use cassowary::strength::*;
 
-use ui::queue::EventAddress;
+use ui::queue::Target;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
@@ -21,7 +21,7 @@ impl EventHandler<WidgetMouseWheel> for ScrollHandler {
             event: event.0,
             parent_bounds: widget_bounds,
         };
-        event_queue.push(EventAddress::Child(widget.id), event);
+        event_queue.push(Target::Child(widget.id), event);
     }
 }
 

@@ -8,7 +8,7 @@ use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
 use limn::app::App;
 use limn::ui::InputEvent;
-use limn::ui::queue::EventAddress;
+use limn::ui::queue::Target;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
 use limn::widget::builder::WidgetBuilder;
@@ -63,7 +63,7 @@ pub fn set_root_and_loop(mut window: Window,
                         app.handle_events();
                     }
                     _ => {
-                        app.event_queue.push(EventAddress::Ui, InputEvent(event));
+                        app.event_queue.push(Target::Ui, InputEvent(event));
                         app.handle_events();
                     },
                 }

@@ -3,7 +3,7 @@ use cassowary::strength::*;
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
 use widget::{EventHandler, EventArgs, HandlerWrapper};
-use ui::queue::EventAddress;
+use ui::queue::Target;
 use drawable::rect::{RectDrawable, RectStyleField};
 use widgets::drag::{DragEvent, WidgetDrag};
 use resources::WidgetId;
@@ -98,7 +98,7 @@ impl EventHandler<WidgetDrag> for DragHandler {
                     solver.suggest_value(layout.left, drag_pos - self.start_pos).unwrap();
                 });
                 let event = MovedSliderWidgetEvent { slider_left: layout.bounds.left, slider_right: layout.bounds.right() };
-                args.event_queue.push(EventAddress::Widget(self.container), event);
+                args.event_queue.push(Target::Widget(self.container), event);
             }
         }
     }

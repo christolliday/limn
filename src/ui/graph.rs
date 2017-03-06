@@ -21,7 +21,7 @@ use widget::builder::WidgetBuilder;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::{resources, WidgetId};
 use color::*;
-use ui::EventAddress;
+use ui::Target;
 
 use super::layout::LimnSolver;
 use super::queue::EventQueue;
@@ -220,25 +220,25 @@ impl WidgetGraph {
     }
 
     pub fn handle_event(&mut self,
-                        address: EventAddress,
+                        address: Target,
                         type_id: TypeId,
                         data: &Box<Any + Send>,
                         event_queue: &mut EventQueue,
                         solver: &mut LimnSolver) {
         match address {
-            EventAddress::Widget(id) => {
+            Target::Widget(id) => {
                 if let Some(node_index) = self.find_widget(id) {
                     self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
                 }
             }
-            EventAddress::Child(id) => {
+            Target::Child(id) => {
                 if let Some(node_index) = self.find_widget(id) {
                     if let Some(child_index) = self.children(node_index).next() {
                         self.trigger_widget_event(child_index, type_id, data, event_queue, solver);
                     }
                 }
             }
-            EventAddress::SubTree(id) => {
+            Target::SubTree(id) => {
                 if let Some(node_index) = self.find_widget(id) {
                     let mut dfs = Dfs::new(&self.graph, node_index);
                     while let Some(node_index) = dfs.next(&self.graph) {
@@ -246,7 +246,7 @@ impl WidgetGraph {
                     }
                 }
             }
-            EventAddress::BubbleUp(id) => {
+            Target::BubbleUp(id) => {
                 // bubble up event from widget, until either it reaches the root, or some widget handles it
                 let mut maybe_node_index = self.find_widget(id);
                 while let Some(node_index) = maybe_node_index {

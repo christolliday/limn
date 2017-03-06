@@ -2,7 +2,7 @@ use backend::Window;
 
 use ui::{self, Ui};
 use ui::EventQueue;
-use ui::{EventArgs, EventAddress, HandlerWrapper};
+use ui::{EventArgs, Target, HandlerWrapper};
 
 pub struct App {
     pub ui: Ui,
@@ -30,7 +30,7 @@ impl App {
             let (event_address, type_id, data) = self.event_queue.next();
             let data = &data;
             match event_address {
-                EventAddress::Ui => {
+                Target::Ui => {
                     for event_handler in self.event_handlers.iter_mut() {
                         if event_handler.handles(type_id) {
                             let args = EventArgs {

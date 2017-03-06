@@ -20,7 +20,7 @@ use backend::gfx::G2d;
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::drawable::ellipse::EllipseDrawable;
-use limn::ui::queue::{EventAddress, EventQueue};
+use limn::ui::queue::{Target, EventQueue};
 use limn::color::*;
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
 
@@ -122,7 +122,7 @@ impl ClockBuilder {
         let clock_id = widget.id;
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
-            event_queue.push(EventAddress::SubTree(clock_id), ClockTick);
+            event_queue.push(Target::SubTree(clock_id), ClockTick);
         });
 
         ClockBuilder { widget: widget }

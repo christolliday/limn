@@ -5,7 +5,7 @@ use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widget::style::Value;
 use drawable::rect::RectStyleField;
-use ui::queue::EventAddress;
+use ui::queue::Target;
 use resources::WidgetId;
 use util::Color;
 use input::mouse::WidgetMouseButton;
@@ -41,7 +41,7 @@ impl EventHandler<WidgetListItemSelected> for ListHandler {
         let selected = event.widget;
         if let Some(old_selected) = self.selected {
             if selected != old_selected {
-                args.event_queue.push(EventAddress::SubTree(old_selected), PropChange::Remove(Property::Selected));
+                args.event_queue.push(Target::SubTree(old_selected), PropChange::Remove(Property::Selected));
             }
         }
         self.selected = Some(selected);
@@ -59,9 +59,9 @@ impl ListItemHandler {
 impl EventHandler<WidgetMouseButton> for ListItemHandler {
     fn handle(&mut self, _: &WidgetMouseButton, mut args: EventArgs) {
        if !args.widget.props.contains(&Property::Selected) {
-            args.event_queue.push(EventAddress::SubTree(args.widget.id), PropChange::Add(Property::Selected));
+            args.event_queue.push(Target::SubTree(args.widget.id), PropChange::Add(Property::Selected));
             let event = WidgetListItemSelected { widget: args.widget.id };
-            args.event_queue.push(EventAddress::Widget(self.list_id), event);
+            args.event_queue.push(Target::Widget(self.list_id), event);
         }
     }
 }

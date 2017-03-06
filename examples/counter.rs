@@ -9,7 +9,7 @@ use limn::widget::layout::{LinearLayout, Orientation};
 use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
-use limn::ui::queue::EventAddress;
+use limn::ui::queue::Target;
 use limn::color::*;
 
 struct CounterEvent(());
@@ -54,7 +54,7 @@ fn main() {
         .set_text("Count")
         .widget
         .on_click(move |_, args| {
-            args.event_queue.push(EventAddress::Widget(root_id), CounterEvent(()));
+            args.event_queue.push(Target::Widget(root_id), CounterEvent(()));
         });
     button_widget.layout.center(&button_container);
     button_widget.layout.bound_by(&button_container, Some(50.0));
@@ -73,7 +73,7 @@ fn main() {
     impl EventHandler<CounterEvent> for CounterHandler {
         fn handle(&mut self, _: &CounterEvent, args: EventArgs) {
             self.count += 1;
-            let address = EventAddress::SubTree(args.widget.id);
+            let address = Target::SubTree(args.widget.id);
             args.event_queue.push(address, CountEvent(self.count));
         }
     }

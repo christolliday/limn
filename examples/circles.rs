@@ -12,7 +12,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::widget::property::{Property, PropChange};
-use limn::ui::queue::EventAddress;
+use limn::ui::queue::Target;
 use limn::ui::LimnSolver;
 use limn::ui::{self, WidgetGraph};
 use limn::util::{Dimensions, Point};
@@ -39,12 +39,12 @@ fn main() {
             .set_text("Undo")
             .widget
             .set_inactive()
-            .on_click(|_, args| { args.event_queue.push(EventAddress::Ui, CircleEvent::Undo); });
+            .on_click(|_, args| { args.event_queue.push(Target::Ui, CircleEvent::Undo); });
         let mut redo_widget = PushButtonBuilder::new()
             .set_text("Redo")
             .widget
             .set_inactive()
-            .on_click(|_, args| { args.event_queue.push(EventAddress::Ui, CircleEvent::Redo); });
+            .on_click(|_, args| { args.event_queue.push(Target::Ui, CircleEvent::Redo); });
         redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
 
         let (undo_id, redo_id) = (undo_widget.id, redo_widget.id);
@@ -103,17 +103,17 @@ fn main() {
                     self.circles.push((point, create_circle(graph, solver, &point)));
                     self.undo.clear();
 
-                    args.event_queue.push(EventAddress::SubTree(self.undo_id), PropChange::Remove(Property::Inactive));
-                    args.event_queue.push(EventAddress::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
+                    args.event_queue.push(Target::SubTree(self.undo_id), PropChange::Remove(Property::Inactive));
+                    args.event_queue.push(Target::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
                 }
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
                         let (point, node_index) = self.circles.pop().unwrap();
                         graph.remove_widget(node_index, solver);
                         self.undo.push(point);
-                        args.event_queue.push(EventAddress::SubTree(self.redo_id), PropChange::Remove(Property::Inactive));
+                        args.event_queue.push(Target::SubTree(self.redo_id), PropChange::Remove(Property::Inactive));
                         if self.circles.len() == 0 {
-                            args.event_queue.push(EventAddress::SubTree(self.undo_id), PropChange::Add(Property::Inactive));
+                            args.event_queue.push(Target::SubTree(self.undo_id), PropChange::Add(Property::Inactive));
                         }
                     }
                 }
@@ -122,7 +122,7 @@ fn main() {
                         let point = self.undo.pop().unwrap();
                         self.circles.push((point, create_circle(graph, solver, &point)));
                         if self.undo.len() == 0 {
-                            args.event_queue.push(EventAddress::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
+                            args.event_queue.push(Target::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
                         }
                     }
                 }
@@ -131,7 +131,7 @@ fn main() {
     }
     let mut root_widget = WidgetBuilder::new().on_click(|event, args| {
         let event = CircleEvent::Add(event.position);
-        args.event_queue.push(EventAddress::Ui, event);
+        args.event_queue.push(Target::Ui, event);
     });
     root_widget.layout.dimensions(Dimensions {
         width: 300.0,

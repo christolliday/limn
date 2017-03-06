@@ -9,7 +9,7 @@ use backend::Window;
 use resources::WidgetId;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
-pub enum EventAddress {
+pub enum Target {
     Widget(WidgetId),
     Child(WidgetId),
     SubTree(WidgetId),
@@ -19,7 +19,7 @@ pub enum EventAddress {
 
 #[derive(Clone)]
 pub struct EventQueue {
-    queue: Arc<Mutex<VecDeque<(EventAddress, TypeId, Box<Any + Send>)>>>,
+    queue: Arc<Mutex<VecDeque<(Target, TypeId, Box<Any + Send>)>>>,
     window_proxy: WindowProxy,
 }
 
@@ -30,7 +30,7 @@ impl EventQueue {
             window_proxy: window.window.create_window_proxy(),
         }
     }
-    pub fn push<T>(&mut self, address: EventAddress, data: T)
+    pub fn push<T>(&mut self, address: Target, data: T)
         where T: Send + 'static
     {
         let mut queue = self.queue.lock().unwrap();
@@ -42,7 +42,7 @@ impl EventQueue {
         let queue = self.queue.lock().unwrap();
         queue.len() == 0
     }
-    pub fn next(&mut self) -> (EventAddress, TypeId, Box<Any + Send>) {
+    pub fn next(&mut self) -> (Target, TypeId, Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.pop_front().unwrap()
     }

@@ -3,7 +3,7 @@ pub mod queue;
 pub mod layout;
 
 pub use self::graph::WidgetGraph;
-pub use self::queue::{EventQueue, EventAddress};
+pub use self::queue::{EventQueue, Target};
 pub use self::layout::LimnSolver;
 
 use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
@@ -44,27 +44,27 @@ impl Ui {
 
     pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
         let ref root_widget = self.graph.get_root();
-        let all_widgets = EventAddress::SubTree(root_widget.id);
+        let all_widgets = Target::SubTree(root_widget.id);
         match event {
             glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
                 event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
-                event_queue.push(EventAddress::Ui, MouseWheel(mouse_scroll_delta));
+                event_queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
             }
             glutin::Event::MouseInput(state, button) => {
                 event_queue.push(all_widgets, MouseButton(state, button));
-                event_queue.push(EventAddress::Ui, MouseButton(state, button));
+                event_queue.push(Target::Ui, MouseButton(state, button));
             }
             glutin::Event::MouseMoved(x, y) => {
                 let point = Point::new(x as f64, y as f64);
                 event_queue.push(all_widgets, MouseMoved(point));
-                event_queue.push(EventAddress::Ui, MouseMoved(point));
+                event_queue.push(Target::Ui, MouseMoved(point));
             }
             glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
                 let key_input = KeyboardInput(state, scan_code, maybe_keycode);
-                event_queue.push(EventAddress::Ui, key_input);
+                event_queue.push(Target::Ui, key_input);
             }
             glutin::Event::ReceivedCharacter(char) => {
-                event_queue.push(EventAddress::Ui, ReceivedCharacter(char));
+                event_queue.push(Target::Ui, ReceivedCharacter(char));
             }
             _ => (),
         }
@@ -76,7 +76,7 @@ impl Ui {
             widget.layout.update(&mut self.solver);
         }
         // redraw everything when layout changes, for now
-        event_queue.push(EventAddress::Ui, RedrawEvent);
+        event_queue.push(Target::Ui, RedrawEvent);
         self.graph.redraw();
     }
 }
