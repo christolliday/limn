@@ -11,6 +11,8 @@ use input::mouse::{MouseMoved, MouseButton, MouseWheel};
 use input::keyboard::{FocusHandler, KeyboardForwarder, KeyboardCharForwarder};
 use input::keyboard::{KeyboardInput, ReceivedCharacter};
 
+use widgets::drag::{DragInputHandler, DragMouseCursorHandler, DragMouseReleaseHandler};
+
 use backend::Window;
 
 use std::any::{Any, TypeId};
@@ -43,20 +45,15 @@ impl Ui {
     }
 
     pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
-        let ref root_widget = self.graph.get_root();
-        let all_widgets = Target::SubTree(root_widget.id);
         match event {
             glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                event_queue.push(all_widgets, MouseWheel(mouse_scroll_delta));
                 event_queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
             }
             glutin::Event::MouseInput(state, button) => {
-                event_queue.push(all_widgets, MouseButton(state, button));
                 event_queue.push(Target::Ui, MouseButton(state, button));
             }
             glutin::Event::MouseMoved(x, y) => {
                 let point = Point::new(x as f64, y as f64);
-                event_queue.push(all_widgets, MouseMoved(point));
                 event_queue.push(Target::Ui, MouseMoved(point));
             }
             glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
@@ -148,13 +145,19 @@ pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
         HandlerWrapper::new(RedrawHandler),
         HandlerWrapper::new(LayoutChangeHandler),
         HandlerWrapper::new(InputHandler),
+
         HandlerWrapper::new(MouseController::new()),
         HandlerWrapper::new(MouseLayoutChangeHandler),
         HandlerWrapper::new(MouseMoveHandler),
         HandlerWrapper::new(MouseButtonHandler),
         HandlerWrapper::new(MouseWheelHandler),
+
         HandlerWrapper::new(KeyboardForwarder),
         HandlerWrapper::new(KeyboardCharForwarder),
         HandlerWrapper::new(FocusHandler::new()),
+
+        HandlerWrapper::new(DragInputHandler::new()),
+        HandlerWrapper::new(DragMouseCursorHandler),
+        HandlerWrapper::new(DragMouseReleaseHandler),
     ]
 }

@@ -9,8 +9,7 @@ use widget::property::{PropSet, Property, PropChangeHandler};
 use widgets::hover::HoverHandler;
 use widgets::button::ClickHandler;
 use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
-use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCursorHandler,
-                    DragInputHandler};
+use widgets::drag::DragWidgetPressHandler;
 use resources::{resources, WidgetId};
 use input::mouse::ClickEvent;
 
@@ -85,9 +84,6 @@ impl WidgetBuilder {
     }
     pub fn draggable(self) -> Self {
         self.add_handler(DragWidgetPressHandler)
-            .add_handler(DragMouseCursorHandler)
-            .add_handler(DragMouseReleaseHandler)
-            .add_handler(DragInputHandler::new())
     }
 
     // only method that is not chainable, because usually called out of order
