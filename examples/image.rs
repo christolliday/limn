@@ -3,7 +3,7 @@ extern crate limn;
 mod util;
 
 use limn::widget::builder::WidgetBuilder;
-use limn::widgets::image::ImageDrawable;
+use limn::drawable::image::ImageDrawable;
 
 fn main() {
     let (mut window, ui) = util::init_default("Limn button demo");

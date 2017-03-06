@@ -6,7 +6,7 @@ mod util;
 use limn::widget::{EventHandler, EventArgs};
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{TextDrawable, TextStyleField};
+use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
 use limn::ui::queue::EventAddress;

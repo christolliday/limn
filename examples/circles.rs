@@ -10,7 +10,7 @@ use cassowary::strength::*;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
-use limn::widgets::primitives::EllipseDrawable;
+use limn::drawable::ellipse::EllipseDrawable;
 use limn::widget::property::Property;
 use limn::ui::queue::EventAddress;
 use limn::ui::LimnSolver;

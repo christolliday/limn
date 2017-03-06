@@ -4,8 +4,8 @@ mod util;
 
 use limn::widget::builder::WidgetBuilder;
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::widgets::text::{TextDrawable, TextStyleField};
-use limn::widgets::primitives::RectDrawable;
+use limn::drawable::text::{TextDrawable, TextStyleField};
+use limn::drawable::rect::RectDrawable;
 use limn::widgets::list::{ListHandler, ListItemHandler, STYLE_LIST_ITEM};
 use limn::widget::style::Value;
 use limn::util::Dimensions;

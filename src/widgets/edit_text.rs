@@ -2,9 +2,8 @@ use widget::{EventHandler, EventArgs};
 use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter};
 use widget::property::PropsChangeEventHandler;
 use widget::builder::WidgetBuilder;
-use widgets::{primitives, text};
-use widgets::primitives::RectDrawable;
-use widgets::text::TextDrawable;
+use drawable::rect::RectDrawable;
+use drawable::text::TextDrawable;
 
 pub struct EditTextKeyboardHandler {
     text: String,

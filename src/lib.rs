@@ -18,6 +18,7 @@ extern crate downcast_rs;
 pub mod app;
 pub mod widget;
 pub mod widgets;
+pub mod drawable;
 pub mod ui;
 pub mod util;
 pub mod resources;

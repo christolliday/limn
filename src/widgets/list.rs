@@ -4,7 +4,7 @@ use widget::{EventArgs, EventHandler};
 use widget::property::Property;
 use widget::property::states::*;
 use widget::style::Value;
-use widgets::primitives::RectStyleField;
+use drawable::rect::RectStyleField;
 use ui::queue::EventAddress;
 use resources::WidgetId;
 use util::Color;
