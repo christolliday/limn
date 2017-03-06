@@ -7,7 +7,6 @@ use glutin::WindowProxy;
 use backend::Window;
 
 use resources::WidgetId;
-use widget::property::{Property, WidgetChangeProp};
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EventAddress {
@@ -46,13 +45,5 @@ impl EventQueue {
     pub fn next(&mut self) -> (EventAddress, TypeId, Box<Any + Send>) {
         let mut queue = self.queue.lock().unwrap();
         queue.pop_front().unwrap()
-    }
-    // common events
-    pub fn change_prop(&mut self, widget_id: WidgetId, prop: Property, add: bool) {
-        self.push(EventAddress::SubTree(widget_id),
-                  WidgetChangeProp {
-                      property: prop,
-                      add: add,
-                  });
     }
 }

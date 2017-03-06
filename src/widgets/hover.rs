@@ -1,5 +1,6 @@
+use ui::queue::EventAddress;
 use widget::{EventArgs, EventHandler};
-use widget::property::Property;
+use widget::property::{Property, PropChange};
 
 #[derive(Debug)]
 pub enum Hover {
@@ -10,11 +11,10 @@ pub enum Hover {
 pub struct HoverHandler;
 impl EventHandler<Hover> for HoverHandler {
     fn handle(&mut self, event: &Hover, mut args: EventArgs) {
-        let hover = match *event {
-            Hover::Over => true,
-            Hover::Out => false,
+        let event = match *event {
+            Hover::Over => PropChange::Add(Property::Hover),
+            Hover::Out => PropChange::Remove(Property::Hover),
         };
-
-        args.event_queue.change_prop(args.widget.id, Property::Hover, hover);
+        args.event_queue.push(EventAddress::SubTree(args.widget.id), event);
     }
 }

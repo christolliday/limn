@@ -1,7 +1,7 @@
 use linked_hash_map::LinkedHashMap;
 
 use widget::{EventArgs, EventHandler};
-use widget::property::Property;
+use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widget::style::Value;
 use drawable::rect::RectStyleField;
@@ -41,7 +41,7 @@ impl EventHandler<WidgetListItemSelected> for ListHandler {
         let selected = event.widget;
         if let Some(old_selected) = self.selected {
             if selected != old_selected {
-                args.event_queue.change_prop(old_selected, Property::Selected, false);
+                args.event_queue.push(EventAddress::SubTree(old_selected), PropChange::Remove(Property::Selected));
             }
         }
         self.selected = Some(selected);
@@ -59,7 +59,7 @@ impl ListItemHandler {
 impl EventHandler<WidgetMouseButton> for ListItemHandler {
     fn handle(&mut self, _: &WidgetMouseButton, mut args: EventArgs) {
        if !args.widget.props.contains(&Property::Selected) {
-            args.event_queue.change_prop(args.widget.id, Property::Selected, true);
+            args.event_queue.push(EventAddress::SubTree(args.widget.id), PropChange::Add(Property::Selected));
             let event = WidgetListItemSelected { widget: args.widget.id };
             args.event_queue.push(EventAddress::Widget(self.list_id), event);
         }

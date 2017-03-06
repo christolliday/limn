@@ -1,13 +1,11 @@
 use std::collections::BTreeSet;
 
 use widget::{EventHandler, EventArgs};
-use ui::queue::EventAddress;
 
-pub struct WidgetChangeProp {
-    pub property: Property,
-    pub add: bool,
+pub enum PropChange {
+    Add(Property),
+    Remove(Property),
 }
-pub struct WidgetPropsChanged;
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum Property {
@@ -32,16 +30,13 @@ pub mod states {
     }
 }
 
-pub struct PropsChangeEventHandler;
-impl EventHandler<WidgetChangeProp> for PropsChangeEventHandler {
-    fn handle(&mut self, event: &WidgetChangeProp, mut args: EventArgs) {
-        let &WidgetChangeProp { ref property, add } = event;
-        if add {
-            args.widget.props.insert(property.clone());
-        } else {
-            args.widget.props.remove(property);
-        }
+pub struct PropChangeHandler;
+impl EventHandler<PropChange> for PropChangeHandler {
+    fn handle(&mut self, event: &PropChange, mut args: EventArgs) {
+        match *event {
+            PropChange::Add(ref property) => args.widget.props.insert(property.clone()),
+            PropChange::Remove(ref property) => args.widget.props.remove(&property),
+        };
         args.widget.apply_style();
-        args.event_queue.push(EventAddress::Widget(args.widget.id), WidgetPropsChanged);
     }
 }

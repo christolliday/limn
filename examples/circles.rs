@@ -11,7 +11,7 @@ use cassowary::strength::*;
 use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::drawable::ellipse::EllipseDrawable;
-use limn::widget::property::Property;
+use limn::widget::property::{Property, PropChange};
 use limn::ui::queue::EventAddress;
 use limn::ui::LimnSolver;
 use limn::ui::{self, WidgetGraph};
@@ -103,17 +103,17 @@ fn main() {
                     self.circles.push((point, create_circle(graph, solver, &point)));
                     self.undo.clear();
 
-                    args.event_queue.change_prop(self.undo_id, Property::Inactive, false);
-                    args.event_queue.change_prop(self.redo_id, Property::Inactive, true);
+                    args.event_queue.push(EventAddress::SubTree(self.undo_id), PropChange::Remove(Property::Inactive));
+                    args.event_queue.push(EventAddress::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
                 }
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
                         let (point, node_index) = self.circles.pop().unwrap();
                         graph.remove_widget(node_index, solver);
                         self.undo.push(point);
-                        args.event_queue.change_prop(self.redo_id, Property::Inactive, false);
+                        args.event_queue.push(EventAddress::SubTree(self.redo_id), PropChange::Remove(Property::Inactive));
                         if self.circles.len() == 0 {
-                            args.event_queue.change_prop(self.undo_id, Property::Inactive, true);
+                            args.event_queue.push(EventAddress::SubTree(self.undo_id), PropChange::Add(Property::Inactive));
                         }
                     }
                 }
@@ -122,7 +122,7 @@ fn main() {
                         let point = self.undo.pop().unwrap();
                         self.circles.push((point, create_circle(graph, solver, &point)));
                         if self.undo.len() == 0 {
-                            args.event_queue.change_prop(self.redo_id, Property::Inactive, true);
+                            args.event_queue.push(EventAddress::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
                         }
                     }
                 }
@@ -140,9 +140,6 @@ fn main() {
 
 
     let (undo_id, redo_id) = create_undo_redo_buttons(&mut root_widget);
-    // todo: better way to set initial props
-    //ui.event_queue.change_prop(undo_id, Property::Inactive, true);
-    //ui.event_queue.change_prop(redo_id, Property::Inactive, true);
 
     let circle_handler = ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id));
     ui.event_handlers.push(circle_handler);

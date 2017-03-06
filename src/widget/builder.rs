@@ -5,7 +5,7 @@ use widget::{Widget, WidgetContainer, EventHandler, HandlerWrapper, EventArgs};
 use widget::drawable::{Drawable, DrawableWrapper};
 use widget::style::Style;
 use widget::layout::{LayoutBuilder, WidgetConstraint};
-use widget::property::{PropSet, Property, PropsChangeEventHandler};
+use widget::property::{PropSet, Property, PropChangeHandler};
 use widgets::hover::HoverHandler;
 use widgets::button::ClickHandler;
 use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
@@ -78,7 +78,7 @@ impl WidgetBuilder {
         self.add_handler(HoverHandler)
     }
     pub fn props_may_change(self) -> Self {
-        self.add_handler(PropsChangeEventHandler)
+        self.add_handler(PropChangeHandler)
     }
     pub fn scrollable(self) -> Self {
         self.add_handler(WidgetScrollHandler::new())
