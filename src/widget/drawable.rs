@@ -13,32 +13,17 @@ use widget::style::{self, Style, StyleField};
 
 use util::{self, Point, Rectangle};
 
-pub struct DrawArgs<'a, 'b: 'a, T: 'static> {
-    pub state: &'a T,
-    pub bounds: Rectangle,
-    pub parent_bounds: Rectangle,
-    pub glyph_cache: &'a mut GlyphCache,
-    pub context: Context,
-    pub graphics: &'a mut G2d<'b>,
-}
 
-pub struct StyleArgs<'a> {
-    pub drawable: &'a mut Drawable,
-    pub style: &'a Box<Any>,
-    pub props: &'a PropSet,
+pub trait Drawable: Downcast {
+    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d);
 }
+impl_downcast!(Drawable);
+
+type StyleFn = Fn(&mut Drawable, &Box<Any>, &PropSet);
 
 pub struct DrawableStyle {
     pub style: Box<Any>,
-    pub style_fn: Box<Fn(StyleArgs)>,
-}
-impl DrawableStyle {
-    pub fn new<D: Drawable, T: Style<D> + 'static>(style: T, style_fn: Box<Fn(StyleArgs)>) -> Self {
-        DrawableStyle {
-            style: Box::new(style),
-            style_fn: style_fn,
-        }
-    }
+    pub style_fn: Box<StyleFn>,
 }
 pub struct DrawableWrapper {
     pub drawable: Box<Drawable>,
@@ -54,13 +39,15 @@ impl DrawableWrapper {
     }
     pub fn new_with_style<T: Drawable + 'static, S: Style<T> + 'static>(drawable: T, style: S) -> Self
     {
-        let style_fn = |args: StyleArgs| {
-            let StyleArgs { drawable, style, props } = args;
+        let style_fn = |drawable: &mut Drawable, style: &Box<Any>, props: &PropSet| {
             let drawable: &mut T = drawable.downcast_mut().unwrap();
             let style: &S = style.downcast_ref().unwrap();
             style.apply(drawable, props);
         };
-        let style = Some(DrawableStyle::new(style, Box::new(style_fn)));
+        let style = Some(DrawableStyle {
+            style: Box::new(style),
+            style_fn: Box::new(style_fn),
+        });
         DrawableWrapper {
             drawable: Box::new(drawable),
             style: style,
@@ -68,22 +55,13 @@ impl DrawableWrapper {
     }
     pub fn apply_style(&mut self, props: &PropSet) -> bool {
         if let Some(ref style) = self.style {
-            (style.style_fn)(StyleArgs {
-                drawable: self.drawable.as_mut(),
-                style: &style.style,
-                props: props,
-            });
+            (style.style_fn)(self.drawable.as_mut(), &style.style, props);
             true
         } else {
             false
         }
     }
 }
-
-pub trait Drawable: Downcast {
-    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d);
-}
-impl_downcast!(Drawable);
 
 pub struct DrawableEventHandler<T, E> {
     drawable_callback: Box<Fn(&mut T)>,

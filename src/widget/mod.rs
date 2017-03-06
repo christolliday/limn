@@ -20,7 +20,6 @@ use util::{self, Point, Rectangle};
 use self::property::PropSet;
 use self::layout::LayoutVars;
 use self::drawable::{Drawable, DrawableWrapper};
-use self::drawable::StyleArgs;
 
 pub use self::builder::WidgetBuilder;
 

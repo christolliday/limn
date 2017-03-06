@@ -4,7 +4,7 @@ use backend::gfx::{ImageSize, G2d};
 use backend::glyph::GlyphCache;
 
 use resources::{ImageId, resources};
-use widget::drawable::{Drawable, DrawArgs};
+use widget::drawable::Drawable;
 use util::{Dimensions, Rectangle};
 
 pub struct ImageDrawable {

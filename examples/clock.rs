@@ -17,7 +17,7 @@ use graphics::Context;
 use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
 
-use limn::widget::drawable::{Drawable, DrawArgs, DrawableEventHandler};
+use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::ui::queue::{EventAddress, EventQueue};

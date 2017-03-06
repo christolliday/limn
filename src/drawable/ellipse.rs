@@ -7,7 +7,7 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 use graphics::Context;
 
-use widget::drawable::{Drawable, StyleArgs, DrawArgs};
+use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{self, Value, StyleField};
 use util::{Scalar, Rectangle, Point};
