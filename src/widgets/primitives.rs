@@ -17,23 +17,18 @@ use color::*;
 pub struct RectDrawable {
     pub background_color: Color,
     pub corner_radius: Option<Scalar>,
-    pub style: Vec<RectStyleField>,
 }
 impl Default for RectDrawable {
     fn default() -> Self {
         RectDrawable {
             background_color: WHITE,
             corner_radius: None,
-            style: vec![],
         }
     }
 }
 impl RectDrawable {
-    pub fn new(style: Vec<RectStyleField>) -> Self {
-        let mut drawable = RectDrawable::default();
-        style::apply_style(&mut drawable, &style, &PropSet::new());
-        drawable.style = style;
-        drawable
+    pub fn new() -> Self {
+        RectDrawable::default()
     }
 }
 impl Drawable for RectDrawable {

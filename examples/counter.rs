@@ -37,10 +37,10 @@ fn main() {
 
     let text_style = vec![TextStyleField::Text(Value::Single("0".to_owned())),
                           TextStyleField::BackgroundColor(Value::Single(WHITE))];
-    let text_drawable = TextDrawable::new(text_style);
+    let text_drawable = TextDrawable::new();
     let text_dims = text_drawable.measure();
     let mut text_widget = WidgetBuilder::new()
-        .set_drawable(text_drawable)
+        .set_drawable_with_style(text_drawable, text_style)
         .add_handler(CountHandler {});
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);

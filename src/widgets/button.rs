@@ -71,7 +71,7 @@ impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
         let mut widget = WidgetBuilder::new()
-            .set_drawable_with_style(RectDrawable::new(STYLE_BUTTON.clone()), STYLE_BUTTON.clone())
+            .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler(ButtonDownHandler)
             .add_handler(ToggleEventHandler)
             .add_handler(PropsChangeEventHandler);
@@ -90,7 +90,7 @@ impl ToggleButtonBuilder {
                                                                     off_text.to_owned()))),
                               TextStyleField::Align(Value::Single(Align::Middle))];
 
-        let button_text_drawable = TextDrawable::new(text_style.clone());
+        let button_text_drawable = TextDrawable::new();
         let button_text_dims = button_text_drawable.measure();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable_with_style(button_text_drawable, text_style)
@@ -127,7 +127,7 @@ pub struct PushButtonBuilder {
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new()
-            .set_drawable(RectDrawable::new(STYLE_BUTTON.clone()))
+            .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler(PropsChangeEventHandler);
 
         widget.layout.dimensions(Dimensions {
@@ -141,7 +141,7 @@ impl PushButtonBuilder {
 
         let text_style = vec![TextStyleField::Text(Value::Single(text.to_owned())),
                               TextStyleField::Align(Value::Single(Align::Middle))];
-        let drawable = TextDrawable::new(text_style.clone());
+        let drawable = TextDrawable::new();
         let button_text_dims = drawable.measure();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable_with_style(drawable, text_style)

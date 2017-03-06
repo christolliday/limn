@@ -40,12 +40,12 @@ impl EditTextBuilder {
     pub fn new() -> Self {
 
         let mut widget = WidgetBuilder::new()
-            .set_drawable(RectDrawable::new(vec![]))
+            .set_drawable(RectDrawable::new())
             .add_handler(WidgetFocusHandler)
             .add_handler(PropsChangeEventHandler);
 
         let text_widget = WidgetBuilder::new()
-            .set_drawable(TextDrawable::new(vec![]))
+            .set_drawable(TextDrawable::new())
             .add_handler(EditTextKeyboardHandler::new())
             .add_handler(PropsChangeEventHandler);
         

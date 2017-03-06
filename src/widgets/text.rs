@@ -37,10 +37,8 @@ impl Default for TextDrawable {
 }
 
 impl TextDrawable {
-    pub fn new(style: Vec<TextStyleField>) -> Self {
-        let mut state = TextDrawable::default();
-        style::apply_style(&mut state, &style, &PropSet::new());
-        state
+    pub fn new() -> Self {
+        TextDrawable::default()
     }
     pub fn measure(&self) -> Dimensions {
         let res = resources();

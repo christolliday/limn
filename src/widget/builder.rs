@@ -7,7 +7,7 @@ use widget::{Widget, WidgetContainer, EventHandler, HandlerWrapper, EventArgs};
 use widget::drawable::{Drawable, DrawableWrapper};
 use widget::style::Style;
 use widget::layout::{LayoutBuilder, WidgetConstraint};
-use widget::property::PropsChangeEventHandler;
+use widget::property::{PropSet, Property, PropsChangeEventHandler};
 use widgets::hover::HoverHandler;
 use widgets::button::ClickHandler;
 use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
@@ -20,6 +20,7 @@ use input::mouse::ClickEvent;
 pub struct WidgetBuilder {
     pub id: WidgetId,
     pub drawable: Option<DrawableWrapper>,
+    pub props: PropSet,
     pub layout: LayoutBuilder,
     pub event_handlers: Vec<HandlerWrapper>,
     pub debug_name: Option<String>,
@@ -33,6 +34,7 @@ impl WidgetBuilder {
         WidgetBuilder {
             id: resources().widget_id(),
             drawable: None,
+            props: PropSet::new(),
             layout: LayoutBuilder::new(),
             event_handlers: Vec::new(),
             debug_name: None,
@@ -59,6 +61,10 @@ impl WidgetBuilder {
     }
     pub fn set_debug_color(mut self, color: Color) -> Self {
         self.debug_color = Some(color);
+        self
+    }
+    pub fn set_inactive(mut self) -> Self {
+        self.props.insert(Property::Inactive);
         self
     }
     // common handlers
@@ -107,6 +113,7 @@ impl WidgetBuilder {
         }
         let widget = Widget::new(self.id,
                                  self.drawable,
+                                 self.props,
                                  self.layout.vars,
                                  self.debug_name,
                                  self.debug_color);

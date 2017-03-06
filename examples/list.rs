@@ -37,11 +37,11 @@ fn main() {
             let text_style = vec![TextStyleField::Text(Value::Single("hello".to_owned())),
                                   TextStyleField::TextColor(Value::Single(WHITE))];
 
-            let text_drawable = TextDrawable::new(text_style);
+            let text_drawable = TextDrawable::new();
             let text_dims = text_drawable.measure();
 
             let mut list_item_widget = WidgetBuilder::new()
-                .set_drawable_with_style(RectDrawable::new(STYLE_LIST_ITEM.clone()), STYLE_LIST_ITEM.clone())
+                .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
                 .set_debug_name("item")
                 .props_may_change()
                 .enable_hover()
@@ -51,7 +51,7 @@ fn main() {
             linear_layout.add_widget(&mut list_item_widget);
 
             let mut list_text_widget = WidgetBuilder::new()
-                .set_drawable(text_drawable)
+                .set_drawable_with_style(text_drawable, text_style)
                 .set_debug_name("text");
             list_text_widget.layout.center(&list_item_widget);
             list_item_widget.add_child(list_text_widget);

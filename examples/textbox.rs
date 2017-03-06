@@ -25,10 +25,10 @@ fn main() {
                                                               Jello.\nIt's good for the stomach"
                               .to_owned())),
                           TextStyleField::BackgroundColor(Value::Single(WHITE))];
-    let text_drawable = TextDrawable::new(text_style.clone());
+    let text_drawable = TextDrawable::new();
 
     let text_widget = WidgetBuilder::new()
-        .set_drawable(text_drawable)
+        .set_drawable_with_style(text_drawable, text_style)
         .set_debug_name("text");
 
     let mut button = ToggleButtonBuilder::new()

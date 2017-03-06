@@ -110,19 +110,22 @@ pub struct Widget {
 impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<DrawableWrapper>,
+               props: PropSet,
                layout: LayoutVars,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
-        Widget {
+        let mut widget = Widget {
             id: id,
             drawable: drawable,
-            props: PropSet::new(),
+            props: props,
             has_updated: false,
             layout: layout,
             debug_name: debug_name,
             debug_color: debug_color,
-        }
+        };
+        widget.apply_style();
+        widget
     }
     pub fn draw(&mut self,
                 crop_to: Rectangle,

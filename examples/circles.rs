@@ -38,10 +38,12 @@ fn main() {
         let undo_widget = PushButtonBuilder::new()
             .set_text("Undo")
             .widget
+            .set_inactive()
             .on_click(|_, args| { args.event_queue.push(EventAddress::Ui, CircleEvent::Undo); });
         let mut redo_widget = PushButtonBuilder::new()
             .set_text("Redo")
             .widget
+            .set_inactive()
             .on_click(|_, args| { args.event_queue.push(EventAddress::Ui, CircleEvent::Redo); });
         redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
 
@@ -139,8 +141,8 @@ fn main() {
 
     let (undo_id, redo_id) = create_undo_redo_buttons(&mut root_widget);
     // todo: better way to set initial props
-    ui.event_queue.change_prop(undo_id, Property::Inactive, true);
-    ui.event_queue.change_prop(redo_id, Property::Inactive, true);
+    //ui.event_queue.change_prop(undo_id, Property::Inactive, true);
+    //ui.event_queue.change_prop(redo_id, Property::Inactive, true);
 
     let circle_handler = ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id));
     ui.event_handlers.push(circle_handler);
