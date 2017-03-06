@@ -43,6 +43,22 @@ pub fn get_text_dimensions(text: &str,
         height: line_infos.count() as f64 * line_height,
     }
 }
+pub fn get_line_rects(text: &str,
+                      rect: Rectangle,
+                      font: &Font,
+                      font_size: Scalar,
+                      line_height: Scalar,
+                      line_wrap: Wrap,
+                      x_align: Align,
+                      y_align: Align)
+                      -> Vec<Rectangle> {
+
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width)
+        .collect();
+    let line_infos = line_infos.iter().cloned();
+    let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
+    line_rects.collect()
+}
 
 pub fn get_positioned_glyphs(text: &str,
                              rect: Rectangle,

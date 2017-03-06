@@ -240,6 +240,16 @@ impl Into<text_layout::Rectangle> for Rectangle {
         }
     }
 }
+impl Into<Rectangle> for text_layout::Rectangle {
+    fn into(self) -> Rectangle {
+        Rectangle {
+            left: self.left,
+            top: self.top,
+            width: self.width,
+            height: self.height,
+        }
+    }
+}
 impl Into<Dimensions> for text_layout::Dimensions {
     fn into(self) -> Dimensions {
         Dimensions {

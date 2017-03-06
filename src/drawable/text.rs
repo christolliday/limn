@@ -13,6 +13,8 @@ use widget::property::PropSet;
 use widget::style::{Value, StyleField};
 use color::*;
 
+const DEBUG_LINE_BOUNDS: bool = false;
+
 pub struct TextDrawable {
     pub text: String,
     pub font_id: FontId,
@@ -21,6 +23,7 @@ pub struct TextDrawable {
     pub background_color: Color,
     pub wrap: Wrap,
     pub align: Align,
+    pub vertical_align: Align,
 }
 impl Default for TextDrawable {
     fn default() -> Self {
@@ -32,6 +35,7 @@ impl Default for TextDrawable {
             background_color: TRANSPARENT,
             wrap: Wrap::Whitespace,
             align: Align::Start,
+            vertical_align: Align::Middle,
         }
     }
 }
@@ -64,14 +68,27 @@ impl Drawable for TextDrawable {
             let res = resources();
             let font = res.fonts.get(self.font_id).unwrap();
 
+            let line_height = self.font_size * 1.25;
+            if DEBUG_LINE_BOUNDS {
+                let line_rects = &text_layout::get_line_rects(&self.text,bounds.into(),
+                                                              font,
+                                                              self.font_size,
+                                                              line_height,
+                                                              self.wrap,
+                                                              self.align,
+                                                              self.vertical_align);
+                for line_rect in line_rects {
+                    util::draw_rect_outline((*line_rect).into(), CYAN, context, graphics);
+                }
+            }
             let positioned_glyphs = &text_layout::get_positioned_glyphs(&self.text,
                                                                         bounds.into(),
                                                                         font,
                                                                         self.font_size,
-                                                                        self.font_size * 1.25,
+                                                                        line_height,
                                                                         self.wrap,
                                                                         self.align,
-                                                                        Align::Start);
+                                                                        self.vertical_align);
 
             // Queue the glyphs to be cached.
             for glyph in positioned_glyphs.iter() {

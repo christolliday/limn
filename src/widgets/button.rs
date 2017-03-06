@@ -94,11 +94,9 @@ impl ToggleButtonBuilder {
                               TextStyleField::Align(Value::Single(Align::Middle))];
 
         let button_text_drawable = TextDrawable::new();
-        let button_text_dims = button_text_drawable.measure();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable_with_style(button_text_drawable, text_style)
             .add_handler(PropChangeHandler);
-        button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget);
 
         self.widget.add_child(button_text_widget);
@@ -145,11 +143,9 @@ impl PushButtonBuilder {
         let text_style = vec![TextStyleField::Text(Value::Single(text.to_owned())),
                               TextStyleField::Align(Value::Single(Align::Middle))];
         let drawable = TextDrawable::new();
-        let button_text_dims = drawable.measure();
         let mut button_text_widget = WidgetBuilder::new()
             .set_drawable_with_style(drawable, text_style)
             .add_handler(PropChangeHandler);
-        button_text_widget.layout.dimensions(button_text_dims);
         button_text_widget.layout.center(&self.widget);
 
         self.widget.add_child(button_text_widget);
