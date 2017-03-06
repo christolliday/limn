@@ -9,7 +9,7 @@ use graphics::Context;
 
 use widget::drawable::Drawable;
 use widget::property::PropSet;
-use widget::style::{self, Value, StyleField};
+use widget::style::{Value, StyleField};
 use util::{Scalar, Rectangle, Point};
 use color::*;
 
@@ -32,7 +32,7 @@ impl RectDrawable {
     }
 }
 impl Drawable for RectDrawable {
-    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         if let Some(radius) = self.corner_radius {
             let points_per_corner = 8;
             let angle_per_step = 2.0 * PI / (points_per_corner * 4) as Scalar;

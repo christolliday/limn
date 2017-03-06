@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use graphics::types::Color;
 use cassowary;
 
@@ -14,7 +12,6 @@ use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
 use widgets::drag::{DragWidgetPressHandler, DragMouseReleaseHandler, DragMouseCursorHandler,
                     DragInputHandler};
 use resources::{resources, WidgetId};
-use util::{Point, Rectangle};
 use input::mouse::ClickEvent;
 
 pub struct WidgetBuilder {

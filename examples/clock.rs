@@ -52,7 +52,7 @@ impl HandDrawable {
     }
 }
 impl Drawable for HandDrawable {
-    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         let cos = self.angle.cos();
         let sin = self.angle.sin();
         let hand_dir = Point {

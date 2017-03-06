@@ -10,7 +10,7 @@ use resources::{FontId, resources};
 use util::{self, Dimensions, Scalar, Rectangle};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
-use widget::style::{self, Value, StyleField};
+use widget::style::{Value, StyleField};
 use color::*;
 
 pub struct TextDrawable {
@@ -53,7 +53,7 @@ impl TextDrawable {
 }
 
 impl Drawable for TextDrawable {
-    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rectangle, _: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         graphics::Rectangle::new(self.background_color)
                 .draw(bounds, &context.draw_state, context.transform, graphics);
 

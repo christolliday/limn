@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::f64;
 use std::any::{Any, TypeId};
 
 use petgraph::stable_graph::StableGraph;

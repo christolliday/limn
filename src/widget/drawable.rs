@@ -1,4 +1,4 @@
-use std::any::{TypeId, Any};
+use std::any::Any;
 use std::marker::PhantomData;
 
 use downcast_rs::Downcast;
@@ -9,9 +9,9 @@ use backend::glyph::GlyphCache;
 
 use widget::{EventHandler, EventArgs};
 use widget::property::PropSet;
-use widget::style::{self, Style, StyleField};
+use widget::style::Style;
 
-use util::{self, Point, Rectangle};
+use util::Rectangle;
 
 
 pub trait Drawable: Downcast {

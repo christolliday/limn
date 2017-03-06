@@ -31,7 +31,7 @@ impl ImageDrawable {
     }
 }
 impl Drawable for ImageDrawable {
-    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         let res = resources();
         let img = res.images.get(self.image_id).unwrap();
         let dims: Dimensions = img.get_size().into();
