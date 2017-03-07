@@ -6,17 +6,17 @@ use ui::{EventArgs, HandlerWrapper};
 
 pub struct App {
     pub ui: Ui,
-    pub event_queue: Queue,
+    pub queue: Queue,
     pub event_handlers: Vec<HandlerWrapper>,
 }
 
 impl App {
     pub fn new(window: &mut Window) -> Self {
-        let event_queue = Queue::new(window);
-        let ui = Ui::new(window, &event_queue);
+        let queue = Queue::new(window);
+        let ui = Ui::new(window, &queue);
         App {
             ui: ui,
-            event_queue: event_queue,
+            queue: queue,
             event_handlers: ui::get_default_event_handlers(),
         }
     }
@@ -26,8 +26,8 @@ impl App {
     }
 
     pub fn handle_events(&mut self) {
-        while !self.event_queue.is_empty() {
-            let (event_address, type_id, data) = self.event_queue.next();
+        while !self.queue.is_empty() {
+            let (event_address, type_id, data) = self.queue.next();
             let data = &data;
             match event_address {
                 Target::Ui => {
@@ -35,14 +35,14 @@ impl App {
                         if event_handler.handles(type_id) {
                             let args = EventArgs {
                                 ui: &mut self.ui,
-                                event_queue: &mut self.event_queue,
+                                queue: &mut self.queue,
                             };
                             event_handler.handle(data, args);
                         }
                     }
                 }
                 _ => {
-                    self.ui.graph.handle_event(event_address, type_id, data, &mut self.event_queue, &mut self.ui.solver);
+                    self.ui.graph.handle_event(event_address, type_id, data, &mut self.queue, &mut self.ui.solver);
                 }
             }
         }

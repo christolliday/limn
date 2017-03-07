@@ -29,9 +29,9 @@ pub struct Ui {
 }
 
 impl Ui {
-    pub fn new(window: &mut Window, event_queue: &Queue) -> Self {
+    pub fn new(window: &mut Window, queue: &Queue) -> Self {
         let graph = WidgetGraph::new(window);
-        let solver = LimnSolver::new(event_queue.clone());
+        let solver = LimnSolver::new(queue.clone());
         Ui {
             graph: graph,
             solver: solver,
@@ -43,20 +43,20 @@ impl Ui {
         self.graph.resize_window_to_fit(&window, &mut self.solver);
     }
 
-    pub fn layout_changed(&mut self, event: &LayoutChanged, event_queue: &mut Queue) {
+    pub fn layout_changed(&mut self, event: &LayoutChanged, queue: &mut Queue) {
         let &LayoutChanged(widget_id) = event;
         if let Some(widget) = self.graph.get_widget(widget_id) {
             widget.layout.update(&mut self.solver);
         }
         // redraw everything when layout changes, for now
-        event_queue.push(Target::Ui, RedrawEvent);
+        queue.push(Target::Ui, RedrawEvent);
         self.graph.redraw();
     }
 }
 
 pub struct EventArgs<'a> {
     pub ui: &'a mut Ui,
-    pub event_queue: &'a mut Queue,
+    pub queue: &'a mut Queue,
 }
 
 pub trait EventHandler<T> {
@@ -100,25 +100,25 @@ pub struct LayoutChanged(pub WidgetId);
 pub struct InputHandler;
 impl EventHandler<InputEvent> for InputHandler {
     fn handle(&mut self, event: &InputEvent, args: EventArgs) {
-        let event_queue = args.event_queue;
+        let queue = args.queue;
         let InputEvent(event) = event.clone();
         match event {
             glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                event_queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
+                queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
             }
             glutin::Event::MouseInput(state, button) => {
-                event_queue.push(Target::Ui, MouseButton(state, button));
+                queue.push(Target::Ui, MouseButton(state, button));
             }
             glutin::Event::MouseMoved(x, y) => {
                 let point = Point::new(x as f64, y as f64);
-                event_queue.push(Target::Ui, MouseMoved(point));
+                queue.push(Target::Ui, MouseMoved(point));
             }
             glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
                 let key_input = KeyboardInput(state, scan_code, maybe_keycode);
-                event_queue.push(Target::Ui, key_input);
+                queue.push(Target::Ui, key_input);
             }
             glutin::Event::ReceivedCharacter(char) => {
-                event_queue.push(Target::Ui, ReceivedCharacter(char));
+                queue.push(Target::Ui, ReceivedCharacter(char));
             }
             _ => (),
         }
@@ -134,7 +134,7 @@ impl EventHandler<RedrawEvent> for RedrawHandler {
 pub struct LayoutChangeHandler;
 impl EventHandler<LayoutChanged> for LayoutChangeHandler {
     fn handle(&mut self, event: &LayoutChanged, args: EventArgs) {
-        args.ui.layout_changed(event, args.event_queue);
+        args.ui.layout_changed(event, args.queue);
     }
 }
 pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {

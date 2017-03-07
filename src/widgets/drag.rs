@@ -40,7 +40,7 @@ impl ui::EventHandler<DragInputEvent> for DragInputHandler {
                     drag_type: DragEvent::DragStart,
                     position: self.position,
                 };
-                args.event_queue.push(Target::Widget(id), event);
+                args.queue.push(Target::Widget(id), event);
             }
             DragInputEvent::MouseReleased => {
                 if let Some(id) = self.widget {
@@ -49,7 +49,7 @@ impl ui::EventHandler<DragInputEvent> for DragInputHandler {
                         drag_type: DragEvent::DragEnd,
                         position: self.position,
                     };
-                    args.event_queue.push(Target::Widget(id), event);
+                    args.queue.push(Target::Widget(id), event);
                 }
             }
             DragInputEvent::MouseMoved(point) => {
@@ -59,7 +59,7 @@ impl ui::EventHandler<DragInputEvent> for DragInputHandler {
                         drag_type: DragEvent::Drag,
                         position: self.position,
                     };
-                    args.event_queue.push(Target::Widget(id), event);
+                    args.queue.push(Target::Widget(id), event);
                 }
             }
         }
@@ -79,7 +79,7 @@ impl EventHandler<WidgetMouseButton> for DragWidgetPressHandler {
         match state {
             glutin::ElementState::Pressed => {
                 let event = DragInputEvent::WidgetPressed(args.widget.id);
-                args.event_queue.push(Target::Ui, event);
+                args.queue.push(Target::Ui, event);
             }
             _ => (),
         }
@@ -89,7 +89,7 @@ pub struct DragMouseCursorHandler;
 impl ui::EventHandler<MouseMoved> for DragMouseCursorHandler {
     fn handle(&mut self, event: &MouseMoved, args: ui::EventArgs) {
         let event = DragInputEvent::MouseMoved(event.0);
-        args.event_queue.push(Target::Ui, event);
+        args.queue.push(Target::Ui, event);
     }
 }
 pub struct DragMouseReleaseHandler;
@@ -98,7 +98,7 @@ impl ui::EventHandler<MouseButton> for DragMouseReleaseHandler {
         let &MouseButton(state, _) = event;
         match state {
             glutin::ElementState::Released => {
-                args.event_queue.push(Target::Ui, DragInputEvent::MouseReleased);
+                args.queue.push(Target::Ui, DragInputEvent::MouseReleased);
             }
             _ => (),
         }

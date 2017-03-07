@@ -15,13 +15,13 @@ pub struct WidgetScroll {
 pub struct ScrollHandler;
 impl EventHandler<WidgetMouseWheel> for ScrollHandler {
     fn handle(&mut self, event: &WidgetMouseWheel, args: EventArgs) {
-        let EventArgs { widget, event_queue, .. } = args;
+        let EventArgs { widget, queue, .. } = args;
         let widget_bounds = widget.layout.bounds();
         let event = WidgetScroll {
             event: event.0,
             parent_bounds: widget_bounds,
         };
-        event_queue.push(Target::Child(widget.id), event);
+        queue.push(Target::Child(widget.id), event);
     }
 }
 

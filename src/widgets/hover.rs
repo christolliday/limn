@@ -15,6 +15,6 @@ impl EventHandler<Hover> for HoverHandler {
             Hover::Over => PropChange::Add(Property::Hover),
             Hover::Out => PropChange::Remove(Property::Hover),
         };
-        args.event_queue.push(Target::SubTree(args.widget.id), event);
+        args.queue.push(Target::SubTree(args.widget.id), event);
     }
 }

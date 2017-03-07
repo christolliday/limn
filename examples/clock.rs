@@ -80,7 +80,7 @@ struct ClockBuilder {
     widget: WidgetBuilder,
 }
 impl ClockBuilder {
-    fn new(mut event_queue: Queue) -> Self {
+    fn new(mut queue: Queue) -> Self {
 
         let border = graphics::ellipse::Border {
             color: BLACK,
@@ -122,7 +122,7 @@ impl ClockBuilder {
         let clock_id = widget.id;
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
-            event_queue.push(Target::SubTree(clock_id), ClockTick);
+            queue.push(Target::SubTree(clock_id), ClockTick);
         });
 
         ClockBuilder { widget: widget }
@@ -133,7 +133,7 @@ fn main() {
     let (window, ui) = util::init_default("Limn clock demo");
 
     let mut root_widget = WidgetBuilder::new();
-    let mut clock = ClockBuilder::new(ui.event_queue.clone()).widget;
+    let mut clock = ClockBuilder::new(ui.queue.clone()).widget;
     clock.layout.center(&root_widget);
     clock.layout.bound_by(&root_widget, Some(50.0));
     root_widget.add_child(clock);

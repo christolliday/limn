@@ -98,7 +98,7 @@ impl EventHandler<WidgetDrag> for DragHandler {
                     solver.suggest_value(layout.left, drag_pos - self.start_pos).unwrap();
                 });
                 let event = MovedSliderWidgetEvent { slider_left: layout.bounds.left, slider_right: layout.bounds.right() };
-                args.event_queue.push(Target::Widget(self.container), event);
+                args.queue.push(Target::Widget(self.container), event);
             }
         }
     }

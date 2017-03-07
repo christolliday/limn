@@ -14,16 +14,16 @@ pub struct LimnSolver {
     solver: cassowary::Solver,
     var_map: HashMap<Variable, WidgetId>,
     constraint_map: HashMap<WidgetId, Vec<Constraint>>,
-    event_queue: Queue,
+    queue: Queue,
 }
 
 impl LimnSolver {
-    pub fn new(event_queue: Queue) -> Self {
+    pub fn new(queue: Queue) -> Self {
         LimnSolver {
             solver: cassowary::Solver::new(),
             var_map: HashMap::new(),
             constraint_map: HashMap::new(),
-            event_queue: event_queue,
+            queue: queue,
         }
     }
     pub fn add_widget(&mut self, widget: &Widget, constraints: Vec<WidgetConstraint>) {
@@ -100,7 +100,7 @@ impl LimnSolver {
                 }
             }
             for widget_id in widget_ids {
-                self.event_queue.push(Target::Ui, LayoutChanged(widget_id));
+                self.queue.push(Target::Ui, LayoutChanged(widget_id));
             }
         }
     }

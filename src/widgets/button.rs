@@ -45,7 +45,7 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
             glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
             glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
         };
-        args.event_queue.push(Target::SubTree(args.widget.id), event);
+        args.queue.push(Target::SubTree(args.widget.id), event);
     }
 }
 
@@ -60,7 +60,7 @@ impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
                     true => PropChange::Remove(Property::Activated),
                     false => PropChange::Add(Property::Activated),
                 };
-                args.event_queue.push(Target::SubTree(args.widget.id), event);
+                args.queue.push(Target::SubTree(args.widget.id), event);
             }
             _ => (),
         }

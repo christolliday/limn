@@ -63,7 +63,7 @@ pub fn set_root_and_loop(mut window: Window,
                         app.handle_events();
                     }
                     _ => {
-                        app.event_queue.push(Target::Ui, InputEvent(event));
+                        app.queue.push(Target::Ui, InputEvent(event));
                         app.handle_events();
                     },
                 }

@@ -195,13 +195,13 @@ impl WidgetGraph {
                                 node_index: NodeIndex,
                                 type_id: TypeId,
                                 data: &Box<Any + Send>,
-                                event_queue: &mut Queue,
+                                queue: &mut Queue,
                                 solver: &mut LimnSolver)
                                 -> bool {
         let ref mut widget_container = self.graph[node_index];
         let handled = widget_container.trigger_event(type_id,
                                                      data,
-                                                     event_queue,
+                                                     queue,
                                                      solver);
         if widget_container.widget.has_updated {
             self.redraw = 2;
@@ -223,18 +223,18 @@ impl WidgetGraph {
                         address: Target,
                         type_id: TypeId,
                         data: &Box<Any + Send>,
-                        event_queue: &mut Queue,
+                        queue: &mut Queue,
                         solver: &mut LimnSolver) {
         match address {
             Target::Widget(id) => {
                 if let Some(node_index) = self.find_widget(id) {
-                    self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
+                    self.trigger_widget_event(node_index, type_id, data, queue, solver);
                 }
             }
             Target::Child(id) => {
                 if let Some(node_index) = self.find_widget(id) {
                     if let Some(child_index) = self.children(node_index).next() {
-                        self.trigger_widget_event(child_index, type_id, data, event_queue, solver);
+                        self.trigger_widget_event(child_index, type_id, data, queue, solver);
                     }
                 }
             }
@@ -242,7 +242,7 @@ impl WidgetGraph {
                 if let Some(node_index) = self.find_widget(id) {
                     let mut dfs = Dfs::new(&self.graph, node_index);
                     while let Some(node_index) = dfs.next(&self.graph) {
-                        self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
+                        self.trigger_widget_event(node_index, type_id, data, queue, solver);
                     }
                 }
             }
@@ -250,7 +250,7 @@ impl WidgetGraph {
                 // bubble up event from widget, until either it reaches the root, or some widget handles it
                 let mut maybe_node_index = self.find_widget(id);
                 while let Some(node_index) = maybe_node_index {
-                    let handled = self.trigger_widget_event(node_index, type_id, data, event_queue, solver);
+                    let handled = self.trigger_widget_event(node_index, type_id, data, queue, solver);
                     maybe_node_index = if handled { None } else { self.parent(node_index) };
                 }
             }

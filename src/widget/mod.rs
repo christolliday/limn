@@ -59,7 +59,7 @@ impl HandlerWrapper {
 
 pub struct EventArgs<'a> {
     pub widget: &'a mut Widget,
-    pub event_queue: &'a mut Queue,
+    pub queue: &'a mut Queue,
     pub solver: &'a mut LimnSolver,
     pub event_state: &'a mut EventState,
 }
@@ -76,7 +76,7 @@ impl WidgetContainer {
     pub fn trigger_event(&mut self,
                          type_id: TypeId,
                          event: &Box<Any + Send>,
-                         event_queue: &mut Queue,
+                         queue: &mut Queue,
                          solver: &mut LimnSolver)
                          -> bool {
 
@@ -86,7 +86,7 @@ impl WidgetContainer {
             if event_handler.handles(type_id) {
                 let event_args = EventArgs {
                     widget: &mut self.widget,
-                    event_queue: event_queue,
+                    queue: queue,
                     solver: solver,
                     event_state: &mut event_state,
                 };
