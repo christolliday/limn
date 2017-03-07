@@ -2,7 +2,7 @@ use cassowary::strength::*;
 
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
-use widget::{EventHandler, EventArgs, HandlerWrapper};
+use widget::{EventHandler, EventArgs};
 use event::Target;
 use drawable::rect::{RectDrawable, RectStyleField};
 use widgets::drag::{DragEvent, WidgetDrag};
@@ -37,15 +37,11 @@ impl SliderBuilder {
         widget.add_child(slider_handle);
         SliderBuilder { widget: widget }
     }
-    // tmp, should be able to use inner widget method
-    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(mut self, handler: T) -> Self {
-        self.widget.event_handlers.push(HandlerWrapper::new(handler));
-        self
-    }
     pub fn on_val_changed<F>(self, on_val_changed: F) -> Self
         where F: Fn(f64) + 'static
     {
-        self.add_handler(SliderHandler::new(on_val_changed))
+        let widget = self.widget.add_handler(SliderHandler::new(on_val_changed));
+        SliderBuilder { widget: widget }
     }
 }
 
