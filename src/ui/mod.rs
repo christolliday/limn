@@ -44,29 +44,6 @@ impl Ui {
         self.graph.resize_window_to_fit(&window, &mut self.solver);
     }
 
-    pub fn handle_input(&mut self, event: glutin::Event, event_queue: &mut EventQueue) {
-        match event {
-            glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                event_queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
-            }
-            glutin::Event::MouseInput(state, button) => {
-                event_queue.push(Target::Ui, MouseButton(state, button));
-            }
-            glutin::Event::MouseMoved(x, y) => {
-                let point = Point::new(x as f64, y as f64);
-                event_queue.push(Target::Ui, MouseMoved(point));
-            }
-            glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
-                let key_input = KeyboardInput(state, scan_code, maybe_keycode);
-                event_queue.push(Target::Ui, key_input);
-            }
-            glutin::Event::ReceivedCharacter(char) => {
-                event_queue.push(Target::Ui, ReceivedCharacter(char));
-            }
-            _ => (),
-        }
-    }
-
     pub fn layout_changed(&mut self, event: &LayoutChanged, event_queue: &mut EventQueue) {
         let &LayoutChanged(widget_id) = event;
         if let Some(widget) = self.graph.get_widget(widget_id) {
@@ -116,15 +93,36 @@ impl HandlerWrapper {
     }
 }
 
-
+#[derive(Clone)]
 pub struct InputEvent(pub glutin::Event);
 pub struct RedrawEvent;
 pub struct LayoutChanged(pub WidgetId);
 
 pub struct InputHandler;
 impl EventHandler<InputEvent> for InputHandler {
-    fn handle(&mut self, event: &InputEvent, mut args: EventArgs) {
-        args.ui.handle_input(event.0.clone(), &mut args.event_queue);
+    fn handle(&mut self, event: &InputEvent, args: EventArgs) {
+        let event_queue = args.event_queue;
+        let InputEvent(event) = event.clone();
+        match event {
+            glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
+                event_queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
+            }
+            glutin::Event::MouseInput(state, button) => {
+                event_queue.push(Target::Ui, MouseButton(state, button));
+            }
+            glutin::Event::MouseMoved(x, y) => {
+                let point = Point::new(x as f64, y as f64);
+                event_queue.push(Target::Ui, MouseMoved(point));
+            }
+            glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
+                let key_input = KeyboardInput(state, scan_code, maybe_keycode);
+                event_queue.push(Target::Ui, key_input);
+            }
+            glutin::Event::ReceivedCharacter(char) => {
+                event_queue.push(Target::Ui, ReceivedCharacter(char));
+            }
+            _ => (),
+        }
     }
 }
 
