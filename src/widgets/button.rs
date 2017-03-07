@@ -152,3 +152,12 @@ impl PushButtonBuilder {
         self
     }
 }
+
+impl WidgetBuilder {
+    pub fn on_click<F>(mut self, on_click: F) -> Self
+        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
+    {
+        self.controller.add_handler(ClickHandler::new(on_click));
+        self
+    }
+}

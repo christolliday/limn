@@ -14,7 +14,7 @@ use widgets::drag::{DragInputHandler, DragMouseCursorHandler, DragMouseReleaseHa
 pub struct App {
     pub ui: Ui,
     pub queue: Queue,
-    event_handlers: Vec<UiHandlerWrapper>,
+    handlers: Vec<UiHandlerWrapper>,
 }
 
 impl App {
@@ -24,7 +24,7 @@ impl App {
         let mut app = App {
             ui: ui,
             queue: queue,
-            event_handlers: Vec::new(),
+            handlers: Vec::new(),
         };
         app.initialize_handlers();
         app
@@ -60,7 +60,7 @@ impl App {
             let data = &data;
             match event_address {
                 Target::Ui => {
-                    for event_handler in self.event_handlers.iter_mut() {
+                    for event_handler in self.handlers.iter_mut() {
                         if event_handler.handles(type_id) {
                             let args = ui::EventArgs {
                                 ui: &mut self.ui,
@@ -78,7 +78,7 @@ impl App {
     }
 
     pub fn add_handler<H: ui::EventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        self.event_handlers.push(UiHandlerWrapper::new(handler));
+        self.handlers.push(UiHandlerWrapper::new(handler));
     }
 }
 

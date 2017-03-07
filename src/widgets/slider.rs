@@ -8,6 +8,7 @@ use drawable::rect::{RectDrawable, RectStyleField};
 use widgets::drag::{DragEvent, WidgetDrag};
 use resources::WidgetId;
 use util::Dimensions;
+//use widgets::drag::Draggable;
 
 pub struct SliderBuilder {
     pub widget: WidgetBuilder,
@@ -27,8 +28,8 @@ impl SliderBuilder {
         let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
         let mut slider_handle = WidgetBuilder::new()
             .set_drawable_with_style(RectDrawable::new(), style)
-            .draggable()
-            .add_handler(DragHandler::new(widget.id));
+            .add_handler(DragHandler::new(widget.id))
+            .make_draggable();
         slider_handle.layout.dimensions(Dimensions {
             width: 30.0,
             height: 30.0,

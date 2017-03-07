@@ -27,7 +27,7 @@ fn main() {
     linear_layout.add_widget(&mut left_spacer);
     root_widget.add_child(left_spacer);
 
-    struct CountHandler {}
+    struct CountHandler;
     impl EventHandler<CountEvent> for CountHandler {
         fn handle(&mut self, event: &CountEvent, args: EventArgs) {
             let &CountEvent(count) = event;
@@ -41,7 +41,7 @@ fn main() {
     let text_dims = text_drawable.measure();
     let mut text_widget = WidgetBuilder::new()
         .set_drawable_with_style(text_drawable, text_style)
-        .add_handler(CountHandler {});
+        .add_handler(CountHandler);
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);
     text_widget.layout.center_vertical(&root_widget);

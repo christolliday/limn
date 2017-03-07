@@ -1,24 +1,19 @@
 use graphics::types::Color;
 use cassowary;
 
-use widget::{Widget, WidgetContainer, EventHandler, HandlerWrapper, EventArgs};
+use widget::{Widget, WidgetContainer, EventHandler, WidgetController};
 use widget::drawable::{Drawable, DrawableWrapper};
 use widget::style::Style;
 use widget::layout::{LayoutBuilder, WidgetConstraint};
-use widget::property::{PropSet, Property, PropChangeHandler};
-use widgets::hover::HoverHandler;
-use widgets::button::ClickHandler;
-use widgets::scroll::{ScrollHandler, WidgetScrollHandler};
-use widgets::drag::DragWidgetPressHandler;
+use widget::property::{PropSet, Property};
 use resources::{resources, WidgetId};
-use input::mouse::ClickEvent;
 
 pub struct WidgetBuilder {
     pub id: WidgetId,
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub layout: LayoutBuilder,
-    pub event_handlers: Vec<HandlerWrapper>,
+    pub controller: WidgetController,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<WidgetBuilder>,
@@ -32,7 +27,7 @@ impl WidgetBuilder {
             drawable: None,
             props: PropSet::new(),
             layout: LayoutBuilder::new(),
-            event_handlers: Vec::new(),
+            controller: WidgetController::new(),
             debug_name: None,
             debug_color: None,
             children: Vec::new(),
@@ -48,7 +43,7 @@ impl WidgetBuilder {
         self
     }
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(mut self, handler: T) -> Self {
-        self.event_handlers.push(HandlerWrapper::new(handler));
+        self.controller.add_handler(handler);
         self
     }
     pub fn set_debug_name(mut self, name: &str) -> Self {
@@ -62,28 +57,6 @@ impl WidgetBuilder {
     pub fn set_inactive(mut self) -> Self {
         self.props.insert(Property::Inactive);
         self
-    }
-    // common handlers
-    pub fn contents_scroll(mut self) -> Self {
-        self.contents_scroll = true;
-        self.add_handler(ScrollHandler)
-    }
-    pub fn on_click<F>(self, on_click: F) -> Self
-        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
-    {
-        self.add_handler(ClickHandler::new(on_click))
-    }
-    pub fn enable_hover(self) -> Self {
-        self.add_handler(HoverHandler)
-    }
-    pub fn props_may_change(self) -> Self {
-        self.add_handler(PropChangeHandler)
-    }
-    pub fn scrollable(self) -> Self {
-        self.add_handler(WidgetScrollHandler::new())
-    }
-    pub fn draggable(self) -> Self {
-        self.add_handler(DragWidgetPressHandler)
     }
 
     // only method that is not chainable, because usually called out of order
@@ -114,7 +87,7 @@ impl WidgetBuilder {
          self.layout.constraints,
          WidgetContainer {
              widget: widget,
-             event_handlers: self.event_handlers,
+             controller: self.controller,
          })
     }
 }

@@ -26,7 +26,7 @@ fn main() {
 
     let mut list_widget = WidgetBuilder::new()
         .add_handler(ListHandler::new())
-        .scrollable();
+        .make_scrollable();
     list_widget.layout.match_width(&scroll_widget);
 
 
@@ -43,9 +43,8 @@ fn main() {
             let mut list_item_widget = WidgetBuilder::new()
                 .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
                 .set_debug_name("item")
-                .props_may_change()
-                .enable_hover()
-                .add_handler(ListItemHandler::new(list_widget.id));
+                .add_handler(ListItemHandler::new(list_widget.id))
+                .enable_hover();
             list_item_widget.layout.match_width(&list_widget);
             list_item_widget.layout.height(text_dims.height);
             linear_layout.add_widget(&mut list_item_widget);

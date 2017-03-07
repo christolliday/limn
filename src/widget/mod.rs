@@ -17,18 +17,28 @@ use resources::WidgetId;
 use ui::solver::LimnSolver;
 use util::{self, Point, Rectangle};
 
-use self::property::PropSet;
+use self::property::{PropSet, PropChangeHandler};
 use self::layout::LayoutVars;
 use self::drawable::{Drawable, DrawableWrapper};
 
 pub use self::builder::WidgetBuilder;
 
-// allows event handlers to communicate with event dispatcher
-pub struct EventState {
-    pub handled: bool,
+pub struct WidgetController {
+    handlers: Vec<HandlerWrapper>,
 }
-
-pub struct HandlerWrapper {
+impl WidgetController {
+    pub fn new() -> Self {
+        let mut controller = WidgetController {
+            handlers: Vec::new(),
+        };
+        controller.add_handler(PropChangeHandler);
+        controller
+    }
+    pub fn add_handler<H: EventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
+        self.handlers.push(HandlerWrapper::new(handler));
+    }
+}
+struct HandlerWrapper {
     type_id: TypeId,
     handler: Box<Any>,
     handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, EventArgs)>,
@@ -57,6 +67,10 @@ impl HandlerWrapper {
     }
 }
 
+// allows event handlers to communicate with event dispatcher
+pub struct EventState {
+    pub handled: bool,
+}
 pub struct EventArgs<'a> {
     pub widget: &'a mut Widget,
     pub queue: &'a mut Queue,
@@ -70,7 +84,7 @@ pub trait EventHandler<T> {
 
 pub struct WidgetContainer {
     pub widget: Widget,
-    pub event_handlers: Vec<HandlerWrapper>,
+    pub controller: WidgetController,
 }
 impl WidgetContainer {
     pub fn trigger_event(&mut self,
@@ -81,7 +95,7 @@ impl WidgetContainer {
                          -> bool {
 
         let mut event_state = EventState { handled: false };
-        for ref mut event_handler in self.event_handlers.iter_mut() {
+        for ref mut event_handler in self.controller.handlers.iter_mut() {
             let event_handler: &mut HandlerWrapper = event_handler;
             if event_handler.handles(type_id) {
                 let event_args = EventArgs {

@@ -3,6 +3,7 @@ use cassowary::strength::*;
 
 use event::Target;
 use widget::{EventArgs, EventHandler};
+use widget::builder::WidgetBuilder;
 use util::{Point, Rectangle};
 
 use input::mouse::WidgetMouseWheel;
@@ -73,5 +74,16 @@ impl EventHandler<WidgetScroll> for WidgetScrollHandler {
             solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
             solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
         });
+    }
+}
+
+impl WidgetBuilder {
+    pub fn contents_scroll(mut self) -> Self {
+        self.contents_scroll = true;
+        self.add_handler(ScrollHandler)
+    }
+    pub fn make_scrollable(mut self) -> Self {
+        self.controller.add_handler(WidgetScrollHandler::new());
+        self
     }
 }
