@@ -7,7 +7,7 @@ use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
 use limn::app::App;
-use limn::ui::InputEvent;
+use limn::input::InputEvent;
 use limn::event::Target;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;

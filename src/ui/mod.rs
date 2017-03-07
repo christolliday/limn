@@ -4,21 +4,9 @@ pub mod solver;
 pub use self::graph::WidgetGraph;
 pub use self::solver::LimnSolver;
 
-use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
-use input::mouse::{MouseMoved, MouseButton, MouseWheel};
-use input::keyboard::{FocusHandler, KeyboardForwarder, KeyboardCharForwarder};
-use input::keyboard::{KeyboardInput, ReceivedCharacter};
-
-use widgets::drag::{DragInputHandler, DragMouseCursorHandler, DragMouseReleaseHandler};
-
 use backend::Window;
 
-use std::any::{Any, TypeId};
-
-use glutin;
-
 use event::{Queue, Target};
-use util::Point;
 use resources::WidgetId;
 
 use widget::WidgetBuilder;
@@ -63,67 +51,8 @@ pub trait EventHandler<T> {
     fn handle(&mut self, event: &T, args: EventArgs);
 }
 
-pub struct HandlerWrapper {
-    type_id: TypeId,
-    handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, EventArgs)>,
-}
-impl HandlerWrapper {
-    pub fn new<H, E>(handler: H) -> Self
-        where H: EventHandler<E> + 'static,
-              E: 'static
-    {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: EventArgs| {
-            let event: &E = event.downcast_ref().unwrap();
-            let handler: &mut H = handler.downcast_mut().unwrap();
-            handler.handle(event, args);
-        };
-        HandlerWrapper {
-            type_id: TypeId::of::<E>(),
-            handler: Box::new(handler),
-            handle_fn: Box::new(handle_fn),
-        }
-    }
-    pub fn handles(&self, type_id: TypeId) -> bool {
-        self.type_id == type_id
-    }
-    pub fn handle(&mut self, event: &Box<Any + Send>, args: EventArgs) {
-        (self.handle_fn)(&mut self.handler, event, args);
-    }
-}
-
-#[derive(Clone)]
-pub struct InputEvent(pub glutin::Event);
 pub struct RedrawEvent;
 pub struct LayoutChanged(pub WidgetId);
-
-pub struct InputHandler;
-impl EventHandler<InputEvent> for InputHandler {
-    fn handle(&mut self, event: &InputEvent, args: EventArgs) {
-        let queue = args.queue;
-        let InputEvent(event) = event.clone();
-        match event {
-            glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
-            }
-            glutin::Event::MouseInput(state, button) => {
-                queue.push(Target::Ui, MouseButton(state, button));
-            }
-            glutin::Event::MouseMoved(x, y) => {
-                let point = Point::new(x as f64, y as f64);
-                queue.push(Target::Ui, MouseMoved(point));
-            }
-            glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
-                let key_input = KeyboardInput(state, scan_code, maybe_keycode);
-                queue.push(Target::Ui, key_input);
-            }
-            glutin::Event::ReceivedCharacter(char) => {
-                queue.push(Target::Ui, ReceivedCharacter(char));
-            }
-            _ => (),
-        }
-    }
-}
 
 pub struct RedrawHandler;
 impl EventHandler<RedrawEvent> for RedrawHandler {
@@ -136,25 +65,4 @@ impl EventHandler<LayoutChanged> for LayoutChangeHandler {
     fn handle(&mut self, event: &LayoutChanged, args: EventArgs) {
         args.ui.layout_changed(event, args.queue);
     }
-}
-pub fn get_default_event_handlers() -> Vec<HandlerWrapper> {
-    vec![
-        HandlerWrapper::new(RedrawHandler),
-        HandlerWrapper::new(LayoutChangeHandler),
-        HandlerWrapper::new(InputHandler),
-
-        HandlerWrapper::new(MouseController::new()),
-        HandlerWrapper::new(MouseLayoutChangeHandler),
-        HandlerWrapper::new(MouseMoveHandler),
-        HandlerWrapper::new(MouseButtonHandler),
-        HandlerWrapper::new(MouseWheelHandler),
-
-        HandlerWrapper::new(KeyboardForwarder),
-        HandlerWrapper::new(KeyboardCharForwarder),
-        HandlerWrapper::new(FocusHandler::new()),
-
-        HandlerWrapper::new(DragInputHandler::new()),
-        HandlerWrapper::new(DragMouseCursorHandler),
-        HandlerWrapper::new(DragMouseReleaseHandler),
-    ]
 }

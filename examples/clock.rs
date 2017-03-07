@@ -20,7 +20,7 @@ use backend::gfx::G2d;
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::widget::builder::WidgetBuilder;
 use limn::drawable::ellipse::EllipseDrawable;
-use limn::ui::queue::{Target, Queue};
+use limn::event::{Target, Queue};
 use limn::color::*;
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
 

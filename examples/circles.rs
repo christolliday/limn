@@ -141,8 +141,7 @@ fn main() {
 
     let (undo_id, redo_id) = create_undo_redo_buttons(&mut root_widget);
 
-    let circle_handler = ui::HandlerWrapper::new(CircleEventHandler::new(undo_id, redo_id));
-    ui.event_handlers.push(circle_handler);
+    ui.add_handler(CircleEventHandler::new(undo_id, redo_id));
 
     util::set_root_and_loop(window, ui, root_widget);
 }
