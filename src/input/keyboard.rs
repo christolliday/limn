@@ -1,7 +1,7 @@
 use widget::{EventArgs, EventHandler};
 use resources::WidgetId;
 use input::mouse::ClickEvent;
-use ui::queue::Target;
+use event::Target;
 use ui;
 
 use glutin;

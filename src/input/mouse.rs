@@ -1,7 +1,7 @@
 use glutin;
 
 use ui;
-use ui::queue::Target;
+use event::Target;
 use util::Point;
 use resources::WidgetId;
 use widgets::hover::Hover;

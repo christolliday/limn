@@ -1,7 +1,7 @@
 use glutin;
 use cassowary::strength::*;
 
-use ui::queue::Target;
+use event::Target;
 use widget::{EventArgs, EventHandler};
 use util::{Point, Rectangle};
 

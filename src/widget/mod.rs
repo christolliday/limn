@@ -12,9 +12,9 @@ use graphics::types::Color;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use ui::queue::EventQueue;
+use event::Queue;
 use resources::WidgetId;
-use ui::layout::LimnSolver;
+use ui::solver::LimnSolver;
 use util::{self, Point, Rectangle};
 
 use self::property::PropSet;
@@ -59,7 +59,7 @@ impl HandlerWrapper {
 
 pub struct EventArgs<'a> {
     pub widget: &'a mut Widget,
-    pub event_queue: &'a mut EventQueue,
+    pub event_queue: &'a mut Queue,
     pub solver: &'a mut LimnSolver,
     pub event_state: &'a mut EventState,
 }
@@ -76,7 +76,7 @@ impl WidgetContainer {
     pub fn trigger_event(&mut self,
                          type_id: TypeId,
                          event: &Box<Any + Send>,
-                         event_queue: &mut EventQueue,
+                         event_queue: &mut Queue,
                          solver: &mut LimnSolver)
                          -> bool {
 

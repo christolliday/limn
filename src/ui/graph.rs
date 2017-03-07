@@ -21,10 +21,10 @@ use widget::builder::WidgetBuilder;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::{resources, WidgetId};
 use color::*;
-use ui::Target;
+use event::Target;
 
-use super::layout::LimnSolver;
-use super::queue::EventQueue;
+use ui::solver::LimnSolver;
+use event::Queue;
 
 const DEBUG_BOUNDS: bool = false;
 
@@ -195,7 +195,7 @@ impl WidgetGraph {
                                 node_index: NodeIndex,
                                 type_id: TypeId,
                                 data: &Box<Any + Send>,
-                                event_queue: &mut EventQueue,
+                                event_queue: &mut Queue,
                                 solver: &mut LimnSolver)
                                 -> bool {
         let ref mut widget_container = self.graph[node_index];
@@ -223,7 +223,7 @@ impl WidgetGraph {
                         address: Target,
                         type_id: TypeId,
                         data: &Box<Any + Send>,
-                        event_queue: &mut EventQueue,
+                        event_queue: &mut Queue,
                         solver: &mut LimnSolver) {
         match address {
             Target::Widget(id) => {

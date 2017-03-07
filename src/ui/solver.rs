@@ -6,7 +6,7 @@ use cassowary::{Variable, Constraint};
 use resources::WidgetId;
 use widget::Widget;
 use widget::layout::WidgetConstraint;
-use ui::queue::{Target, EventQueue};
+use event::{Target, Queue};
 use ui::LayoutChanged;
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
@@ -14,11 +14,11 @@ pub struct LimnSolver {
     solver: cassowary::Solver,
     var_map: HashMap<Variable, WidgetId>,
     constraint_map: HashMap<WidgetId, Vec<Constraint>>,
-    event_queue: EventQueue,
+    event_queue: Queue,
 }
 
 impl LimnSolver {
-    pub fn new(event_queue: EventQueue) -> Self {
+    pub fn new(event_queue: Queue) -> Self {
         LimnSolver {
             solver: cassowary::Solver::new(),
             var_map: HashMap::new(),

@@ -1,18 +1,18 @@
 use backend::Window;
 
 use ui::{self, Ui};
-use ui::EventQueue;
-use ui::{EventArgs, Target, HandlerWrapper};
+use event::{Queue, Target};
+use ui::{EventArgs, HandlerWrapper};
 
 pub struct App {
     pub ui: Ui,
-    pub event_queue: EventQueue,
+    pub event_queue: Queue,
     pub event_handlers: Vec<HandlerWrapper>,
 }
 
 impl App {
     pub fn new(window: &mut Window) -> Self {
-        let event_queue = EventQueue::new(window);
+        let event_queue = Queue::new(window);
         let ui = Ui::new(window, &event_queue);
         App {
             ui: ui,

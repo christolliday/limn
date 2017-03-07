@@ -1,4 +1,4 @@
-use ui::queue::Target;
+use event::Target;
 use widget::{EventArgs, EventHandler};
 use widget::property::{Property, PropChange};
 

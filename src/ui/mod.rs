@@ -1,10 +1,8 @@
 pub mod graph;
-pub mod queue;
-pub mod layout;
+pub mod solver;
 
 pub use self::graph::WidgetGraph;
-pub use self::queue::{EventQueue, Target};
-pub use self::layout::LimnSolver;
+pub use self::solver::LimnSolver;
 
 use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
 use input::mouse::{MouseMoved, MouseButton, MouseWheel};
@@ -19,6 +17,7 @@ use std::any::{Any, TypeId};
 
 use glutin;
 
+use event::{Queue, Target};
 use util::Point;
 use resources::WidgetId;
 
@@ -30,7 +29,7 @@ pub struct Ui {
 }
 
 impl Ui {
-    pub fn new(window: &mut Window, event_queue: &EventQueue) -> Self {
+    pub fn new(window: &mut Window, event_queue: &Queue) -> Self {
         let graph = WidgetGraph::new(window);
         let solver = LimnSolver::new(event_queue.clone());
         Ui {
@@ -44,7 +43,7 @@ impl Ui {
         self.graph.resize_window_to_fit(&window, &mut self.solver);
     }
 
-    pub fn layout_changed(&mut self, event: &LayoutChanged, event_queue: &mut EventQueue) {
+    pub fn layout_changed(&mut self, event: &LayoutChanged, event_queue: &mut Queue) {
         let &LayoutChanged(widget_id) = event;
         if let Some(widget) = self.graph.get_widget(widget_id) {
             widget.layout.update(&mut self.solver);
@@ -57,7 +56,7 @@ impl Ui {
 
 pub struct EventArgs<'a> {
     pub ui: &'a mut Ui,
-    pub event_queue: &'a mut EventQueue,
+    pub event_queue: &'a mut Queue,
 }
 
 pub trait EventHandler<T> {

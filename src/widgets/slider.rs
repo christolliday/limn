@@ -3,7 +3,7 @@ use cassowary::strength::*;
 use widget::builder::WidgetBuilder;
 use widget::style::Value;
 use widget::{EventHandler, EventArgs, HandlerWrapper};
-use ui::queue::Target;
+use event::Target;
 use drawable::rect::{RectDrawable, RectStyleField};
 use widgets::drag::{DragEvent, WidgetDrag};
 use resources::WidgetId;

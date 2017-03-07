@@ -5,7 +5,7 @@ use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widget::style::Value;
 use drawable::rect::RectStyleField;
-use ui::queue::Target;
+use event::Target;
 use resources::WidgetId;
 use util::Color;
 use input::mouse::WidgetMouseButton;

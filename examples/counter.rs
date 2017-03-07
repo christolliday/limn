@@ -9,7 +9,7 @@ use limn::widget::layout::{LinearLayout, Orientation};
 use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
-use limn::ui::queue::Target;
+use limn::event::Target;
 use limn::color::*;
 
 struct CounterEvent(());

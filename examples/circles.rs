@@ -12,7 +12,7 @@ use limn::widget::builder::WidgetBuilder;
 use limn::widgets::button::PushButtonBuilder;
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::widget::property::{Property, PropChange};
-use limn::ui::queue::Target;
+use limn::event::Target;
 use limn::ui::LimnSolver;
 use limn::ui::{self, WidgetGraph};
 use limn::util::{Dimensions, Point};

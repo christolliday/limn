@@ -24,3 +24,4 @@ pub mod util;
 pub mod resources;
 pub mod color;
 pub mod input;
+pub mod event;

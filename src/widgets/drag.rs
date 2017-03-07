@@ -2,7 +2,7 @@ use glutin;
 
 use widget::{EventArgs, EventHandler};
 use ui;
-use ui::queue::Target;
+use event::Target;
 use util::Point;
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use resources::WidgetId;

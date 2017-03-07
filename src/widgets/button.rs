@@ -5,7 +5,7 @@ use linked_hash_map::LinkedHashMap;
 
 use text_layout::Align;
 
-use ui::queue::Target;
+use event::Target;
 use widget::{EventHandler, EventArgs};
 use widget::property::{Property, PropChange, PropChangeHandler};
 use widget::property::states::*;

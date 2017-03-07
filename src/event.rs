@@ -18,14 +18,14 @@ pub enum Target {
 }
 
 #[derive(Clone)]
-pub struct EventQueue {
+pub struct Queue {
     queue: Arc<Mutex<VecDeque<(Target, TypeId, Box<Any + Send>)>>>,
     window_proxy: WindowProxy,
 }
 
-impl EventQueue {
+impl Queue {
     pub fn new(window: &Window) -> Self {
-        EventQueue {
+        Queue {
             queue: Arc::new(Mutex::new(VecDeque::new())),
             window_proxy: window.window.create_window_proxy(),
         }
