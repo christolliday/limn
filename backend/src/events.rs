@@ -100,16 +100,16 @@ impl WindowEvents
     ///
     /// While in the `Waiting` state, returns `Input` events up until `dt_frame` has passed, or if idle, waits indefinitely.
     /// Once `dt_frame` has elapsed, or no longer idle, returns in order, `Update`, `Render` and `AfterRender` then resumes `Waiting` state.
-    pub fn next(&mut self, window: &mut glutin::Window) -> Option<WindowEvent>
+    pub fn next(&mut self, window: &mut glutin::Window) -> WindowEvent
     {
         if self.idle {
             // Block and wait until an event is received.
             let event = wait_event_timeout(window, Duration::new(u64::max_value(), 0));
             self.idle = false;
             if let Some(event) = event {
-                Some(WindowEvent::Input(event))
+                WindowEvent::Input(event)
             } else {
-                Some(WindowEvent::Render)
+                WindowEvent::Render
             }
         } else {
             let current_time = Instant::now();
@@ -117,12 +117,12 @@ impl WindowEvents
                 // Wait for events until ready for next frame.
                 let event = wait_event_timeout(window, self.next_frame_time - current_time);
                 if let Some(event) = event {
-                    return Some(WindowEvent::Input(event));
+                    return WindowEvent::Input(event);
                 }
             }
             // Handle any pending input before updating.
             if let Some(event) = window.poll_events().next() {
-                return Some(WindowEvent::Input(event));
+                return WindowEvent::Input(event);
             }
 
             // Just rendered, send `AfterRender`, initialize for next frame
@@ -131,7 +131,7 @@ impl WindowEvents
             self.next_frame_time = self.last_frame_time + self.dt_frame;
             self.idle = !self.updating;
             self.updating = false;
-            return Some(WindowEvent::Render);
+            WindowEvent::Render
         }
     }
 }

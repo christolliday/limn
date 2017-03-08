@@ -7,7 +7,7 @@ use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
 use limn::app::App;
-use limn::input::InputEvent;
+use limn::input::{InputEvent, EscKeyCloseHandler};
 use limn::event::Target;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
@@ -44,15 +44,13 @@ pub fn set_root_and_loop(mut window: Window,
     app.handle_events();
     app.ui.graph.resize_window_to_fit(&window);
 
+    app.add_handler(EscKeyCloseHandler);
     let mut events = WindowEvents::new();
-    while let Some(event) = events.next(&mut window.window) {
+    while !app.ui.should_close() {
+        let event = events.next(&mut window.window);
         match event {
             WindowEvent::Input(event) => {
                 match event {
-                    Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
-                    Event::Closed => {
-                        break;
-                    }
                     Event::Resized(width, height) => {
                         window.window_resized();
                         app.ui.graph.window_resized(Dimensions {

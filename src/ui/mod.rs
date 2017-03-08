@@ -13,6 +13,7 @@ use widget::WidgetBuilder;
 pub struct Ui {
     pub graph: WidgetGraph,
     pub solver: LimnSolver,
+    should_close: bool,
 }
 
 impl Ui {
@@ -22,9 +23,15 @@ impl Ui {
         Ui {
             graph: graph,
             solver: solver,
+            should_close: false,
         }
     }
-
+    pub fn close(&mut self) {
+        self.should_close = true;
+    }
+    pub fn should_close(&self) -> bool {
+        self.should_close
+    }
     pub fn set_root(&mut self, root_widget: WidgetBuilder) {
         let root_widget = root_widget.set_debug_name("root");
         self.graph.set_root(root_widget, &mut self.solver);

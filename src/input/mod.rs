@@ -17,6 +17,9 @@ impl ui::EventHandler<InputEvent> for InputHandler {
         let queue = args.queue;
         let InputEvent(event) = event.clone();
         match event {
+            glutin::Event::Closed => {
+                args.ui.close();
+            }
             glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
                 queue.push(Target::Ui, MouseWheel(mouse_scroll_delta));
             }
@@ -35,6 +38,15 @@ impl ui::EventHandler<InputEvent> for InputHandler {
                 queue.push(Target::Ui, ReceivedCharacter(char));
             }
             _ => (),
+        }
+    }
+}
+
+pub struct EscKeyCloseHandler;
+impl ui::EventHandler<KeyboardInput> for EscKeyCloseHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: ui::EventArgs) {
+        if let &KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = event {
+            args.ui.close();
         }
     }
 }
