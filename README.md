@@ -2,24 +2,6 @@
 
 WIP
 
-Todo:
-
-Make eventqueue (more) typesafe
-
-Optimize event dispatch to widgets
-
-Declarative format for layout, styles, themes (json?)
-
-Macro for styleable types
-
-Styles for more than DrawState
-
-Scroll bars, tabs, double click, resizable widgets, animation
-
-High level events, eg. double click
-
-
-
 ## License
 
 Licensed under either of
