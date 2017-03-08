@@ -75,13 +75,9 @@ pub enum DragInputEvent {
 pub struct DragWidgetPressHandler;
 impl EventHandler<WidgetMouseButton> for DragWidgetPressHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
-        let &WidgetMouseButton(state, _) = event;
-        match state {
-            glutin::ElementState::Pressed => {
-                let event = DragInputEvent::WidgetPressed(args.widget.id);
-                args.queue.push(Target::Ui, event);
-            }
-            _ => (),
+        if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
+            let event = DragInputEvent::WidgetPressed(args.widget.id);
+            args.queue.push(Target::Ui, event);
         }
     }
 }
@@ -95,12 +91,8 @@ impl ui::EventHandler<MouseMoved> for DragMouseCursorHandler {
 pub struct DragMouseReleaseHandler;
 impl ui::EventHandler<MouseButton> for DragMouseReleaseHandler {
     fn handle(&mut self, event: &MouseButton, args: ui::EventArgs) {
-        let &MouseButton(state, _) = event;
-        match state {
-            glutin::ElementState::Released => {
-                args.queue.push(Target::Ui, DragInputEvent::MouseReleased);
-            }
-            _ => (),
+        if let &MouseButton(glutin::ElementState::Released, _) = event {
+            args.queue.push(Target::Ui, DragInputEvent::MouseReleased);
         }
     }
 }

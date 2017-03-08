@@ -52,16 +52,12 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
 pub struct ToggleEventHandler;
 impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
-        let &WidgetMouseButton(state, _) = event;
-        match state {
-            glutin::ElementState::Released => {
-                let event = match args.widget.props.contains(&Property::Activated) {
-                    true => PropChange::Remove(Property::Activated),
-                    false => PropChange::Add(Property::Activated),
-                };
-                args.queue.push(Target::SubTree(args.widget.id), event);
-            }
-            _ => (),
+        if let &WidgetMouseButton(glutin::ElementState::Released, _) = event {
+            let event = match args.widget.props.contains(&Property::Activated) {
+                true => PropChange::Remove(Property::Activated),
+                false => PropChange::Add(Property::Activated),
+            };
+            args.queue.push(Target::SubTree(args.widget.id), event);
         }
     }
 }
