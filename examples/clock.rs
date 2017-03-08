@@ -17,12 +17,12 @@ use graphics::Context;
 use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
 
+use limn::widget::WidgetBuilder;
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
-use limn::widget::builder::WidgetBuilder;
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::event::{Target, Queue};
-use limn::color::*;
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
+use limn::color::*;
 
 fn hour_angle() -> f64 {
     2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0

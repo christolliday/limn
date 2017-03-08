@@ -17,7 +17,7 @@ use backend::glyph::GlyphCache;
 use backend::window::Window;
 
 use widget::{Widget, WidgetContainer};
-use widget::builder::WidgetBuilder;
+use widget::WidgetBuilder;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::{resources, WidgetId};
 use color::*;

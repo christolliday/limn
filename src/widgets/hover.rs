@@ -1,6 +1,5 @@
 use event::Target;
-use widget::{EventArgs, EventHandler};
-use widget::builder::WidgetBuilder;
+use widget::{WidgetBuilder, EventArgs, EventHandler};
 use widget::property::{Property, PropChange};
 
 #[derive(Debug)]

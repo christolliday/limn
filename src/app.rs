@@ -2,14 +2,13 @@ use std::any::{Any, TypeId};
 
 use backend::Window;
 
-use ui::{self, Ui};
+use ui::{self, Ui, RedrawHandler, LayoutChangeHandler};
 use event::{Queue, Target};
 
-use ui::{RedrawHandler, LayoutChangeHandler};
+use widgets::drag::{DragInputHandler, DragMouseCursorHandler, DragMouseReleaseHandler};
 use input::InputHandler;
 use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
 use input::keyboard::{FocusHandler, KeyboardForwarder, KeyboardCharForwarder};
-use widgets::drag::{DragInputHandler, DragMouseCursorHandler, DragMouseReleaseHandler};
 
 pub struct App {
     pub ui: Ui,

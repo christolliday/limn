@@ -1,14 +1,14 @@
 use linked_hash_map::LinkedHashMap;
 
+use event::Target;
 use widget::{EventArgs, EventHandler};
+use widget::style::Value;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
-use widget::style::Value;
 use drawable::rect::RectStyleField;
-use event::Target;
 use resources::WidgetId;
-use util::Color;
 use input::mouse::WidgetMouseButton;
+use util::Color;
 
 pub struct WidgetListItemSelected {
     widget: WidgetId,

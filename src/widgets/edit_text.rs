@@ -1,7 +1,6 @@
-use widget::{EventHandler, EventArgs};
-use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter};
+use widget::{WidgetBuilder, EventHandler, EventArgs};
 use widget::property::PropChangeHandler;
-use widget::builder::WidgetBuilder;
+use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter};
 use drawable::rect::RectDrawable;
 use drawable::text::TextDrawable;
 

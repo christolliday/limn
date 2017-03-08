@@ -3,16 +3,15 @@ extern crate glutin;
 
 mod util;
 
-use limn::widget::{EventHandler, EventArgs};
-use limn::widget::builder::WidgetBuilder;
+use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
 use limn::widget::layout::{LinearLayout, Orientation};
-use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
+use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::event::Target;
 use limn::color::*;
 
-struct CounterEvent(());
+struct CounterEvent;
 struct CountEvent(u32);
 
 fn main() {
@@ -54,7 +53,7 @@ fn main() {
         .set_text("Count")
         .widget
         .on_click(move |_, args| {
-            args.queue.push(Target::Widget(root_id), CounterEvent(()));
+            args.queue.push(Target::Widget(root_id), CounterEvent);
         });
     button_widget.layout.center(&button_container);
     button_widget.layout.bound_by(&button_container, Some(50.0));

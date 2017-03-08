@@ -2,7 +2,7 @@ extern crate limn;
 
 mod util;
 
-use limn::widget::builder::WidgetBuilder;
+use limn::widget::WidgetBuilder;
 use limn::drawable::image::ImageDrawable;
 
 fn main() {

@@ -1,5 +1,7 @@
 use linked_hash_map::LinkedHashMap;
+
 use widget::PropSet;
+use widget::drawable::Drawable;
 
 #[derive(Clone, Debug)]
 pub enum Value<T>
@@ -37,7 +39,7 @@ impl<T> Value<T>
         }
     }
 }
-use widget::drawable::Drawable;
+
 pub trait Style<D: Drawable> {
     fn apply(&self, drawable: &mut D, props: &PropSet);
 }

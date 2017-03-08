@@ -1,14 +1,12 @@
 use cassowary::strength::*;
 
-use widget::builder::WidgetBuilder;
-use widget::style::Value;
-use widget::{EventHandler, EventArgs};
 use event::Target;
-use drawable::rect::{RectDrawable, RectStyleField};
+use widget::{WidgetBuilder, EventHandler, EventArgs};
+use widget::style::Value;
 use widgets::drag::{DragEvent, WidgetDrag};
+use drawable::rect::{RectDrawable, RectStyleField};
 use resources::WidgetId;
 use util::Dimensions;
-//use widgets::drag::Draggable;
 
 pub struct SliderBuilder {
     pub widget: WidgetBuilder,

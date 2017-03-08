@@ -2,12 +2,11 @@ extern crate limn;
 
 mod util;
 
-use limn::widget::builder::WidgetBuilder;
-use limn::drawable::rect::{RectDrawable, RectStyleField};
+use limn::widget::WidgetBuilder;
 use limn::widget::style::Value;
-use limn::color::*;
+use limn::drawable::rect::{RectDrawable, RectStyleField};
 use limn::util::Dimensions;
-
+use limn::color::*;
 
 fn main() {
     let (window, ui) = util::init_default("Limn scroll demo");

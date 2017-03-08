@@ -3,8 +3,8 @@ use graphics::{self, Context, Transformed};
 use backend::gfx::{ImageSize, G2d};
 use backend::glyph::GlyphCache;
 
-use resources::{ImageId, resources};
 use widget::drawable::Drawable;
+use resources::{ImageId, resources};
 use util::{Dimensions, Rectangle};
 
 pub struct ImageDrawable {

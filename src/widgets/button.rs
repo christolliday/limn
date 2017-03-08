@@ -6,14 +6,13 @@ use linked_hash_map::LinkedHashMap;
 use text_layout::Align;
 
 use event::Target;
-use widget::{EventHandler, EventArgs};
+use widget::{WidgetBuilder, EventHandler, EventArgs};
+use widget::style::Value;
 use widget::property::{Property, PropChange, PropChangeHandler};
 use widget::property::states::*;
 use input::mouse::{ClickEvent, WidgetMouseButton};
 use drawable::rect::{RectDrawable, RectStyleField};
 use drawable::text::{TextDrawable, TextStyleField};
-use widget::builder::WidgetBuilder;
-use widget::style::Value;
 use util::{Dimensions, Color};
 use color::*;
 

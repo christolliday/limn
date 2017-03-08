@@ -4,7 +4,7 @@ extern crate cassowary;
 
 mod util;
 
-use limn::widget::builder::WidgetBuilder;
+use limn::widget::WidgetBuilder;
 use limn::widgets::slider::SliderBuilder;
 use limn::util::Dimensions;
 

@@ -11,7 +11,7 @@ use limn::input::InputEvent;
 use limn::event::Target;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
-use limn::widget::builder::WidgetBuilder;
+use limn::widget::WidgetBuilder;
 
 pub fn init_default(title: &str) -> (Window, App) {
     let window_dims = (100, 100);

@@ -2,8 +2,7 @@ use glutin;
 use cassowary::strength::*;
 
 use event::Target;
-use widget::{EventArgs, EventHandler};
-use widget::builder::WidgetBuilder;
+use widget::{WidgetBuilder, EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
 use input::mouse::WidgetMouseWheel;

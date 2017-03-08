@@ -2,11 +2,11 @@ extern crate limn;
 
 mod util;
 
-use limn::widget::builder::WidgetBuilder;
-use limn::widgets::button::ToggleButtonBuilder;
-use limn::drawable::text::{TextDrawable, TextStyleField};
-use limn::widgets::edit_text::EditTextBuilder;
+use limn::widget::WidgetBuilder;
 use limn::widget::style::Value;
+use limn::widgets::button::ToggleButtonBuilder;
+use limn::widgets::edit_text::EditTextBuilder;
+use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::util::Dimensions;
 use limn::color::*;
 
