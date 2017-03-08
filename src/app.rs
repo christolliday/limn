@@ -2,9 +2,10 @@ use std::any::{Any, TypeId};
 
 use backend::Window;
 
-use ui::{self, Ui, RedrawHandler, LayoutChangeHandler};
+use ui::{self, Ui, RedrawHandler};
 use event::{Queue, Target};
 
+use ui::solver::LayoutChangeHandler;
 use widgets::drag::{DragInputHandler, DragMouseCursorHandler, DragMouseReleaseHandler};
 use input::InputHandler;
 use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};

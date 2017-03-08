@@ -1,6 +1,6 @@
 use std;
 use std::sync::{Arc, Mutex};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use linked_hash_map::LinkedHashMap;
 
@@ -12,7 +12,8 @@ use resources::WidgetId;
 use widget::Widget;
 use widget::layout::WidgetConstraint;
 use event::{Target, Queue};
-use ui::LayoutChanged;
+use ui::RedrawEvent;
+use ui;
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
@@ -98,13 +99,6 @@ impl LimnSolver {
         self.solver.has_constraint(constraint)
     }
 
-    pub fn fetch_changes(&mut self) -> &[(Variable, f64)] {
-        self.solver.fetch_changes()
-    }
-    pub fn get_value(&mut self, v: Variable) -> f64 {
-        self.solver.get_value(v)
-    }
-
     fn add_constraint(&mut self, constraint: Constraint) {
         self.debug_constraint_list.insert(constraint.clone(), ());
         self.solver.add_constraint(constraint).unwrap();
@@ -113,21 +107,35 @@ impl LimnSolver {
     fn check_changes(&mut self) {
         let changes = self.solver.fetch_changes();
         if changes.len() > 0 {
-            let mut widget_ids = HashSet::new();
-            for &(var, _) in changes {
+            let mut wchanges = Vec::new();
+            for &(var, que) in changes {
                 if let Some(widget_id) = self.var_map.get(&var) {
-                    widget_ids.insert(widget_id.clone());
+                    wchanges.push((*widget_id, var, que));
                 }
             }
-            for widget_id in widget_ids {
-                self.queue.push(Target::Ui, LayoutChanged(widget_id));
-            }
+            self.queue.push(Target::Ui, LayoutChanged(wchanges));
         }
     }
     pub fn debug_constraints(&self) {
         for constraint in self.debug_constraint_list.keys() {
             debug_constraint(constraint);
         }
+    }
+}
+
+pub struct LayoutChanged(Vec<(WidgetId, Variable, f64)>);
+pub struct LayoutChangeHandler;
+impl ui::EventHandler<LayoutChanged> for LayoutChangeHandler {
+    fn handle(&mut self, event: &LayoutChanged, args: ui::EventArgs) { 
+        let ref changes = event.0;
+        for &(widget_id, var, value) in changes {
+            if let Some(widget) = args.ui.graph.get_widget(widget_id) {
+                widget.layout.update_val(var, value);
+            }
+        }
+        // redraw everything when layout changes, for now
+        args.queue.push(Target::Ui, RedrawEvent);
+        args.ui.graph.redraw();
     }
 }
 

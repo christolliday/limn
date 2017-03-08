@@ -48,8 +48,8 @@ impl WidgetGraph {
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
         }
     }
-    pub fn resize_window_to_fit(&mut self, window: &Window, solver: &mut LimnSolver) {
-        let window_dims = self.get_root_dims(solver);
+    pub fn resize_window_to_fit(&mut self, window: &Window) {
+        let window_dims = self.get_root_dims();
         window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
     pub fn set_root(&mut self, mut root_widget: WidgetBuilder, solver: &mut LimnSolver) {
@@ -66,11 +66,14 @@ impl WidgetGraph {
         let root_id = self.root_id;
         self.get_widget(root_id).unwrap()
     }
-    pub fn get_root_dims(&mut self, solver: &mut LimnSolver) -> Dimensions {
+    pub fn get_root_dims(&mut self) -> Dimensions {
         let root_index = self.root_index();
         let ref mut root = &mut self.graph[root_index].widget;
-        root.layout.update(solver);
-        root.layout.get_dims()
+        let mut dims = root.layout.get_dims();
+        // use min size to prevent window size from being set to 0 (X crashes)
+        dims.width = f64::max(100.0, dims.width);
+        dims.height = f64::max(100.0, dims.height);
+        dims
     }
     fn root_index(&self) -> NodeIndex {
         self.widget_map[&self.root_id].clone()
@@ -78,7 +81,6 @@ impl WidgetGraph {
     pub fn window_resized(&mut self, window_dims: Dimensions, solver: &mut LimnSolver) {
         let root_index = self.root_index();
         let ref mut root = self.graph[root_index].widget;
-        root.layout.update(solver);
         solver.update_solver(|solver| {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
             solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
@@ -92,13 +94,6 @@ impl WidgetGraph {
         self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
-    pub fn update_layout(&mut self, solver: &mut LimnSolver) {
-        let mut dfs = Dfs::new(&self.graph, self.root_index());
-        while let Some(node_index) = dfs.next(&self.graph) {
-            let ref mut widget = self.graph[node_index].widget;
-            widget.layout.update(solver);
-        }
-    }
     pub fn redraw(&mut self) {
         self.redraw = 2;
     }

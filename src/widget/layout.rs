@@ -2,7 +2,6 @@ use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use ui::solver::LimnSolver;
 use widget::WidgetBuilder;
 use resources::WidgetId;
 use util::{Point, Rectangle, Dimensions, Scalar};
@@ -96,7 +95,11 @@ pub struct LayoutVars {
     pub top: Variable,
     pub right: Variable,
     pub bottom: Variable,
-    pub bounds: Rectangle,
+
+    left_val: f64,
+    top_val: f64,
+    right_val: f64,
+    bottom_val: f64,
 }
 impl LayoutVars {
     pub fn new() -> Self {
@@ -105,24 +108,37 @@ impl LayoutVars {
             top: Variable::new(),
             right: Variable::new(),
             bottom: Variable::new(),
-            bounds: Rectangle::new_empty(),
+            left_val: 0.0,
+            top_val: 0.0,
+            right_val: 0.0,
+            bottom_val: 0.0,
         }
     }
-    pub fn update(&mut self, solver: &mut LimnSolver) {
-        self.bounds = Rectangle {
-            left: solver.get_value(self.left),
-            top: solver.get_value(self.top),
-            width: solver.get_value(self.right) - solver.get_value(self.left),
-            height: solver.get_value(self.bottom) - solver.get_value(self.top),
+    pub fn update_val(&mut self, var: Variable, value: f64) {
+        if var == self.left {
+            self.left_val = value;
+        } else if var == self.top {
+            self.top_val = value;
+        } else if var == self.right {
+            self.right_val = value;
+        } else if var == self.bottom {
+            self.bottom_val = value;
+        } else {
+            panic!();
         }
     }
     pub fn bounds(&self) -> Rectangle {
-        self.bounds
+        Rectangle {
+            left: self.left_val,
+            top: self.top_val,
+            width: self.right_val - self.left_val,
+            height: self.bottom_val - self.top_val, 
+        }
     }
     pub fn get_dims(&self) -> Dimensions {
         Dimensions {
-            width: self.bounds.width,
-            height: self.bounds.height,
+            width: self.right_val - self.left_val,
+            height: self.bottom_val - self.top_val,
         }
     }
 }

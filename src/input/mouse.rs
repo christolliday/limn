@@ -5,6 +5,7 @@ use event::Target;
 use util::Point;
 use resources::WidgetId;
 use widgets::hover::Hover;
+use ui::solver::LayoutChanged;
 
 use super::InputEvent;
 
@@ -18,8 +19,8 @@ pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
 // adapters
 pub struct MouseLayoutChangeHandler;
-impl ui::EventHandler<ui::LayoutChanged> for MouseLayoutChangeHandler {
-    fn handle(&mut self, _: &ui::LayoutChanged, args: ui::EventArgs) {
+impl ui::EventHandler<LayoutChanged> for MouseLayoutChangeHandler {
+    fn handle(&mut self, _: &LayoutChanged, args: ui::EventArgs) {
         args.queue.push(Target::Ui, MouseInputEvent::LayoutChanged);
     }
 }

@@ -7,8 +7,9 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 backend = { path = "backend" }
 text_layout = { path = "text_layout" }
-cassowary = { git = "https://github.com/christolliday/cassowary-rs", branch = "debug" }
 petgraph = { git = "https://github.com/bluss/petgraph", rev = "f58200a" }
+
+cassowary = "0.2.0"
 
 rusttype = "0.2.1"
 piston2d-graphics = "0.21"
