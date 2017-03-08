@@ -8,8 +8,6 @@ use std::any::{TypeId, Any};
 use graphics::Context;
 use graphics::types::Color;
 
-use cassowary;
-
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
@@ -86,12 +84,6 @@ impl WidgetBuilder {
 
     pub fn build(self) -> (Vec<WidgetBuilder>, Vec<WidgetConstraint>, WidgetContainer) {
 
-        if let Some(ref debug_name) = self.debug_name {
-            cassowary::add_var_name(self.layout.vars.left, &format!("{}.left", debug_name));
-            cassowary::add_var_name(self.layout.vars.top, &format!("{}.top", debug_name));
-            cassowary::add_var_name(self.layout.vars.right, &format!("{}.right", debug_name));
-            cassowary::add_var_name(self.layout.vars.bottom, &format!("{}.bottom", debug_name));
-        }
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,

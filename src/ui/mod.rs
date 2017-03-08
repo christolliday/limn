@@ -27,6 +27,7 @@ impl Ui {
     }
 
     pub fn set_root(&mut self, root_widget: WidgetBuilder, window: &mut Window) {
+        let root_widget = root_widget.set_debug_name("root");
         self.graph.set_root(root_widget, &mut self.solver);
         self.graph.resize_window_to_fit(&window, &mut self.solver);
     }
