@@ -7,8 +7,8 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 backend = { path = "backend" }
 text_layout = { path = "text_layout" }
-petgraph = { git = "https://github.com/bluss/petgraph", rev = "f58200a" }
 
+petgraph = "0.4.3"
 cassowary = "0.2.0"
 
 rusttype = "0.2.1"
