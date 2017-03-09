@@ -147,6 +147,7 @@ pub enum TextStyleField {
     BackgroundColor(Value<Color>),
     Wrap(Value<Wrap>),
     Align(Value<Align>),
+    VertAlign(Value<Align>),
 }
 impl StyleField<TextDrawable> for TextStyleField {
     fn apply(&self, state: &mut TextDrawable, props: &PropSet) {
@@ -160,6 +161,7 @@ impl StyleField<TextDrawable> for TextStyleField {
             }
             TextStyleField::Wrap(ref val) => state.wrap = val.from_props(props),
             TextStyleField::Align(ref val) => state.align = val.from_props(props),
+            TextStyleField::VertAlign(ref val) => state.vertical_align = val.from_props(props),
         }
     }
 }

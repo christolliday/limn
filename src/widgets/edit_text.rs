@@ -33,7 +33,9 @@ impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
     }
 }
 
-
+use drawable::text::TextStyleField;
+use widget::style::Value;
+use text_layout::Align;
 pub struct EditTextBuilder {
     pub widget: WidgetBuilder,
 }
@@ -45,8 +47,10 @@ impl EditTextBuilder {
             .add_handler(WidgetFocusHandler)
             .add_handler(PropChangeHandler);
 
+
+        let text_style = vec![TextStyleField::VertAlign(Value::Single(Align::Start))];
         let text_widget = WidgetBuilder::new()
-            .set_drawable(TextDrawable::new())
+            .set_drawable_with_style(TextDrawable::new(), text_style)
             .add_handler(EditTextKeyboardHandler::new())
             .add_handler(PropChangeHandler);
         

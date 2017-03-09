@@ -48,16 +48,21 @@ impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
     }
 }
 
+pub enum ToggleEvent {
+    On,
+    Off,
+}
 // show whether toggle button is activated
 pub struct ToggleEventHandler;
 impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
     fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
         if let &WidgetMouseButton(glutin::ElementState::Released, _) = event {
-            let event = match args.widget.props.contains(&Property::Activated) {
-                true => PropChange::Remove(Property::Activated),
-                false => PropChange::Add(Property::Activated),
+            let (toggle_event, prop_event) = match args.widget.props.contains(&Property::Activated) {
+                true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
+                false => (ToggleEvent::On, PropChange::Add(Property::Activated)),
             };
-            args.queue.push(Target::SubTree(args.widget.id), event);
+            args.queue.push(Target::Widget(args.widget.id), toggle_event);
+            args.queue.push(Target::SubTree(args.widget.id), prop_event);
         }
     }
 }
