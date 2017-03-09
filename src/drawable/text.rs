@@ -54,6 +54,18 @@ impl TextDrawable {
                                          self.wrap)
             .into()
     }
+    pub fn text_fits(&self, text: &str, bounds: Rectangle) -> bool {
+        let res = resources();
+        let font = res.fonts.get(self.font_id).unwrap();
+        let measured: Dimensions =
+            text_layout::get_text_dimensions(text,
+                                             font,
+                                             self.font_size,
+                                             self.font_size * 1.25,
+                                             self.wrap)
+            .into();
+        measured.width < bounds.width && measured.height < bounds.height
+    }
 }
 
 impl Drawable for TextDrawable {

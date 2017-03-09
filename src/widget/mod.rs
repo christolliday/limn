@@ -232,6 +232,13 @@ impl Widget {
     pub fn is_mouse_over(&self, mouse: Point) -> bool {
         util::point_inside_rect(mouse, self.layout.bounds())
     }
+    pub fn drawable<T: Drawable>(&self) -> Option<&T> {
+        if let Some(ref drawable) = self.drawable {
+            drawable.drawable.as_ref().downcast_ref::<T>()
+        } else {
+            None
+        }
+    }
 
     pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)

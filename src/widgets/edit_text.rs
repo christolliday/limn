@@ -16,7 +16,6 @@ impl EditTextKeyboardHandler {
 }
 impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
     fn handle(&mut self, event: &WidgetReceivedCharacter, args: EventArgs) {
-        //println!("widget key input: {:?}", event);
         let &WidgetReceivedCharacter(char) = event;
         match char {
             '\u{8}' => {
@@ -24,6 +23,10 @@ impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
             }
             _ => {
                 self.text.push(char);
+                let drawable = args.widget.drawable::<TextDrawable>().unwrap();
+                if !drawable.text_fits(&self.text, args.widget.layout.bounds()) {
+                    self.text.pop();
+                }
             }
         }
         args.widget.update(|state: &mut TextDrawable| state.text = self.text.clone());
