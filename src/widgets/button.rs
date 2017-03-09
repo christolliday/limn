@@ -102,6 +102,11 @@ impl ToggleButtonBuilder {
         self.widget.add_child(button_text_widget);
         self
     }
+    pub fn on_toggle<F>(mut self, callback: F) -> Self
+        where F: Fn(&ToggleEvent, &mut EventArgs) + 'static {
+        self.widget.controller.add_handler(CallbackHandler::new(callback));
+        self
+    }
 }
 
 pub struct PushButtonBuilder {

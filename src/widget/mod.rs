@@ -268,7 +268,7 @@ impl Widget {
     {
         if let Some(ref mut drawable) = self.drawable {
             self.has_updated = true;
-            let state = drawable.drawable.as_mut().downcast_mut::<T>().unwrap();
+            let state = drawable.drawable.as_mut().downcast_mut::<T>().expect("Called update on widget with wrong drawable type");
             f(state);
         }
     }
