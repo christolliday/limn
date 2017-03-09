@@ -17,14 +17,16 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
 
-    let mut scroll_widget = WidgetBuilder::new().contents_scroll();
+    let mut scroll_widget = WidgetBuilder::new();
+    scroll_widget.contents_scroll();
     scroll_widget.layout.bound_by(&root_widget, Some(50.0));
     scroll_widget.layout.dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
     });
 
-    let mut list_widget = WidgetBuilder::new()
+    let mut list_widget = WidgetBuilder::new();
+    list_widget
         .add_handler(ListHandler::new())
         .make_scrollable();
     list_widget.layout.match_width(&scroll_widget);
@@ -40,7 +42,8 @@ fn main() {
             let text_drawable = TextDrawable::new();
             let text_dims = text_drawable.measure();
 
-            let mut list_item_widget = WidgetBuilder::new()
+            let mut list_item_widget = WidgetBuilder::new();
+            list_item_widget
                 .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
                 .set_debug_name("item")
                 .add_handler(ListItemHandler::new(list_widget.id))
@@ -49,7 +52,8 @@ fn main() {
             list_item_widget.layout.height(text_dims.height);
             linear_layout.add_widget(&mut list_item_widget);
 
-            let mut list_text_widget = WidgetBuilder::new()
+            let mut list_text_widget = WidgetBuilder::new();
+            list_text_widget
                 .set_drawable_with_style(text_drawable, text_style)
                 .set_debug_name("text");
             list_text_widget.layout.center(&list_item_widget);

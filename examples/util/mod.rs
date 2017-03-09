@@ -39,7 +39,7 @@ pub fn set_root_and_loop(mut window: Window,
                          mut app: App,
                          root_widget: WidgetBuilder) {
 
-    app.ui.set_root(root_widget);
+    app.ui.graph.set_root(root_widget, &mut app.ui.solver);
     // handle layout change events, needed to measure widgets before resizing window
     app.handle_events();
     app.ui.graph.resize_window_to_fit(&window);

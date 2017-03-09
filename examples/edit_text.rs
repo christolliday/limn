@@ -48,7 +48,8 @@ fn main() {
         edit_text.controller.add_handler(EditTextSettingsHandler);
         edit_text.id
     };
-    let mut h_align_button = ToggleButtonBuilder::new()
+    let mut h_align_button = ToggleButtonBuilder::new();
+    h_align_button
         .set_text("Right Align", "Left Align")
         .on_toggle(move |event, args| {
             match *event {
@@ -59,10 +60,11 @@ fn main() {
                     args.queue.push(Target::Widget(edit_text_id), EditTextSettingsEvent::LeftAlign);
                 },
             }
-        })
-        .widget;
+        });
+    let mut h_align_button = h_align_button.widget;
 
-    let mut v_align_button = ToggleButtonBuilder::new()
+    let mut v_align_button = ToggleButtonBuilder::new();
+    v_align_button
         .set_text("Bottom Align", "Top Align")
         .on_toggle(move |event, args| {
             match *event {
@@ -73,8 +75,8 @@ fn main() {
                     args.queue.push(Target::Widget(edit_text_id), EditTextSettingsEvent::TopAlign);
                 },
             }
-        })
-        .widget;
+        });
+    let mut v_align_button = v_align_button.widget;
 
     h_align_button.layout.align_top(&root_widget, Some(20.0));
     h_align_button.layout.align_left(&root_widget, Some(20.0));

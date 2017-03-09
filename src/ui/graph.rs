@@ -53,6 +53,7 @@ impl WidgetGraph {
         window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
     pub fn set_root(&mut self, mut root_widget: WidgetBuilder, solver: &mut LimnSolver) {
+        root_widget.set_debug_name("root");
         self.root_id = root_widget.id;
         root_widget.layout.top_left(Point { x: 0.0, y: 0.0 }, None);
         self.add_widget(root_widget, None, solver);

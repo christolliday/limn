@@ -87,7 +87,8 @@ impl ClockBuilder {
             radius: 2.0,
         };
         let drawable = EllipseDrawable::new(WHITE, Some(border));
-        let mut widget = WidgetBuilder::new().set_drawable(drawable);
+        let mut widget = WidgetBuilder::new();
+        widget.set_drawable(drawable);
         widget.layout.dimensions(Dimensions {
             width: 200.0,
             height: 200.0,
@@ -105,13 +106,16 @@ impl ClockBuilder {
             state.angle = second_angle();
         };
 
-        let hour_widget = WidgetBuilder::new()
+        let mut hour_widget = WidgetBuilder::new();
+        hour_widget
             .set_drawable(HandDrawable::new(BLACK, 4.0, 60.0, hour_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, update_hour_hand));
-        let minute_widget = WidgetBuilder::new()
+        let mut minute_widget = WidgetBuilder::new();
+        minute_widget
             .set_drawable(HandDrawable::new(BLACK, 3.0, 90.0, minute_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, update_minute_hand));
-        let second_widget = WidgetBuilder::new()
+        let mut second_widget = WidgetBuilder::new();
+        second_widget
             .set_drawable(HandDrawable::new(RED, 2.0, 80.0, second_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, update_second_hand));
 

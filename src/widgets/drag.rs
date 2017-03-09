@@ -98,7 +98,7 @@ impl ui::EventHandler<MouseButton> for DragMouseReleaseHandler {
 }
 
 impl WidgetBuilder {
-    pub fn make_draggable(mut self) -> Self {
+    pub fn make_draggable(&mut self) -> &mut Self {
         self.controller.add_handler(DragWidgetPressHandler);
         self
     }

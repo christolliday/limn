@@ -18,10 +18,11 @@ fn main() {
         height: 300.0,
     });
 
-    let mut slider = SliderBuilder::new()
-        .on_val_changed(|val| {
-            println!("val {}", val);
-        }).widget;
+    let mut slider = SliderBuilder::new();
+    slider.on_val_changed(|val| {
+        println!("val {}", val);
+    });
+    let mut slider = slider.widget;
     slider.layout.align_top(&root_widget, Some(10.0));
     slider.layout.center_horizontal(&root_widget);
 

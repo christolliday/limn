@@ -48,39 +48,38 @@ impl WidgetBuilder {
             contents_scroll: false,
         }
     }
-    pub fn set_drawable<T: Drawable + 'static>(mut self, drawable: T) -> Self {
+    pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
         self.drawable = Some(DrawableWrapper::new(drawable));
         self
     }
-    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(mut self, drawable: T, style: S) -> Self {
+    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
         self.drawable = Some(DrawableWrapper::new_with_style(drawable, style));
         self
     }
-    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(mut self, handler: T) -> Self {
+    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.controller.add_handler(handler);
         self
     }
-    pub fn set_debug_name(mut self, name: &str) -> Self {
+    pub fn set_debug_name(&mut self, name: &str) -> &mut Self {
         self.debug_name = Some(name.to_owned());
         self
     }
-    pub fn set_debug_color(mut self, color: Color) -> Self {
+    pub fn set_debug_color(&mut self, color: Color) -> &mut Self {
         self.debug_color = Some(color);
         self
     }
-    pub fn set_inactive(mut self) -> Self {
+    pub fn set_inactive(&mut self) -> &mut Self {
         self.props.insert(Property::Inactive);
         self
     }
-
-    // only method that is not chainable, because usually called out of order
-    pub fn add_child(&mut self, mut widget: WidgetBuilder) {
+    pub fn add_child(&mut self, mut widget: WidgetBuilder) -> &mut Self {
         if self.contents_scroll {
             widget.layout.scroll_inside(&self);
         } else {
             widget.layout.bound_by(&self, None);
         }
         self.children.push(widget);
+        self
     }
 
     pub fn build(self) -> (Vec<WidgetBuilder>, Vec<WidgetConstraint>, WidgetContainer) {

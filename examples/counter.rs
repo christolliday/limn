@@ -38,7 +38,8 @@ fn main() {
                           TextStyleField::BackgroundColor(Value::Single(WHITE))];
     let text_drawable = TextDrawable::new();
     let text_dims = text_drawable.measure();
-    let mut text_widget = WidgetBuilder::new()
+    let mut text_widget = WidgetBuilder::new();
+    text_widget
         .set_drawable_with_style(text_drawable, text_style)
         .add_handler(CountHandler);
     text_widget.layout.width(80.0);
@@ -49,12 +50,12 @@ fn main() {
     let mut button_container = WidgetBuilder::new();
     linear_layout.add_widget(&mut button_container);
     let root_id = root_widget.id;
-    let mut button_widget = PushButtonBuilder::new()
-        .set_text("Count")
-        .widget
-        .on_click(move |_, args| {
-            args.queue.push(Target::Widget(root_id), CounterEvent);
-        });
+    let mut button_widget = PushButtonBuilder::new();
+    button_widget.set_text("Count");
+    let mut button_widget = button_widget.widget;
+    button_widget.on_click(move |_, args| {
+        args.queue.push(Target::Widget(root_id), CounterEvent);
+    });
     button_widget.layout.center(&button_container);
     button_widget.layout.bound_by(&button_container, Some(50.0));
     button_container.add_child(button_widget);
@@ -76,7 +77,7 @@ fn main() {
             args.queue.push(address, CountEvent(self.count));
         }
     }
-    let root_widget = root_widget.add_handler(CounterHandler::new());
+    root_widget.add_handler(CounterHandler::new());
 
     util::set_root_and_loop(window, ui, root_widget);
 }

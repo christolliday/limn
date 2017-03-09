@@ -15,8 +15,8 @@ impl SliderBuilder {
     pub fn new() -> Self {
         let rect_color = [0.1, 0.1, 0.1, 1.0];
         let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
-        let mut widget = WidgetBuilder::new()
-            .set_drawable_with_style(RectDrawable::new(), style);
+        let mut widget = WidgetBuilder::new();
+        widget.set_drawable_with_style(RectDrawable::new(), style);
         widget.layout.dimensions(Dimensions {
             width: 200.0,
             height: 30.0,
@@ -24,7 +24,8 @@ impl SliderBuilder {
 
         let rect_color = [0.4, 0.4, 0.4, 1.0];
         let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
-        let mut slider_handle = WidgetBuilder::new()
+        let mut slider_handle = WidgetBuilder::new();
+        slider_handle
             .set_drawable_with_style(RectDrawable::new(), style)
             .add_handler(DragHandler::new(widget.id))
             .make_draggable();
@@ -36,11 +37,11 @@ impl SliderBuilder {
         widget.add_child(slider_handle);
         SliderBuilder { widget: widget }
     }
-    pub fn on_val_changed<F>(self, on_val_changed: F) -> Self
+    pub fn on_val_changed<F>(&mut self, on_val_changed: F) -> &mut Self
         where F: Fn(f64) + 'static
     {
-        let widget = self.widget.add_handler(SliderHandler::new(on_val_changed));
-        SliderBuilder { widget: widget }
+        self.widget.add_handler(SliderHandler::new(on_val_changed));
+        self
     }
 }
 

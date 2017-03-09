@@ -73,7 +73,8 @@ pub struct ToggleButtonBuilder {
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
-        let mut widget = WidgetBuilder::new()
+        let mut widget = WidgetBuilder::new();
+        widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler(ButtonDownHandler)
             .add_handler(ToggleEventHandler)
@@ -85,7 +86,7 @@ impl ToggleButtonBuilder {
 
         ToggleButtonBuilder { widget: widget }
     }
-    pub fn set_text(mut self, on_text: &'static str, off_text: &'static str) -> Self {
+    pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
 
         let mut selector = LinkedHashMap::new();
         selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
@@ -94,7 +95,8 @@ impl ToggleButtonBuilder {
                               TextStyleField::Align(Value::Single(Align::Middle))];
 
         let button_text_drawable = TextDrawable::new();
-        let mut button_text_widget = WidgetBuilder::new()
+        let mut button_text_widget = WidgetBuilder::new();
+        button_text_widget
             .set_drawable_with_style(button_text_drawable, text_style)
             .add_handler(PropChangeHandler);
         button_text_widget.layout.center(&self.widget);
@@ -102,9 +104,9 @@ impl ToggleButtonBuilder {
         self.widget.add_child(button_text_widget);
         self
     }
-    pub fn on_toggle<F>(mut self, callback: F) -> Self
+    pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
         where F: Fn(&ToggleEvent, &mut EventArgs) + 'static {
-        self.widget.controller.add_handler(CallbackHandler::new(callback));
+        self.widget.add_handler(CallbackHandler::new(callback));
         self
     }
 }
@@ -114,7 +116,8 @@ pub struct PushButtonBuilder {
 }
 impl PushButtonBuilder {
     pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new()
+        let mut widget = WidgetBuilder::new();
+        widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler(PropChangeHandler);
 
@@ -125,12 +128,13 @@ impl PushButtonBuilder {
 
         PushButtonBuilder { widget: widget }
     }
-    pub fn set_text(mut self, text: &'static str) -> Self {
+    pub fn set_text(&mut self, text: &'static str) -> &mut Self {
 
         let text_style = vec![TextStyleField::Text(Value::Single(text.to_owned())),
                               TextStyleField::Align(Value::Single(Align::Middle))];
         let drawable = TextDrawable::new();
-        let mut button_text_widget = WidgetBuilder::new()
+        let mut button_text_widget = WidgetBuilder::new();
+        button_text_widget
             .set_drawable_with_style(drawable, text_style)
             .add_handler(PropChangeHandler);
         button_text_widget.layout.center(&self.widget);
@@ -141,13 +145,12 @@ impl PushButtonBuilder {
 }
 
 impl WidgetBuilder {
-    pub fn on_click<F>(mut self, on_click: F) -> Self
+    pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
         where F: Fn(&ClickEvent, &mut EventArgs) + 'static
     {
-        self.controller.add_handler(CallbackHandler::new(move |event, mut args| {
+        self.add_handler(CallbackHandler::new(move |event, mut args| {
             (on_click)(event, &mut args);
             args.event_state.handled = true;
-        }));
-        self
+        }))
     }
 }

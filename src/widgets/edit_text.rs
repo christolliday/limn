@@ -42,14 +42,16 @@ pub struct EditTextBuilder {
 impl EditTextBuilder {
     pub fn new() -> Self {
 
-        let mut widget = WidgetBuilder::new()
+        let mut widget = WidgetBuilder::new();
+        widget
             .set_drawable(RectDrawable::new())
             .add_handler(WidgetFocusHandler)
             .add_handler(PropChangeHandler);
 
 
         let text_style = vec![TextStyleField::VertAlign(Value::Single(Align::Start))];
-        let text_widget = WidgetBuilder::new()
+        let mut text_widget = WidgetBuilder::new();
+        text_widget
             .set_drawable_with_style(TextDrawable::new(), text_style)
             .add_handler(EditTextKeyboardHandler::new())
             .add_handler(PropChangeHandler);

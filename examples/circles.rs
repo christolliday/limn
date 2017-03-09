@@ -35,14 +35,17 @@ fn main() {
         button_container.layout.align_bottom(&root_widget, Some(20.0));
         button_container.layout.shrink();
 
-        let undo_widget = PushButtonBuilder::new()
-            .set_text("Undo")
-            .widget
+        let mut undo_widget = PushButtonBuilder::new();
+        undo_widget.set_text("Undo");
+        let mut undo_widget = undo_widget.widget;
+        undo_widget
             .set_inactive()
             .on_click(|_, args| { args.queue.push(Target::Ui, CircleEvent::Undo); });
-        let mut redo_widget = PushButtonBuilder::new()
-            .set_text("Redo")
-            .widget
+
+        let mut redo_widget = PushButtonBuilder::new();
+        redo_widget.set_text("Redo");
+        let mut redo_widget = redo_widget.widget;
+        redo_widget
             .set_inactive()
             .on_click(|_, args| { args.queue.push(Target::Ui, CircleEvent::Redo); });
         redo_widget.layout.to_right_of(&undo_widget, Some(20.0));
@@ -60,8 +63,8 @@ fn main() {
             color: BLACK,
             radius: 2.0,
         };
-        let mut widget = WidgetBuilder::new()
-            .set_drawable(EllipseDrawable::new(RED, Some(border)));
+        let mut widget = WidgetBuilder::new();
+        widget.set_drawable(EllipseDrawable::new(RED, Some(border)));
         widget.layout.dimensions(Dimensions {
             width: 30.0,
             height: 30.0,
@@ -129,7 +132,8 @@ fn main() {
             }
         }
     }
-    let mut root_widget = WidgetBuilder::new().on_click(|event, args| {
+    let mut root_widget = WidgetBuilder::new();
+    root_widget.on_click(|event, args| {
         let event = CircleEvent::Add(event.position);
         args.queue.push(Target::Ui, event);
     });

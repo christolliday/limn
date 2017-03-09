@@ -20,8 +20,7 @@ impl EventHandler<Hover> for HoverHandler {
 }
 
 impl WidgetBuilder {
-    pub fn enable_hover(mut self) -> Self {
-        self.controller.add_handler(HoverHandler);
-        self
+    pub fn enable_hover(&mut self) -> &mut Self {
+        self.add_handler(HoverHandler)
     }
 }

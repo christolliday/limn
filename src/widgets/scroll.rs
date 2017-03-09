@@ -77,12 +77,11 @@ impl EventHandler<WidgetScroll> for WidgetScrollHandler {
 }
 
 impl WidgetBuilder {
-    pub fn contents_scroll(mut self) -> Self {
+    pub fn contents_scroll(&mut self) -> &mut Self {
         self.contents_scroll = true;
         self.add_handler(ScrollHandler)
     }
-    pub fn make_scrollable(mut self) -> Self {
-        self.controller.add_handler(WidgetScrollHandler::new());
-        self
+    pub fn make_scrollable(&mut self) -> &mut Self {
+        self.add_handler(WidgetScrollHandler::new())
     }
 }
