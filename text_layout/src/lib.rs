@@ -42,6 +42,15 @@ pub fn get_text_dimensions(text: &str,
         width: max_width,
         height: line_infos.count() as f64 * line_height,
     }
+}pub fn get_text_height(text: &str,
+                        font: &Font,
+                        font_size: Scalar,
+                        line_height: Scalar,
+                        wrap: Wrap,
+                        width: Scalar)
+                        -> Scalar {
+    let line_infos = LineInfos::new(text, font, font_size, wrap, width);
+    line_infos.count() as f64 * line_height
 }
 pub fn get_line_rects(text: &str,
                       rect: Rectangle,

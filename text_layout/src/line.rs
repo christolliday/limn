@@ -467,7 +467,7 @@ fn next_break_by_whitespace(text: &str,
         let new_width = width + advance_width(ch, font, scale, &mut last_glyph);
 
         // Check for a line wrap.
-        if width > max_width {
+        if new_width > max_width {
             match last_whitespace_start {
                 Some(Last { byte, char, width_before }) => {
                     let break_ = Break::new(byte, char, BreakType::Wrap { len_bytes: 1 });
