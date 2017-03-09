@@ -6,7 +6,7 @@ use linked_hash_map::LinkedHashMap;
 use text_layout::Align;
 
 use event::Target;
-use widget::{WidgetBuilder, EventHandler, EventArgs};
+use widget::{WidgetBuilder, EventHandler, CallbackHandler, EventArgs};
 use widget::style::Value;
 use widget::property::{Property, PropChange, PropChangeHandler};
 use widget::property::states::*;
@@ -104,24 +104,6 @@ impl ToggleButtonBuilder {
     }
 }
 
-pub struct ClickHandler<F>
-    where F: Fn(&ClickEvent, &mut EventArgs)
-{
-    callback: F,
-}
-impl<F: Fn(&ClickEvent, &mut EventArgs)> ClickHandler<F> {
-    pub fn new(callback: F) -> Self {
-        ClickHandler { callback: callback }
-    }
-}
-impl<F: Fn(&ClickEvent, &mut EventArgs)> EventHandler<ClickEvent>
-    for ClickHandler<F> {
-    fn handle(&mut self, event: &ClickEvent, mut args: EventArgs) {
-        (self.callback)(event, &mut args);
-        args.event_state.handled = true;
-    }
-}
-
 pub struct PushButtonBuilder {
     pub widget: WidgetBuilder,
 }
@@ -157,7 +139,10 @@ impl WidgetBuilder {
     pub fn on_click<F>(mut self, on_click: F) -> Self
         where F: Fn(&ClickEvent, &mut EventArgs) + 'static
     {
-        self.controller.add_handler(ClickHandler::new(on_click));
+        self.controller.add_handler(CallbackHandler::new(move |event, mut args| {
+            (on_click)(event, &mut args);
+            args.event_state.handled = true;
+        }));
         self
     }
 }

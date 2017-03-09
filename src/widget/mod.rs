@@ -4,6 +4,7 @@ pub mod property;
 pub mod drawable;
 
 use std::any::{TypeId, Any};
+use std::marker::PhantomData;
 
 use graphics::Context;
 use graphics::types::Color;
@@ -156,6 +157,28 @@ pub struct EventArgs<'a> {
 
 pub trait EventHandler<T> {
     fn handle(&mut self, event: &T, args: EventArgs);
+}
+
+pub struct CallbackHandler<F, E>
+    where F: Fn(&E, &mut EventArgs)
+{
+    callback: F,
+    phantom: PhantomData<E>,
+}
+impl<F, E> CallbackHandler<F, E>
+    where F: Fn(&E, &mut EventArgs) {
+    pub fn new(callback: F) -> Self {
+        CallbackHandler {
+            callback: callback,
+            phantom: PhantomData,
+        }
+    }
+}
+impl<F, E> EventHandler<E> for CallbackHandler<F, E>
+    where F: Fn(&E, &mut EventArgs) {
+    fn handle(&mut self, event: &E, mut args: EventArgs) {
+        (self.callback)(event, &mut args);
+    }
 }
 
 pub struct WidgetContainer {
