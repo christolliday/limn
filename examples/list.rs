@@ -36,10 +36,8 @@ fn main() {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &mut list_widget);
         let mut list_item_widgets = Vec::new();
         for _ in 1..15 {
-            let text_style = vec![TextStyleField::Text(Value::Single("hello".to_owned())),
-                                  TextStyleField::TextColor(Value::Single(WHITE))];
-
-            let text_drawable = TextDrawable::new();
+            let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
+            let text_drawable = TextDrawable::new("hello");
             let text_dims = text_drawable.measure();
 
             let mut list_item_widget = WidgetBuilder::new();

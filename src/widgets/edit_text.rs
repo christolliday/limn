@@ -52,7 +52,7 @@ impl EditTextBuilder {
         let text_style = vec![TextStyleField::VertAlign(Value::Single(Align::Start))];
         let mut text_widget = WidgetBuilder::new();
         text_widget
-            .set_drawable_with_style(TextDrawable::new(), text_style)
+            .set_drawable_with_style(TextDrawable::default(), text_style)
             .add_handler(EditTextKeyboardHandler::new())
             .add_handler(PropChangeHandler);
         

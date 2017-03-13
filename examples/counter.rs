@@ -34,9 +34,8 @@ fn main() {
         }
     }
 
-    let text_style = vec![TextStyleField::Text(Value::Single("0".to_owned())),
-                          TextStyleField::BackgroundColor(Value::Single(WHITE))];
-    let text_drawable = TextDrawable::new();
+    let text_style = vec![TextStyleField::BackgroundColor(Value::Single(WHITE))];
+    let text_drawable = TextDrawable::new("0");
     let text_dims = text_drawable.measure();
     let mut text_widget = WidgetBuilder::new();
     text_widget

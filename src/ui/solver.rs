@@ -105,6 +105,7 @@ impl LimnSolver {
     }
 
     fn check_changes(&mut self) {
+        //self.debug_constraints();
         let changes = self.solver.fetch_changes();
         if changes.len() > 0 {
             let mut wchanges = Vec::new();
@@ -117,6 +118,7 @@ impl LimnSolver {
         }
     }
     pub fn debug_constraints(&self) {
+        println!("CONSTRAINTS");
         for constraint in self.debug_constraint_list.keys() {
             debug_constraint(constraint);
         }

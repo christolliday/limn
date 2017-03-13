@@ -41,8 +41,10 @@ impl Default for TextDrawable {
 }
 
 impl TextDrawable {
-    pub fn new() -> Self {
-        TextDrawable::default()
+    pub fn new(text: &str) -> Self {
+        let mut drawable = TextDrawable::default();
+        drawable.text = text.to_owned();
+        drawable
     }
     pub fn measure(&self) -> Dimensions {
         let res = resources();
@@ -53,6 +55,9 @@ impl TextDrawable {
                                          self.font_size * 1.25,
                                          self.wrap)
             .into()
+    }
+    pub fn min_height(&self) -> Scalar {
+        self.font_size * 1.25
     }
     pub fn text_fits(&self, text: &str, bounds: Rectangle) -> bool {
         let res = resources();
