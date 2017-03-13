@@ -151,19 +151,23 @@ impl<'a> Iterator for LineInfos<'a> {
         match next.break_type {
             BreakType::Newline { len_bytes } |
             BreakType::Wrap { len_bytes } => {
-                let next_break = Break::new(*start_byte + next.byte,
-                                            *start_char + next.char,
-                                            next.break_type);
-                let info = LineInfo {
-                    start_byte: *start_byte,
-                    start_char: *start_char,
-                    end_break: next_break,
-                    width: width,
-                };
-                *start_byte = info.start_byte + next.byte + len_bytes;
-                *start_char = info.start_char + next.char + 1;
-                *last_break = Some(next_break);
-                Some(info)
+                if next.byte == 0 && len_bytes == 0 {
+                    None
+                } else {
+                    let next_break = Break::new(*start_byte + next.byte,
+                                                *start_char + next.char,
+                                                next.break_type);
+                    let info = LineInfo {
+                        start_byte: *start_byte,
+                        start_char: *start_char,
+                        end_break: next_break,
+                        width: width,
+                    };
+                    *start_byte = info.start_byte + next.byte + len_bytes;
+                    *start_char = info.start_char + next.char + 1;
+                    *last_break = Some(next_break);
+                    Some(info)
+                }
             }
             BreakType::End => {
                 let char = next.char;
