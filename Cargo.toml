@@ -9,7 +9,7 @@ backend = { path = "backend" }
 text_layout = { path = "text_layout" }
 
 petgraph = "0.4.3"
-cassowary = "0.2.0"
+cassowary = "0.2.1"
 
 rusttype = "0.2.1"
 piston2d-graphics = "0.21"
