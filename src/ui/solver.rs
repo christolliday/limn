@@ -1,12 +1,12 @@
-use std;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use std::collections::HashMap;
+use std::fmt::Write;
 
 use linked_hash_map::LinkedHashMap;
 
 use cassowary;
 use cassowary::strength;
-use cassowary::{Variable, Constraint};
+use cassowary::{Variable, Constraint, Expression};
 
 use resources::WidgetId;
 use widget::Widget;
@@ -141,111 +141,67 @@ impl ui::EventHandler<LayoutChanged> for LayoutChangeHandler {
     }
 }
 
-// Below code is used to debug cassowary constraints
-// uses unsafe to access private fields, so depends on matching cassowary struct contents exactly
-// This functionality could be added to cassowary at some point, but the design will need more thought
-
 fn debug_constraint(constraint: &Constraint) {
-    let constraint = unsafe {
-        std::mem::transmute::<&Constraint, &DebugConstraint>(constraint)
+    println!("{}", fmt_constraint(constraint));
+}
+
+fn fmt_constraint(constraint: &Constraint) -> String {
+    let ref constraint = constraint.0;
+    let strength_desc = {
+        let stren = constraint.strength;
+        if stren < strength::WEAK { "WEAK-" }
+        else if stren == strength::WEAK { "WEAK " }
+        else if stren < strength::MEDIUM { "WEAK+" }
+        else if stren == strength::MEDIUM { "MED  " }
+        else if stren < strength::STRONG { "MED+ " }
+        else if stren == strength::STRONG { "STR  " }
+        else if stren < strength::REQUIRED { "STR+ " }
+        else if stren == strength::REQUIRED { "REQD " }
+        else { "REQD+" }
     };
-    println!("{:?}", constraint);
-}
-struct DebugConstraint(Arc<DebugConstraintData>);
-struct DebugConstraintData {
-    expression: DebugExpression,
-    strength: f64,
-    op: DebugRelationalOperator
-}
-#[allow(dead_code)]
-enum DebugRelationalOperator {
-    LessOrEqual,
-    Equal,
-    GreaterOrEqual
-}
-pub struct DebugExpression {
-    pub terms: Vec<DebugTerm>,
-    pub constant: f64
-}
-pub struct DebugTerm {
-    pub variable: DebugVariable,
-    pub coefficient: f64
-}
-pub struct DebugVariable(usize);
-
-impl std::fmt::Debug for DebugConstraint {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let strength_desc = {
-            let stren = self.0.strength;
-            if stren < strength::WEAK { "WEAK-" }
-            else if stren == strength::WEAK { "WEAK " }
-            else if stren < strength::MEDIUM { "WEAK+" }
-            else if stren == strength::MEDIUM { "MED  " }
-            else if stren < strength::STRONG { "MED+ " }
-            else if stren == strength::STRONG { "STR  " }
-            else if stren < strength::REQUIRED { "STR+ " }
-            else if stren == strength::REQUIRED { "REQD " }
-            else { "REQD+" }
-        };
-        write!(fmt, "{} {:?} {} 0", strength_desc, self.0.expression, self.0.op)
-    }
-}
-impl std::fmt::Display for DebugRelationalOperator {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            DebugRelationalOperator::LessOrEqual => try!(write!(fmt, "<=")),
-            DebugRelationalOperator::Equal => try!(write!(fmt, "==")),
-            DebugRelationalOperator::GreaterOrEqual => try!(write!(fmt, ">=")),
-        }
-        Ok(())
-    }
+    format!("{} {} {} 0", strength_desc, fmt_expression(&constraint.expression), constraint.op)
 }
 
-impl std::fmt::Debug for DebugExpression {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut first = true;
-        if self.constant != 0.0 {
-            try!(write!(fmt, "{}", self.constant));
-            first = false;
-        }
-        for term in self.terms.iter() {
-            let coef = {
-                if term.coefficient == 1.0 {
-                    if first {
-                        "".to_owned()
-                    } else {
-                        "+ ".to_owned()
-                    }
-                } else if term.coefficient == -1.0 {
-                    "- ".to_owned()
-                } else if term.coefficient > 0.0 {
-                    if !first {
-                        format!("+ {} * ", term.coefficient)
-                    } else {
-                        format!("{} * ", term.coefficient)
-                    }
+fn fmt_expression(expression: &Expression) -> String {
+    let mut out = String::new();
+    let mut first = true;
+    if expression.constant != 0.0 {
+        write!(out, "{}", expression.constant).unwrap();
+        first = false;
+    }
+    for term in expression.terms.iter() {
+        let coef = {
+            if term.coefficient == 1.0 {
+                if first {
+                    "".to_owned()
                 } else {
-                    format!("- {} * ", term.coefficient)
+                    "+ ".to_owned()
                 }
-            };
-            try!(write!(fmt, " {}{:?}", coef, term.variable));
-
-            first = false;
-        }
-        Ok(())
-    }
-}
-impl std::fmt::Debug for DebugVariable {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let names = VAR_NAMES.lock().unwrap();
-        let var = unsafe {
-            std::mem::transmute::<&DebugVariable, &Variable>(self)
+            } else if term.coefficient == -1.0 {
+                "- ".to_owned()
+            } else if term.coefficient > 0.0 {
+                if !first {
+                    format!("+ {} * ", term.coefficient)
+                } else {
+                    format!("{} * ", term.coefficient)
+                }
+            } else {
+                format!("- {} * ", term.coefficient)
+            }
         };
-        if let Some(name) = names.get(var) {
-            write!(fmt, "{}", name)
-        } else {
-            write!(fmt, "var({})", self.0)
-        }
+        write!(out, " {}{}", coef, fmt_variable(term.variable)).unwrap();
+
+        first = false;
+    }
+    out
+}
+
+fn fmt_variable(variable: Variable) -> String {
+    let names = VAR_NAMES.lock().unwrap();
+    if let Some(name) = names.get(&variable) {
+        format!("{}", name)
+    } else {
+        format!("var({:?})", variable)
     }
 }
 
