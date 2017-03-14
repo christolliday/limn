@@ -170,9 +170,10 @@ impl WidgetGraph {
 
     pub fn remove_widget(&mut self, widget_id: WidgetId, solver: &mut LimnSolver) {
         if let Some(node_index) = self.find_widget(widget_id) {
-            self.graph.remove_node(node_index);
-            self.redraw();
-            solver.remove_widget(&widget_id);
+            if let Some(widget) = self.graph.remove_node(node_index) {
+                self.redraw();
+                solver.remove_widget(&widget.widget.layout);
+            }
         }
     }
     pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<&mut Widget> {

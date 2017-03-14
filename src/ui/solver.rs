@@ -1,5 +1,5 @@
 use std::sync::Mutex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
 use linked_hash_map::LinkedHashMap;
@@ -10,7 +10,7 @@ use cassowary::{Variable, Constraint, Expression};
 
 use resources::WidgetId;
 use widget::Widget;
-use widget::layout::WidgetConstraint;
+use widget::layout::LayoutVars;
 use event::{Target, Queue};
 use ui::RedrawEvent;
 use ui;
@@ -18,8 +18,9 @@ use ui;
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
     solver: cassowary::Solver,
-    var_map: HashMap<Variable, WidgetId>,
-    constraint_map: HashMap<WidgetId, Vec<Constraint>>,
+    var_map: HashMap<Variable, HashSet<Constraint>>,
+    constraint_map: HashMap<Constraint, Vec<Variable>>,
+    widget_map: HashMap<Variable, WidgetId>,
     queue: Queue,
     debug_constraint_list: LinkedHashMap<Constraint, ()>, // LinkedHashSet (maintains insertion order)
 }
@@ -30,38 +31,28 @@ impl LimnSolver {
             solver: cassowary::Solver::new(),
             var_map: HashMap::new(),
             constraint_map: HashMap::new(),
+            widget_map: HashMap::new(),
             queue: queue,
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
-    pub fn add_widget(&mut self, widget: &Widget, constraints: Vec<WidgetConstraint>) {
-        self.constraint_map.insert(widget.id, Vec::new());
+    pub fn add_widget(&mut self, widget: &Widget, constraints: Vec<Constraint>) {
         for constraint in constraints {
-            // insert constraint into list for both widgets it affects,
-            // so that if either widget is removed, the constraint is as well
-            let constraint = match constraint {
-                WidgetConstraint::Local(constraint) => constraint,
-                WidgetConstraint::Relative(constraint, widget_id) => {
-                    if !self.constraint_map.contains_key(&widget_id) {
-                        self.constraint_map.insert(widget_id, Vec::new());
-                    }
-                    if let Some(constraint_list) = self.constraint_map.get_mut(&widget.id) {
-                        constraint_list.push(constraint.clone());
-                    }
-                    constraint
-                }
-            };
-            if let Some(constraint_list) = self.constraint_map.get_mut(&widget.id) {
-                constraint_list.push(constraint.clone());
+            self.add_constraint(constraint.clone());
+            let var_list = self.constraint_map.entry(constraint.clone()).or_insert(Vec::new());
+            for term in &constraint.0.expression.terms {
+                let variable = term.variable;
+                let constraint_set = self.var_map.entry(variable).or_insert(HashSet::new());
+                constraint_set.insert(constraint.clone());
+                var_list.push(variable);
             }
-            self.add_constraint(constraint);
         }
-
         let ref vars = widget.layout;
-        self.var_map.insert(vars.left, widget.id);
-        self.var_map.insert(vars.top, widget.id);
-        self.var_map.insert(vars.right, widget.id);
-        self.var_map.insert(vars.bottom, widget.id);
+        self.widget_map.insert(vars.left, widget.id);
+        self.widget_map.insert(vars.top, widget.id);
+        self.widget_map.insert(vars.right, widget.id);
+        self.widget_map.insert(vars.bottom, widget.id);
+
         self.check_changes();
 
         if let Some(ref debug_name) = widget.debug_name {
@@ -71,18 +62,28 @@ impl LimnSolver {
             add_debug_var_name(widget.layout.bottom, &format!("{}.bottom", debug_name));
         }
     }
-    pub fn remove_widget(&mut self, widget_id: &WidgetId) {
-        // remove constraints that are relative to this widget from solver
-        if let Some(constraint_list) = self.constraint_map.get(&widget_id) {
-            for constraint in constraint_list {
-                if self.solver.has_constraint(constraint) {
-                    self.debug_constraint_list.remove(constraint);
-                    self.solver.remove_constraint(constraint).unwrap();
+    pub fn remove_widget(&mut self, widget_vars: &LayoutVars) {
+        for var in [widget_vars.left, widget_vars.top, widget_vars.right, widget_vars.bottom].iter() {
+            // remove constraints that are relative to this widget from solver
+            if let Some(constraint_set) = self.var_map.remove(&var) {
+                for constraint in constraint_set {
+                    if self.solver.has_constraint(&constraint) {
+                        self.debug_constraint_list.remove(&constraint);
+                        self.solver.remove_constraint(&constraint).unwrap();
+                        // look up other variables that references this constraint,
+                        // and remove this constraint from those variables constraint sets
+                        if let Some(var_list) = self.constraint_map.get(&constraint) {
+                            for var in var_list {
+                                if let Some(constraint_set) = self.var_map.get_mut(&var) {
+                                    constraint_set.remove(&constraint);
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            self.widget_map.remove(&var);
         }
-        // doesn't clean up other references to these constraints in the constraint map, but at least they won't affect the solver
-        self.constraint_map.remove(&widget_id);
         self.check_changes();
     }
     pub fn update_solver<F>(&mut self, f: F)
@@ -110,7 +111,7 @@ impl LimnSolver {
         if changes.len() > 0 {
             let mut wchanges = Vec::new();
             for &(var, que) in changes {
-                if let Some(widget_id) = self.var_map.get(&var) {
+                if let Some(widget_id) = self.widget_map.get(&var) {
                     wchanges.push((*widget_id, var, que));
                 }
             }

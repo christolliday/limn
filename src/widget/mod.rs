@@ -9,6 +9,8 @@ use std::marker::PhantomData;
 use graphics::Context;
 use graphics::types::Color;
 
+use cassowary::Constraint;
+
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
@@ -18,7 +20,7 @@ use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
 use self::property::{PropSet, Property, PropChangeHandler};
-use self::layout::{LayoutBuilder, LayoutVars, WidgetConstraint};
+use self::layout::{LayoutBuilder, LayoutVars};
 use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 
@@ -82,7 +84,7 @@ impl WidgetBuilder {
         self
     }
 
-    pub fn build(self) -> (Vec<WidgetBuilder>, Vec<WidgetConstraint>, WidgetContainer) {
+    pub fn build(self) -> (Vec<WidgetBuilder>, Vec<Constraint>, WidgetContainer) {
 
         let widget = Widget::new(self.id,
                                  self.drawable,
