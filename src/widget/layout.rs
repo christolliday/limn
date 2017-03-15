@@ -151,17 +151,17 @@ impl LayoutBuilder {
     pub fn build(self) -> (LayoutVars, Vec<Constraint>) {
         (self.vars, self.constraints)
     }
-    pub fn match_layout(&mut self, widget: &WidgetBuilder) {
+    pub fn match_layout(&mut self, widget: &LayoutVars) {
         self.match_width(widget);
         self.match_height(widget);
     }
-    pub fn match_width(&mut self, widget: &WidgetBuilder) {
-        self.constraints.push(self.vars.left | EQ(REQUIRED) | widget.layout.vars.left);
-        self.constraints.push(self.vars.right | EQ(REQUIRED) | widget.layout.vars.right);
+    pub fn match_width(&mut self, widget: &LayoutVars) {
+        self.constraints.push(self.vars.left | EQ(REQUIRED) | widget.left);
+        self.constraints.push(self.vars.right | EQ(REQUIRED) | widget.right);
     }
-    pub fn match_height(&mut self, widget: &WidgetBuilder) {
-        self.constraints.push(self.vars.top | EQ(REQUIRED) | widget.layout.vars.top);
-        self.constraints.push(self.vars.bottom | EQ(REQUIRED) | widget.layout.vars.bottom);
+    pub fn match_height(&mut self, widget: &LayoutVars) {
+        self.constraints.push(self.vars.top | EQ(REQUIRED) | widget.top);
+        self.constraints.push(self.vars.bottom | EQ(REQUIRED) | widget.bottom);
     }
     pub fn width(&mut self, width: Scalar) {
         self.constraints.push(self.vars.right - self.vars.left | EQ(REQUIRED) | width);
@@ -201,102 +201,81 @@ impl LayoutBuilder {
         self.constraints
             .push(self.vars.top | EQ(strength.unwrap_or(REQUIRED)) | point.y);
     }
-    pub fn center(&mut self, widget: &WidgetBuilder) {
+    pub fn center(&mut self, widget: &LayoutVars) {
         self.center_horizontal(widget);
         self.center_vertical(widget);
     }
-    pub fn center_horizontal(&mut self, widget: &WidgetBuilder) {
-        self.constraints.push(self.vars.left - widget.layout.vars.left |
-                                                         EQ(REQUIRED) |
-                                                         widget.layout.vars.right -
-                                                         self.vars.right);
-    }
-    pub fn center_vertical(&mut self, widget: &WidgetBuilder) {
+    pub fn center_horizontal(&mut self, widget: &LayoutVars) {
         self.constraints
-            .push(self.vars.top - widget.layout.vars.top | EQ(REQUIRED) |
-                                             widget.layout.vars.bottom - self.vars.bottom);
+            .push(self.vars.left - widget.left | EQ(REQUIRED) | widget.right - self.vars.right);
+    }
+    pub fn center_vertical(&mut self, widget: &LayoutVars) {
+        self.constraints
+            .push(self.vars.top - widget.top | EQ(REQUIRED) | widget.bottom - self.vars.bottom);
     }
 
-    pub fn align_top(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn align_top(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(self.vars.top - widget.layout.vars.top | EQ(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(self.vars.top - widget.top | EQ(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn align_bottom(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn align_bottom(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(widget.layout.vars.bottom - self.vars.bottom |
-                                             EQ(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(widget.bottom - self.vars.bottom | EQ(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn align_left(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
-        self.constraints.push(self.vars.left - widget.layout.vars.left |
-                                                         EQ(REQUIRED) |
-                                                         padding.unwrap_or(0.0));
-    }
-    pub fn align_right(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn align_left(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(widget.layout.vars.right - self.vars.right |
-                                             EQ(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(self.vars.left - widget.left | EQ(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    pub fn align_right(&mut self, widget: &LayoutVars, padding: Option<f64>) {
+        self.constraints
+            .push(widget.right - self.vars.right | EQ(REQUIRED) | padding.unwrap_or(0.0));
     }
 
-    pub fn above(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn above(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(self.vars.bottom - widget.layout.vars.top |
-                                             GE(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(self.vars.bottom - widget.top | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn below(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn below(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(self.vars.top - widget.layout.vars.bottom |
-                                             GE(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(self.vars.top - widget.bottom | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn to_left_of(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn to_left_of(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(widget.layout.vars.left - self.vars.right |
-                                             GE(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(widget.left - self.vars.right | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn to_right_of(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn to_right_of(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(self.vars.left - widget.layout.vars.right |
-                                             GE(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(self.vars.left - widget.right | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
 
-    pub fn bound_left(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
-        self.constraints.push(self.vars.left - widget.layout.vars.left |
-                                                         GE(REQUIRED) |
-                                                         padding.unwrap_or(0.0));
-    }
-    pub fn bound_top(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn bound_left(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(self.vars.top - widget.layout.vars.top | GE(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(self.vars.left - widget.left | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn bound_right(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn bound_top(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.constraints
-            .push(widget.layout.vars.right - self.vars.right | GE(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+            .push(self.vars.top - widget.top | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
-    pub fn bound_bottom(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
-        self.constraints.push(widget.layout.vars.bottom - self.vars.bottom | GE(REQUIRED) |
-                                             padding.unwrap_or(0.0));
+    pub fn bound_right(&mut self, widget: &LayoutVars, padding: Option<f64>) {
+        self.constraints
+            .push(widget.right - self.vars.right | GE(REQUIRED) | padding.unwrap_or(0.0));
+    }
+    pub fn bound_bottom(&mut self, widget: &LayoutVars, padding: Option<f64>) {
+        self.constraints.push(widget.bottom - self.vars.bottom | GE(REQUIRED) | padding.unwrap_or(0.0));
     }
 
-    pub fn bound_by(&mut self, widget: &WidgetBuilder, padding: Option<f64>) {
+    pub fn bound_by(&mut self, widget: &LayoutVars, padding: Option<f64>) {
         self.bound_left(widget, padding);
         self.bound_top(widget, padding);
         self.bound_right(widget, padding);
         self.bound_bottom(widget, padding);
     }
 
-    pub fn scroll_inside(&mut self, widget: &WidgetBuilder) {
-        self.constraints.push(self.vars.left | LE(REQUIRED) | widget.layout.vars.left);
-        self.constraints.push(self.vars.top | LE(REQUIRED) | widget.layout.vars.top);
+    pub fn scroll_inside(&mut self, widget: &LayoutVars) {
+        self.constraints.push(self.vars.left | LE(REQUIRED) | widget.left);
+        self.constraints.push(self.vars.top | LE(REQUIRED) | widget.top);
         // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
-        self.constraints.push(self.vars.right | GE(STRONG) | widget.layout.vars.right);
-        self.constraints.push(self.vars.bottom | GE(STRONG) | widget.layout.vars.bottom);
+        self.constraints.push(self.vars.right | GE(STRONG) | widget.right);
+        self.constraints.push(self.vars.bottom | GE(STRONG) | widget.bottom);
     }
 }

@@ -19,7 +19,7 @@ fn main() {
 
     let mut scroll_widget = WidgetBuilder::new();
     scroll_widget.contents_scroll();
-    scroll_widget.layout.bound_by(&root_widget, Some(50.0));
+    scroll_widget.layout.bound_by(&root_widget.layout.vars, Some(50.0));
     scroll_widget.layout.dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
@@ -29,7 +29,7 @@ fn main() {
     list_widget
         .add_handler(ListHandler::new())
         .make_scrollable();
-    list_widget.layout.match_width(&scroll_widget);
+    list_widget.layout.match_width(&scroll_widget.layout.vars);
 
 
     let list_item_widgets = {
@@ -46,7 +46,7 @@ fn main() {
                 .set_debug_name("item")
                 .add_handler(ListItemHandler::new(list_widget.id))
                 .enable_hover();
-            list_item_widget.layout.match_width(&list_widget);
+            list_item_widget.layout.match_width(&list_widget.layout.vars);
             list_item_widget.layout.height(text_dims.height);
             linear_layout.add_widget(&mut list_item_widget);
 
@@ -54,7 +54,7 @@ fn main() {
             list_text_widget
                 .set_drawable_with_style(text_drawable, text_style)
                 .set_debug_name("text");
-            list_text_widget.layout.center(&list_item_widget);
+            list_text_widget.layout.center(&list_item_widget.layout.vars);
             list_item_widget.add_child(list_text_widget);
 
             list_item_widgets.push(list_item_widget);

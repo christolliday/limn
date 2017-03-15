@@ -1,5 +1,9 @@
 extern crate limn;
 extern crate text_layout;
+extern crate cassowary;
+
+use cassowary::WeightedRelation::*;
+use cassowary::strength::*;
 
 mod util;
 
@@ -64,10 +68,7 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
         }
     }
 }
-extern crate cassowary;
-use cassowary::WeightedRelation::*;
-use cassowary::strength::*;
-use limn::widget::layout::WidgetConstraint;
+
 pub fn add_person(graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mut LimnSolver) {
     let list_item_widget = {
         
@@ -83,19 +84,17 @@ pub fn add_person(graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mu
             .enable_hover();
         //list_item_widget.layout.match_width(&list_widget);
         // ugly match width
-        list_item_widget.layout.constraints.push(WidgetConstraint::Relative(list_item_widget.layout.vars.left | EQ(REQUIRED) |
-                                                            list_widget.layout.left,
-                                                            list_widget.id));
-        list_item_widget.layout.constraints.push(WidgetConstraint::Relative(list_item_widget.layout.vars.right | EQ(REQUIRED) |
-                                                            list_widget.layout.right,
-                                                            list_widget.id));
+        list_item_widget.layout.constraints.push(list_item_widget.layout.vars.left | EQ(REQUIRED) |
+                                                            list_widget.layout.left);
+        list_item_widget.layout.constraints.push(list_item_widget.layout.vars.right | EQ(REQUIRED) |
+                                                            list_widget.layout.right);
         list_item_widget.layout.height(text_dims.height);
         //linear_layout.add_widget(&mut list_item_widget);
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
             .set_debug_name("text");
-        list_text_widget.layout.center(&list_item_widget);
+        list_text_widget.layout.center(&list_item_widget.layout.vars);
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
@@ -112,30 +111,30 @@ fn main() {
         height: 300.0,
     });
     let mut container = WidgetBuilder::new();
-    container.layout.bound_by(&root_widget, Some(20.0));
+    container.layout.bound_by(&root_widget.layout.vars, Some(20.0));
 
     let mut first_name_container = WidgetBuilder::new();
-    first_name_container.layout.align_top(&container, None);
+    first_name_container.layout.align_top(&container.layout.vars, None);
 
     let mut first_name = WidgetBuilder::new();
     let text = TextDrawable::new("First name:");
     let text_dims = text.measure();
     first_name.set_drawable(text);
-    first_name.layout.center_vertical(&first_name_container);
+    first_name.layout.center_vertical(&first_name_container.layout.vars);
     first_name.layout.dimensions(text_dims);
 
     let mut first_name_box = EditTextBuilder::new().widget;
     first_name_box.set_debug_name("first_name");
     first_name_box.layout.min_height(30.0);
     first_name_box.layout.min_width(200.0);
-    first_name_box.layout.align_right(&container, None);
-    first_name_box.layout.to_right_of(&first_name, Some(20.0));
+    first_name_box.layout.align_right(&container.layout.vars, None);
+    first_name_box.layout.to_right_of(&first_name.layout.vars, Some(20.0));
     first_name_container.layout.shrink();
     first_name_container.add_child(first_name);
     first_name_container.add_child(first_name_box);
 
     let mut last_name_container = WidgetBuilder::new();
-    last_name_container.layout.below(&first_name_container, Some(20.0));
+    last_name_container.layout.below(&first_name_container.layout.vars, Some(20.0));
     let mut last_name = WidgetBuilder::new();
     let text = TextDrawable::new("Last name:");
     let text_dims = text.measure();
@@ -145,13 +144,13 @@ fn main() {
     let mut last_name_box = EditTextBuilder::new().widget;
     last_name_box.set_debug_name("last_name");
     last_name_box.layout.min_height(30.0);
-    last_name_box.layout.align_right(&container, None);
-    last_name_box.layout.to_right_of(&last_name, Some(20.0));
+    last_name_box.layout.align_right(&container.layout.vars, None);
+    last_name_box.layout.to_right_of(&last_name.layout.vars, Some(20.0));
     last_name_container.add_child(last_name);
     last_name_container.add_child(last_name_box);
 
     let mut button_container = WidgetBuilder::new();
-    button_container.layout.below(&last_name_container, Some(20.0));
+    button_container.layout.below(&last_name_container.layout.vars, Some(20.0));
 
     let mut create_button = PushButtonBuilder::new();
     create_button.set_text("Create");
@@ -168,12 +167,12 @@ fn main() {
     delete_button.on_click(|_, _| {
         println!("delete");
     });
-    update_button.layout.to_right_of(&create_button, Some(20.0));
-    delete_button.layout.to_right_of(&update_button, Some(20.0));
+    update_button.layout.to_right_of(&create_button.layout.vars, Some(20.0));
+    delete_button.layout.to_right_of(&update_button.layout.vars, Some(20.0));
 
     let mut scroll_container = WidgetBuilder::new();
     scroll_container.set_drawable(RectDrawable::new());
-    scroll_container.layout.below(&button_container, Some(20.0));
+    scroll_container.layout.below(&button_container.layout.vars, Some(20.0));
     scroll_container.layout.min_height(260.0);
     scroll_container.contents_scroll();
 
@@ -181,7 +180,7 @@ fn main() {
     list_widget
         .add_handler(ListHandler::new())
         .make_scrollable();
-    list_widget.layout.match_width(&scroll_container);
+    list_widget.layout.match_width(&scroll_container.layout.vars);
     /*let list_item_widgets = {
         let mut linear_layout = LinearLayout::new(Orientation::Vertical, &mut list_widget);
         let mut list_item_widgets = Vec::new();

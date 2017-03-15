@@ -76,9 +76,9 @@ impl WidgetBuilder {
     }
     pub fn add_child(&mut self, mut widget: WidgetBuilder) -> &mut Self {
         if self.contents_scroll {
-            widget.layout.scroll_inside(&self);
+            widget.layout.scroll_inside(&self.layout.vars);
         } else {
-            widget.layout.bound_by(&self, None);
+            widget.layout.bound_by(&self.layout.vars, None);
         }
         self.children.push(widget);
         self
