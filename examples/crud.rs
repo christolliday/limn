@@ -111,7 +111,7 @@ fn main() {
         height: 300.0,
     });
     let mut container = WidgetBuilder::new();
-    container.layout.bound_by(&root_widget.layout.vars, Some(20.0));
+    container.layout.bound_by(&root_widget.layout.vars).padding(20.0);
 
     let mut first_name_container = WidgetBuilder::new();
     first_name_container.layout.align_top(&container.layout.vars);

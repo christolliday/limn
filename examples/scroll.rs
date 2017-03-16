@@ -21,7 +21,7 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    scroll_widget.layout.bound_by(&root_widget.layout.vars, Some(50.0));
+    scroll_widget.layout.bound_by(&root_widget.layout.vars).padding(50.0);
 
     let mut rect_container_widget = WidgetBuilder::new();
     rect_container_widget

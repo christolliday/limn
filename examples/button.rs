@@ -15,7 +15,7 @@ fn main() {
     let mut button = button.widget;
     button.set_debug_name("button");
     button.layout.center(&root_widget.layout.vars);
-    button.layout.bound_by(&root_widget.layout.vars, Some(50.0));
+    button.layout.bound_by(&root_widget.layout.vars).padding(50.0);
     root_widget.add_child(button);
 
     util::set_root_and_loop(window, ui, root_widget);

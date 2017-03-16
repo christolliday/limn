@@ -19,7 +19,7 @@ fn main() {
 
     let mut scroll_widget = WidgetBuilder::new();
     scroll_widget.contents_scroll();
-    scroll_widget.layout.bound_by(&root_widget.layout.vars, Some(50.0));
+    scroll_widget.layout.bound_by(&root_widget.layout.vars).padding(50.0);
     scroll_widget.layout.dimensions(Dimensions {
         width: 300.0,
         height: 300.0,

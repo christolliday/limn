@@ -1,4 +1,6 @@
-use cassowary::{Variable, Constraint};
+use std::ops::Drop;
+
+use cassowary::{Variable, Constraint, Expression};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
@@ -148,60 +150,76 @@ impl LayoutBuilder {
             constraints: Vec::new(),
         }
     }
-    pub fn build(self) -> (LayoutVars, Vec<Constraint>) {
-        (self.vars, self.constraints)
+    pub fn match_layout(&mut self, widget: &LayoutVars) -> WidgetConstraint {
+        let constraints = vec![
+            self.vars.left | EQ(REQUIRED) | widget.left,
+            self.vars.right | EQ(REQUIRED) | widget.right,
+            self.vars.top | EQ(REQUIRED) | widget.top,
+            self.vars.bottom | EQ(REQUIRED) | widget.bottom,
+        ];
+        WidgetConstraint::new_set(self, constraints)
     }
-    pub fn match_layout(&mut self, widget: &LayoutVars) {
-        self.match_width(widget);
-        self.match_height(widget);
+    pub fn match_width(&mut self, widget: &LayoutVars) -> WidgetConstraint {
+        let constraints = vec![
+            self.vars.left | EQ(REQUIRED) | widget.left,
+            self.vars.right | EQ(REQUIRED) | widget.right,
+        ];
+        WidgetConstraint::new_set(self, constraints)
     }
-    pub fn match_width(&mut self, widget: &LayoutVars) {
-        self.constraints.push(self.vars.left | EQ(REQUIRED) | widget.left);
-        self.constraints.push(self.vars.right | EQ(REQUIRED) | widget.right);
+    pub fn match_height(&mut self, widget: &LayoutVars) -> WidgetConstraint {
+        let constraints = vec![
+            self.vars.top | EQ(REQUIRED) | widget.top,
+            self.vars.bottom | EQ(REQUIRED) | widget.bottom,
+        ];
+        WidgetConstraint::new_set(self, constraints)
     }
-    pub fn match_height(&mut self, widget: &LayoutVars) {
-        self.constraints.push(self.vars.top | EQ(REQUIRED) | widget.top);
-        self.constraints.push(self.vars.bottom | EQ(REQUIRED) | widget.bottom);
+    pub fn width(&mut self, width: Scalar) -> WidgetConstraint {
+        let constraint = self.vars.right - self.vars.left | EQ(REQUIRED) | width;
+        WidgetConstraint::new(self, constraint)
     }
-    pub fn width(&mut self, width: Scalar) {
-        self.constraints.push(self.vars.right - self.vars.left | EQ(REQUIRED) | width);
+    pub fn height(&mut self, height: Scalar) -> WidgetConstraint {
+        let constraint = self.vars.bottom - self.vars.top | EQ(REQUIRED) | height;
+        WidgetConstraint::new(self, constraint)
     }
-    pub fn height(&mut self, height: Scalar) {
-        self.constraints.push(self.vars.bottom - self.vars.top | EQ(REQUIRED) | height);
+    pub fn min_width(&mut self, width: Scalar) -> WidgetConstraint {
+        let constraint = self.vars.right - self.vars.left | GE(REQUIRED) | width;
+        WidgetConstraint::new(self, constraint)
     }
-    pub fn min_width(&mut self, width: Scalar) {
-        self.constraints.push(self.vars.right - self.vars.left | GE(REQUIRED) | width);
+    pub fn min_height(&mut self, height: Scalar) -> WidgetConstraint {
+        let constraint = self.vars.bottom - self.vars.top | GE(REQUIRED) | height;
+        WidgetConstraint::new(self, constraint)
     }
-    pub fn min_height(&mut self, height: Scalar) {
-        self.constraints.push(self.vars.bottom - self.vars.top | GE(REQUIRED) | height);
+    pub fn dimensions(&mut self, dimensions: Dimensions) -> WidgetConstraint {
+        let constraints = vec![
+            self.vars.right - self.vars.left | EQ(REQUIRED) | dimensions.width,
+            self.vars.bottom - self.vars.top | EQ(REQUIRED) | dimensions.height,
+        ];
+        WidgetConstraint::new_set(self, constraints)
     }
-    pub fn dimensions(&mut self, dimensions: Dimensions) {
-        self.width(dimensions.width);
-        self.height(dimensions.height);
-    }
-    pub fn min_dimensions(&mut self, dimensions: Dimensions) {
-        self.min_width(dimensions.width);
-        self.min_height(dimensions.height);
+    pub fn min_dimensions(&mut self, dimensions: Dimensions) -> WidgetConstraint {
+        let constraints = vec![
+            self.vars.right - self.vars.left | GE(REQUIRED) | dimensions.width,
+            self.vars.bottom - self.vars.top | GE(REQUIRED) | dimensions.height,
+        ];
+        WidgetConstraint::new_set(self, constraints)
     }
     pub fn shrink(&mut self) {
-        self.width_strength(0.0, WEAK);
-        self.height_strength(0.0, WEAK);
+        self.width(0.0).strength(WEAK);
+        self.height(0.0).strength(WEAK);
     }
-    pub fn width_strength(&mut self, width: Scalar, strength: f64) -> WidgetConstraint {
-        let constraint = self.vars.right - self.vars.left | EQ(strength) | width;
-        WidgetConstraint::new(self, constraint)
+    pub fn top_left(&mut self, point: Point, strength: Option<f64>) -> WidgetConstraint {
+        let constraints = vec![
+            self.vars.left | EQ(strength.unwrap_or(REQUIRED)) | point.x,
+            self.vars.top | EQ(strength.unwrap_or(REQUIRED)) | point.y,
+        ];
+        WidgetConstraint::new_set(self, constraints)
     }
-    pub fn height_strength(&mut self, height: Scalar, strength: f64) -> WidgetConstraint {
-        let constraint = self.vars.bottom - self.vars.top | EQ(strength) | height;
-        WidgetConstraint::new(self, constraint)
-    }
-    pub fn top_left(&mut self, point: Point, strength: Option<f64>) {
-        self.constraints.push(self.vars.left | EQ(strength.unwrap_or(REQUIRED)) | point.x);
-        self.constraints.push(self.vars.top | EQ(strength.unwrap_or(REQUIRED)) | point.y);
-    }
-    pub fn center(&mut self, widget: &LayoutVars) {
-        self.center_horizontal(widget);
-        self.center_vertical(widget);
+    pub fn center(&mut self, widget: &LayoutVars) -> WidgetConstraint {
+        let constraints = vec![
+            self.vars.left - widget.left | EQ(REQUIRED) | widget.right - self.vars.right,
+            self.vars.top - widget.top | EQ(REQUIRED) | widget.bottom - self.vars.bottom,
+        ];
+        WidgetConstraint::new_set(self, constraints)
     }
     pub fn center_horizontal(&mut self, widget: &LayoutVars) -> WidgetConstraint {
         let constraint = self.vars.left - widget.left | EQ(REQUIRED) | widget.right - self.vars.right;
@@ -263,12 +281,14 @@ impl LayoutBuilder {
         PaddableConstraint::new(self, constraint)
     }
 
-    pub fn bound_by(&mut self, widget: &LayoutVars, padding: Option<Scalar>) {
-        let padding = padding.unwrap_or(0.0);
-        self.bound_left(widget).padding(padding);
-        self.bound_top(widget).padding(padding);
-        self.bound_right(widget).padding(padding);
-        self.bound_bottom(widget).padding(padding);
+    pub fn bound_by(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraints = vec![
+            self.vars.left - widget.left | GE(REQUIRED) | 0.0,
+            self.vars.top - widget.top | GE(REQUIRED) | 0.0,
+            widget.right - self.vars.right | GE(REQUIRED) | 0.0,
+            widget.bottom - self.vars.bottom | GE(REQUIRED) | 0.0,
+        ];
+        PaddableConstraint::new_set(self, constraints)
     }
 
     pub fn scroll_inside(&mut self, widget: &LayoutVars) {
@@ -282,50 +302,77 @@ impl LayoutBuilder {
 
 pub struct WidgetConstraint<'a> {
     pub builder: &'a mut LayoutBuilder,
-    pub constraint: Constraint,
+    pub constraints: Vec<Constraint>,
 }
 impl<'a> WidgetConstraint<'a> {
     pub fn new(builder: &'a mut LayoutBuilder, constraint: Constraint) -> Self {
         WidgetConstraint {
             builder: builder,
-            constraint: constraint,
+            constraints: vec![constraint],
         }
+    }
+    pub fn new_set(builder: &'a mut LayoutBuilder, constraints: Vec<Constraint>) -> Self {
+        WidgetConstraint {
+            builder: builder,
+            constraints: constraints,
+        }
+    }
+    pub fn strength(mut self, strength: f64) -> Self {
+        self.constraints = change_strength(&self.constraints, strength);
+        self
     }
 }
 pub struct PaddableConstraint<'a> {
     pub builder: &'a mut LayoutBuilder,
-    pub constraint: Constraint,
+    pub constraints: Vec<Constraint>,
 }
-use cassowary::Expression;
+
 impl<'a> PaddableConstraint<'a> {
     pub fn new(builder: &'a mut LayoutBuilder, constraint: Constraint) -> Self {
         PaddableConstraint {
             builder: builder,
-            constraint: constraint,
+            constraints: vec![constraint],
         }
     }
-    /*pub fn add(self) {
-        self.builder.constraints.push(self.constraint);
-    }*/
+    pub fn new_set(builder: &'a mut LayoutBuilder, constraints: Vec<Constraint>) -> Self {
+        PaddableConstraint {
+            builder: builder,
+            constraints: constraints,
+        }
+    }
+    pub fn strength(mut self, strength: f64) -> Self {
+        self.constraints = change_strength(&self.constraints, strength);
+        self
+    }
     pub fn padding(mut self, padding: Scalar) -> Self {
-        // replace constant in existing constraint, with padding value, negative because on the same side as the terms
-        let cons = {
-            let ref cons = self.constraint.0;
-            let expression = Expression::new(cons.expression.terms.clone(), -padding);
-            Constraint::new(expression, cons.op, cons.strength)
-        };
-        self.constraint = cons;
+        let mut new_constraints = Vec::new();
+        for cons in &self.constraints {
+            // replace constant in existing constraint, with padding value, negative because on the same side as the terms
+            let expression = Expression::new(cons.0.expression.terms.clone(), -padding);
+            let cons = Constraint::new(expression, cons.0.op, cons.0.strength);
+            new_constraints.push(cons);
+        }
+        self.constraints = new_constraints;
         self
     }
 }
-use std::ops::Drop;
+
 impl<'a> Drop for PaddableConstraint<'a> {
     fn drop(&mut self) {
-        self.builder.constraints.push(self.constraint.clone());
+        self.builder.constraints.extend(self.constraints.clone());
     }
 }
 impl<'a> Drop for WidgetConstraint<'a> {
     fn drop(&mut self) {
-        self.builder.constraints.push(self.constraint.clone());
+        self.builder.constraints.extend(self.constraints.clone());
     }
+}
+
+pub fn change_strength(constraints: &Vec<Constraint>, strength: f64) -> Vec<Constraint> {
+    let mut new_constraints = Vec::new();
+    for cons in constraints {
+        let cons = Constraint::new(cons.0.expression.clone(), cons.0.op, strength);
+        new_constraints.push(cons);
+    }
+    new_constraints
 }

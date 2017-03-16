@@ -56,7 +56,7 @@ fn main() {
         args.queue.push(Target::Widget(root_id), CounterEvent);
     });
     button_widget.layout.center(&button_container.layout.vars);
-    button_widget.layout.bound_by(&button_container.layout.vars, Some(50.0));
+    button_widget.layout.bound_by(&button_container.layout.vars).padding(50.0);
     button_container.add_child(button_widget);
     root_widget.add_child(text_widget);
     root_widget.add_child(button_container);

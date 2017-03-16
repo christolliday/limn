@@ -78,7 +78,7 @@ impl WidgetBuilder {
         if self.contents_scroll {
             widget.layout.scroll_inside(&self.layout.vars);
         } else {
-            widget.layout.bound_by(&self.layout.vars, None);
+            widget.layout.bound_by(&self.layout.vars);
         }
         self.children.push(widget);
         self
