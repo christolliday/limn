@@ -187,88 +187,88 @@ impl LayoutBuilder {
         self.width_strength(0.0, WEAK);
         self.height_strength(0.0, WEAK);
     }
-    pub fn width_strength(&mut self, width: Scalar, strength: f64) {
-        self.constraints
-            .push(self.vars.right - self.vars.left | EQ(strength) | width);
+    pub fn width_strength(&mut self, width: Scalar, strength: f64) -> WidgetConstraint {
+        let constraint = self.vars.right - self.vars.left | EQ(strength) | width;
+        WidgetConstraint::new(self, constraint)
     }
-    pub fn height_strength(&mut self, height: Scalar, strength: f64) {
-        self.constraints
-            .push(self.vars.bottom - self.vars.top | EQ(strength) | height);
+    pub fn height_strength(&mut self, height: Scalar, strength: f64) -> WidgetConstraint {
+        let constraint = self.vars.bottom - self.vars.top | EQ(strength) | height;
+        WidgetConstraint::new(self, constraint)
     }
     pub fn top_left(&mut self, point: Point, strength: Option<f64>) {
-        self.constraints
-            .push(self.vars.left | EQ(strength.unwrap_or(REQUIRED)) | point.x);
-        self.constraints
-            .push(self.vars.top | EQ(strength.unwrap_or(REQUIRED)) | point.y);
+        self.constraints.push(self.vars.left | EQ(strength.unwrap_or(REQUIRED)) | point.x);
+        self.constraints.push(self.vars.top | EQ(strength.unwrap_or(REQUIRED)) | point.y);
     }
     pub fn center(&mut self, widget: &LayoutVars) {
         self.center_horizontal(widget);
         self.center_vertical(widget);
     }
-    pub fn center_horizontal(&mut self, widget: &LayoutVars) {
-        self.constraints
-            .push(self.vars.left - widget.left | EQ(REQUIRED) | widget.right - self.vars.right);
+    pub fn center_horizontal(&mut self, widget: &LayoutVars) -> WidgetConstraint {
+        let constraint = self.vars.left - widget.left | EQ(REQUIRED) | widget.right - self.vars.right;
+        WidgetConstraint::new(self, constraint)
     }
-    pub fn center_vertical(&mut self, widget: &LayoutVars) {
-        self.constraints
-            .push(self.vars.top - widget.top | EQ(REQUIRED) | widget.bottom - self.vars.bottom);
-    }
-
-    pub fn align_top(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(self.vars.top - widget.top | EQ(REQUIRED) | padding.unwrap_or(0.0));
-    }
-    pub fn align_bottom(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(widget.bottom - self.vars.bottom | EQ(REQUIRED) | padding.unwrap_or(0.0));
-    }
-    pub fn align_left(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(self.vars.left - widget.left | EQ(REQUIRED) | padding.unwrap_or(0.0));
-    }
-    pub fn align_right(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(widget.right - self.vars.right | EQ(REQUIRED) | padding.unwrap_or(0.0));
+    pub fn center_vertical(&mut self, widget: &LayoutVars) -> WidgetConstraint {
+        let constraint = self.vars.top - widget.top | EQ(REQUIRED) | widget.bottom - self.vars.bottom;
+        WidgetConstraint::new(self, constraint)
     }
 
-    pub fn above(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(self.vars.bottom - widget.top | GE(REQUIRED) | padding.unwrap_or(0.0));
+    pub fn align_top(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = self.vars.top - widget.top | EQ(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
     }
-    pub fn below(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(self.vars.top - widget.bottom | GE(REQUIRED) | padding.unwrap_or(0.0));
+    pub fn align_bottom(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = widget.bottom - self.vars.bottom | EQ(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
     }
-    pub fn to_left_of(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(widget.left - self.vars.right | GE(REQUIRED) | padding.unwrap_or(0.0));
+    pub fn align_left(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = self.vars.left - widget.left | EQ(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
     }
-    pub fn to_right_of(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(self.vars.left - widget.right | GE(REQUIRED) | padding.unwrap_or(0.0));
-    }
-
-    pub fn bound_left(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(self.vars.left - widget.left | GE(REQUIRED) | padding.unwrap_or(0.0));
-    }
-    pub fn bound_top(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(self.vars.top - widget.top | GE(REQUIRED) | padding.unwrap_or(0.0));
-    }
-    pub fn bound_right(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints
-            .push(widget.right - self.vars.right | GE(REQUIRED) | padding.unwrap_or(0.0));
-    }
-    pub fn bound_bottom(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.constraints.push(widget.bottom - self.vars.bottom | GE(REQUIRED) | padding.unwrap_or(0.0));
+    pub fn align_right(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = widget.right - self.vars.right | EQ(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
     }
 
-    pub fn bound_by(&mut self, widget: &LayoutVars, padding: Option<f64>) {
-        self.bound_left(widget, padding);
-        self.bound_top(widget, padding);
-        self.bound_right(widget, padding);
-        self.bound_bottom(widget, padding);
+    pub fn above(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = self.vars.bottom - widget.top | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+    pub fn below(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = self.vars.top - widget.bottom | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+    pub fn to_left_of(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = widget.left - self.vars.right | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+    pub fn to_right_of(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = self.vars.left - widget.right | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+
+    pub fn bound_left(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = self.vars.left - widget.left | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+    pub fn bound_top(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = self.vars.top - widget.top | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+    pub fn bound_right(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = widget.right - self.vars.right | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+    pub fn bound_bottom(&mut self, widget: &LayoutVars) -> PaddableConstraint {
+        let constraint = widget.bottom - self.vars.bottom | GE(REQUIRED) | 0.0;
+        PaddableConstraint::new(self, constraint)
+    }
+
+    pub fn bound_by(&mut self, widget: &LayoutVars, padding: Option<Scalar>) {
+        let padding = padding.unwrap_or(0.0);
+        self.bound_left(widget).padding(padding);
+        self.bound_top(widget).padding(padding);
+        self.bound_right(widget).padding(padding);
+        self.bound_bottom(widget).padding(padding);
     }
 
     pub fn scroll_inside(&mut self, widget: &LayoutVars) {
@@ -277,5 +277,55 @@ impl LayoutBuilder {
         // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
         self.constraints.push(self.vars.right | GE(STRONG) | widget.right);
         self.constraints.push(self.vars.bottom | GE(STRONG) | widget.bottom);
+    }
+}
+
+pub struct WidgetConstraint<'a> {
+    pub builder: &'a mut LayoutBuilder,
+    pub constraint: Constraint,
+}
+impl<'a> WidgetConstraint<'a> {
+    pub fn new(builder: &'a mut LayoutBuilder, constraint: Constraint) -> Self {
+        WidgetConstraint {
+            builder: builder,
+            constraint: constraint,
+        }
+    }
+}
+pub struct PaddableConstraint<'a> {
+    pub builder: &'a mut LayoutBuilder,
+    pub constraint: Constraint,
+}
+use cassowary::Expression;
+impl<'a> PaddableConstraint<'a> {
+    pub fn new(builder: &'a mut LayoutBuilder, constraint: Constraint) -> Self {
+        PaddableConstraint {
+            builder: builder,
+            constraint: constraint,
+        }
+    }
+    /*pub fn add(self) {
+        self.builder.constraints.push(self.constraint);
+    }*/
+    pub fn padding(mut self, padding: Scalar) -> Self {
+        // replace constant in existing constraint, with padding value, negative because on the same side as the terms
+        let cons = {
+            let ref cons = self.constraint.0;
+            let expression = Expression::new(cons.expression.terms.clone(), -padding);
+            Constraint::new(expression, cons.op, cons.strength)
+        };
+        self.constraint = cons;
+        self
+    }
+}
+use std::ops::Drop;
+impl<'a> Drop for PaddableConstraint<'a> {
+    fn drop(&mut self) {
+        self.builder.constraints.push(self.constraint.clone());
+    }
+}
+impl<'a> Drop for WidgetConstraint<'a> {
+    fn drop(&mut self) {
+        self.builder.constraints.push(self.constraint.clone());
     }
 }

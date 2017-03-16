@@ -39,8 +39,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_tl_widget.layout.align_top(&rect_container_widget.layout.vars, None);
-    rect_tl_widget.layout.align_left(&rect_container_widget.layout.vars, None);
+    rect_tl_widget.layout.align_top(&rect_container_widget.layout.vars);
+    rect_tl_widget.layout.align_left(&rect_container_widget.layout.vars);
 
     let style = vec![RectStyleField::BackgroundColor(Value::Single(GREEN))];
     let mut rect_tr_widget = WidgetBuilder::new();
@@ -49,8 +49,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_tr_widget.layout.align_top(&rect_container_widget.layout.vars, None);
-    rect_tr_widget.layout.align_right(&rect_container_widget.layout.vars, None);
+    rect_tr_widget.layout.align_top(&rect_container_widget.layout.vars);
+    rect_tr_widget.layout.align_right(&rect_container_widget.layout.vars);
 
     let style = vec![RectStyleField::BackgroundColor(Value::Single(BLUE))];
     let mut rect_bl_widget = WidgetBuilder::new();
@@ -59,8 +59,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_bl_widget.layout.align_bottom(&rect_container_widget.layout.vars, None);
-    rect_bl_widget.layout.align_left(&rect_container_widget.layout.vars, None);
+    rect_bl_widget.layout.align_bottom(&rect_container_widget.layout.vars);
+    rect_bl_widget.layout.align_left(&rect_container_widget.layout.vars);
 
     let style = vec![RectStyleField::BackgroundColor(Value::Single(FUSCHIA))];
     let mut rect_br_widget = WidgetBuilder::new();
@@ -69,8 +69,8 @@ fn main() {
         width: 200.0,
         height: 200.0,
     });
-    rect_br_widget.layout.align_bottom(&rect_container_widget.layout.vars, None);
-    rect_br_widget.layout.align_right(&rect_container_widget.layout.vars, None);
+    rect_br_widget.layout.align_bottom(&rect_container_widget.layout.vars);
+    rect_br_widget.layout.align_right(&rect_container_widget.layout.vars);
 
     rect_container_widget.add_child(rect_tl_widget);
     rect_container_widget.add_child(rect_tr_widget);

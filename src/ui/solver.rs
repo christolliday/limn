@@ -146,7 +146,7 @@ fn debug_constraint(constraint: &Constraint) {
     println!("{}", fmt_constraint(constraint));
 }
 
-fn fmt_constraint(constraint: &Constraint) -> String {
+pub fn fmt_constraint(constraint: &Constraint) -> String {
     let ref constraint = constraint.0;
     let strength_desc = {
         let stren = constraint.strength;

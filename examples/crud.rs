@@ -114,7 +114,7 @@ fn main() {
     container.layout.bound_by(&root_widget.layout.vars, Some(20.0));
 
     let mut first_name_container = WidgetBuilder::new();
-    first_name_container.layout.align_top(&container.layout.vars, None);
+    first_name_container.layout.align_top(&container.layout.vars);
 
     let mut first_name = WidgetBuilder::new();
     let text = TextDrawable::new("First name:");
@@ -127,14 +127,14 @@ fn main() {
     first_name_box.set_debug_name("first_name");
     first_name_box.layout.min_height(30.0);
     first_name_box.layout.min_width(200.0);
-    first_name_box.layout.align_right(&container.layout.vars, None);
-    first_name_box.layout.to_right_of(&first_name.layout.vars, Some(20.0));
+    first_name_box.layout.align_right(&container.layout.vars);
+    first_name_box.layout.to_right_of(&first_name.layout.vars).padding(20.0);
     first_name_container.layout.shrink();
     first_name_container.add_child(first_name);
     first_name_container.add_child(first_name_box);
 
     let mut last_name_container = WidgetBuilder::new();
-    last_name_container.layout.below(&first_name_container.layout.vars, Some(20.0));
+    last_name_container.layout.below(&first_name_container.layout.vars).padding(20.0);
     let mut last_name = WidgetBuilder::new();
     let text = TextDrawable::new("Last name:");
     let text_dims = text.measure();
@@ -144,13 +144,13 @@ fn main() {
     let mut last_name_box = EditTextBuilder::new().widget;
     last_name_box.set_debug_name("last_name");
     last_name_box.layout.min_height(30.0);
-    last_name_box.layout.align_right(&container.layout.vars, None);
-    last_name_box.layout.to_right_of(&last_name.layout.vars, Some(20.0));
+    last_name_box.layout.align_right(&container.layout.vars);
+    last_name_box.layout.to_right_of(&last_name.layout.vars).padding(20.0);
     last_name_container.add_child(last_name);
     last_name_container.add_child(last_name_box);
 
     let mut button_container = WidgetBuilder::new();
-    button_container.layout.below(&last_name_container.layout.vars, Some(20.0));
+    button_container.layout.below(&last_name_container.layout.vars).padding(20.0);
 
     let mut create_button = PushButtonBuilder::new();
     create_button.set_text("Create");
@@ -167,12 +167,12 @@ fn main() {
     delete_button.on_click(|_, _| {
         println!("delete");
     });
-    update_button.layout.to_right_of(&create_button.layout.vars, Some(20.0));
-    delete_button.layout.to_right_of(&update_button.layout.vars, Some(20.0));
+    update_button.layout.to_right_of(&create_button.layout.vars).padding(20.0);
+    delete_button.layout.to_right_of(&update_button.layout.vars).padding(20.0);
 
     let mut scroll_container = WidgetBuilder::new();
     scroll_container.set_drawable(RectDrawable::new());
-    scroll_container.layout.below(&button_container.layout.vars, Some(20.0));
+    scroll_container.layout.below(&button_container.layout.vars).padding(20.0);
     scroll_container.layout.min_height(260.0);
     scroll_container.contents_scroll();
 
