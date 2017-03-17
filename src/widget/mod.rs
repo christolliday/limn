@@ -29,11 +29,11 @@ pub struct WidgetBuilder {
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub layout: LayoutBuilder,
+    pub add_child_fn: Option<Box<Fn(&mut WidgetBuilder, &Widget)>>,
     pub controller: WidgetController,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<WidgetBuilder>,
-    pub contents_scroll: bool,
 }
 
 impl WidgetBuilder {
@@ -43,11 +43,11 @@ impl WidgetBuilder {
             drawable: None,
             props: PropSet::new(),
             layout: LayoutBuilder::new(),
+            add_child_fn: None,
             controller: WidgetController::new(),
             debug_name: None,
             debug_color: None,
             children: Vec::new(),
-            contents_scroll: false,
         }
     }
     pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
@@ -74,12 +74,7 @@ impl WidgetBuilder {
         self.props.insert(Property::Inactive);
         self
     }
-    pub fn add_child(&mut self, mut widget: WidgetBuilder) -> &mut Self {
-        if self.contents_scroll {
-            widget.layout.scroll_inside(&self.layout.vars);
-        } else {
-            widget.layout.bound_by(&self.layout.vars);
-        }
+    pub fn add_child(&mut self, widget: WidgetBuilder) -> &mut Self {
         self.children.push(widget);
         self
     }
@@ -90,6 +85,7 @@ impl WidgetBuilder {
                                  self.drawable,
                                  self.props,
                                  self.layout.vars,
+                                 self.add_child_fn,
                                  self.debug_name,
                                  self.debug_color);
         (self.children,
@@ -216,6 +212,7 @@ pub struct Widget {
     pub props: PropSet,
     pub has_updated: bool,
     pub layout: LayoutVars,
+    pub add_child_fn: Option<Box<Fn(&mut WidgetBuilder, &Widget)>>,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
 }
@@ -225,6 +222,7 @@ impl Widget {
                drawable: Option<DrawableWrapper>,
                props: PropSet,
                layout: LayoutVars,
+               add_child_fn: Option<Box<Fn(&mut WidgetBuilder, &Widget)>>,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
@@ -234,6 +232,7 @@ impl Widget {
             props: props,
             has_updated: false,
             layout: layout,
+            add_child_fn: add_child_fn,
             debug_name: debug_name,
             debug_color: debug_color,
         };

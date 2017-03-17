@@ -2,7 +2,7 @@ use glutin;
 use cassowary::strength::*;
 
 use event::Target;
-use widget::{WidgetBuilder, EventArgs, EventHandler};
+use widget::{WidgetBuilder, Widget, EventArgs, EventHandler};
 use util::{Point, Rectangle};
 
 use input::mouse::WidgetMouseWheel;
@@ -78,7 +78,10 @@ impl EventHandler<WidgetScroll> for WidgetScrollHandler {
 
 impl WidgetBuilder {
     pub fn contents_scroll(&mut self) -> &mut Self {
-        self.contents_scroll = true;
+        let add_child_fn = |widget: &mut WidgetBuilder, parent: &Widget| {
+            widget.layout.scroll_inside(&parent.layout);
+        };
+        self.add_child_fn = Some(Box::new(add_child_fn));
         self.add_handler(ScrollHandler)
     }
     pub fn make_scrollable(&mut self) -> &mut Self {

@@ -145,11 +145,20 @@ impl WidgetGraph {
     }
 
     pub fn add_widget(&mut self,
-                      widget: WidgetBuilder,
+                      mut widget: WidgetBuilder,
                       parent_id: Option<WidgetId>,
                       solver: &mut LimnSolver)
                       -> NodeIndex {
 
+        if let Some(parent_id) = parent_id {
+            if let Some(parent) = self.get_widget(parent_id) {
+                if let Some(ref add_child_fn) = parent.add_child_fn {
+                    add_child_fn(&mut widget, &parent);
+                } else {
+                    widget.layout.bound_by(&parent.layout);
+                }
+            }
+        }
         let (children, constraints, widget) = widget.build();
         solver.add_widget(&widget.widget, constraints);
 
