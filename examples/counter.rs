@@ -4,7 +4,6 @@ extern crate glutin;
 mod util;
 
 use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
-use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::style::Value;
 use limn::widgets::button::PushButtonBuilder;
 use limn::drawable::text::{TextDrawable, TextStyleField};
@@ -19,11 +18,10 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
+    root_widget.hbox();
 
-    let mut linear_layout = LinearLayout::new(Orientation::Horizontal, &mut root_widget);
     let mut left_spacer = WidgetBuilder::new();
     left_spacer.layout.width(50.0);
-    linear_layout.add_widget(&mut left_spacer);
     root_widget.add_child(left_spacer);
 
     struct CountHandler;
@@ -44,10 +42,8 @@ fn main() {
     text_widget.layout.width(80.0);
     text_widget.layout.height(text_dims.height);
     text_widget.layout.center_vertical(&root_widget.layout.vars);
-    linear_layout.add_widget(&mut text_widget);
 
     let mut button_container = WidgetBuilder::new();
-    linear_layout.add_widget(&mut button_container);
     let root_id = root_widget.id;
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");

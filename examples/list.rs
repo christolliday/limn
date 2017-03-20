@@ -3,7 +3,6 @@ extern crate limn;
 mod util;
 
 use limn::widget::WidgetBuilder;
-use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widget::style::Value;
 use limn::widgets::list::{ListHandler, ListItemHandler, STYLE_LIST_ITEM};
 use limn::drawable::text::{TextDrawable, TextStyleField};
@@ -28,12 +27,12 @@ fn main() {
     let mut list_widget = WidgetBuilder::new();
     list_widget
         .add_handler(ListHandler::new())
+        .vbox()
         .make_scrollable();
     list_widget.layout.match_width(&scroll_widget.layout.vars);
 
 
     let list_item_widgets = {
-        let mut linear_layout = LinearLayout::new(Orientation::Vertical, &mut list_widget);
         let mut list_item_widgets = Vec::new();
         for _ in 1..15 {
             let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
@@ -48,7 +47,6 @@ fn main() {
                 .enable_hover();
             list_item_widget.layout.match_width(&list_widget.layout.vars);
             list_item_widget.layout.height(text_dims.height);
-            linear_layout.add_widget(&mut list_item_widget);
 
             let mut list_text_widget = WidgetBuilder::new();
             list_text_widget

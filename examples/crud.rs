@@ -10,7 +10,6 @@ mod util;
 use limn::event::Target;
 use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
 use limn::widget::style::Value;
-use limn::widget::layout::{LinearLayout, Orientation};
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::widgets::list::{STYLE_LIST_ITEM, ListItemHandler, ListHandler};
@@ -89,7 +88,6 @@ pub fn add_person(graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mu
         list_item_widget.layout.constraints.push(list_item_widget.layout.vars.right | EQ(REQUIRED) |
                                                             list_widget.layout.right);
         list_item_widget.layout.height(text_dims.height);
-        //linear_layout.add_widget(&mut list_item_widget);
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
@@ -179,6 +177,7 @@ fn main() {
     let mut list_widget = WidgetBuilder::new();
     list_widget
         .add_handler(ListHandler::new())
+        .vbox()
         .make_scrollable();
     list_widget.layout.match_width(&scroll_container.layout.vars);
     /*let list_item_widgets = {
