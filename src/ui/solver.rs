@@ -37,23 +37,11 @@ impl LimnSolver {
         }
     }
     pub fn add_widget(&mut self, widget: &Widget, constraints: Vec<Constraint>) {
-        for constraint in constraints {
-            self.add_constraint(constraint.clone());
-            let var_list = self.constraint_map.entry(constraint.clone()).or_insert(Vec::new());
-            for term in &constraint.0.expression.terms {
-                let variable = term.variable;
-                let constraint_set = self.var_map.entry(variable).or_insert(HashSet::new());
-                constraint_set.insert(constraint.clone());
-                var_list.push(variable);
-            }
-        }
         let ref vars = widget.layout;
         self.widget_map.insert(vars.left, widget.id);
         self.widget_map.insert(vars.top, widget.id);
         self.widget_map.insert(vars.right, widget.id);
         self.widget_map.insert(vars.bottom, widget.id);
-
-        self.check_changes();
 
         if let Some(ref debug_name) = widget.debug_name {
             add_debug_var_name(widget.layout.left, &format!("{}.left", debug_name));
@@ -61,6 +49,7 @@ impl LimnSolver {
             add_debug_var_name(widget.layout.right, &format!("{}.right", debug_name));
             add_debug_var_name(widget.layout.bottom, &format!("{}.bottom", debug_name));
         }
+        self.add_constraints(constraints);
     }
     pub fn remove_widget(&mut self, widget_vars: &LayoutVars) {
         for var in [widget_vars.left, widget_vars.top, widget_vars.right, widget_vars.bottom].iter() {
@@ -100,6 +89,19 @@ impl LimnSolver {
         self.solver.has_constraint(constraint)
     }
 
+    pub fn add_constraints(&mut self, constraints: Vec<Constraint>) {
+        for constraint in constraints {
+            self.add_constraint(constraint.clone());
+            let var_list = self.constraint_map.entry(constraint.clone()).or_insert(Vec::new());
+            for term in &constraint.0.expression.terms {
+                let variable = term.variable;
+                let constraint_set = self.var_map.entry(variable).or_insert(HashSet::new());
+                constraint_set.insert(constraint.clone());
+                var_list.push(variable);
+            }
+        }
+        self.check_changes();
+    }
     fn add_constraint(&mut self, constraint: Constraint) {
         self.debug_constraint_list.insert(constraint.clone(), ());
         self.solver.add_constraint(constraint).unwrap();

@@ -16,7 +16,7 @@ pub struct Ui {
 
 impl Ui {
     pub fn new(window: &mut Window, queue: &Queue) -> Self {
-        let graph = WidgetGraph::new(window);
+        let graph = WidgetGraph::new(window, queue.clone());
         let solver = LimnSolver::new(queue.clone());
         Ui {
             graph: graph,

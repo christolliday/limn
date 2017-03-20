@@ -86,6 +86,7 @@ pub enum ConstraintType {
 }
 */
 
+#[derive(Clone)]
 pub struct LayoutVars {
     pub left: Variable,
     pub top: Variable,
@@ -147,6 +148,12 @@ impl LayoutBuilder {
     pub fn new() -> Self {
         LayoutBuilder {
             vars: LayoutVars::new(),
+            constraints: Vec::new(),
+        }
+    }
+    pub fn from(vars: LayoutVars) -> Self {
+        LayoutBuilder {
+            vars: vars,
             constraints: Vec::new(),
         }
     }

@@ -29,7 +29,7 @@ pub struct WidgetBuilder {
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub layout: LayoutBuilder,
-    pub add_child_fn: Option<Box<Fn(&mut WidgetBuilder, &Widget)>>,
+    pub bound_children: bool,
     pub controller: WidgetController,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -43,7 +43,7 @@ impl WidgetBuilder {
             drawable: None,
             props: PropSet::new(),
             layout: LayoutBuilder::new(),
-            add_child_fn: None,
+            bound_children: true,
             controller: WidgetController::new(),
             debug_name: None,
             debug_color: None,
@@ -85,7 +85,7 @@ impl WidgetBuilder {
                                  self.drawable,
                                  self.props,
                                  self.layout.vars,
-                                 self.add_child_fn,
+                                 self.bound_children,
                                  self.debug_name,
                                  self.debug_color);
         (self.children,
@@ -212,7 +212,7 @@ pub struct Widget {
     pub props: PropSet,
     pub has_updated: bool,
     pub layout: LayoutVars,
-    pub add_child_fn: Option<Box<Fn(&mut WidgetBuilder, &Widget)>>,
+    pub bound_children: bool,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
 }
@@ -222,7 +222,7 @@ impl Widget {
                drawable: Option<DrawableWrapper>,
                props: PropSet,
                layout: LayoutVars,
-               add_child_fn: Option<Box<Fn(&mut WidgetBuilder, &Widget)>>,
+               bound_children: bool,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
@@ -232,7 +232,7 @@ impl Widget {
             props: props,
             has_updated: false,
             layout: layout,
-            add_child_fn: add_child_fn,
+            bound_children: bound_children,
             debug_name: debug_name,
             debug_color: debug_color,
         };
@@ -279,5 +279,13 @@ impl Widget {
                 self.has_updated = true;
             }
         }
+    }
+
+    pub fn update_layout<F>(&mut self, f: F, solver: &mut LimnSolver)
+        where F: FnOnce(&mut LayoutBuilder)
+    {
+        let mut layout = LayoutBuilder::from(self.layout.clone());
+        f(&mut layout);
+        solver.add_constraints(layout.constraints);
     }
 }

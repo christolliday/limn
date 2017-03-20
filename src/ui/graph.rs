@@ -33,16 +33,18 @@ type Graph = StableGraph<WidgetContainer, ()>;
 pub struct WidgetGraph {
     pub graph: Graph,
     pub root_id: WidgetId,
+    queue: Queue,
     widget_map: HashMap<WidgetId, NodeIndex>,
     redraw: u32,
     glyph_cache: GlyphCache,
 }
 
 impl WidgetGraph {
-    pub fn new(window: &mut Window) -> Self {
+    pub fn new(window: &mut Window, queue: Queue) -> Self {
         WidgetGraph {
             graph: StableGraph::new(),
             root_id: resources().widget_id(),
+            queue: queue,
             widget_map: HashMap::new(),
             redraw: 2,
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
@@ -152,9 +154,7 @@ impl WidgetGraph {
 
         if let Some(parent_id) = parent_id {
             if let Some(parent) = self.get_widget(parent_id) {
-                if let Some(ref add_child_fn) = parent.add_child_fn {
-                    add_child_fn(&mut widget, &parent);
-                } else {
+                if parent.bound_children {
                     widget.layout.bound_by(&parent.layout);
                 }
             }
@@ -164,12 +164,16 @@ impl WidgetGraph {
 
         let id = widget.widget.id;
         let widget_index = self.graph.add_node(widget);
+        self.widget_map.insert(id, widget_index);
         if let Some(parent_id) = parent_id {
             if let Some(parent_index) = self.find_widget(parent_id) {
                 self.graph.add_edge(parent_index, widget_index, ());
+                if let Some(widget_container) = self.graph.node_weight_mut(parent_index.clone()) {
+                    let parent_layout = widget_container.widget.layout.clone();
+                    self.queue.push(Target::Widget(id), ChildAttachedEvent(parent_layout));
+                }
             }
         }
-        self.widget_map.insert(id, widget_index);
         self.redraw();
         for child in children {
             self.add_widget(child, Some(id), solver);
@@ -264,6 +268,9 @@ impl WidgetGraph {
         }
     }
 }
+use widget::layout::LayoutVars;
+pub struct ChildAttachedEvent(pub LayoutVars);
+
 use petgraph::visit::Visitable;
 pub struct CursorWidgetIter {
     point: Point,

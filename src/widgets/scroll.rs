@@ -2,7 +2,8 @@ use glutin;
 use cassowary::strength::*;
 
 use event::Target;
-use widget::{WidgetBuilder, Widget, EventArgs, EventHandler};
+use widget::{WidgetBuilder, EventArgs, EventHandler};
+use ui::graph::ChildAttachedEvent;
 use util::{Point, Rectangle};
 
 use input::mouse::WidgetMouseWheel;
@@ -22,6 +23,16 @@ impl EventHandler<WidgetMouseWheel> for ScrollHandler {
             parent_bounds: widget_bounds,
         };
         queue.push(Target::Child(widget.id), event);
+    }
+}
+
+pub struct ScrollChildAddedHandler;
+impl EventHandler<ChildAttachedEvent> for ScrollChildAddedHandler {
+    fn handle(&mut self, event: &ChildAttachedEvent, args: EventArgs) {
+        let &ChildAttachedEvent(ref parent_layout) = event;
+        args.widget.update_layout(|layout| {
+            layout.scroll_inside(&parent_layout);
+        }, args.solver);
     }
 }
 
@@ -78,13 +89,11 @@ impl EventHandler<WidgetScroll> for WidgetScrollHandler {
 
 impl WidgetBuilder {
     pub fn contents_scroll(&mut self) -> &mut Self {
-        let add_child_fn = |widget: &mut WidgetBuilder, parent: &Widget| {
-            widget.layout.scroll_inside(&parent.layout);
-        };
-        self.add_child_fn = Some(Box::new(add_child_fn));
+        self.bound_children = false;
         self.add_handler(ScrollHandler)
     }
     pub fn make_scrollable(&mut self) -> &mut Self {
+        self.add_handler(ScrollChildAddedHandler);
         self.add_handler(WidgetScrollHandler::new())
     }
 }
