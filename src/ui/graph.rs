@@ -163,16 +163,14 @@ impl WidgetGraph {
         solver.add_widget(&widget.widget, constraints);
 
         let id = widget.widget.id;
+        let layout = widget.widget.layout.clone();
         let widget_index = self.graph.add_node(widget);
         self.widget_map.insert(id, widget_index);
         if let Some(parent_id) = parent_id {
             if let Some(parent_index) = self.find_widget(parent_id) {
                 self.graph.add_edge(parent_index, widget_index, ());
-                if let Some(widget_container) = self.graph.node_weight_mut(parent_index.clone()) {
-                    let parent_layout = widget_container.widget.layout.clone();
-                    self.queue.push(Target::Widget(id), ChildAttachedEvent(parent_layout));
-                }
             }
+            self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(layout));
         }
         self.redraw();
         for child in children {

@@ -298,12 +298,19 @@ impl LayoutBuilder {
         PaddableConstraint::new_set(self, constraints)
     }
 
-    pub fn scroll_inside(&mut self, widget: &LayoutVars) {
-        self.constraints.push(self.vars.left | LE(REQUIRED) | widget.left);
-        self.constraints.push(self.vars.top | LE(REQUIRED) | widget.top);
+    pub fn scroll_inside(&mut self, outer: &LayoutVars) {
+        self.constraints.push(self.vars.left | LE(REQUIRED) | outer.left);
+        self.constraints.push(self.vars.top | LE(REQUIRED) | outer.top);
         // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
-        self.constraints.push(self.vars.right | GE(STRONG) | widget.right);
-        self.constraints.push(self.vars.bottom | GE(STRONG) | widget.bottom);
+        self.constraints.push(self.vars.right | GE(STRONG) | outer.right);
+        self.constraints.push(self.vars.bottom | GE(STRONG) | outer.bottom);
+    }
+    pub fn scroll_parent(&mut self, inner: &LayoutVars) {
+        self.constraints.push(inner.left | LE(REQUIRED) | self.vars.left);
+        self.constraints.push(inner.top | LE(REQUIRED) | self.vars.top);
+        // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
+        self.constraints.push(inner.right | GE(STRONG) | self.vars.right);
+        self.constraints.push(inner.bottom | GE(STRONG) | self.vars.bottom);
     }
 }
 

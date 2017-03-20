@@ -31,7 +31,7 @@ impl EventHandler<ChildAttachedEvent> for ScrollChildAddedHandler {
     fn handle(&mut self, event: &ChildAttachedEvent, args: EventArgs) {
         let &ChildAttachedEvent(ref parent_layout) = event;
         args.widget.update_layout(|layout| {
-            layout.scroll_inside(&parent_layout);
+            layout.scroll_parent(&parent_layout);
         }, args.solver);
     }
 }
@@ -90,10 +90,10 @@ impl EventHandler<WidgetScroll> for WidgetScrollHandler {
 impl WidgetBuilder {
     pub fn contents_scroll(&mut self) -> &mut Self {
         self.bound_children = false;
+        self.add_handler(ScrollChildAddedHandler);
         self.add_handler(ScrollHandler)
     }
     pub fn make_scrollable(&mut self) -> &mut Self {
-        self.add_handler(ScrollChildAddedHandler);
         self.add_handler(WidgetScrollHandler::new())
     }
 }
