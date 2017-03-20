@@ -24,7 +24,7 @@ use limn::util::Dimensions;
 use limn::color::*;
 
 #[derive(Clone)]
-struct Person {
+pub struct Person {
     first_name: String,
     last_name: String,
 }
@@ -35,45 +35,58 @@ impl Person {
             last_name: last_name.to_owned(),
         }
     }
+    fn name(&self) -> String {
+        format!("{}, {}", self.last_name, self.first_name)
+    }
 }
 
 #[derive(Clone)]
 enum PeopleEvent {
-    Add(Person),
-    Update(Person),
-    Delete(Person),
+    Add,
+    Update,
+    Delete,
+    ChangeFirstName(String),
+    ChangeLastName(String),
 }
 
 struct PeopleHandler {
     list_widget_id: WidgetId,
     people: Vec<Person>,
+    person: Person,
 }
 impl PeopleHandler {
     fn new(list_widget_id: WidgetId) -> Self {
         PeopleHandler {
             list_widget_id: list_widget_id,
             people: Vec::new(),
+            person: Person::new("", ""),
         }
     }
 }
 impl ui::EventHandler<PeopleEvent> for PeopleHandler {
     fn handle(&mut self, event: &PeopleEvent, args: ui::EventArgs) {
         match event.clone() {
-            PeopleEvent::Add(person) => {
-                let person = person.clone();
+            PeopleEvent::Add => {
+                let person = self.person.clone();
+                add_person(&person, &mut args.ui.graph, self.list_widget_id, &mut args.ui.solver);
                 self.people.push(person);
-                add_person(&mut args.ui.graph, self.list_widget_id, &mut args.ui.solver);
+            },
+            PeopleEvent::ChangeFirstName(name) => {
+                self.person.first_name = name;
+            },
+            PeopleEvent::ChangeLastName(name) => {
+                self.person.last_name = name;
             }, _ => ()
         }
     }
 }
 
-pub fn add_person(graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mut LimnSolver) {
+pub fn add_person(person: &Person, graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mut LimnSolver) {
     let list_item_widget = {
         
         let list_widget = graph.get_widget(list_widget_id).unwrap();
         let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
-        let text_drawable = TextDrawable::new("SCrim");
+        let text_drawable = TextDrawable::new(&person.name());
         let text_dims = text_drawable.measure();
         let mut list_item_widget = WidgetBuilder::new();
         list_item_widget
@@ -81,12 +94,7 @@ pub fn add_person(graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mu
             .set_debug_name("item")
             .add_handler(ListItemHandler::new(list_widget_id))
             .enable_hover();
-        //list_item_widget.layout.match_width(&list_widget);
-        // ugly match width
-        list_item_widget.layout.constraints.push(list_item_widget.layout.vars.left | EQ(REQUIRED) |
-                                                            list_widget.layout.left);
-        list_item_widget.layout.constraints.push(list_item_widget.layout.vars.right | EQ(REQUIRED) |
-                                                            list_widget.layout.right);
+        list_item_widget.layout.match_width(&list_widget.layout);
         list_item_widget.layout.height(text_dims.height);
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
@@ -121,7 +129,11 @@ fn main() {
     first_name.layout.center_vertical(&first_name_container.layout.vars);
     first_name.layout.dimensions(text_dims);
 
-    let mut first_name_box = EditTextBuilder::new().widget;
+    let mut first_name_box = EditTextBuilder::new();
+    first_name_box.on_text_changed(|text, args| {
+        args.queue.push(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
+    });
+    let mut first_name_box = first_name_box.widget;
     first_name_box.set_debug_name("first_name");
     first_name_box.layout.min_height(30.0);
     first_name_box.layout.min_width(200.0);
@@ -139,7 +151,11 @@ fn main() {
     last_name.set_drawable(text);
     last_name.layout.dimensions(text_dims);
 
-    let mut last_name_box = EditTextBuilder::new().widget;
+    let mut last_name_box = EditTextBuilder::new();
+    last_name_box.on_text_changed(|text, args| {
+        args.queue.push(Target::Ui, PeopleEvent::ChangeLastName(text.0.clone()));
+    });
+    let mut last_name_box = last_name_box.widget;
     last_name_box.set_debug_name("last_name");
     last_name_box.layout.min_height(30.0);
     last_name_box.layout.align_right(&container.layout.vars);
@@ -180,44 +196,11 @@ fn main() {
         .vbox()
         .make_scrollable();
     list_widget.layout.match_width(&scroll_container.layout.vars);
-    /*let list_item_widgets = {
-        let mut linear_layout = LinearLayout::new(Orientation::Vertical, &mut list_widget);
-        let mut list_item_widgets = Vec::new();
-        for _ in 1..15 {
-            let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
-            let text_drawable = TextDrawable::new("hello");
-            let text_dims = text_drawable.measure();
-
-            let mut list_item_widget = WidgetBuilder::new();
-            list_item_widget
-                .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
-                .set_debug_name("item")
-                .add_handler(ListItemHandler::new(list_widget.id))
-                .enable_hover();
-            list_item_widget.layout.match_width(&list_widget);
-            list_item_widget.layout.height(text_dims.height);
-            linear_layout.add_widget(&mut list_item_widget);
-
-            let mut list_text_widget = WidgetBuilder::new();
-            list_text_widget
-                .set_drawable_with_style(text_drawable, text_style)
-                .set_debug_name("text");
-            list_text_widget.layout.center(&list_item_widget);
-            list_item_widget.add_child(list_text_widget);
-
-            list_item_widgets.push(list_item_widget);
-        }
-        list_item_widgets
-    };
-    for list_item_widget in list_item_widgets {
-        list_widget.add_child(list_item_widget);
-    }*/
     let list_widget_id = list_widget.id;
     scroll_container.add_child(list_widget);
 
     create_button.on_click(move |_, args| {
-        let person = Person::new("Jim", "Jones");
-        let event = PeopleEvent::Add(person);
+        let event = PeopleEvent::Add;
         args.queue.push(Target::Ui, event);
         println!("create");
     });

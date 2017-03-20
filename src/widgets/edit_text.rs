@@ -1,8 +1,9 @@
-use widget::{WidgetBuilder, EventHandler, EventArgs};
+use widget::{WidgetBuilder, EventHandler, EventArgs, CallbackHandler};
 use widget::property::PropChangeHandler;
 use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter};
 use drawable::rect::RectDrawable;
 use drawable::text::TextDrawable;
+use event::Target;
 
 pub struct EditTextKeyboardHandler {
     text: String,
@@ -30,8 +31,10 @@ impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
             }
         }
         args.widget.update(|state: &mut TextDrawable| state.text = self.text.clone());
+        args.queue.push(Target::Widget(args.widget.id), TextUpdated(self.text.clone()));
     }
 }
+pub struct TextUpdated(pub String);
 
 use drawable::text::TextStyleField;
 use widget::style::Value;
@@ -55,10 +58,20 @@ impl EditTextBuilder {
             .set_drawable_with_style(TextDrawable::default(), text_style)
             .add_handler(EditTextKeyboardHandler::new())
             .add_handler(PropChangeHandler);
-        
+
         widget.add_child(text_widget);
         EditTextBuilder {
             widget: widget,
         }
+    }
+
+    pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
+        where F: Fn(&TextUpdated, &mut EventArgs) + 'static
+    {
+        {
+            let edit_text = self.widget.children.get_mut(0).unwrap();
+            edit_text.add_handler(CallbackHandler::new(callback));
+        }
+        self
     }
 }
