@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 
 use widget::{EventHandler, EventArgs};
 
+#[derive(Debug)]
 pub enum PropChange {
     Add(Property),
     Remove(Property),

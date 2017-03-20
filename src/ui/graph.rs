@@ -185,6 +185,7 @@ impl WidgetGraph {
                 self.redraw();
                 solver.remove_widget(&widget.widget.layout);
             }
+            self.widget_map.remove(&widget_id);
         }
     }
     pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<&mut Widget> {

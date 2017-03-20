@@ -10,6 +10,7 @@ mod util;
 use limn::event::Target;
 use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
 use limn::widget::style::Value;
+use limn::widget::property::PropChange;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::widgets::list::{STYLE_LIST_ITEM, ListItemHandler, ListHandler};
@@ -23,14 +24,16 @@ use limn::ui::solver::LimnSolver;
 use limn::util::Dimensions;
 use limn::color::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Person {
+    id: u32,
     first_name: String,
     last_name: String,
 }
 impl Person {
     fn new(first_name: &str, last_name: &str) -> Self {
         Person {
+            id: 0,
             first_name: first_name.to_owned(),
             last_name: last_name.to_owned(),
         }
@@ -45,31 +48,52 @@ enum PeopleEvent {
     Add,
     Update,
     Delete,
+    PersonSelected(Person, WidgetId),
     ChangeFirstName(String),
     ChangeLastName(String),
 }
 
 struct PeopleHandler {
     list_widget_id: WidgetId,
-    people: Vec<Person>,
+    first_name_box_id: WidgetId,
+    last_name_box_id: WidgetId,
+    selected_item_id: Option<WidgetId>,
     person: Person,
 }
 impl PeopleHandler {
-    fn new(list_widget_id: WidgetId) -> Self {
+    fn new(list_widget_id: WidgetId, first_name_box_id: WidgetId, last_name_box_id: WidgetId) -> Self {
         PeopleHandler {
             list_widget_id: list_widget_id,
-            people: Vec::new(),
+            first_name_box_id: first_name_box_id,
+            last_name_box_id: last_name_box_id,
+            selected_item_id: None,
             person: Person::new("", ""),
         }
     }
 }
+use limn::widgets::edit_text::TextUpdated;
 impl ui::EventHandler<PeopleEvent> for PeopleHandler {
     fn handle(&mut self, event: &PeopleEvent, args: ui::EventArgs) {
         match event.clone() {
             PeopleEvent::Add => {
                 let person = self.person.clone();
-                add_person(&person, &mut args.ui.graph, self.list_widget_id, &mut args.ui.solver);
-                self.people.push(person);
+                add_person(person, &mut args.ui.graph, self.list_widget_id, &mut args.ui.solver);
+            },
+            PeopleEvent::Update => {
+                if let Some(selected_item_id) = self.selected_item_id {
+                    args.queue.push(Target::Widget(selected_item_id), PersonEvent(self.person.clone()));
+                }
+            },
+            PeopleEvent::Delete => {
+                if let Some(selected_item_id) = self.selected_item_id {
+                    args.ui.graph.remove_widget(selected_item_id, &mut args.ui.solver);
+                }
+            }
+            PeopleEvent::PersonSelected(person, widget_id) => {
+                self.person = person;
+                self.selected_item_id = Some(widget_id);
+                args.queue.push(Target::SubTree(self.first_name_box_id), TextUpdated(self.person.first_name.clone()));
+                args.queue.push(Target::SubTree(self.last_name_box_id), TextUpdated(self.person.last_name.clone()));
             },
             PeopleEvent::ChangeFirstName(name) => {
                 self.person.first_name = name;
@@ -81,7 +105,40 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
     }
 }
 
-pub fn add_person(person: &Person, graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mut LimnSolver) {
+struct PersonHandler {
+    person: Person,
+}
+impl PersonHandler {
+    fn new(person: Person) -> Self {
+        PersonHandler {
+            person: person,
+        }
+    }
+}
+use limn::widget::property::Property;
+impl EventHandler<PropChange> for PersonHandler {
+    fn handle(&mut self, event: &PropChange, args: EventArgs) {
+        match *event {
+            PropChange::Add(Property::Selected) => {
+                args.queue.push(Target::Ui, PeopleEvent::PersonSelected(self.person.clone(), args.widget.id));
+            },
+            PropChange::Remove(Property::Selected) => {
+                //println!("{:?}", event);
+            }, _ => ()
+        }
+    }
+}
+
+struct PersonEvent(Person);
+struct PersonEventHandler;
+impl EventHandler<PersonEvent> for PersonEventHandler {
+    fn handle(&mut self, event: &PersonEvent, args: EventArgs) {
+        println!("preson evnet {:?}", event.0.name());
+        args.queue.push(Target::SubTree(args.widget.id), TextUpdated(event.0.name()));
+    }
+}
+use limn::widgets::edit_text::TextChangeHandler;
+pub fn add_person(person: Person, graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mut LimnSolver) {
     let list_item_widget = {
         
         let list_widget = graph.get_widget(list_widget_id).unwrap();
@@ -92,6 +149,8 @@ pub fn add_person(person: &Person, graph: &mut WidgetGraph, list_widget_id: Widg
         list_item_widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
             .set_debug_name("item")
+            .add_handler(PersonEventHandler)
+            .add_handler(PersonHandler::new(person))
             .add_handler(ListItemHandler::new(list_widget_id))
             .enable_hover();
         list_item_widget.layout.match_width(&list_widget.layout);
@@ -99,6 +158,7 @@ pub fn add_person(person: &Person, graph: &mut WidgetGraph, list_widget_id: Widg
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
+            .add_handler(TextChangeHandler)
             .set_debug_name("text");
         list_text_widget.layout.center(&list_item_widget.layout.vars);
         list_item_widget.add_child(list_text_widget);
@@ -139,6 +199,7 @@ fn main() {
     first_name_box.layout.min_width(200.0);
     first_name_box.layout.align_right(&container.layout.vars);
     first_name_box.layout.to_right_of(&first_name.layout.vars).padding(20.0);
+    let first_name_box_id = first_name_box.id;
     first_name_container.layout.shrink();
     first_name_container.add_child(first_name);
     first_name_container.add_child(first_name_box);
@@ -160,6 +221,7 @@ fn main() {
     last_name_box.layout.min_height(30.0);
     last_name_box.layout.align_right(&container.layout.vars);
     last_name_box.layout.to_right_of(&last_name.layout.vars).padding(20.0);
+    let last_name_box_id = last_name_box.id;
     last_name_container.add_child(last_name);
     last_name_container.add_child(last_name_box);
 
@@ -172,14 +234,16 @@ fn main() {
     let mut update_button = PushButtonBuilder::new();
     update_button.set_text("Update");
     let mut update_button = update_button.widget;
-    update_button.on_click(|_, _| {
+    update_button.on_click(|_, args| {
         println!("update");
+        args.queue.push(Target::Ui, PeopleEvent::Update);
     });
     let mut delete_button = PushButtonBuilder::new();
     delete_button.set_text("Delete");
     let mut delete_button = delete_button.widget;
-    delete_button.on_click(|_, _| {
+    delete_button.on_click(|_, args| {
         println!("delete");
+        args.queue.push(Target::Ui, PeopleEvent::Delete);
     });
     update_button.layout.to_right_of(&create_button.layout.vars).padding(20.0);
     delete_button.layout.to_right_of(&update_button.layout.vars).padding(20.0);
@@ -200,8 +264,7 @@ fn main() {
     scroll_container.add_child(list_widget);
 
     create_button.on_click(move |_, args| {
-        let event = PeopleEvent::Add;
-        args.queue.push(Target::Ui, event);
+        args.queue.push(Target::Ui, PeopleEvent::Add);
         println!("create");
     });
     button_container.add_child(create_button);
@@ -214,7 +277,7 @@ fn main() {
     container.add_child(scroll_container);
     root_widget.add_child(container);
 
-    app.add_handler(PeopleHandler::new(list_widget_id));
+    app.add_handler(PeopleHandler::new(list_widget_id, first_name_box_id, last_name_box_id));
 
     util::set_root_and_loop(window, app, root_widget);
 }
