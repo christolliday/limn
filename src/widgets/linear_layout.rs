@@ -20,12 +20,11 @@ pub enum Orientation {
 struct WidgetData {
     start: Variable,
     end: Variable,
-    pred: WidgetId,
+    pred: Option<WidgetId>,
     succ: Option<WidgetId>,
 }
 struct LinearLayoutHandler {
     orientation: Orientation,
-    parent_id: WidgetId,
     top: Variable,
 
     widgets: HashMap<WidgetId, WidgetData>,
@@ -33,10 +32,9 @@ struct LinearLayoutHandler {
 }
 
 impl LinearLayoutHandler {
-    fn new(orientation: Orientation, parent_id: WidgetId, parent: &LayoutVars) -> Self {
+    fn new(orientation: Orientation, parent: &LayoutVars) -> Self {
         LinearLayoutHandler {
             orientation: orientation,
-            parent_id: parent_id,
             top: beginning(orientation, parent),
             widgets: HashMap::new(),
             last_widget: None,
@@ -71,39 +69,33 @@ impl EventHandler<LinearLayoutEvent> for LinearLayoutHandler {
                     self.widgets.insert(child_id, WidgetData {
                         start: child_start,
                         end: child_end,
-                        pred: last_widget_id,
+                        pred: Some(last_widget_id),
                         succ: None,
                     });
                 } else {
                     self.widgets.insert(child_id, WidgetData {
                         start: child_start,
                         end: child_end,
-                        pred: self.parent_id,
+                        pred: None,
                         succ: None,
                     });
                 }
                 self.last_widget = Some(child_id);
             },
             LinearLayoutEvent::RemoveWidget(widget_id) => {
-                
                 if let Some(widget_data) = self.widgets.remove(&widget_id) {
 
                     if let Some(last_widget_id) = self.last_widget {
                         if last_widget_id == widget_id {
-                            if widget_data.pred == self.parent_id {
-                                self.last_widget = None;
-                            } else {
-                                self.last_widget = Some(widget_data.pred);
-                            }
+                            self.last_widget = widget_data.pred;
                         }
                     }
-
-                    let pred_end = if widget_data.pred == self.parent_id {
-                        self.top
-                    } else {
-                        let pred = self.widgets.get_mut(&widget_data.pred).unwrap();
+                    let pred_end = if let Some(pred) = widget_data.pred {
+                        let pred = self.widgets.get_mut(&pred).unwrap();
                         pred.succ = widget_data.succ;
                         pred.end
+                    } else {
+                        self.top
                     };
                     if let Some(succ) = widget_data.succ {
                         let succ = self.widgets.get_mut(&succ).unwrap();
@@ -143,12 +135,12 @@ fn ending(orientation: Orientation, layout: &LayoutVars) -> Variable {
 
 impl WidgetBuilder {
     pub fn vbox(&mut self) -> &mut Self {
-        let handler = LinearLayoutHandler::new(Orientation::Vertical, self.id, &self.layout.vars);
+        let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout.vars);
         self.add_handler(handler);
         self.add_handler(LinearLayoutChildAttachedHandler)
     }
     pub fn hbox(&mut self) -> &mut Self {
-        let handler = LinearLayoutHandler::new(Orientation::Horizontal, self.id, &self.layout.vars);
+        let handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout.vars);
         self.add_handler(handler);
         self.add_handler(LinearLayoutChildAttachedHandler)
     }

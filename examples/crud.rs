@@ -2,9 +2,6 @@ extern crate limn;
 extern crate text_layout;
 extern crate cassowary;
 
-use cassowary::WeightedRelation::*;
-use cassowary::strength::*;
-
 mod util;
 
 use limn::event::Target;
@@ -19,7 +16,6 @@ use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::WidgetId;
 use limn::ui;
-use limn::ui::Ui;
 use limn::ui::graph::WidgetGraph;
 use limn::ui::solver::LimnSolver;
 use limn::util::Dimensions;
@@ -79,6 +75,11 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
             PeopleEvent::Add => {
                 let person = self.person.clone();
                 add_person(person, &mut args.ui.graph, self.list_widget_id, &mut args.ui.solver);
+
+                self.person = Person::new("","");
+                self.selected_item_id = None;
+                args.queue.push(Target::SubTree(self.first_name_box_id), TextUpdated("".to_owned()));
+                args.queue.push(Target::SubTree(self.last_name_box_id), TextUpdated("".to_owned()));
             },
             PeopleEvent::Update => {
                 if let Some(selected_item_id) = self.selected_item_id {
@@ -103,7 +104,7 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
             },
             PeopleEvent::ChangeLastName(name) => {
                 self.person.last_name = name;
-            }, _ => ()
+            }
         }
     }
 }
@@ -136,7 +137,6 @@ struct PersonEvent(Person);
 struct PersonEventHandler;
 impl EventHandler<PersonEvent> for PersonEventHandler {
     fn handle(&mut self, event: &PersonEvent, args: EventArgs) {
-        println!("preson evnet {:?}", event.0.name());
         args.queue.push(Target::SubTree(args.widget.id), TextUpdated(event.0.name()));
     }
 }
@@ -238,14 +238,12 @@ fn main() {
     update_button.set_text("Update");
     let mut update_button = update_button.widget;
     update_button.on_click(|_, args| {
-        println!("update");
         args.queue.push(Target::Ui, PeopleEvent::Update);
     });
     let mut delete_button = PushButtonBuilder::new();
     delete_button.set_text("Delete");
     let mut delete_button = delete_button.widget;
     delete_button.on_click(|_, args| {
-        println!("delete");
         args.queue.push(Target::Ui, PeopleEvent::Delete);
     });
     update_button.layout.to_right_of(&create_button.layout.vars).padding(20.0);
@@ -269,7 +267,6 @@ fn main() {
 
     create_button.on_click(move |_, args| {
         args.queue.push(Target::Ui, PeopleEvent::Add);
-        println!("create");
     });
     button_container.add_child(create_button);
     button_container.add_child(update_button);
