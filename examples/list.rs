@@ -4,7 +4,7 @@ mod util;
 
 use limn::widget::WidgetBuilder;
 use limn::widget::style::Value;
-use limn::widgets::list::{ListHandler, ListItemHandler, STYLE_LIST_ITEM};
+use limn::widgets::list::{ListItemHandler, STYLE_LIST_ITEM};
 use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::drawable::rect::RectDrawable;
 use limn::util::Dimensions;
@@ -25,12 +25,8 @@ fn main() {
     });
 
     let mut list_widget = WidgetBuilder::new();
-    list_widget
-        .add_handler(ListHandler::new())
-        .vbox()
-        .make_scrollable();
+    list_widget.make_vertical_list();
     list_widget.layout.match_width(&scroll_widget.layout.vars);
-
 
     let list_item_widgets = {
         let mut list_item_widgets = Vec::new();
@@ -43,9 +39,8 @@ fn main() {
             list_item_widget
                 .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
                 .set_debug_name("item")
-                .add_handler(ListItemHandler::new(list_widget.id))
+                .list_item(list_widget.id)
                 .enable_hover();
-            list_item_widget.layout.match_width(&list_widget.layout.vars);
             list_item_widget.layout.height(text_dims.height);
 
             let mut list_text_widget = WidgetBuilder::new();

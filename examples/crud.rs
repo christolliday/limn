@@ -10,7 +10,7 @@ use limn::widget::style::Value;
 use limn::widget::property::PropChange;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::edit_text::EditTextBuilder;
-use limn::widgets::list::{STYLE_LIST_ITEM, ListItemHandler, ListDeselectHandler, ListHandler};
+use limn::widgets::list::STYLE_LIST_ITEM;
 use limn::widgets::linear_layout::LinearLayoutEvent;
 use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::drawable::rect::RectDrawable;
@@ -154,9 +154,8 @@ pub fn add_person(person: Person, graph: &mut WidgetGraph, list_widget_id: Widge
             .set_debug_name("item")
             .add_handler(PersonEventHandler)
             .add_handler(PersonHandler::new(person))
-            .add_handler(ListItemHandler::new(list_widget_id))
+            .list_item(list_widget_id)
             .enable_hover();
-        list_item_widget.layout.match_width(&list_widget.layout);
         list_item_widget.layout.height(text_dims.height);
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
@@ -256,11 +255,7 @@ fn main() {
     scroll_container.contents_scroll();
 
     let mut list_widget = WidgetBuilder::new();
-    list_widget
-        .add_handler(ListHandler::new())
-        .add_handler(ListDeselectHandler)
-        .vbox()
-        .make_scrollable();
+    list_widget.make_vertical_list();
     list_widget.layout.match_width(&scroll_container.layout.vars);
     let list_widget_id = list_widget.id;
     scroll_container.add_child(list_widget);

@@ -74,3 +74,17 @@ impl EventHandler<ClickEvent> for ListItemHandler {
         }
     }
 }
+
+use widget::WidgetBuilder;
+impl WidgetBuilder {
+    pub fn make_vertical_list(&mut self) -> &mut Self {
+        self.add_handler(ListHandler::new())
+            .add_handler(ListDeselectHandler)
+            .vbox()
+            .make_scrollable()
+    }
+
+    pub fn list_item(&mut self, list_id: WidgetId) -> &mut Self {
+        self.add_handler(ListItemHandler::new(list_id))
+    }
+}
