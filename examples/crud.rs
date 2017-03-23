@@ -13,7 +13,8 @@ use limn::widget::style::Value;
 use limn::widget::property::PropChange;
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::edit_text::EditTextBuilder;
-use limn::widgets::list::{STYLE_LIST_ITEM, ListItemHandler, ListHandler};
+use limn::widgets::list::{STYLE_LIST_ITEM, ListItemHandler, ListDeselectHandler, ListHandler};
+use limn::widgets::linear_layout::LinearLayoutEvent;
 use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::WidgetId;
@@ -86,6 +87,8 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
             },
             PeopleEvent::Delete => {
                 if let Some(selected_item_id) = self.selected_item_id {
+                    let event = LinearLayoutEvent::RemoveWidget(selected_item_id);
+                    args.queue.push(Target::Widget(self.list_widget_id), event);
                     args.ui.graph.remove_widget(selected_item_id, &mut args.ui.solver);
                 }
             }
@@ -257,6 +260,7 @@ fn main() {
     let mut list_widget = WidgetBuilder::new();
     list_widget
         .add_handler(ListHandler::new())
+        .add_handler(ListDeselectHandler)
         .vbox()
         .make_scrollable();
     list_widget.layout.match_width(&scroll_container.layout.vars);

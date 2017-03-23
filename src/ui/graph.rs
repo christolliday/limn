@@ -170,7 +170,7 @@ impl WidgetGraph {
             if let Some(parent_index) = self.find_widget(parent_id) {
                 self.graph.add_edge(parent_index, widget_index, ());
             }
-            self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(layout));
+            self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
         }
         self.redraw();
         for child in children {
@@ -268,7 +268,7 @@ impl WidgetGraph {
     }
 }
 use widget::layout::LayoutVars;
-pub struct ChildAttachedEvent(pub LayoutVars);
+pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
 
 use petgraph::visit::Visitable;
 pub struct CursorWidgetIter {

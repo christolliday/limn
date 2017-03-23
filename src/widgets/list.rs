@@ -7,11 +7,11 @@ use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use drawable::rect::RectStyleField;
 use resources::WidgetId;
-use input::mouse::WidgetMouseButton;
+use input::mouse::ClickEvent;
 use util::Color;
 
 pub struct WidgetListItemSelected {
-    widget: WidgetId,
+    widget: Option<WidgetId>,
 }
 
 static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
@@ -39,12 +39,20 @@ impl ListHandler {
 impl EventHandler<WidgetListItemSelected> for ListHandler {
     fn handle(&mut self, event: &WidgetListItemSelected, mut args: EventArgs) {
         let selected = event.widget;
-        if let Some(old_selected) = self.selected {
-            if selected != old_selected {
+        if selected != self.selected {
+            if let Some(old_selected) = self.selected {
                 args.queue.push(Target::SubTree(old_selected), PropChange::Remove(Property::Selected));
             }
         }
-        self.selected = Some(selected);
+        self.selected = selected;
+    }
+}
+
+pub struct ListDeselectHandler;
+impl EventHandler<ClickEvent> for ListDeselectHandler {
+    fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
+        let event = WidgetListItemSelected { widget: None };
+        args.queue.push(Target::Widget(args.widget.id), event);
     }
 }
 
@@ -56,12 +64,13 @@ impl ListItemHandler {
         ListItemHandler { list_id: list_id }
     }
 }
-impl EventHandler<WidgetMouseButton> for ListItemHandler {
-    fn handle(&mut self, _: &WidgetMouseButton, mut args: EventArgs) {
+impl EventHandler<ClickEvent> for ListItemHandler {
+    fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
        if !args.widget.props.contains(&Property::Selected) {
             args.queue.push(Target::SubTree(args.widget.id), PropChange::Add(Property::Selected));
-            let event = WidgetListItemSelected { widget: args.widget.id };
+            let event = WidgetListItemSelected { widget: Some(args.widget.id) };
             args.queue.push(Target::Widget(self.list_id), event);
+            args.event_state.handled = true;
         }
     }
 }

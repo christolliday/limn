@@ -29,7 +29,7 @@ impl EventHandler<WidgetMouseWheel> for ScrollHandler {
 pub struct ScrollChildAddedHandler;
 impl EventHandler<ChildAttachedEvent> for ScrollChildAddedHandler {
     fn handle(&mut self, event: &ChildAttachedEvent, args: EventArgs) {
-        let &ChildAttachedEvent(ref child_layout) = event;
+        let &ChildAttachedEvent(_, ref child_layout) = event;
         args.widget.update_layout(|layout| {
             layout.scroll_parent(&child_layout);
         }, args.solver);
