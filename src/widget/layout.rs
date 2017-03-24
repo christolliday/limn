@@ -6,45 +6,6 @@ use cassowary::strength::*;
 
 use util::{Point, Rectangle, Dimensions, Scalar};
 
-/*
-constraint types, for declarative layout
-pub enum ConstraintType {
-    // EQ, StrDefault: WEAK
-    ShrinkWidth,
-    ShrinkHeight,
-    // EQ, StrDefault: WEAK,
-    GrowWidth,
-    GrowHeight,
-    // EQ, Args(Widget), StrDefault: REQ
-    MatchWidth,
-    MatchHeight,
-    // GE, StrDefault: REQ
-    MinWidth,
-    MinHeight,
-    // GE, StrDefault: REQ,
-    MaxWidth,
-    MaxHeight,
-    // EQ, Args(Widget), StrDefault: REQ
-    CenterHorizontal,
-    CenterVertical,
-    // EQ, Args(Widget, Option<padding>), StrDefault: REQ
-    AlignTop,
-    AlignBottom,
-    AlignLeft,
-    AlignRight,
-    // GE, Args(Widget, Option<padding>), StrDefault: REQ
-    BoundTop,
-    BoundBottom,
-    BoundLeft,
-    BoundRight,
-    // GE, Args(Widget, Option<padding>), StrDefault: REQ
-    Above,
-    Below,
-    ToRightOf,
-    ToLeftOf,
-}
-*/
-
 #[derive(Clone)]
 pub struct LayoutVars {
     pub left: Variable,
@@ -173,10 +134,10 @@ impl LayoutBuilder {
         self.width(0.0).strength(WEAK);
         self.height(0.0).strength(WEAK);
     }
-    pub fn top_left(&mut self, point: Point, strength: Option<f64>) -> WidgetConstraint {
+    pub fn top_left(&mut self, point: Point) -> WidgetConstraint {
         let constraints = vec![
-            self.vars.left | EQ(strength.unwrap_or(REQUIRED)) | point.x,
-            self.vars.top | EQ(strength.unwrap_or(REQUIRED)) | point.y,
+            self.vars.left | EQ(REQUIRED) | point.x,
+            self.vars.top | EQ(REQUIRED) | point.y,
         ];
         WidgetConstraint::new_set(self, constraints)
     }
@@ -257,13 +218,6 @@ impl LayoutBuilder {
         PaddableConstraint::new_set(self, constraints)
     }
 
-    pub fn scroll_inside(&mut self, outer: &LayoutVars) {
-        self.constraints.push(self.vars.left | LE(REQUIRED) | outer.left);
-        self.constraints.push(self.vars.top | LE(REQUIRED) | outer.top);
-        // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
-        self.constraints.push(self.vars.right | GE(STRONG) | outer.right);
-        self.constraints.push(self.vars.bottom | GE(STRONG) | outer.bottom);
-    }
     pub fn scroll_parent(&mut self, inner: &LayoutVars) {
         self.constraints.push(inner.left | LE(REQUIRED) | self.vars.left);
         self.constraints.push(inner.top | LE(REQUIRED) | self.vars.top);

@@ -37,14 +37,14 @@ fn main() {
         button_container.layout().shrink();
 
         let mut undo_widget = PushButtonBuilder::new();
-        undo_widget.set_text("Undo");
         undo_widget
+            .set_text("Undo")
             .set_inactive()
             .on_click(|_, args| { args.queue.push(Target::Ui, CircleEvent::Undo); });
 
         let mut redo_widget = PushButtonBuilder::new();
-        redo_widget.set_text("Redo");
         redo_widget
+            .set_text("Redo")
             .set_inactive()
             .on_click(|_, args| { args.queue.push(Target::Ui, CircleEvent::Redo); });
         redo_widget.layout().to_right_of(&undo_widget.layout().vars).padding(20.0);
@@ -73,7 +73,7 @@ fn main() {
             y: center.y - 15.0,
         };
 
-        widget.layout().top_left(top_left, Some(STRONG));
+        widget.layout().top_left(top_left).strength(STRONG);
         let id = widget.id();
         let root_id = graph.root_id;
         graph.add_widget(widget, Some(root_id), solver);

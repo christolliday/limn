@@ -144,8 +144,6 @@ impl EventHandler<PersonEvent> for PersonEventHandler {
 use limn::widgets::edit_text::TextChangeHandler;
 pub fn add_person(person: Person, graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mut LimnSolver) {
     let list_item_widget = {
-        
-        let list_widget = graph.get_widget(list_widget_id).unwrap();
         let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
         let text_drawable = TextDrawable::new(&person.name());
         let text_dims = text_drawable.measure();

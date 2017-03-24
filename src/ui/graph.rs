@@ -58,7 +58,7 @@ impl WidgetGraph {
     pub fn set_root(&mut self, mut root_widget: WidgetBuilder, solver: &mut LimnSolver) {
         root_widget.set_debug_name("root");
         self.root_id = root_widget.id();
-        root_widget.layout().top_left(Point { x: 0.0, y: 0.0 }, None);
+        root_widget.layout().top_left(Point { x: 0.0, y: 0.0 });
         self.add_widget(root_widget, None, solver);
         let ref mut root = self.get_root();
         solver.update_solver(|solver| {
