@@ -25,17 +25,70 @@ use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 
 pub struct WidgetBuilder {
-    pub id: WidgetId,
-    pub drawable: Option<DrawableWrapper>,
-    pub props: PropSet,
-    pub layout: LayoutBuilder,
+    id: WidgetId,
+    drawable: Option<DrawableWrapper>,
+    props: PropSet,
+    layout: LayoutBuilder,
     pub bound_children: bool,
     pub controller: WidgetController,
-    pub debug_name: Option<String>,
-    pub debug_color: Option<Color>,
+    debug_name: Option<String>,
+    debug_color: Option<Color>,
     pub children: Vec<WidgetBuilder>,
 }
 
+impl AsMut<WidgetBuilder> for WidgetBuilder {
+    fn as_mut(&mut self) -> &mut WidgetBuilder {
+        self
+    }
+}
+pub trait WidgetBuilderCore {
+    fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self;
+    fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self;
+    fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self;
+    fn set_debug_name(&mut self, name: &str) -> &mut Self;
+    fn set_debug_color(&mut self, color: Color) -> &mut Self;
+    fn set_inactive(&mut self) -> &mut Self;
+    fn add_child(&mut self, widget: WidgetBuilder) -> &mut Self;
+    fn layout(&mut self) -> &mut LayoutBuilder;
+    fn id(&mut self) -> WidgetId;
+}
+
+impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
+    fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
+        self.as_mut().drawable = Some(DrawableWrapper::new(drawable));
+        self
+    }
+    fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
+        self.as_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
+        self
+    }
+    fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+        self.as_mut().controller.add_handler(handler);
+        self
+    }
+    fn set_debug_name(&mut self, name: &str) -> &mut Self {
+        self.as_mut().debug_name = Some(name.to_owned());
+        self
+    }
+    fn set_debug_color(&mut self, color: Color) -> &mut Self {
+        self.as_mut().debug_color = Some(color);
+        self
+    }
+    fn set_inactive(&mut self) -> &mut Self {
+        self.as_mut().props.insert(Property::Inactive);
+        self
+    }
+    fn add_child(&mut self, widget: WidgetBuilder) -> &mut Self {
+        self.as_mut().children.push(widget);
+        self
+    }
+    fn layout(&mut self) -> &mut LayoutBuilder {
+        &mut self.as_mut().layout
+    }
+    fn id(&mut self) -> WidgetId {
+        self.as_mut().id
+    }
+}
 impl WidgetBuilder {
     pub fn new() -> Self {
         WidgetBuilder {
@@ -49,34 +102,6 @@ impl WidgetBuilder {
             debug_color: None,
             children: Vec::new(),
         }
-    }
-    pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
-        self.drawable = Some(DrawableWrapper::new(drawable));
-        self
-    }
-    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
-        self.drawable = Some(DrawableWrapper::new_with_style(drawable, style));
-        self
-    }
-    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.controller.add_handler(handler);
-        self
-    }
-    pub fn set_debug_name(&mut self, name: &str) -> &mut Self {
-        self.debug_name = Some(name.to_owned());
-        self
-    }
-    pub fn set_debug_color(&mut self, color: Color) -> &mut Self {
-        self.debug_color = Some(color);
-        self
-    }
-    pub fn set_inactive(&mut self) -> &mut Self {
-        self.props.insert(Property::Inactive);
-        self
-    }
-    pub fn add_child(&mut self, widget: WidgetBuilder) -> &mut Self {
-        self.children.push(widget);
-        self
     }
 
     pub fn build(self) -> (Vec<WidgetBuilder>, Vec<Constraint>, WidgetContainer) {

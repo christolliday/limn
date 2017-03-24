@@ -76,6 +76,7 @@ impl EventHandler<ClickEvent> for ListItemHandler {
 }
 
 use widget::WidgetBuilder;
+use widget::WidgetBuilderCore;
 impl WidgetBuilder {
     pub fn make_vertical_list(&mut self) -> &mut Self {
         self.add_handler(ListHandler::new())

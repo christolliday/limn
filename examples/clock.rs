@@ -18,6 +18,7 @@ use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
 
 use limn::widget::WidgetBuilder;
+use limn::widget::WidgetBuilderCore;
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::event::{Target, Queue};
@@ -89,7 +90,7 @@ impl ClockBuilder {
         let drawable = EllipseDrawable::new(WHITE, Some(border));
         let mut widget = WidgetBuilder::new();
         widget.set_drawable(drawable);
-        widget.layout.dimensions(Dimensions {
+        widget.layout().dimensions(Dimensions {
             width: 200.0,
             height: 200.0,
         });
@@ -123,7 +124,7 @@ impl ClockBuilder {
         widget.add_child(minute_widget);
         widget.add_child(second_widget);
 
-        let clock_id = widget.id;
+        let clock_id = widget.id();
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
             queue.push(Target::SubTree(clock_id), ClockTick);
@@ -138,8 +139,8 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
     let mut clock = ClockBuilder::new(ui.queue.clone()).widget;
-    clock.layout.center(&root_widget.layout.vars);
-    clock.layout.bound_by(&root_widget.layout.vars).padding(50.0);
+    clock.layout().center(&root_widget.layout().vars);
+    clock.layout().bound_by(&root_widget.layout().vars).padding(50.0);
     root_widget.add_child(clock);
 
     util::set_root_and_loop(window, ui, root_widget);

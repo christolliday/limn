@@ -9,8 +9,9 @@ mod util;
 use cassowary::strength::*;
 
 use limn::widget::WidgetBuilder;
+use limn::widget::WidgetBuilderCore;
 use limn::widget::property::{Property, PropChange};
-use limn::widgets::button::PushButtonBuilder;
+use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::event::Target;
 use limn::ui::{self, WidgetGraph};
@@ -31,28 +32,26 @@ fn main() {
 
     fn create_undo_redo_buttons(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId) {
         let mut button_container = WidgetBuilder::new();
-        button_container.layout.center_horizontal(&root_widget.layout.vars);
-        button_container.layout.align_bottom(&root_widget.layout.vars).padding(20.0);
-        button_container.layout.shrink();
+        button_container.layout().center_horizontal(&root_widget.layout().vars);
+        button_container.layout().align_bottom(&root_widget.layout().vars).padding(20.0);
+        button_container.layout().shrink();
 
         let mut undo_widget = PushButtonBuilder::new();
         undo_widget.set_text("Undo");
-        let mut undo_widget = undo_widget.widget;
         undo_widget
             .set_inactive()
             .on_click(|_, args| { args.queue.push(Target::Ui, CircleEvent::Undo); });
 
         let mut redo_widget = PushButtonBuilder::new();
         redo_widget.set_text("Redo");
-        let mut redo_widget = redo_widget.widget;
         redo_widget
             .set_inactive()
             .on_click(|_, args| { args.queue.push(Target::Ui, CircleEvent::Redo); });
-        redo_widget.layout.to_right_of(&undo_widget.layout.vars).padding(20.0);
+        redo_widget.layout().to_right_of(&undo_widget.layout().vars).padding(20.0);
 
-        let (undo_id, redo_id) = (undo_widget.id, redo_widget.id);
-        button_container.add_child(undo_widget);
-        button_container.add_child(redo_widget);
+        let (undo_id, redo_id) = (undo_widget.id(), redo_widget.id());
+        button_container.add_child(undo_widget.widget);
+        button_container.add_child(redo_widget.widget);
 
         root_widget.add_child(button_container);
         (undo_id, redo_id)
@@ -65,7 +64,7 @@ fn main() {
         };
         let mut widget = WidgetBuilder::new();
         widget.set_drawable(EllipseDrawable::new(RED, Some(border)));
-        widget.layout.dimensions(Dimensions {
+        widget.layout().dimensions(Dimensions {
             width: 30.0,
             height: 30.0,
         });
@@ -74,8 +73,8 @@ fn main() {
             y: center.y - 15.0,
         };
 
-        widget.layout.top_left(top_left, Some(STRONG));
-        let id = widget.id;
+        widget.layout().top_left(top_left, Some(STRONG));
+        let id = widget.id();
         let root_id = graph.root_id;
         graph.add_widget(widget, Some(root_id), solver);
         id
@@ -137,7 +136,7 @@ fn main() {
         let event = CircleEvent::Add(event.position);
         args.queue.push(Target::Ui, event);
     });
-    root_widget.layout.dimensions(Dimensions {
+    root_widget.layout().dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
     });

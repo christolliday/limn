@@ -5,6 +5,7 @@ use cassowary::WeightedRelation::*;
 use cassowary::Variable;
 
 use widget::{WidgetBuilder, EventHandler, EventArgs};
+use widget::WidgetBuilderCore;
 use widget::layout::LayoutVars;
 use ui::graph::ChildAttachedEvent;
 use resources::WidgetId;
@@ -135,12 +136,12 @@ fn ending(orientation: Orientation, layout: &LayoutVars) -> Variable {
 
 impl WidgetBuilder {
     pub fn vbox(&mut self) -> &mut Self {
-        let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout.vars);
+        let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout().vars);
         self.add_handler(handler);
         self.add_handler(LinearLayoutChildAttachedHandler)
     }
     pub fn hbox(&mut self) -> &mut Self {
-        let handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout.vars);
+        let handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout().vars);
         self.add_handler(handler);
         self.add_handler(LinearLayoutChildAttachedHandler)
     }

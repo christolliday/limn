@@ -70,6 +70,12 @@ impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
 pub struct ToggleButtonBuilder {
     pub widget: WidgetBuilder,
 }
+impl AsMut<WidgetBuilder> for ToggleButtonBuilder {
+    fn as_mut(&mut self) -> &mut WidgetBuilder {
+        &mut self.widget
+    }
+}
+use widget::WidgetBuilderCore;
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
@@ -79,7 +85,7 @@ impl ToggleButtonBuilder {
             .add_handler(ButtonDownHandler)
             .add_handler(ToggleEventHandler)
             .add_handler(PropChangeHandler);
-        widget.layout.dimensions(Dimensions {
+        widget.layout().dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
         });
@@ -99,7 +105,7 @@ impl ToggleButtonBuilder {
         button_text_widget
             .set_drawable_with_style(button_text_drawable, text_style)
             .add_handler(PropChangeHandler);
-        button_text_widget.layout.center(&self.widget.layout.vars);
+        button_text_widget.layout().center(&self.widget.layout().vars);
 
         self.widget.add_child(button_text_widget);
         self
@@ -114,6 +120,11 @@ impl ToggleButtonBuilder {
 pub struct PushButtonBuilder {
     pub widget: WidgetBuilder,
 }
+impl AsMut<WidgetBuilder> for PushButtonBuilder {
+    fn as_mut(&mut self) -> &mut WidgetBuilder {
+        &mut self.widget
+    }
+}
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new();
@@ -121,7 +132,7 @@ impl PushButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler(PropChangeHandler);
 
-        widget.layout.dimensions(Dimensions {
+        widget.layout().dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
         });
@@ -137,15 +148,19 @@ impl PushButtonBuilder {
         button_text_widget
             .set_drawable_with_style(drawable, text_style)
             .add_handler(PropChangeHandler);
-        button_text_widget.layout.center(&self.widget.layout.vars);
+        button_text_widget.layout().center(&self.widget.layout().vars);
 
         self.widget.add_child(button_text_widget);
         self
     }
 }
 
-impl WidgetBuilder {
-    pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
+pub trait WidgetClickable {
+    fn on_click<F>(&mut self, on_click: F) -> &mut Self
+        where F: Fn(&ClickEvent, &mut EventArgs) + 'static;
+}
+impl<B> WidgetClickable for B where B: AsMut<WidgetBuilder> {
+    fn on_click<F>(&mut self, on_click: F) -> &mut Self
         where F: Fn(&ClickEvent, &mut EventArgs) + 'static
     {
         self.add_handler(CallbackHandler::new(move |event, mut args| {

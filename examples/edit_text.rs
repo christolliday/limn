@@ -7,6 +7,7 @@ use text_layout::Align;
 
 use limn::event::Target;
 use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
+use limn::widget::WidgetBuilderCore;
 use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::drawable::text::TextDrawable;
@@ -37,7 +38,7 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    root_widget.layout.min_dimensions(Dimensions {
+    root_widget.layout().min_dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
     });
@@ -46,7 +47,7 @@ fn main() {
     let edit_text_id = {
         let edit_text = edit_text_box.children.get_mut(0).unwrap();
         edit_text.controller.add_handler(EditTextSettingsHandler);
-        edit_text.id
+        edit_text.id()
     };
     let mut h_align_button = ToggleButtonBuilder::new();
     h_align_button
@@ -61,7 +62,6 @@ fn main() {
                 },
             }
         });
-    let mut h_align_button = h_align_button.widget;
 
     let mut v_align_button = ToggleButtonBuilder::new();
     v_align_button
@@ -76,20 +76,19 @@ fn main() {
                 },
             }
         });
-    let mut v_align_button = v_align_button.widget;
 
-    h_align_button.layout.align_top(&root_widget.layout.vars).padding(20.0);
-    h_align_button.layout.align_left(&root_widget.layout.vars).padding(20.0);
-    v_align_button.layout.align_top(&root_widget.layout.vars).padding(20.0);
-    v_align_button.layout.align_right(&root_widget.layout.vars).padding(20.0);
+    h_align_button.layout().align_top(&root_widget.layout().vars).padding(20.0);
+    h_align_button.layout().align_left(&root_widget.layout().vars).padding(20.0);
+    v_align_button.layout().align_top(&root_widget.layout().vars).padding(20.0);
+    v_align_button.layout().align_right(&root_widget.layout().vars).padding(20.0);
 
-    edit_text_box.layout.below(&h_align_button.layout.vars).padding(20.0);
-    edit_text_box.layout.align_bottom(&root_widget.layout.vars).padding(20.0);
-    edit_text_box.layout.align_left(&root_widget.layout.vars).padding(20.0);
-    edit_text_box.layout.align_right(&root_widget.layout.vars).padding(20.0);
+    edit_text_box.layout().below(&h_align_button.layout().vars).padding(20.0);
+    edit_text_box.layout().align_bottom(&root_widget.layout().vars).padding(20.0);
+    edit_text_box.layout().align_left(&root_widget.layout().vars).padding(20.0);
+    edit_text_box.layout().align_right(&root_widget.layout().vars).padding(20.0);
 
-    root_widget.add_child(h_align_button);
-    root_widget.add_child(v_align_button);
+    root_widget.add_child(h_align_button.widget);
+    root_widget.add_child(v_align_button.widget);
     root_widget.add_child(edit_text_box);
 
     util::set_root_and_loop(window, ui, root_widget);

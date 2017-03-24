@@ -4,7 +4,7 @@ extern crate cassowary;
 
 mod util;
 
-use limn::widget::WidgetBuilder;
+use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::slider::SliderBuilder;
 use limn::util::Dimensions;
 
@@ -13,7 +13,7 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    root_widget.layout.dimensions(Dimensions {
+    root_widget.layout().dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
     });
@@ -23,8 +23,8 @@ fn main() {
         println!("val {}", val);
     });
     let mut slider = slider.widget;
-    slider.layout.align_top(&root_widget.layout.vars).padding(10.0);
-    slider.layout.center_horizontal(&root_widget.layout.vars);
+    slider.layout().align_top(&root_widget.layout().vars).padding(10.0);
+    slider.layout().center_horizontal(&root_widget.layout().vars);
 
     root_widget.add_child(slider);
 

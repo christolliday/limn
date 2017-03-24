@@ -1,4 +1,5 @@
 use widget::{WidgetBuilder, EventHandler, EventArgs, CallbackHandler};
+use widget::WidgetBuilderCore;
 use widget::property::PropChangeHandler;
 use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter};
 use drawable::rect::RectDrawable;
@@ -42,6 +43,11 @@ use widget::style::Value;
 use text_layout::Align;
 pub struct EditTextBuilder {
     pub widget: WidgetBuilder,
+}
+impl AsMut<WidgetBuilder> for EditTextBuilder {
+    fn as_mut(&mut self) -> &mut WidgetBuilder {
+        &mut self.widget
+    }
 }
 impl EditTextBuilder {
     pub fn new() -> Self {

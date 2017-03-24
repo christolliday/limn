@@ -18,6 +18,7 @@ use backend::window::Window;
 
 use widget::{Widget, WidgetContainer};
 use widget::WidgetBuilder;
+use widget::WidgetBuilderCore;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::{resources, WidgetId};
 use color::*;
@@ -56,8 +57,8 @@ impl WidgetGraph {
     }
     pub fn set_root(&mut self, mut root_widget: WidgetBuilder, solver: &mut LimnSolver) {
         root_widget.set_debug_name("root");
-        self.root_id = root_widget.id;
-        root_widget.layout.top_left(Point { x: 0.0, y: 0.0 }, None);
+        self.root_id = root_widget.id();
+        root_widget.layout().top_left(Point { x: 0.0, y: 0.0 }, None);
         self.add_widget(root_widget, None, solver);
         let ref mut root = self.get_root();
         solver.update_solver(|solver| {
@@ -155,7 +156,7 @@ impl WidgetGraph {
         if let Some(parent_id) = parent_id {
             if let Some(parent) = self.get_widget(parent_id) {
                 if parent.bound_children {
-                    widget.layout.bound_by(&parent.layout);
+                    widget.layout().bound_by(&parent.layout);
                 }
             }
         }
