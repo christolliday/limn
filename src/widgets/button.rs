@@ -148,7 +148,7 @@ impl PushButtonBuilder {
         button_text_widget
             .set_drawable_with_style(drawable, text_style)
             .add_handler(PropChangeHandler);
-        button_text_widget.layout().center(&self.widget.layout().vars);
+        button_text_widget.layout().center(self.layout());
 
         self.widget.add_child(button_text_widget);
         self

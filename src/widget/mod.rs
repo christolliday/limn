@@ -41,6 +41,7 @@ impl AsMut<WidgetBuilder> for WidgetBuilder {
         self
     }
 }
+
 pub trait WidgetBuilderCore {
     fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self;
     fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self;

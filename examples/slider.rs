@@ -23,8 +23,8 @@ fn main() {
         println!("val {}", val);
     });
     let mut slider = slider.widget;
-    slider.layout().align_top(&root_widget.layout().vars).padding(10.0);
-    slider.layout().center_horizontal(&root_widget.layout().vars);
+    slider.layout().align_top(&root_widget.layout()).padding(10.0);
+    slider.layout().center_horizontal(&root_widget.layout());
 
     root_widget.add_child(slider);
 

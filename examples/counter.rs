@@ -42,7 +42,7 @@ fn main() {
         .add_handler(CountHandler);
     text_widget.layout().width(80.0);
     text_widget.layout().height(text_dims.height);
-    text_widget.layout().center_vertical(&root_widget.layout().vars);
+    text_widget.layout().center_vertical(&root_widget.layout());
 
     let mut button_container = WidgetBuilder::new();
     let root_id = root_widget.id();
@@ -51,8 +51,8 @@ fn main() {
     button_widget.on_click(move |_, args| {
         args.queue.push(Target::Widget(root_id), CounterEvent);
     });
-    button_widget.layout().center(&button_container.layout().vars);
-    button_widget.layout().bound_by(&button_container.layout().vars).padding(50.0);
+    button_widget.layout().center(&button_container.layout());
+    button_widget.layout().bound_by(&button_container.layout()).padding(50.0);
     button_container.add_child(button_widget.widget);
     root_widget.add_child(text_widget);
     root_widget.add_child(button_container);
