@@ -32,10 +32,9 @@ const DEBUG_BOUNDS: bool = false;
 type Graph = StableGraph<WidgetContainer, ()>;
 
 pub struct WidgetGraph {
-    pub graph: Graph,
+    pub graph: GraphWrapper,
     pub root_id: WidgetId,
     queue: Queue,
-    widget_map: HashMap<WidgetId, NodeIndex>,
     redraw: u32,
     glyph_cache: GlyphCache,
 }
@@ -43,10 +42,9 @@ pub struct WidgetGraph {
 impl WidgetGraph {
     pub fn new(window: &mut Window, queue: Queue) -> Self {
         WidgetGraph {
-            graph: StableGraph::new(),
+            graph: GraphWrapper::new(),
             root_id: resources().widget_id(),
             queue: queue,
-            widget_map: HashMap::new(),
             redraw: 2,
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
         }
@@ -68,11 +66,11 @@ impl WidgetGraph {
     }
     pub fn get_root(&mut self) -> &mut Widget {
         let root_id = self.root_id;
-        self.get_widget(root_id).unwrap()
+        self.graph.get_widget(root_id).unwrap()
     }
     pub fn get_root_dims(&mut self) -> Dimensions {
         let root_index = self.root_index();
-        let ref mut root = &mut self.graph[root_index].widget;
+        let ref mut root = &mut self.graph.graph[root_index].widget;
         let mut dims = root.layout.get_dims();
         // use min size to prevent window size from being set to 0 (X crashes)
         dims.width = f64::max(100.0, dims.width);
@@ -80,22 +78,16 @@ impl WidgetGraph {
         dims
     }
     fn root_index(&self) -> NodeIndex {
-        self.widget_map[&self.root_id].clone()
+        self.graph.find_widget(self.root_id).unwrap()
     }
     pub fn window_resized(&mut self, window_dims: Dimensions, solver: &mut LimnSolver) {
         let root_index = self.root_index();
-        let ref mut root = self.graph[root_index].widget;
+        let ref mut root = self.graph.graph[root_index].widget;
         solver.update_solver(|solver| {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
             solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
         });
         self.redraw = 2;
-    }
-    fn parent(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
-        self.graph.neighbors_directed(node_index, Direction::Incoming).next()
-    }
-    fn children(&mut self, node_index: NodeIndex) -> Neighbors<()> {
-        self.graph.neighbors_directed(node_index, Direction::Outgoing)
     }
 
     pub fn redraw(&mut self) {
@@ -115,9 +107,9 @@ impl WidgetGraph {
         let crop_to = Rectangle::new_from_pos_dim(Point::zero(), Dimensions::max());
         self.draw_node(context, graphics, index, crop_to);
         if DEBUG_BOUNDS {
-            let mut dfs = Dfs::new(&self.graph, self.root_index());
-            while let Some(node_index) = dfs.next(&self.graph) {
-                let ref widget = self.graph[node_index].widget;
+            let mut dfs = Dfs::new(&self.graph.graph, self.root_index());
+            while let Some(node_index) = dfs.next(&self.graph.graph) {
+                let ref widget = self.graph.graph[node_index].widget;
                 let color = widget.debug_color.unwrap_or(GREEN);
                 let bounds = widget.layout.bounds();
                 util::draw_rect_outline(bounds, color, context, graphics);
@@ -131,13 +123,13 @@ impl WidgetGraph {
                      crop_to: Rectangle) {
 
         let crop_to = {
-            let ref mut widget = self.graph[node_index].widget;
+            let ref mut widget = self.graph.graph[node_index].widget;
             widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
             util::crop_rect(crop_to, widget.layout.bounds())
         };
 
         if !crop_to.no_area() {
-            let children: Vec<NodeIndex> = self.children(node_index).collect();
+            let children: Vec<NodeIndex> = self.graph.children(node_index).collect();
             // need to iterate backwards to draw in correct order, because
             // petgraph neighbours iterate in reverse order of insertion, not sure why
             for child_index in children.iter().rev() {
@@ -147,6 +139,7 @@ impl WidgetGraph {
         }
     }
 
+    
     pub fn add_widget(&mut self,
                       mut widget: WidgetBuilder,
                       parent_id: Option<WidgetId>,
@@ -154,7 +147,7 @@ impl WidgetGraph {
                       -> NodeIndex {
 
         if let Some(parent_id) = parent_id {
-            if let Some(parent) = self.get_widget(parent_id) {
+            if let Some(parent) = self.graph.get_widget(parent_id) {
                 if parent.bound_children {
                     widget.layout().bound_by(&parent.layout);
                 }
@@ -165,12 +158,8 @@ impl WidgetGraph {
 
         let id = widget.widget.id;
         let layout = widget.widget.layout.clone();
-        let widget_index = self.graph.add_node(widget);
-        self.widget_map.insert(id, widget_index);
+        let widget_index = self.graph.add_widget(widget, parent_id);
         if let Some(parent_id) = parent_id {
-            if let Some(parent_index) = self.find_widget(parent_id) {
-                self.graph.add_edge(parent_index, widget_index, ());
-            }
             self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
         }
         self.redraw();
@@ -181,24 +170,10 @@ impl WidgetGraph {
     }
 
     pub fn remove_widget(&mut self, widget_id: WidgetId, solver: &mut LimnSolver) {
-        if let Some(node_index) = self.find_widget(widget_id) {
-            if let Some(widget) = self.graph.remove_node(node_index) {
-                self.redraw();
-                solver.remove_widget(&widget.widget.layout);
-            }
-            self.widget_map.remove(&widget_id);
+        if let Some(widget) = self.graph.remove_widget(widget_id) {
+            self.redraw();
+            solver.remove_widget(&widget.widget.layout);
         }
-    }
-    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<&mut Widget> {
-        if let Some(node_index) = self.widget_map.get(&widget_id) {
-            if let Some(widget_container) = self.graph.node_weight_mut(node_index.clone()) {
-                return Some(&mut widget_container.widget)
-            }
-        }
-        None
-    }
-    pub fn find_widget(&mut self, widget_id: WidgetId) -> Option<NodeIndex> {
-        self.widget_map.get(&widget_id).map(|index| *index)
     }
 
     fn trigger_widget_event(&mut self,
@@ -208,7 +183,7 @@ impl WidgetGraph {
                                 queue: &mut Queue,
                                 solver: &mut LimnSolver)
                                 -> bool {
-        let ref mut widget_container = self.graph[node_index];
+        let ref mut widget_container = self.graph.graph[node_index];
         let handled = widget_container.trigger_event(type_id,
                                                      data,
                                                      queue,
@@ -221,12 +196,12 @@ impl WidgetGraph {
     }
 
     pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetIter {
-        CursorWidgetIter::new(point, &self.graph, self.root_index())
+        CursorWidgetIter::new(point, &self.graph.graph, self.root_index())
     }
 
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetId> {
         // first widget found is the deepest, later will need to have z order as ordering
-        CursorWidgetIter::new(point, &self.graph, self.root_index()).next(&mut self.graph)
+        CursorWidgetIter::new(point, &self.graph.graph, self.root_index()).next(&mut self.graph.graph)
     }
 
     pub fn handle_event(&mut self,
@@ -237,31 +212,31 @@ impl WidgetGraph {
                         solver: &mut LimnSolver) {
         match address {
             Target::Widget(id) => {
-                if let Some(node_index) = self.find_widget(id) {
+                if let Some(node_index) = self.graph.find_widget(id) {
                     self.trigger_widget_event(node_index, type_id, data, queue, solver);
                 }
             }
             Target::Child(id) => {
-                if let Some(node_index) = self.find_widget(id) {
-                    if let Some(child_index) = self.children(node_index).next() {
+                if let Some(node_index) = self.graph.find_widget(id) {
+                    if let Some(child_index) = self.graph.children(node_index).next() {
                         self.trigger_widget_event(child_index, type_id, data, queue, solver);
                     }
                 }
             }
             Target::SubTree(id) => {
-                if let Some(node_index) = self.find_widget(id) {
-                    let mut dfs = Dfs::new(&self.graph, node_index);
-                    while let Some(node_index) = dfs.next(&self.graph) {
+                if let Some(node_index) = self.graph.find_widget(id) {
+                    let mut dfs = Dfs::new(&self.graph.graph, node_index);
+                    while let Some(node_index) = dfs.next(&self.graph.graph) {
                         self.trigger_widget_event(node_index, type_id, data, queue, solver);
                     }
                 }
             }
             Target::BubbleUp(id) => {
                 // bubble up event from widget, until either it reaches the root, or some widget handles it
-                let mut maybe_node_index = self.find_widget(id);
+                let mut maybe_node_index = self.graph.find_widget(id);
                 while let Some(node_index) = maybe_node_index {
                     let handled = self.trigger_widget_event(node_index, type_id, data, queue, solver);
-                    maybe_node_index = if handled { None } else { self.parent(node_index) };
+                    maybe_node_index = if handled { None } else { self.graph.parent(node_index) };
                 }
             }
             _ => ()
@@ -293,3 +268,62 @@ impl CursorWidgetIter {
         None
     }
 }
+
+pub struct GraphWrapper {
+    pub graph: Graph,
+    widget_map: HashMap<WidgetId, NodeIndex>,
+}
+impl GraphWrapper {
+    fn new() -> Self {
+        GraphWrapper {
+            graph: StableGraph::new(),
+            widget_map: HashMap::new(),
+        }
+    }
+
+    pub fn find_widget(&self, widget_id: WidgetId) -> Option<NodeIndex> {
+        self.widget_map.get(&widget_id).map(|index| *index)
+    }
+    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<&mut Widget> {
+        if let Some(node_index) = self.widget_map.get(&widget_id) {
+            if let Some(widget_container) = self.graph.node_weight_mut(node_index.clone()) {
+                return Some(&mut widget_container.widget)
+            }
+        }
+        None
+    }
+
+    pub fn add_widget(&mut self,
+                      widget: WidgetContainer,
+                      parent_id: Option<WidgetId>)
+                      -> NodeIndex
+    {
+        let id = widget.widget.id;
+        let widget_index = self.graph.add_node(widget);
+        self.widget_map.insert(id, widget_index);
+        if let Some(parent_id) = parent_id {
+            if let Some(parent_index) = self.find_widget(parent_id) {
+                self.graph.add_edge(parent_index, widget_index, ());
+            }
+        }
+        widget_index
+    }
+
+    pub fn remove_widget(&mut self, widget_id: WidgetId) -> Option<WidgetContainer> {
+        if let Some(node_index) = self.find_widget(widget_id) {
+            self.widget_map.remove(&widget_id);
+            if let Some(widget) = self.graph.remove_node(node_index) {
+                return Some(widget);
+            }
+        }
+        None
+    }
+
+    fn parent(&mut self, node_index: NodeIndex) -> Option<NodeIndex> {
+        self.graph.neighbors_directed(node_index, Direction::Incoming).next()
+    }
+    fn children(&mut self, node_index: NodeIndex) -> Neighbors<()> {
+        self.graph.neighbors_directed(node_index, Direction::Outgoing)
+    }
+}
+
