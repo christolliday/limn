@@ -51,7 +51,7 @@ impl App {
     }
 
     pub fn render(&mut self, window: &mut Window) {
-        self.ui.graph.draw_if_needed(window);
+        self.ui.draw_if_needed(window);
     }
 
     pub fn handle_events(&mut self) {
@@ -71,7 +71,7 @@ impl App {
                     }
                 }
                 _ => {
-                    self.ui.graph.handle_event(event_address, type_id, data, &mut self.queue, &mut self.ui.solver);
+                    self.ui.handle_event(event_address, type_id, data);
                 }
             }
         }

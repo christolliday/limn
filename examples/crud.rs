@@ -16,9 +16,7 @@ use limn::widgets::linear_layout::LinearLayoutEvent;
 use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::WidgetId;
-use limn::ui;
-use limn::ui::graph::WidgetGraph;
-use limn::ui::solver::LimnSolver;
+use limn::ui::{self, Ui};
 use limn::util::Dimensions;
 use limn::color::*;
 
@@ -75,7 +73,7 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
         match event.clone() {
             PeopleEvent::Add => {
                 let person = self.person.clone();
-                add_person(person, &mut args.ui.graph, self.list_widget_id, &mut args.ui.solver);
+                add_person(person, args.ui, self.list_widget_id);
 
                 self.person = Person::new("","");
                 self.selected_item_id = None;
@@ -91,7 +89,7 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
                 if let Some(selected_item_id) = self.selected_item_id {
                     let event = LinearLayoutEvent::RemoveWidget(selected_item_id);
                     args.queue.push(Target::Widget(self.list_widget_id), event);
-                    args.ui.graph.remove_widget(selected_item_id, &mut args.ui.solver);
+                    args.ui.remove_widget(selected_item_id);
                 }
             }
             PeopleEvent::PersonSelected(person, widget_id) => {
@@ -142,7 +140,7 @@ impl EventHandler<PersonEvent> for PersonEventHandler {
     }
 }
 use limn::widgets::edit_text::TextChangeHandler;
-pub fn add_person(person: Person, graph: &mut WidgetGraph, list_widget_id: WidgetId, solver: &mut LimnSolver) {
+pub fn add_person(person: Person, ui: &mut Ui, list_widget_id: WidgetId) {
     let list_item_widget = {
         let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
         let text_drawable = TextDrawable::new(&person.name());
@@ -165,7 +163,7 @@ pub fn add_person(person: Person, graph: &mut WidgetGraph, list_widget_id: Widge
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
-    graph.add_widget(list_item_widget, Some(list_widget_id), solver);
+    ui.add_widget(list_item_widget, Some(list_widget_id));
 }
 
 fn main() {

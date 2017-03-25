@@ -4,7 +4,7 @@ use cassowary::strength::*;
 use event::Target;
 use widget::{WidgetBuilder, EventArgs, EventHandler};
 use widget::WidgetBuilderCore;
-use ui::graph::ChildAttachedEvent;
+use ui::ChildAttachedEvent;
 use util::{Point, Rectangle};
 
 use input::mouse::WidgetMouseWheel;

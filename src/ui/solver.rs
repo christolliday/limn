@@ -134,13 +134,13 @@ impl ui::EventHandler<LayoutChanged> for LayoutChangeHandler {
     fn handle(&mut self, event: &LayoutChanged, args: ui::EventArgs) { 
         let ref changes = event.0;
         for &(widget_id, var, value) in changes {
-            if let Some(widget) = args.ui.graph.graph.get_widget(widget_id) {
+            if let Some(widget) = args.ui.graph.get_widget(widget_id) {
                 widget.layout.update_val(var, value);
             }
         }
         // redraw everything when layout changes, for now
         args.queue.push(Target::Ui, RedrawEvent);
-        args.ui.graph.redraw();
+        args.ui.redraw();
     }
 }
 

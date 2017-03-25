@@ -83,7 +83,7 @@ impl ui::EventHandler<MouseInputEvent> for MouseController {
         if let &MouseInputEvent::MouseMoved(mouse) = event {
             self.mouse = mouse;
 
-            let widget_under_cursor = ui.graph.widget_under_cursor(mouse);
+            let widget_under_cursor = ui.widget_under_cursor(mouse);
             if widget_under_cursor != self.widget_under_mouse {
                 if let Some(old_widget) = self.widget_under_mouse {
                     queue.push(Target::BubbleUp(old_widget), Hover::Out);

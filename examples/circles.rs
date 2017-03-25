@@ -14,8 +14,7 @@ use limn::widget::property::{Property, PropChange};
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::event::Target;
-use limn::ui::{self, WidgetGraph};
-use limn::ui::LimnSolver;
+use limn::ui::{self, Ui};
 use limn::util::{Dimensions, Point};
 use limn::resources::WidgetId;
 use limn::color::*;
@@ -57,7 +56,7 @@ fn main() {
         (undo_id, redo_id)
     }
 
-    fn create_circle(graph: &mut WidgetGraph, solver: &mut LimnSolver, center: &Point) -> WidgetId {
+    fn create_circle(ui: &mut Ui, center: &Point) -> WidgetId {
         let border = graphics::ellipse::Border {
             color: BLACK,
             radius: 2.0,
@@ -75,8 +74,8 @@ fn main() {
 
         widget.layout().top_left(top_left).strength(STRONG);
         let id = widget.id();
-        let root_id = graph.graph.root_id;
-        graph.add_widget(widget, Some(root_id), solver);
+        let root_id = ui.graph.root_id;
+        ui.add_widget(widget, Some(root_id));
         id
     }
 
@@ -98,11 +97,9 @@ fn main() {
     }
     impl ui::EventHandler<CircleEvent> for CircleEventHandler {
         fn handle(&mut self, event: &CircleEvent, args: ui::EventArgs) {
-            let graph = &mut args.ui.graph;
-            let solver = &mut args.ui.solver;
             match *event {
                 CircleEvent::Add(point) => {
-                    self.circles.push((point, create_circle(graph, solver, &point)));
+                    self.circles.push((point, create_circle(args.ui, &point)));
                     self.undo.clear();
 
                     args.queue.push(Target::SubTree(self.undo_id), PropChange::Remove(Property::Inactive));
@@ -110,8 +107,8 @@ fn main() {
                 }
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
-                        let (point, node_index) = self.circles.pop().unwrap();
-                        graph.remove_widget(node_index, solver);
+                        let (point, widget_id) = self.circles.pop().unwrap();
+                        args.ui.remove_widget(widget_id);
                         self.undo.push(point);
                         args.queue.push(Target::SubTree(self.redo_id), PropChange::Remove(Property::Inactive));
                         if self.circles.len() == 0 {
@@ -122,7 +119,7 @@ fn main() {
                 CircleEvent::Redo => {
                     if self.undo.len() > 0 {
                         let point = self.undo.pop().unwrap();
-                        self.circles.push((point, create_circle(graph, solver, &point)));
+                        self.circles.push((point, create_circle(args.ui, &point)));
                         if self.undo.len() == 0 {
                             args.queue.push(Target::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
                         }

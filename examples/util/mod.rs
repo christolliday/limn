@@ -39,10 +39,10 @@ pub fn set_root_and_loop(mut window: Window,
                          mut app: App,
                          root_widget: WidgetBuilder) {
 
-    app.ui.graph.set_root(root_widget, &mut app.ui.solver);
+    app.ui.set_root(root_widget);
     // handle layout change events, needed to measure widgets before resizing window
     app.handle_events();
-    app.ui.graph.resize_window_to_fit(&window);
+    app.ui.resize_window_to_fit(&window);
 
     app.add_handler(EscKeyCloseHandler);
     let mut events = WindowEvents::new();
@@ -53,10 +53,10 @@ pub fn set_root_and_loop(mut window: Window,
                 match event {
                     Event::Resized(width, height) => {
                         window.window_resized();
-                        app.ui.graph.window_resized(Dimensions {
+                        app.ui.window_resized(Dimensions {
                             width: width as f64,
                             height: height as f64,
-                        }, &mut app.ui.solver);
+                        });
                         events.update();
                     }
                     Event::Awakened => {
