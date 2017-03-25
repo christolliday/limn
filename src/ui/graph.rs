@@ -13,6 +13,20 @@ use resources::{resources, WidgetId};
 
 type Graph = StableGraph<WidgetContainer, ()>;
 
+/**
+Most of the functionality of WidgetGraph is to wrap NodeIndex so only WidgetId is exposed to the Ui.
+WidgetId is used outside of this class so that new WidgetIds can be generated
+without holding a mutable reference to the graph. This greatly simplifies the ergonomics
+of creating widgets via WidgetBuilder.
+Conrod's solution (to a slightly different problem) is to pre-generate the Widget Ids, before modifying
+the widgets, but that also has cost in terms of ergonomics, especially when you want anonymous Widget Ids.
+
+A better long term solution could be to extend petgraphs stable_graph to have a mutable Index generator that
+the graph references, that can potentially outlive the graph and can be assumed to not be tied to a single
+graph, but that generates NodeIndexes directly, so that WidgetId can be an alias for NodeIndex.
+That generator could be owned by and be accessed via the global Mutex in Resources, while the graph itself
+is owned by the Ui.
+*/
 pub struct WidgetGraph {
     pub graph: Graph,
     pub root_id: WidgetId,
