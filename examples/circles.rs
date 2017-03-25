@@ -75,7 +75,7 @@ fn main() {
 
         widget.layout().top_left(top_left).strength(STRONG);
         let id = widget.id();
-        let root_id = graph.root_id;
+        let root_id = graph.graph.root_id;
         graph.add_widget(widget, Some(root_id), solver);
         id
     }
