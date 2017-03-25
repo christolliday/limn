@@ -5,7 +5,8 @@ use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{Dfs, DfsPostOrder};
 use petgraph::Direction;
-use petgraph::stable_graph::Neighbors;
+use petgraph::visit::Visitable;
+use petgraph::stable_graph::WalkNeighbors;
 
 use cassowary::strength::*;
 
@@ -19,6 +20,7 @@ use backend::window::Window;
 use widget::{Widget, WidgetContainer};
 use widget::WidgetBuilder;
 use widget::WidgetBuilderCore;
+use widget::layout::LayoutVars;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::{resources, WidgetId};
 use color::*;
@@ -99,15 +101,17 @@ impl WidgetGraph {
         let crop_to = Rectangle::new_from_pos_dim(Point::zero(), Dimensions::max());
         let id = self.graph.root_id;
         self.draw_node(context, graphics, id, crop_to);
-        /*if DEBUG_BOUNDS {
-            let mut dfs = Dfs::new(&self.graph.graph, self.root_index());
-            while let Some(node_index) = dfs.next(&self.graph.graph) {
-                let ref widget = self.graph.graph[node_index].widget;
+        if DEBUG_BOUNDS {
+            let root_id = self.graph.root_id;
+            let mut dfs = self.graph.dfs(root_id);
+            //Dfs::new(&self.graph.graph, self.root_index());
+            while let Some(widget_id) = dfs.next(&self.graph.graph) {
+                let widget = self.graph.get_widget(widget_id).unwrap();
                 let color = widget.debug_color.unwrap_or(GREEN);
                 let bounds = widget.layout.bounds();
                 util::draw_rect_outline(bounds, color, context, graphics);
             }
-        }*/
+        }
     }
     pub fn draw_node(&mut self,
                      context: Context,
@@ -132,7 +136,6 @@ impl WidgetGraph {
         }
     }
 
-    
     pub fn add_widget(&mut self,
                       mut widget: WidgetBuilder,
                       parent_id: Option<WidgetId>,
@@ -172,7 +175,6 @@ impl WidgetGraph {
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetId> {
         // first widget found is the deepest, later will need to have z order as ordering
         self.graph.widgets_under_cursor(point).next(&mut self.graph.graph)
-        //CursorWidgetIter::new(point, &self.graph, self.root_index()).next(&mut self.graph)
     }
 
     fn handle_widget_event(&mut self,
@@ -196,24 +198,6 @@ impl WidgetGraph {
             false
         }
     }
-    fn trigger_widget_event(&mut self,
-                                node_index: NodeIndex,
-                                type_id: TypeId,
-                                data: &Box<Any + Send>,
-                                queue: &mut Queue,
-                                solver: &mut LimnSolver)
-                                -> bool {
-        let ref mut widget_container = self.graph.graph[node_index];
-        let handled = widget_container.trigger_event(type_id,
-                                                     data,
-                                                     queue,
-                                                     solver);
-        if widget_container.widget.has_updated {
-            self.redraw = 2;
-            widget_container.widget.has_updated = false;
-        }
-        handled
-    }
 
     pub fn handle_event(&mut self,
                         address: Target,
@@ -231,11 +215,9 @@ impl WidgetGraph {
                 }
             }
             Target::SubTree(id) => {
-                if let Some(node_index) = self.graph.find_widget(id) {
-                    let mut dfs = Dfs::new(&self.graph.graph, node_index);
-                    while let Some(node_index) = dfs.next(&self.graph.graph) {
-                        self.trigger_widget_event(node_index, type_id, data, queue, solver);
-                    }
+                let mut dfs = self.graph.dfs(id);
+                while let Some(widget_id) = dfs.next(&self.graph.graph) {
+                    self.handle_widget_event(widget_id, type_id, data, queue, solver);
                 }
             }
             Target::BubbleUp(id) => {
@@ -250,7 +232,6 @@ impl WidgetGraph {
         }
     }
 }
-use widget::layout::LayoutVars;
 pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
 
 pub struct GraphWrapper {
@@ -339,9 +320,12 @@ impl GraphWrapper {
     pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetIter {
         CursorWidgetIter::new(point, &self.graph, self.root_index())
     }
+    pub fn dfs(&mut self, widget_id: WidgetId) -> DfsIter {
+        let node_index = self.widget_map.get(&widget_id).unwrap();
+        DfsIter::new(&self.graph, node_index.clone())
+    }
 }
 
-use petgraph::stable_graph::WalkNeighbors;
 struct NeighborsIter {
     neighbors: WalkNeighbors<u32>,
 }
@@ -366,7 +350,7 @@ impl NeighborsIter {
         ids
     }
 }
-use petgraph::visit::Visitable;
+
 pub struct CursorWidgetIter {
     point: Point,
     dfs: DfsPostOrder<NodeIndex, <Graph as Visitable>::Map>,
@@ -386,5 +370,22 @@ impl CursorWidgetIter {
             }
         }
         None
+    }
+}
+pub struct DfsIter {
+    dfs: Dfs<NodeIndex, <Graph as Visitable>::Map>,
+}
+impl DfsIter {
+    pub fn new(graph: &Graph, root_index: NodeIndex) -> Self {
+        DfsIter {
+            dfs: Dfs::new(graph, root_index),
+        }
+    }
+    pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
+        if let Some(node_index) = self.dfs.next(graph) {
+            Some(graph[node_index].widget.id)
+        } else {
+            None
+        }
     }
 }
