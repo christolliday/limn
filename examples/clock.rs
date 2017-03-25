@@ -6,34 +6,22 @@ extern crate chrono;
 
 mod util;
 
-use std::thread;
-use std::time;
-use std::f64;
+use std::{thread, time, f64};
 
-use chrono::*;
+use chrono::{Local, Timelike};
 use graphics::types::Color;
 use graphics::Context;
 
 use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
 
-use limn::widget::WidgetBuilder;
-use limn::widget::WidgetBuilderCore;
+use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::drawable::ellipse::EllipseDrawable;
 use limn::event::{Target, Queue};
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
 use limn::color::*;
 
-fn hour_angle() -> f64 {
-    2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0
-}
-fn minute_angle() -> f64 {
-    2.0 * f64::consts::PI * Local::now().minute() as f64 / 60.0
-}
-fn second_angle() -> f64 {
-    2.0 * f64::consts::PI * Local::now().second() as f64 / 60.0
-}
 struct ClockTick;
 
 pub struct HandDrawable {
@@ -95,30 +83,27 @@ impl ClockBuilder {
             height: 200.0,
         });
 
-        
-
-        fn update_hour_hand(state: &mut HandDrawable) {
-            state.angle = hour_angle();
-        };
-        fn update_minute_hand(state: &mut HandDrawable) {
-            state.angle = minute_angle();
-        };
-        fn update_second_hand(state: &mut HandDrawable) {
-            state.angle = second_angle();
-        };
-
+        let hour_angle = || 2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0;
+        let minute_angle = || 2.0 * f64::consts::PI * Local::now().minute() as f64 / 60.0;
+        let second_angle = || 2.0 * f64::consts::PI * Local::now().second() as f64 / 60.0;
         let mut hour_widget = WidgetBuilder::new();
         hour_widget
             .set_drawable(HandDrawable::new(BLACK, 4.0, 60.0, hour_angle()))
-            .add_handler(DrawableEventHandler::new(ClockTick, update_hour_hand));
+            .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
+                state.angle = hour_angle()
+            }));
         let mut minute_widget = WidgetBuilder::new();
         minute_widget
             .set_drawable(HandDrawable::new(BLACK, 3.0, 90.0, minute_angle()))
-            .add_handler(DrawableEventHandler::new(ClockTick, update_minute_hand));
+            .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
+                state.angle = minute_angle()
+            }));
         let mut second_widget = WidgetBuilder::new();
         second_widget
             .set_drawable(HandDrawable::new(RED, 2.0, 80.0, second_angle()))
-            .add_handler(DrawableEventHandler::new(ClockTick, update_second_hand));
+            .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
+                state.angle = second_angle()
+            }));
 
         widget.add_child(hour_widget);
         widget.add_child(minute_widget);
