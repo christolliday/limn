@@ -35,42 +35,35 @@ fn main() {
     let style = vec![RectStyleField::BackgroundColor(Value::Single(RED))];
     let mut rect_tl_widget = WidgetBuilder::new();
     rect_tl_widget.set_drawable_with_style(RectDrawable::new(), style);
-    rect_tl_widget.layout().dimensions(Dimensions {
-        width: 200.0,
-        height: 200.0,
-    });
     rect_tl_widget.layout().align_top(&rect_container_widget.layout());
     rect_tl_widget.layout().align_left(&rect_container_widget.layout());
 
     let style = vec![RectStyleField::BackgroundColor(Value::Single(GREEN))];
     let mut rect_tr_widget = WidgetBuilder::new();
     rect_tr_widget.set_drawable_with_style(RectDrawable::new(), style);
-    rect_tr_widget.layout().dimensions(Dimensions {
-        width: 200.0,
-        height: 200.0,
-    });
+    rect_tr_widget.layout().to_right_of(&rect_tl_widget.layout());
     rect_tr_widget.layout().align_top(&rect_container_widget.layout());
     rect_tr_widget.layout().align_right(&rect_container_widget.layout());
 
     let style = vec![RectStyleField::BackgroundColor(Value::Single(BLUE))];
     let mut rect_bl_widget = WidgetBuilder::new();
     rect_bl_widget.set_drawable_with_style(RectDrawable::new(), style);
-    rect_bl_widget.layout().dimensions(Dimensions {
-        width: 200.0,
-        height: 200.0,
-    });
+    rect_bl_widget.layout().below(&rect_tl_widget.layout());
     rect_bl_widget.layout().align_bottom(&rect_container_widget.layout());
     rect_bl_widget.layout().align_left(&rect_container_widget.layout());
 
     let style = vec![RectStyleField::BackgroundColor(Value::Single(FUSCHIA))];
     let mut rect_br_widget = WidgetBuilder::new();
     rect_br_widget.set_drawable_with_style(RectDrawable::new(), style);
-    rect_br_widget.layout().dimensions(Dimensions {
-        width: 200.0,
-        height: 200.0,
-    });
+    rect_br_widget.layout().below(&rect_tr_widget.layout());
+    rect_br_widget.layout().to_right_of(&rect_bl_widget.layout());
     rect_br_widget.layout().align_bottom(&rect_container_widget.layout());
     rect_br_widget.layout().align_right(&rect_container_widget.layout());
+
+    rect_tl_widget.layout().match_width(&rect_tr_widget.layout());
+    rect_tl_widget.layout().match_height(&rect_bl_widget.layout());
+    rect_br_widget.layout().match_height(&rect_tr_widget.layout());
+    rect_br_widget.layout().match_width(&rect_bl_widget.layout());
 
     rect_container_widget.add_child(rect_tl_widget);
     rect_container_widget.add_child(rect_tr_widget);
