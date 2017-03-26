@@ -37,6 +37,9 @@ impl Person {
     fn name(&self) -> String {
         format!("{}, {}", self.last_name, self.first_name)
     }
+    fn is_valid(&self) -> bool {
+        self.first_name.len() > 0 && self.last_name.len() > 0
+    }
 }
 
 #[derive(Clone)]
@@ -53,15 +56,27 @@ struct PeopleHandler {
     list_widget_id: WidgetId,
     first_name_box_id: WidgetId,
     last_name_box_id: WidgetId,
+    create_button_id: WidgetId,
+    update_button_id: WidgetId,
+    delete_button_id: WidgetId,
     selected_item_id: Option<WidgetId>,
     person: Person,
 }
 impl PeopleHandler {
-    fn new(list_widget_id: WidgetId, first_name_box_id: WidgetId, last_name_box_id: WidgetId) -> Self {
+    fn new(list_widget_id: WidgetId,
+           first_name_box_id: WidgetId,
+           last_name_box_id: WidgetId,
+           create_button_id: WidgetId,
+           update_button_id: WidgetId,
+           delete_button_id: WidgetId
+    ) -> Self {
         PeopleHandler {
             list_widget_id: list_widget_id,
             first_name_box_id: first_name_box_id,
             last_name_box_id: last_name_box_id,
+            create_button_id: create_button_id,
+            update_button_id: update_button_id,
+            delete_button_id: delete_button_id,
             selected_item_id: None,
             person: Person::new("", ""),
         }
@@ -70,6 +85,8 @@ impl PeopleHandler {
 use limn::widgets::edit_text::TextUpdated;
 impl ui::EventHandler<PeopleEvent> for PeopleHandler {
     fn handle(&mut self, event: &PeopleEvent, args: ui::EventArgs) {
+
+        let was_valid = self.person.is_valid();
         match event.clone() {
             PeopleEvent::Add => {
                 let person = self.person.clone();
@@ -103,6 +120,14 @@ impl ui::EventHandler<PeopleEvent> for PeopleHandler {
             },
             PeopleEvent::ChangeLastName(name) => {
                 self.person.last_name = name;
+            }
+        }
+        let is_valid = self.person.is_valid();
+        if was_valid != is_valid {
+            if is_valid {
+                args.queue.push(Target::SubTree(self.create_button_id), PropChange::Remove(Property::Inactive));
+            } else {
+                args.queue.push(Target::SubTree(self.create_button_id), PropChange::Add(Property::Inactive));
             }
         }
     }
@@ -227,13 +252,16 @@ fn main() {
 
     let mut create_button = PushButtonBuilder::new();
     create_button.set_text("Create");
+    create_button.set_inactive();
     let mut update_button = PushButtonBuilder::new();
     update_button.set_text("Update");
+    update_button.set_inactive();
     update_button.on_click(|_, args| {
         args.queue.push(Target::Ui, PeopleEvent::Update);
     });
     let mut delete_button = PushButtonBuilder::new();
     delete_button.set_text("Delete");
+    delete_button.set_inactive();
     delete_button.on_click(|_, args| {
         args.queue.push(Target::Ui, PeopleEvent::Delete);
     });
@@ -255,6 +283,9 @@ fn main() {
     create_button.on_click(move |_, args| {
         args.queue.push(Target::Ui, PeopleEvent::Add);
     });
+    let create_button_id = create_button.id();
+    let update_button_id = update_button.id();
+    let delete_button_id = delete_button.id();
     button_container.add_child(create_button.widget);
     button_container.add_child(update_button.widget);
     button_container.add_child(delete_button.widget);
@@ -265,7 +296,7 @@ fn main() {
     container.add_child(scroll_container);
     root_widget.add_child(container);
 
-    app.add_handler(PeopleHandler::new(list_widget_id, first_name_box_id, last_name_box_id));
+    app.add_handler(PeopleHandler::new(list_widget_id, first_name_box_id, last_name_box_id, create_button_id, update_button_id, delete_button_id));
 
     util::set_root_and_loop(window, app, root_widget);
 }
