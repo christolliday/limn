@@ -10,6 +10,7 @@ extern crate glutin;
 #[macro_use]
 extern crate lazy_static;
 extern crate linked_hash_map;
+extern crate stable_bst;
 #[macro_use]
 extern crate maplit;
 #[macro_use]

@@ -152,6 +152,7 @@ impl Ui {
         let id = widget.widget.id;
         let layout = widget.widget.layout.clone();
         self.graph.add_widget(widget, parent_id);
+        self.queue.push(Target::Widget(id), WidgetAttachedEvent);
         if let Some(parent_id) = parent_id {
             self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
         }
@@ -162,6 +163,7 @@ impl Ui {
     }
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {
+        self.queue.push(Target::Widget(widget_id), WidgetDetachedEvent);
         if let Some(widget) = self.graph.remove_widget(widget_id) {
             self.redraw();
             self.solver.remove_widget(&widget.widget.layout);
@@ -224,6 +226,8 @@ impl Ui {
         }
     }
 }
+pub struct WidgetAttachedEvent;
+pub struct WidgetDetachedEvent;
 pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
 
 pub struct EventArgs<'a> {

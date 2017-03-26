@@ -1,7 +1,8 @@
 use widget::{WidgetBuilder, EventHandler, EventArgs, CallbackHandler};
 use widget::WidgetBuilderCore;
 use widget::property::PropChangeHandler;
-use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter};
+use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
+use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::RectDrawable;
 use drawable::text::TextDrawable;
 use event::Target;
@@ -55,6 +56,12 @@ impl EditTextBuilder {
         let mut widget = WidgetBuilder::new();
         widget
             .set_drawable(RectDrawable::new())
+            .add_handler(CallbackHandler::new(|_: &WidgetAttachedEvent, args| {
+                args.queue.push(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget.id));
+            }))
+            .add_handler(CallbackHandler::new(|_: &WidgetDetachedEvent, args| {
+                args.queue.push(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget.id));
+            }))
             .add_handler(WidgetFocusHandler)
             .add_handler(PropChangeHandler);
 
