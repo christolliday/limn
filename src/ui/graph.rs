@@ -7,7 +7,9 @@ use petgraph::Direction;
 use petgraph::visit::Visitable;
 use petgraph::stable_graph::WalkNeighbors;
 
-use widget::{Widget, WidgetContainer};
+use widget::{Widget, WidgetContainer, WidgetController};
+use widget::property::PropSet;
+use layout::LayoutVars;
 use util::Point;
 use resources::{resources, WidgetId};
 
@@ -31,13 +33,21 @@ pub struct WidgetGraph {
     pub graph: Graph,
     pub root_id: WidgetId,
     widget_map: HashMap<WidgetId, NodeIndex>,
+    null_index: NodeIndex, // node with no edges, used to create graph iterators/walkers that return nothing
 }
 impl WidgetGraph {
     pub fn new() -> Self {
+        let mut graph = Graph::new();
+        let dummy_container = WidgetContainer {
+            widget: Widget::new(WidgetId(0), None, PropSet::new(), LayoutVars::new(), false, None, None),
+            controller: WidgetController::new(),
+        };
+        let null_index = graph.add_node(dummy_container);
         WidgetGraph {
-            graph: StableGraph::new(),
+            graph: graph,
             widget_map: HashMap::new(),
             root_id: resources().widget_id(),
+            null_index: null_index,
         }
     }
 
@@ -95,27 +105,19 @@ impl WidgetGraph {
     }
 
     pub fn parent(&mut self, widget_id: WidgetId) -> Option<WidgetId> {
-        let node_index = if let Some(node_index) = self.widget_map.get(&widget_id) {
-            node_index.clone()
-        } else {
-            NodeIndex::end()
-        };
+        let node_index = self.widget_map.get(&widget_id).unwrap_or(&self.null_index).clone();
         NeighborsWalker::new(&self.graph, node_index, Direction::Incoming).next(&self.graph)
     }
     pub fn children(&mut self, widget_id: WidgetId) -> NeighborsWalker {
-        let node_index = if let Some(node_index) = self.widget_map.get(&widget_id) {
-            node_index.clone()
-        } else {
-            NodeIndex::end()
-        };
+        let node_index = self.widget_map.get(&widget_id).unwrap_or(&self.null_index).clone();
         NeighborsWalker::new(&self.graph, node_index, Direction::Outgoing)
     }
     pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetWalker {
         CursorWidgetWalker::new(point, &self.graph, self.root_index())
     }
     pub fn dfs(&mut self, widget_id: WidgetId) -> DfsWalker {
-        let node_index = self.widget_map.get(&widget_id).unwrap();
-        DfsWalker::new(&self.graph, node_index.clone())
+        let node_index = self.widget_map.get(&widget_id).unwrap_or(&self.null_index).clone();
+        DfsWalker::new(&self.graph, node_index)
     }
 }
 

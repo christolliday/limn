@@ -104,7 +104,6 @@ impl Ui {
         if DEBUG_BOUNDS {
             let root_id = self.graph.root_id;
             let mut dfs = self.graph.dfs(root_id);
-            //Dfs::new(&self.graph.graph, self.root_index());
             while let Some(widget_id) = dfs.next(&self.graph.graph) {
                 let widget = self.graph.get_widget(widget_id).unwrap();
                 let color = widget.debug_color.unwrap_or(GREEN);
