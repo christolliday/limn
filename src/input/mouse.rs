@@ -5,7 +5,7 @@ use event::Target;
 use util::Point;
 use resources::WidgetId;
 use widgets::hover::Hover;
-use ui::solver::LayoutChanged;
+use layout::solver::LayoutChanged;
 
 use super::InputEvent;
 

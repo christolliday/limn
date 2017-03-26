@@ -1,3 +1,5 @@
+pub mod solver;
+
 use std::ops::Drop;
 
 use cassowary::{Variable, Constraint, Expression};

@@ -1,4 +1,3 @@
-pub mod layout;
 pub mod style;
 pub mod property;
 pub mod drawable;
@@ -15,12 +14,12 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
 use event::Queue;
-use ui::solver::LimnSolver;
+use layout::solver::LimnSolver;
+use layout::{LayoutBuilder, LayoutVars};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
 use self::property::{PropSet, Property, PropChangeHandler};
-use self::layout::{LayoutBuilder, LayoutVars};
 use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 

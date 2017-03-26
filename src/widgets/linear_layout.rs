@@ -6,7 +6,7 @@ use cassowary::Variable;
 
 use widget::{WidgetBuilder, EventHandler, EventArgs};
 use widget::WidgetBuilderCore;
-use widget::layout::LayoutVars;
+use layout::LayoutVars;
 use ui::ChildAttachedEvent;
 use resources::WidgetId;
 use event::Target;

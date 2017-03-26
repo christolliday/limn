@@ -10,10 +10,11 @@ use cassowary::{Variable, Constraint, Expression};
 
 use resources::WidgetId;
 use widget::Widget;
-use widget::layout::LayoutVars;
 use event::{Target, Queue};
 use ui::RedrawEvent;
 use ui;
+
+use layout::LayoutVars;
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {

@@ -1,7 +1,4 @@
 pub mod graph;
-pub mod solver;
-
-pub use self::solver::LimnSolver;
 
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
@@ -16,7 +13,8 @@ use graphics::Context;
 
 use widget::WidgetBuilder;
 use widget::WidgetBuilderCore;
-use widget::layout::LayoutVars;
+use layout::solver::LimnSolver;
+use layout::LayoutVars;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
 use color::*;

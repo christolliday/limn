@@ -20,6 +20,7 @@ pub mod widget;
 pub mod widgets;
 pub mod drawable;
 pub mod ui;
+pub mod layout;
 pub mod util;
 pub mod resources;
 pub mod color;
