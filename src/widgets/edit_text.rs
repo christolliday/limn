@@ -68,7 +68,10 @@ impl EditTextBuilder {
             let mut selector = LinkedHashMap::new();
             selector.insert(STATE_FOCUSED.deref().clone(), focused_border);
             selector.insert(STATE_DEFAULT.deref().clone(), default_border);
-            vec!{ RectStyleField::Border(Value::Selector((selector, default_border))) }
+            vec![
+                RectStyleField::Border(Value::Selector((selector, default_border))),
+                RectStyleField::CornerRadius(Value::Single(Some(3.0)))
+            ]
         };
         let mut widget = WidgetBuilder::new();
         widget
@@ -90,6 +93,8 @@ impl EditTextBuilder {
             .add_handler(EditTextKeyboardHandler)
             .add_handler(TextChangeHandler)
             .add_handler(PropChangeHandler);
+        text_widget.layout().bound_left(&widget.layout()).padding(5.0);
+        text_widget.layout().bound_right(&widget.layout()).padding(5.0);
 
         widget.add_child(text_widget);
         EditTextBuilder {

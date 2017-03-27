@@ -34,14 +34,26 @@ impl RectDrawable {
     }
 }
 impl Drawable for RectDrawable {
-    fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, mut bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+
+        if let Some((radius, _)) = self.border {
+            // piston graphics draws the border outside the rectangle bounds
+            // so it can get cut off by the clip rect, this shrinks the rect
+            // to accomodate the border.
+            bounds = Rectangle {
+                left: bounds.left + radius,
+                top: bounds.top + radius,
+                width: bounds.width - radius * 2.0,
+                height: bounds.height - radius * 2.0,
+            };
+        }
         if let Some(radius) = self.corner_radius {
             let points_per_corner = 8;
             let angle_per_step = 2.0 * PI / (points_per_corner * 4) as Scalar;
             fn circle_coords(radius: f64, step: f64, angle_per_step: f64) -> [f64; 2] {
                 [radius * (step * angle_per_step).cos(), radius * (step * angle_per_step).sin()]
             };
-            // corners are center points of four circle segments
+            // corners are center points of four circle arcs
             let inner_rect = Rectangle {
                 left: bounds.left + radius,
                 top: bounds.top + radius,
@@ -67,10 +79,22 @@ impl Drawable for RectDrawable {
                 .collect();
             graphics::Polygon::new(self.background_color)
                 .draw(&points, &context.draw_state, context.transform, graphics);
+            if let Some((radius, color)) = self.border {
+                let line = graphics::Line::new_round(color, radius);
+                let mut points = points.iter().peekable();
+                let first = points.peek().unwrap().clone();
+                while let Some(val) = points.next() {
+                    let next = points.peek().unwrap_or(&first);
+                    let coords = [val[0], val[1], next[0], next[1]];
+                    line.draw(coords, &context.draw_state, context.transform, graphics);
+                }
+            }
         } else {
-            let border = self.border.map(|(radius, color)| graphics::rectangle::Border {
-                radius: radius,
-                color: color,
+            let border = self.border.and_then(|(radius, color)| {
+                Some(graphics::rectangle::Border {
+                    radius: radius,
+                    color: color,
+                })
             });
             graphics::Rectangle::new(self.background_color)
                 .maybe_border(border)

@@ -211,48 +211,40 @@ fn main() {
     let mut container = WidgetBuilder::new();
     container.layout().bound_by(&root_widget.layout()).padding(20.0);
 
-    let mut first_name_container = WidgetBuilder::new();
+    let create_name_group = |title, container: &mut WidgetBuilder| {
+        let mut name_container = WidgetBuilder::new();
+        name_container.layout().match_width(container.layout());
+
+        let mut static_text = WidgetBuilder::new();
+        let text = TextDrawable::new(title);
+        let text_dims = text.measure();
+        static_text.set_drawable(text);
+        static_text.layout().center_vertical(&name_container.layout());
+        static_text.layout().dimensions(text_dims);
+
+        let mut text_box = EditTextBuilder::new();
+        text_box.layout().min_height(30.0);
+        text_box.layout().min_width(200.0);
+        text_box.layout().align_right(&name_container.layout());
+        text_box.layout().to_right_of(&static_text.layout()).padding(20.0);
+        name_container.add_child(static_text);
+        (name_container, text_box)
+    };
+
+    let (mut first_name_container, mut first_name_box) = create_name_group("First name:", &mut container);
+    let (mut last_name_container, mut last_name_box) = create_name_group("Last name:", &mut container);
+
     first_name_container.layout().align_top(&container.layout());
-
-    let mut first_name = WidgetBuilder::new();
-    let text = TextDrawable::new("First name:");
-    let text_dims = text.measure();
-    first_name.set_drawable(text);
-    first_name.layout().center_vertical(&first_name_container.layout());
-    first_name.layout().dimensions(text_dims);
-
-    let mut first_name_box = EditTextBuilder::new();
+    last_name_container.layout().below(&first_name_container.layout()).padding(20.0);
     first_name_box.on_text_changed(|text, args| {
         args.queue.push(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
     });
-    first_name_box.set_debug_name("first_name");
-    first_name_box.layout().min_height(30.0);
-    first_name_box.layout().min_width(200.0);
-    first_name_box.layout().align_right(&container.layout());
-    first_name_box.layout().to_right_of(&first_name.layout()).padding(20.0);
-    let first_name_box_id = first_name_box.id();
-    first_name_container.layout().shrink();
-    first_name_container.add_child(first_name);
-    first_name_container.add_child(first_name_box.widget);
-
-    let mut last_name_container = WidgetBuilder::new();
-    last_name_container.layout().below(&first_name_container.layout()).padding(20.0);
-    let mut last_name = WidgetBuilder::new();
-    let text = TextDrawable::new("Last name:");
-    let text_dims = text.measure();
-    last_name.set_drawable(text);
-    last_name.layout().dimensions(text_dims);
-
-    let mut last_name_box = EditTextBuilder::new();
     last_name_box.on_text_changed(|text, args| {
         args.queue.push(Target::Ui, PeopleEvent::ChangeLastName(text.0.clone()));
     });
-    last_name_box.set_debug_name("last_name");
-    last_name_box.layout().min_height(30.0);
-    last_name_box.layout().align_right(&container.layout());
-    last_name_box.layout().to_right_of(&last_name.layout()).padding(20.0);
+    let first_name_box_id = first_name_box.id();
     let last_name_box_id = last_name_box.id();
-    last_name_container.add_child(last_name);
+    first_name_container.add_child(first_name_box.widget);
     last_name_container.add_child(last_name_box.widget);
 
     let mut button_container = WidgetBuilder::new();
