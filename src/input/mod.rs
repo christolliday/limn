@@ -50,3 +50,22 @@ impl ui::EventHandler<KeyboardInput> for EscKeyCloseHandler {
         }
     }
 }
+pub struct DebugSettingsHandler {
+    debug_on: bool
+}
+impl DebugSettingsHandler {
+    pub fn new() -> Self {
+        DebugSettingsHandler {
+            debug_on: false,
+        }
+    }
+}
+use glutin::ElementState;
+impl ui::EventHandler<KeyboardInput> for DebugSettingsHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: ui::EventArgs) {
+        if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = event {
+            self.debug_on = !self.debug_on;
+            args.ui.set_debug_draw_bounds(self.debug_on);
+        }
+    }
+}

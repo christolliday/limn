@@ -7,7 +7,7 @@ use self::glutin::Event;
 use self::backend::{Window, WindowEvents};
 use self::backend::events::WindowEvent;
 use limn::app::App;
-use limn::input::{InputEvent, EscKeyCloseHandler};
+use limn::input::{InputEvent, EscKeyCloseHandler, DebugSettingsHandler};
 use limn::event::Target;
 use limn::resources::{FontId, ImageId, resources};
 use limn::util::Dimensions;
@@ -45,6 +45,7 @@ pub fn set_root_and_loop(mut window: Window,
     app.ui.resize_window_to_fit(&window);
 
     app.add_handler(EscKeyCloseHandler);
+    app.add_handler(DebugSettingsHandler::new());
     let mut events = WindowEvents::new();
     while !app.ui.should_close() {
         let event = events.next(&mut window.window);

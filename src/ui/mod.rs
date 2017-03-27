@@ -23,8 +23,6 @@ use event::Target;
 use ui::graph::WidgetGraph;
 use event::Queue;
 
-const DEBUG_BOUNDS: bool = false;
-
 pub struct Ui {
     pub graph: WidgetGraph,
     pub solver: LimnSolver,
@@ -32,6 +30,7 @@ pub struct Ui {
     glyph_cache: GlyphCache,
     redraw: u32,
     should_close: bool,
+    debug_draw_bounds: bool,
 }
 
 impl Ui {
@@ -43,6 +42,7 @@ impl Ui {
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
             redraw: 2,
             should_close: false,
+            debug_draw_bounds: false,
         }
     }
     pub fn close(&mut self) {
@@ -50,6 +50,10 @@ impl Ui {
     }
     pub fn should_close(&self) -> bool {
         self.should_close
+    }
+    pub fn set_debug_draw_bounds(&mut self, debug_draw_bounds: bool) {
+        self.debug_draw_bounds = debug_draw_bounds;
+        self.redraw = 1;
     }
     pub fn resize_window_to_fit(&mut self, window: &Window) {
         let window_dims = self.get_root_dims();
@@ -101,7 +105,7 @@ impl Ui {
         let crop_to = Rectangle::new_from_pos_dim(Point::zero(), Dimensions::max());
         let id = self.graph.root_id;
         self.draw_node(context, graphics, id, crop_to);
-        if DEBUG_BOUNDS {
+        if self.debug_draw_bounds {
             let root_id = self.graph.root_id;
             let mut dfs = self.graph.dfs(root_id);
             while let Some(widget_id) = dfs.next(&self.graph.graph) {

@@ -276,7 +276,7 @@ pub fn draw_rect_outline(rect: Rectangle, color: Color, context: Context, graphi
                   [rect.left, rect.top]];
     let mut points = points.iter();
     if let Some(first) = points.next() {
-        let line = graphics::Line::new_round(color, 2.0);
+        let line = graphics::Line::new_round(color, 1.0);
         let mut start = first;
         for end in points {
             let coords = [start[0], start[1], end[0], end[1]];
