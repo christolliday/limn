@@ -1,11 +1,22 @@
+use std::ops::Deref;
+
+use linked_hash_map::LinkedHashMap;
+
+use text_layout::Align;
+
 use widget::{WidgetBuilder, EventHandler, EventArgs, CallbackHandler};
 use widget::WidgetBuilderCore;
 use widget::property::PropChangeHandler;
+use widget::property::states::*;
+use widget::style::Value;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter, KeyboardInputEvent};
-use drawable::rect::RectDrawable;
-use drawable::text::TextDrawable;
+use drawable::rect::{RectDrawable, RectStyleField};
+use drawable::text::{TextDrawable, TextStyleField};
 use event::Target;
+use color::*;
+
+const BACKSPACE: char = '\u{8}';
 
 pub struct EditTextKeyboardHandler;
 impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
@@ -13,7 +24,7 @@ impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
         let &WidgetReceivedCharacter(char) = event;
         let mut text = args.widget.drawable::<TextDrawable>().unwrap().text.clone();
         match char {
-            '\u{8}' => {
+            BACKSPACE => {
                 text.pop();
             }
             _ => {
@@ -39,9 +50,6 @@ impl EventHandler<TextUpdated> for TextChangeHandler {
     }
 }
 
-use drawable::text::TextStyleField;
-use widget::style::Value;
-use text_layout::Align;
 pub struct EditTextBuilder {
     pub widget: WidgetBuilder,
 }
@@ -50,12 +58,21 @@ impl AsMut<WidgetBuilder> for EditTextBuilder {
         &mut self.widget
     }
 }
+
 impl EditTextBuilder {
     pub fn new() -> Self {
 
+        let default_border = Some((1.0, GRAY));
+        let focused_border = Some((1.0, BLUE));
+        let rect_style = {
+            let mut selector = LinkedHashMap::new();
+            selector.insert(STATE_FOCUSED.deref().clone(), focused_border);
+            selector.insert(STATE_DEFAULT.deref().clone(), default_border);
+            vec!{ RectStyleField::Border(Value::Selector((selector, default_border))) }
+        };
         let mut widget = WidgetBuilder::new();
         widget
-            .set_drawable(RectDrawable::new())
+            .set_drawable_with_style(RectDrawable::new(), rect_style)
             .add_handler(CallbackHandler::new(|_: &WidgetAttachedEvent, args| {
                 args.queue.push(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget.id));
             }))

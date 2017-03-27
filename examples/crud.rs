@@ -4,6 +4,8 @@ extern crate cassowary;
 
 mod util;
 
+use std::mem;
+
 use limn::event::Target;
 use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
 use limn::widget::WidgetBuilderCore;
@@ -83,7 +85,7 @@ impl PeopleHandler {
         }
     }
 }
-use std::mem;
+
 impl PeopleHandler {
     fn update_selected(&mut self, queue: &mut Queue) {
         queue.push(Target::SubTree(self.first_name_box_id), TextUpdated(self.person.first_name.clone()));

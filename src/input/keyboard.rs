@@ -4,9 +4,10 @@ use stable_bst::map::TreeMap;
 use stable_bst::Bound::{Excluded, Unbounded};
 
 use widget::{EventArgs, EventHandler};
+use widget::property::{PropChange, Property};
 use resources::WidgetId;
 use input::mouse::ClickEvent;
-use event::Target;
+use event::{Target, Queue};
 use ui;
 
 use glutin;
@@ -44,6 +45,17 @@ impl FocusHandler {
             focus_index_max: 0,
         }
     }
+    fn set_focus(&mut self, new_focus: Option<WidgetId>, queue: &mut Queue) {
+        if new_focus != self.focused {
+            if let Some(focused) = self.focused {
+                queue.push(Target::SubTree(focused), PropChange::Remove(Property::Focused));
+            }
+            self.focused = new_focus;
+            if let Some(focused) = self.focused {
+                queue.push(Target::SubTree(focused), PropChange::Add(Property::Focused));
+            }
+        }
+    }
 }
 impl ui::EventHandler<KeyboardInputEvent> for FocusHandler {
     fn handle(&mut self, event: &KeyboardInputEvent, mut args: ui::EventArgs) {
@@ -53,20 +65,20 @@ impl ui::EventHandler<KeyboardInputEvent> for FocusHandler {
                 self.focusable_map.insert(widget_id, self.focus_index_max);
                 self.focus_index_max += 1;
                 if self.focused.is_none() {
-                    self.focused = Some(widget_id);
+                    self.set_focus(Some(widget_id), args.queue);
                 }
             }
             &KeyboardInputEvent::RemoveFocusable(widget_id) => {
                 if let Some(focused) = self.focused {
                     if focused == widget_id {
-                        self.focused = None;
+                        self.set_focus(None, args.queue);
                     }
                 }
                 let index = self.focusable_map.remove(&widget_id).unwrap();
                 self.focusable.remove(&index);
             }
             &KeyboardInputEvent::FocusChange(new_focus) => {
-                self.focused = new_focus;
+                self.set_focus(new_focus, args.queue);
             }
             &KeyboardInputEvent::KeyboardInput(ref key_input) => {
                 if let Some(focused) = self.focused {
@@ -78,14 +90,15 @@ impl ui::EventHandler<KeyboardInputEvent> for FocusHandler {
             &KeyboardInputEvent::ReceivedCharacter(ref received_char) => {
                 let &ReceivedCharacter(char) = received_char;
                 if char == '\t' {
-                    if let Some(focused) = self.focused {
+                    let mut new_focus = self.focused.and_then(|focused| {
                         let index = self.focusable_map.get(&focused).unwrap();
-                        self.focused = self.focusable.range(Excluded(index), Unbounded).next().map(|(_, v)| v.clone());
-                    }
-                    if self.focused.is_none() {
+                        self.focusable.range(Excluded(index), Unbounded).next().map(|(_, v)| v.clone())
+                    });
+                    if new_focus.is_none() {
                         // focus on first, if any
-                        self.focused = self.focusable.iter().next().map(|(_, v)| v.clone());
+                        new_focus = self.focusable.iter().next().map(|(_, v)| v.clone());
                     }
+                    self.set_focus(new_focus, args.queue);
                 } else if let Some(focused) = self.focused {
                     let event = WidgetReceivedCharacter(char);
                     args.queue.push(Target::SubTree(focused), event);

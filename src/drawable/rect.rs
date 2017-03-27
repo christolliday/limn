@@ -17,12 +17,14 @@ use color::*;
 pub struct RectDrawable {
     pub background_color: Color,
     pub corner_radius: Option<Scalar>,
+    pub border: Option<(Scalar, Color)>,
 }
 impl Default for RectDrawable {
     fn default() -> Self {
         RectDrawable {
             background_color: WHITE,
             corner_radius: None,
+            border: None,
         }
     }
 }
@@ -66,7 +68,12 @@ impl Drawable for RectDrawable {
             graphics::Polygon::new(self.background_color)
                 .draw(&points, &context.draw_state, context.transform, graphics);
         } else {
+            let border = self.border.map(|(radius, color)| graphics::rectangle::Border {
+                radius: radius,
+                color: color,
+            });
             graphics::Rectangle::new(self.background_color)
+                .maybe_border(border)
                 .draw(bounds, &context.draw_state, context.transform, graphics);
         }
     }
@@ -76,6 +83,7 @@ impl Drawable for RectDrawable {
 pub enum RectStyleField {
     BackgroundColor(Value<Color>),
     CornerRadius(Value<Option<Scalar>>),
+    Border(Value<Option<(Scalar, Color)>>),
 }
 
 impl StyleField<RectDrawable> for RectStyleField {
@@ -85,6 +93,7 @@ impl StyleField<RectDrawable> for RectStyleField {
                 drawable.background_color = val.from_props(props)
             }
             RectStyleField::CornerRadius(ref val) => drawable.corner_radius = val.from_props(props),
+            RectStyleField::Border(ref val) => drawable.border = val.from_props(props),
         }
     }
 }

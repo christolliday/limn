@@ -15,6 +15,7 @@ pub enum Property {
     Selected,
     Pressed,
     Inactive,
+    Focused,
 }
 pub type PropSet = BTreeSet<Property>;
 
@@ -28,6 +29,7 @@ pub mod states {
         pub static ref STATE_ACTIVATED_PRESSED: PropSet = btreeset!{Property::Activated, Property::Pressed};
         pub static ref STATE_SELECTED: PropSet = btreeset!{Property::Selected};
         pub static ref STATE_INACTIVE: PropSet = btreeset!{Property::Inactive};
+        pub static ref STATE_FOCUSED: PropSet = btreeset!{Property::Focused};
     }
 }
 
