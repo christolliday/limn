@@ -1,14 +1,10 @@
-use std::ops::Deref;
-
-use linked_hash_map::LinkedHashMap;
-
 use text_layout::Align;
 
 use widget::{WidgetBuilder, EventHandler, EventArgs, CallbackHandler};
 use widget::WidgetBuilderCore;
 use widget::property::PropChangeHandler;
 use widget::property::states::*;
-use widget::style::Value;
+use widget::style::{Value, Selector};
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::{RectDrawable, RectStyleField};
@@ -65,11 +61,10 @@ impl EditTextBuilder {
         let default_border = Some((1.0, GRAY));
         let focused_border = Some((1.0, BLUE));
         let rect_style = {
-            let mut selector = LinkedHashMap::new();
-            selector.insert(STATE_FOCUSED.deref().clone(), focused_border);
-            selector.insert(STATE_DEFAULT.deref().clone(), default_border);
+            let mut selector = Selector::new(default_border);
+            selector.insert(&FOCUSED, focused_border);
             vec![
-                RectStyleField::Border(Value::Selector((selector, default_border))),
+                RectStyleField::Border(Value::Selector(selector)),
                 RectStyleField::CornerRadius(Value::Single(Some(3.0)))
             ]
         };

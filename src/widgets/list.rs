@@ -1,8 +1,6 @@
-use linked_hash_map::LinkedHashMap;
-
 use event::Target;
 use widget::{EventArgs, EventHandler};
-use widget::style::Value;
+use widget::style::{Value, Selector};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use drawable::rect::RectStyleField;
@@ -20,11 +18,11 @@ static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
 
 lazy_static! {
     pub static ref STYLE_LIST_ITEM: Vec<RectStyleField> = {
-        let mut selector = LinkedHashMap::new();
-        selector.insert(STATE_SELECTED.deref().clone(), COLOR_LIST_ITEM_SELECTED);
-        selector.insert(STATE_HOVER.deref().clone(), COLOR_LIST_ITEM_HOVER);
+        let mut selector = Selector::new(COLOR_LIST_ITEM_DEFAULT);
+        selector.insert(&SELECTED, COLOR_LIST_ITEM_SELECTED);
+        selector.insert(&HOVER, COLOR_LIST_ITEM_HOVER);
 
-        vec!{ RectStyleField::BackgroundColor(Value::Selector((selector, COLOR_LIST_ITEM_DEFAULT))) }
+        vec!{ RectStyleField::BackgroundColor(Value::Selector(selector)) }
     };
 }
 

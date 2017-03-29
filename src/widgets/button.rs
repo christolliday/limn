@@ -1,13 +1,10 @@
-use std::ops::Deref;
-
 use glutin;
-use linked_hash_map::LinkedHashMap;
 
 use text_layout::Align;
 
 use event::Target;
 use widget::{WidgetBuilder, EventHandler, CallbackHandler, EventArgs};
-use widget::style::Value;
+use widget::style::{Value, Selector};
 use widget::property::{Property, PropChange, PropChangeHandler};
 use widget::property::states::*;
 use input::mouse::{ClickEvent, WidgetMouseButton};
@@ -24,14 +21,13 @@ static COLOR_BUTTON_INACTIVE: Color = [0.3, 0.3, 0.3, 1.0];
 
 lazy_static! {
     pub static ref STYLE_BUTTON: Vec<RectStyleField> = {
-        let mut selector = LinkedHashMap::new();
-        selector.insert(STATE_ACTIVATED_PRESSED.deref().clone(), COLOR_BUTTON_ACTIVATED_PRESSED);
-        selector.insert(STATE_ACTIVATED.deref().clone(), COLOR_BUTTON_ACTIVATED);
-        selector.insert(STATE_PRESSED.deref().clone(), COLOR_BUTTON_PRESSED);
-        selector.insert(STATE_INACTIVE.deref().clone(), COLOR_BUTTON_INACTIVE);
-        selector.insert(STATE_DEFAULT.deref().clone(), COLOR_BUTTON_DEFAULT);
+        let mut selector = Selector::new(COLOR_BUTTON_DEFAULT);
+        selector.insert(&ACTIVATED_PRESSED, COLOR_BUTTON_ACTIVATED_PRESSED);
+        selector.insert(&ACTIVATED, COLOR_BUTTON_ACTIVATED);
+        selector.insert(&PRESSED, COLOR_BUTTON_PRESSED);
+        selector.insert(&INACTIVE, COLOR_BUTTON_INACTIVE);
 
-        vec!{ RectStyleField::BackgroundColor(Value::Selector((selector, COLOR_BUTTON_DEFAULT))), RectStyleField::CornerRadius(Value::Single(Some(8.0))) }
+        vec!{ RectStyleField::BackgroundColor(Value::Selector(selector)), RectStyleField::CornerRadius(Value::Single(Some(8.0))) }
     };
 }
 
@@ -94,10 +90,9 @@ impl ToggleButtonBuilder {
     }
     pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
 
-        let mut selector = LinkedHashMap::new();
-        selector.insert(STATE_ACTIVATED.deref().clone(), on_text.to_owned());
-        let text_style = vec![TextStyleField::Text(Value::Selector((selector,
-                                                                    off_text.to_owned()))),
+        let mut selector = Selector::new(off_text.to_owned());
+        selector.insert(&ACTIVATED, on_text.to_owned());
+        let text_style = vec![TextStyleField::Text(Value::Selector(selector)),
                               TextStyleField::Align(Value::Single(Align::Middle))];
 
         let button_text_drawable = TextDrawable::default();

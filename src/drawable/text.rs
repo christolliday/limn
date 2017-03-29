@@ -154,6 +154,7 @@ pub enum TextStyleField {
     Align(Value<Align>),
     VertAlign(Value<Align>),
 }
+
 impl StyleField<TextDrawable> for TextStyleField {
     fn apply(&self, state: &mut TextDrawable, props: &PropSet) {
         match *self {

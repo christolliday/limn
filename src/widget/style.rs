@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use linked_hash_map::LinkedHashMap;
 
 use widget::PropSet;
@@ -8,35 +10,53 @@ pub enum Value<T>
     where T: Clone
 {
     Single(T),
-    Selector((LinkedHashMap<PropSet, T>, T)),
+    // uses a linked hashmap to allow ordering of matches by priority
+    // the first ordered propset that is a subset of the widgets props will be matched
+    Selector(Selector<T>),
+}
+
+#[derive(Clone, Debug)]
+pub struct Selector<T> {
+    pub matcher: LinkedHashMap<PropSet, T>,
+    pub default: T,
+}
+impl<T> Selector<T> {
+    pub fn new(default: T) -> Self {
+        Selector {
+            matcher: LinkedHashMap::new(),
+            default: default,
+        }
+    }
+    pub fn insert<P: Deref<Target=PropSet>>(&mut self, props: &P, value: T) {
+        self.matcher.insert(props.deref().clone(), value);
+    }
 }
 
 impl<T> Value<T>
     where T: Clone
 {
     pub fn from_props(&self, props: &PropSet) -> T {
-        match *self {
-            Value::Selector::<T>((ref sel, _)) => {
-                if sel.contains_key(&props) {
-                    return sel.get(&props).unwrap().clone();
+        let val = match *self {
+            Value::Selector::<T>(ref sel) => {
+                let &Selector { ref matcher, ref default } = sel;
+                if matcher.contains_key(&props) {
+                    matcher.get(&props).unwrap()
                 } else {
-                    for (style_props, style_val) in sel.iter() {
-                        // props matches all in style props
-                        if style_props.is_subset(&props) {
-                            return style_val.clone();
-                        }
-                    }
+                    matcher.iter().find(|&(matcher_props, _)| {
+                        matcher_props.is_subset(&props)
+                    }).map(|(_, val)| val).unwrap_or(default)
                 }
-            }
-            _ => (),
-        }
-        self.default()
+            },
+            Value::Single(ref val) => val
+        };
+        val.clone()
     }
     pub fn default(&self) -> T {
-        match *self {
-            Value::Single::<T>(ref val) => val.clone(),
-            Value::Selector::<T>((_, ref def)) => def.clone(),
-        }
+        let val = match *self {
+            Value::Single::<T>(ref val) => val,
+            Value::Selector::<T>(ref sel) => &sel.default,
+        };
+        val.clone()
     }
 }
 
