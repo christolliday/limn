@@ -196,7 +196,7 @@ pub fn add_person(person: &Person, person_index: usize, ui: &mut Ui, list_widget
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
-    ui.add_widget(list_item_widget, Some(list_widget_id));
+    ui.add_widget(list_item_widget, list_widget_id);
 }
 
 fn main() {

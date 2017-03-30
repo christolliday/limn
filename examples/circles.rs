@@ -75,7 +75,7 @@ fn main() {
         widget.layout().top_left(top_left).strength(STRONG);
         let id = widget.id();
         let root_id = ui.graph.root_id;
-        ui.add_widget(widget, Some(root_id));
+        ui.add_widget(widget, root_id);
         id
     }
 

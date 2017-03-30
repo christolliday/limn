@@ -70,7 +70,7 @@ impl Ui {
             });
         }
         self.graph.root_id = root_widget.id();
-        self.add_widget(root_widget, None);
+        self.attach_widget(root_widget, None);
     }
     pub fn get_root_dims(&mut self) -> Dimensions {
         let root = self.graph.get_root();
@@ -141,28 +141,32 @@ impl Ui {
 
     pub fn add_widget(&mut self,
                       mut widget: WidgetBuilder,
-                      parent_id: Option<WidgetId>) {
-
-        if let Some(parent_id) = parent_id {
-            if let Some(parent) = self.graph.get_widget(parent_id) {
-                if parent.bound_children {
-                    widget.layout().bound_by(&parent.layout);
-                }
+                      parent_id: WidgetId)
+    {
+        if let Some(parent) = self.graph.get_widget(parent_id) {
+            if parent.bound_children {
+                widget.layout().bound_by(&parent.layout);
             }
         }
+        let layout = widget.layout().vars.clone();
+        let id = widget.id();
+        self.attach_widget(widget, Some(parent_id));
+        self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
+        self.redraw();
+    }
+
+    fn attach_widget(&mut self,
+                     widget: WidgetBuilder,
+                     parent_id: Option<WidgetId>) {
+
         let (children, constraints, widget) = widget.build();
         self.solver.add_widget(&widget.widget, constraints);
 
         let id = widget.widget.id;
-        let layout = widget.widget.layout.clone();
         self.graph.add_widget(widget, parent_id);
         self.queue.push(Target::Widget(id), WidgetAttachedEvent);
-        if let Some(parent_id) = parent_id {
-            self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
-        }
-        self.redraw();
         for child in children {
-            self.add_widget(child, Some(id));
+            self.add_widget(child, id);
         }
     }
 
