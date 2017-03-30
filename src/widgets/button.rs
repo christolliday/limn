@@ -4,6 +4,7 @@ use text_layout::Align;
 
 use event::Target;
 use widget::{WidgetBuilder, EventHandler, CallbackHandler, EventArgs};
+use widget::{WidgetBuilderCore, BuildWidget};
 use widget::style::{Value, Selector};
 use widget::property::{Property, PropChange, PropChangeHandler};
 use widget::property::states::*;
@@ -71,7 +72,11 @@ impl AsMut<WidgetBuilder> for ToggleButtonBuilder {
         &mut self.widget
     }
 }
-use widget::WidgetBuilderCore;
+impl BuildWidget for ToggleButtonBuilder {
+    fn build(self) -> WidgetBuilder {
+        self.widget
+    }
+}
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
 
@@ -118,6 +123,11 @@ pub struct PushButtonBuilder {
 impl AsMut<WidgetBuilder> for PushButtonBuilder {
     fn as_mut(&mut self) -> &mut WidgetBuilder {
         &mut self.widget
+    }
+}
+impl BuildWidget for PushButtonBuilder {
+    fn build(self) -> WidgetBuilder {
+        self.widget
     }
 }
 impl PushButtonBuilder {

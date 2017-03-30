@@ -40,6 +40,14 @@ impl AsMut<WidgetBuilder> for WidgetBuilder {
         self
     }
 }
+pub trait BuildWidget: AsMut<WidgetBuilder> {
+    fn build(self) -> WidgetBuilder;
+}
+impl BuildWidget for WidgetBuilder {
+    fn build(self) -> WidgetBuilder {
+        self
+    }
+}
 
 pub trait WidgetBuilderCore {
     fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self;
@@ -48,7 +56,7 @@ pub trait WidgetBuilderCore {
     fn set_debug_name(&mut self, name: &str) -> &mut Self;
     fn set_debug_color(&mut self, color: Color) -> &mut Self;
     fn set_inactive(&mut self) -> &mut Self;
-    fn add_child(&mut self, widget: WidgetBuilder) -> &mut Self;
+    fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self;
     fn layout(&mut self) -> &mut LayoutBuilder;
     fn id(&mut self) -> WidgetId;
 }
@@ -78,8 +86,8 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self.as_mut().props.insert(Property::Inactive);
         self
     }
-    fn add_child(&mut self, widget: WidgetBuilder) -> &mut Self {
-        self.as_mut().children.push(widget);
+    fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
+        self.as_mut().children.push(widget.build());
         self
     }
     fn layout(&mut self) -> &mut LayoutBuilder {

@@ -49,8 +49,8 @@ fn main() {
         redo_widget.layout().to_right_of(&undo_widget.layout()).padding(20.0);
 
         let (undo_id, redo_id) = (undo_widget.id(), redo_widget.id());
-        button_container.add_child(undo_widget.widget);
-        button_container.add_child(redo_widget.widget);
+        button_container.add_child(undo_widget);
+        button_container.add_child(redo_widget);
 
         root_widget.add_child(button_container);
         (undo_id, redo_id)

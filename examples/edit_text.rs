@@ -43,12 +43,10 @@ fn main() {
         height: 300.0,
     });
 
-    let mut edit_text_box = EditTextBuilder::new().widget;
-    let edit_text_id = {
-        let edit_text = edit_text_box.children.get_mut(0).unwrap();
-        edit_text.controller.add_handler(EditTextSettingsHandler);
-        edit_text.id()
-    };
+    let mut edit_text_box = EditTextBuilder::new();
+    edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
+    let edit_text_id = edit_text_box.text_widget.id();
+
     let mut h_align_button = ToggleButtonBuilder::new();
     h_align_button
         .set_text("Right Align", "Left Align")
@@ -87,8 +85,8 @@ fn main() {
     edit_text_box.layout().align_left(&root_widget.layout()).padding(20.0);
     edit_text_box.layout().align_right(&root_widget.layout()).padding(20.0);
 
-    root_widget.add_child(h_align_button.widget);
-    root_widget.add_child(v_align_button.widget);
+    root_widget.add_child(h_align_button);
+    root_widget.add_child(v_align_button);
     root_widget.add_child(edit_text_box);
 
     util::set_root_and_loop(window, ui, root_widget);

@@ -1,7 +1,7 @@
 use text_layout::Align;
 
 use widget::{WidgetBuilder, EventHandler, EventArgs, CallbackHandler};
-use widget::WidgetBuilderCore;
+use widget::{WidgetBuilderCore, BuildWidget};
 use widget::property::PropChangeHandler;
 use widget::property::states::*;
 use widget::style::{Value, Selector};
@@ -48,10 +48,17 @@ impl EventHandler<TextUpdated> for TextChangeHandler {
 
 pub struct EditTextBuilder {
     pub widget: WidgetBuilder,
+    pub text_widget: WidgetBuilder,
 }
 impl AsMut<WidgetBuilder> for EditTextBuilder {
     fn as_mut(&mut self) -> &mut WidgetBuilder {
         &mut self.widget
+    }
+}
+impl BuildWidget for EditTextBuilder {
+    fn build(mut self) -> WidgetBuilder {
+        self.widget.add_child(self.text_widget);
+        self.widget
     }
 }
 
@@ -91,19 +98,16 @@ impl EditTextBuilder {
         text_widget.layout().bound_left(&widget.layout()).padding(5.0);
         text_widget.layout().bound_right(&widget.layout()).padding(5.0);
 
-        widget.add_child(text_widget);
         EditTextBuilder {
             widget: widget,
+            text_widget: text_widget,
         }
     }
 
     pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
         where F: Fn(&TextUpdated, &mut EventArgs) + 'static
     {
-        {
-            let edit_text = self.widget.children.get_mut(0).unwrap();
-            edit_text.add_handler(CallbackHandler::new(callback));
-        }
+        self.text_widget.add_handler(CallbackHandler::new(callback));
         self
     }
 }

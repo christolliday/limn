@@ -16,7 +16,7 @@ fn main() {
     button.set_debug_name("button");
     button.layout().center(&root_widget.layout());
     button.layout().bound_by(&root_widget.layout()).padding(50.0);
-    root_widget.add_child(button.widget);
+    root_widget.add_child(button);
 
     util::set_root_and_loop(window, ui, root_widget);
 }

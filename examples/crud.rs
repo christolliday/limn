@@ -244,8 +244,8 @@ fn main() {
     });
     let first_name_box_id = first_name_box.id();
     let last_name_box_id = last_name_box.id();
-    first_name_container.add_child(first_name_box.widget);
-    last_name_container.add_child(last_name_box.widget);
+    first_name_container.add_child(first_name_box);
+    last_name_container.add_child(last_name_box);
 
     let mut button_container = WidgetBuilder::new();
     button_container.layout().below(&last_name_container.layout()).padding(20.0);
@@ -286,9 +286,9 @@ fn main() {
     let create_button_id = create_button.id();
     let update_button_id = update_button.id();
     let delete_button_id = delete_button.id();
-    button_container.add_child(create_button.widget);
-    button_container.add_child(update_button.widget);
-    button_container.add_child(delete_button.widget);
+    button_container.add_child(create_button);
+    button_container.add_child(update_button);
+    button_container.add_child(delete_button);
 
     container.add_child(first_name_container);
     container.add_child(last_name_container);

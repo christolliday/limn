@@ -53,7 +53,7 @@ fn main() {
     });
     button_widget.layout().center(&button_container.layout());
     button_widget.layout().bound_by(&button_container.layout()).padding(50.0);
-    button_container.add_child(button_widget.widget);
+    button_container.add_child(button_widget);
     root_widget.add_child(text_widget);
     root_widget.add_child(button_container);
 
