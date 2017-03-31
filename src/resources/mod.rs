@@ -21,27 +21,22 @@ pub trait Id: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {
     fn new(index: usize) -> Self;
 }
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct WidgetId(pub usize);
-impl Id for WidgetId {
-    fn new(index: usize) -> Self {
-        WidgetId(index)
+#[macro_export]
+macro_rules! named_id {
+    ($name:ident) => {
+        #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+        pub struct $name(pub usize);
+        impl Id for $name {
+            fn new(index: usize) -> Self {
+                $name(index)
+            }
+        }
     }
 }
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct FontId(pub usize);
-impl Id for FontId {
-    fn new(index: usize) -> Self {
-        FontId(index)
-    }
-}
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ImageId(pub usize);
-impl Id for ImageId {
-    fn new(index: usize) -> Self {
-        ImageId(index)
-    }
-}
+
+named_id!(WidgetId);
+named_id!(FontId);
+named_id!(ImageId);
 
 pub struct IdGen<I> {
     id: usize,
