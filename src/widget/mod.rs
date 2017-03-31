@@ -29,10 +29,10 @@ pub struct WidgetBuilder {
     props: PropSet,
     layout: LayoutBuilder,
     pub bound_children: bool,
-    pub controller: WidgetController,
+    controller: WidgetController,
     debug_name: Option<String>,
     debug_color: Option<Color>,
-    pub children: Vec<WidgetBuilder>,
+    children: Vec<WidgetBuilder>,
 }
 
 impl AsMut<WidgetBuilder> for WidgetBuilder {

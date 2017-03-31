@@ -3,6 +3,7 @@ use glutin;
 use ui;
 use event::Target;
 use widget::{WidgetBuilder, EventArgs, EventHandler};
+use widget::WidgetBuilderCore;
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use resources::WidgetId;
 use util::Point;
@@ -99,7 +100,7 @@ impl ui::EventHandler<MouseButton> for DragMouseReleaseHandler {
 
 impl WidgetBuilder {
     pub fn make_draggable(&mut self) -> &mut Self {
-        self.controller.add_handler(DragWidgetPressHandler);
+        self.as_mut().add_handler(DragWidgetPressHandler);
         self
     }
 }
