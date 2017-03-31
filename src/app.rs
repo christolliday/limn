@@ -1,4 +1,5 @@
 use std::any::{Any, TypeId};
+use std::collections::HashMap;
 
 use backend::Window;
 
@@ -14,7 +15,7 @@ use input::keyboard::{FocusHandler, KeyboardForwarder, KeyboardCharForwarder};
 pub struct App {
     pub ui: Ui,
     pub queue: Queue,
-    handlers: Vec<UiHandlerWrapper>,
+    handlers: HashMap<TypeId, Vec<UiHandlerWrapper>>,
 }
 
 impl App {
@@ -24,7 +25,7 @@ impl App {
         let mut app = App {
             ui: ui,
             queue: queue,
-            handlers: Vec::new(),
+            handlers: HashMap::new(),
         };
         app.initialize_handlers();
         app
@@ -60,8 +61,8 @@ impl App {
             let data = &data;
             match event_address {
                 Target::Ui => {
-                    for event_handler in self.handlers.iter_mut() {
-                        if event_handler.handles(type_id) {
+                    if let Some(handlers) = self.handlers.get_mut(&type_id) {
+                        for event_handler in handlers.iter_mut() {
                             let args = ui::EventArgs {
                                 ui: &mut self.ui,
                                 queue: &mut self.queue,
@@ -78,12 +79,12 @@ impl App {
     }
 
     pub fn add_handler<H: ui::EventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        self.handlers.push(UiHandlerWrapper::new(handler));
+        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
+        handlers.push(UiHandlerWrapper::new(handler));
     }
 }
 
 struct UiHandlerWrapper {
-    type_id: TypeId,
     handler: Box<Any>,
     handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, ui::EventArgs)>,
 }
@@ -98,13 +99,9 @@ impl UiHandlerWrapper {
             handler.handle(event, args);
         };
         UiHandlerWrapper {
-            type_id: TypeId::of::<E>(),
             handler: Box::new(handler),
             handle_fn: Box::new(handle_fn),
         }
-    }
-    pub fn handles(&self, type_id: TypeId) -> bool {
-        self.type_id == type_id
     }
     pub fn handle(&mut self, event: &Box<Any + Send>, args: ui::EventArgs) {
         (self.handle_fn)(&mut self.handler, event, args);
