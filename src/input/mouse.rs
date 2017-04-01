@@ -6,6 +6,7 @@ use util::Point;
 use resources::WidgetId;
 use widgets::hover::Hover;
 use layout::solver::LayoutChanged;
+use app::App;
 
 use super::InputEvent;
 
@@ -16,28 +17,27 @@ pub struct MouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
 pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
-// adapters
-pub struct MouseLayoutChangeHandler;
+struct MouseLayoutChangeHandler;
 impl ui::EventHandler<LayoutChanged> for MouseLayoutChangeHandler {
     fn handle(&mut self, _: &LayoutChanged, args: ui::EventArgs) {
         args.queue.push(Target::Ui, MouseInputEvent::LayoutChanged);
     }
 }
-pub struct MouseMoveHandler;
+struct MouseMoveHandler;
 impl ui::EventHandler<MouseMoved> for MouseMoveHandler {
     fn handle(&mut self, event: &MouseMoved, args: ui::EventArgs) {
         let &MouseMoved(mouse) = event;
         args.queue.push(Target::Ui, MouseInputEvent::MouseMoved(mouse));
     }
 }
-pub struct MouseButtonHandler;
+struct MouseButtonHandler;
 impl ui::EventHandler<MouseButton> for MouseButtonHandler {
     fn handle(&mut self, event: &MouseButton, args: ui::EventArgs) {
         let &MouseButton(state, button) = event;
         args.queue.push(Target::Ui, MouseInputEvent::MouseButton(state, button));
     }
 }
-pub struct MouseWheelHandler;
+struct MouseWheelHandler;
 impl ui::EventHandler<MouseWheel> for MouseWheelHandler {
     fn handle(&mut self, event: &MouseWheel, args: ui::EventArgs) {
         let &MouseWheel(scroll) = event;
@@ -58,7 +58,7 @@ pub struct ClickEvent {
     pub position: Point,
 }
 
-pub struct MouseController {
+struct MouseController {
     pub mouse: Point,
     pub widget_under_mouse: Option<WidgetId>,
 }
@@ -107,5 +107,15 @@ impl ui::EventHandler<MouseInputEvent> for MouseController {
                 queue.push(Target::BubbleUp(widget_under), WidgetMouseWheel(mouse_scroll_delta));
             }
         }
+    }
+}
+
+impl App {
+    pub fn add_mouse_handlers(&mut self) {
+        self.add_handler(MouseController::new());
+        self.add_handler(MouseLayoutChangeHandler);
+        self.add_handler(MouseMoveHandler);
+        self.add_handler(MouseButtonHandler);
+        self.add_handler(MouseWheelHandler);
     }
 }

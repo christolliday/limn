@@ -7,6 +7,7 @@ use widget::WidgetBuilderCore;
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use resources::WidgetId;
 use util::Point;
+use app::App;
 
 pub struct WidgetDrag {
     pub drag_type: DragEvent,
@@ -20,7 +21,7 @@ pub enum DragEvent {
     DragEnd,
 }
 
-pub struct DragInputHandler {
+struct DragInputHandler {
     widget: Option<WidgetId>,
     position: Point,
 }
@@ -79,10 +80,10 @@ fn drag_handle_mouse_press(event: &WidgetMouseButton, args: EventArgs) {
         args.queue.push(Target::Ui, event);
     }
 }
-pub fn drag_handle_mouse_move(event: &MouseMoved, args: ui::EventArgs) {
+fn drag_handle_mouse_move(event: &MouseMoved, args: ui::EventArgs) {
     args.queue.push(Target::Ui, DragInputEvent::MouseMoved(event.0));
 }
-pub fn drag_handle_mouse_release(event: &MouseButton, args: ui::EventArgs) {
+fn drag_handle_mouse_release(event: &MouseButton, args: ui::EventArgs) {
     if let &MouseButton(glutin::ElementState::Released, _) = event {
         args.queue.push(Target::Ui, DragInputEvent::MouseReleased);
     }
@@ -92,5 +93,13 @@ impl WidgetBuilder {
     pub fn make_draggable(&mut self) -> &mut Self {
         self.as_mut().add_handler_fn(drag_handle_mouse_press);
         self
+    }
+}
+
+impl App {
+    pub fn add_drag_handlers(&mut self) {
+        self.add_handler(DragInputHandler::new());
+        self.add_handler_fn(drag_handle_mouse_move);
+        self.add_handler_fn(drag_handle_mouse_release);
     }
 }

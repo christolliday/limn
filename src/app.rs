@@ -7,10 +7,7 @@ use ui::{self, Ui, RedrawHandler};
 use event::{Queue, Target};
 
 use layout::solver::LayoutChangeHandler;
-use widgets::drag::{DragInputHandler, drag_handle_mouse_move, drag_handle_mouse_release};
 use input::InputHandler;
-use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
-use input::keyboard::{FocusHandler, KeyboardForwarder, KeyboardCharForwarder};
 
 pub struct App {
     pub ui: Ui,
@@ -36,19 +33,9 @@ impl App {
         self.add_handler(LayoutChangeHandler);
         self.add_handler(InputHandler);
 
-        self.add_handler(MouseController::new());
-        self.add_handler(MouseLayoutChangeHandler);
-        self.add_handler(MouseMoveHandler);
-        self.add_handler(MouseButtonHandler);
-        self.add_handler(MouseWheelHandler);
-
-        self.add_handler(KeyboardForwarder);
-        self.add_handler(KeyboardCharForwarder);
-        self.add_handler(FocusHandler::new());
-
-        self.add_handler(DragInputHandler::new());
-        self.add_handler_fn(drag_handle_mouse_move);
-        self.add_handler_fn(drag_handle_mouse_release);
+        self.add_mouse_handlers();
+        self.add_keyboard_handlers();
+        self.add_drag_handlers();
     }
 
     pub fn render(&mut self, window: &mut Window) {

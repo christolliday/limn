@@ -9,6 +9,7 @@ use resources::WidgetId;
 use input::mouse::ClickEvent;
 use event::{Target, Queue};
 use ui;
+use app::App;
 
 use glutin;
 
@@ -116,13 +117,13 @@ pub enum KeyboardInputEvent {
     ReceivedCharacter(ReceivedCharacter),
 }
 
-pub struct KeyboardForwarder;
+struct KeyboardForwarder;
 impl ui::EventHandler<KeyboardInput> for KeyboardForwarder {
     fn handle(&mut self, event: &KeyboardInput, mut args: ui::EventArgs) {
         args.queue.push(Target::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
     }
 }
-pub struct KeyboardCharForwarder;
+struct KeyboardCharForwarder;
 impl ui::EventHandler<ReceivedCharacter> for KeyboardCharForwarder {
     fn handle(&mut self, event: &ReceivedCharacter, mut args: ui::EventArgs) {
         args.queue.push(Target::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
@@ -133,5 +134,13 @@ pub struct WidgetFocusHandler;
 impl EventHandler<ClickEvent> for WidgetFocusHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
         args.queue.push(Target::Ui, KeyboardInputEvent::FocusChange(Some(args.widget.id)));
+    }
+}
+
+impl App {
+    pub fn add_keyboard_handlers(&mut self) {
+        self.add_handler(KeyboardForwarder);
+        self.add_handler(KeyboardCharForwarder);
+        self.add_handler(FocusHandler::new());
     }
 }
