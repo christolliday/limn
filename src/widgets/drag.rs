@@ -2,7 +2,7 @@ use glutin;
 
 use ui;
 use event::Target;
-use widget::{WidgetBuilder, EventArgs, EventHandler};
+use widget::{WidgetBuilder, EventArgs};
 use widget::WidgetBuilderCore;
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use resources::WidgetId;
@@ -73,34 +73,24 @@ pub enum DragInputEvent {
     MouseReleased,
 }
 
-pub struct DragWidgetPressHandler;
-impl EventHandler<WidgetMouseButton> for DragWidgetPressHandler {
-    fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
-        if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
-            let event = DragInputEvent::WidgetPressed(args.widget.id);
-            args.queue.push(Target::Ui, event);
-        }
-    }
-}
-pub struct DragMouseCursorHandler;
-impl ui::EventHandler<MouseMoved> for DragMouseCursorHandler {
-    fn handle(&mut self, event: &MouseMoved, args: ui::EventArgs) {
-        let event = DragInputEvent::MouseMoved(event.0);
+fn drag_handle_mouse_press(event: &WidgetMouseButton, args: EventArgs) {
+    if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
+        let event = DragInputEvent::WidgetPressed(args.widget.id);
         args.queue.push(Target::Ui, event);
     }
 }
-pub struct DragMouseReleaseHandler;
-impl ui::EventHandler<MouseButton> for DragMouseReleaseHandler {
-    fn handle(&mut self, event: &MouseButton, args: ui::EventArgs) {
-        if let &MouseButton(glutin::ElementState::Released, _) = event {
-            args.queue.push(Target::Ui, DragInputEvent::MouseReleased);
-        }
+pub fn drag_handle_mouse_move(event: &MouseMoved, args: ui::EventArgs) {
+    args.queue.push(Target::Ui, DragInputEvent::MouseMoved(event.0));
+}
+pub fn drag_handle_mouse_release(event: &MouseButton, args: ui::EventArgs) {
+    if let &MouseButton(glutin::ElementState::Released, _) = event {
+        args.queue.push(Target::Ui, DragInputEvent::MouseReleased);
     }
 }
 
 impl WidgetBuilder {
     pub fn make_draggable(&mut self) -> &mut Self {
-        self.as_mut().add_handler(DragWidgetPressHandler);
+        self.as_mut().add_handler_fn(drag_handle_mouse_press);
         self
     }
 }

@@ -16,7 +16,6 @@ pub struct MouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
 pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
-
 // adapters
 pub struct MouseLayoutChangeHandler;
 impl ui::EventHandler<LayoutChanged> for MouseLayoutChangeHandler {

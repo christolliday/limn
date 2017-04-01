@@ -7,7 +7,7 @@ use ui::{self, Ui, RedrawHandler};
 use event::{Queue, Target};
 
 use layout::solver::LayoutChangeHandler;
-use widgets::drag::{DragInputHandler, DragMouseCursorHandler, DragMouseReleaseHandler};
+use widgets::drag::{DragInputHandler, drag_handle_mouse_move, drag_handle_mouse_release};
 use input::InputHandler;
 use input::mouse::{MouseMoveHandler, MouseButtonHandler, MouseWheelHandler, MouseLayoutChangeHandler, MouseController};
 use input::keyboard::{FocusHandler, KeyboardForwarder, KeyboardCharForwarder};
@@ -47,8 +47,8 @@ impl App {
         self.add_handler(FocusHandler::new());
 
         self.add_handler(DragInputHandler::new());
-        self.add_handler(DragMouseCursorHandler);
-        self.add_handler(DragMouseReleaseHandler);
+        self.add_handler_fn(drag_handle_mouse_move);
+        self.add_handler_fn(drag_handle_mouse_release);
     }
 
     pub fn render(&mut self, window: &mut Window) {
@@ -82,6 +82,10 @@ impl App {
         let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
         handlers.push(UiHandlerWrapper::new(handler));
     }
+    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, ui::EventArgs)) {
+        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
+        handlers.push(UiHandlerWrapper::new_from_fn(handler));
+    }
 }
 
 struct UiHandlerWrapper {
@@ -97,6 +101,17 @@ impl UiHandlerWrapper {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler.handle(event, args);
+        };
+        UiHandlerWrapper {
+            handler: Box::new(handler),
+            handle_fn: Box::new(handle_fn),
+        }
+    }
+    pub fn new_from_fn<E: 'static>(handler: fn(&E, ui::EventArgs)) -> Self {
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: ui::EventArgs| {
+            let event: &E = event.downcast_ref().unwrap();
+            let handler: &fn(&E, ui::EventArgs) = handler.downcast_ref().unwrap();
+            handler(event, args);
         };
         UiHandlerWrapper {
             handler: Box::new(handler),

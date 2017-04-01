@@ -53,6 +53,7 @@ pub trait WidgetBuilderCore {
     fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self;
     fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self;
     fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self;
+    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, EventArgs)) -> &mut Self;
     fn set_debug_name(&mut self, name: &str) -> &mut Self;
     fn set_debug_color(&mut self, color: Color) -> &mut Self;
     fn set_inactive(&mut self) -> &mut Self;
@@ -72,6 +73,10 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
     }
     fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.as_mut().controller.add_handler(handler);
+        self
+    }
+    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, EventArgs)) -> &mut Self {
+        self.as_mut().controller.add_handler_fn(handler);
         self
     }
     fn set_debug_name(&mut self, name: &str) -> &mut Self {
@@ -144,6 +149,9 @@ impl WidgetController {
     pub fn add_handler<H: EventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
         self.handlers.push(HandlerWrapper::new(handler));
     }
+    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, EventArgs)) {
+        self.handlers.push(HandlerWrapper::new_from_fn(handler));
+    }
 }
 struct HandlerWrapper {
     type_id: TypeId,
@@ -159,6 +167,18 @@ impl HandlerWrapper {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler.handle(event, args);
+        };
+        HandlerWrapper {
+            type_id: TypeId::of::<E>(),
+            handler: Box::new(handler),
+            handle_fn: Box::new(handle_fn),
+        }
+    }
+    pub fn new_from_fn<E: 'static>(handler: fn(&E, EventArgs)) -> Self {
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: EventArgs| {
+            let event: &E = event.downcast_ref().unwrap();
+            let handler: &fn(&E, EventArgs) = handler.downcast_ref().unwrap();
+            handler(event, args);
         };
         HandlerWrapper {
             type_id: TypeId::of::<E>(),
