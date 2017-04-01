@@ -1,8 +1,8 @@
 use text_layout::Align;
 
-use widget::{WidgetBuilder, EventHandler, EventArgs, CallbackHandler};
+use widget::{WidgetBuilder, EventArgs, CallbackHandler};
 use widget::{WidgetBuilderCore, BuildWidget};
-use widget::property::PropChangeHandler;
+use widget::property;
 use widget::property::states::*;
 use widget::style::{Value, Selector};
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
@@ -14,36 +14,31 @@ use color::*;
 
 const BACKSPACE: char = '\u{8}';
 
-pub struct EditTextKeyboardHandler;
-impl EventHandler<WidgetReceivedCharacter> for EditTextKeyboardHandler {
-    fn handle(&mut self, event: &WidgetReceivedCharacter, args: EventArgs) {
-        let &WidgetReceivedCharacter(char) = event;
-        let mut text = args.widget.drawable::<TextDrawable>().unwrap().text.clone();
-        match char {
-            BACKSPACE => {
+fn edit_text_handle_char(event: &WidgetReceivedCharacter, args: EventArgs) {
+    let &WidgetReceivedCharacter(char) = event;
+    let mut text = args.widget.drawable::<TextDrawable>().unwrap().text.clone();
+    match char {
+        BACKSPACE => {
+            text.pop();
+        }
+        _ => {
+            text.push(char);
+            let drawable = args.widget.drawable::<TextDrawable>().unwrap();
+            if !drawable.text_fits(&text, args.widget.layout.bounds()) {
                 text.pop();
             }
-            _ => {
-                text.push(char);
-                let drawable = args.widget.drawable::<TextDrawable>().unwrap();
-                if !drawable.text_fits(&text, args.widget.layout.bounds()) {
-                    text.pop();
-                }
-            }
         }
-        args.widget.update(|state: &mut TextDrawable| {
-            state.text = text.clone()
-        });
-        args.queue.push(Target::Widget(args.widget.id), TextUpdated(text.clone()));
     }
+    args.widget.update(|state: &mut TextDrawable| {
+        state.text = text.clone()
+    });
+    args.queue.push(Target::Widget(args.widget.id), TextUpdated(text.clone()));
 }
+
 pub struct TextUpdated(pub String);
 
-pub struct TextChangeHandler;
-impl EventHandler<TextUpdated> for TextChangeHandler {
-    fn handle(&mut self, event: &TextUpdated, args: EventArgs) {
-        args.widget.update(|state: &mut TextDrawable| state.text = event.0.clone());
-    }
+pub fn text_change_handle(event: &TextUpdated, args: EventArgs) {
+    args.widget.update(|state: &mut TextDrawable| state.text = event.0.clone());
 }
 
 pub struct EditTextBuilder {
@@ -85,16 +80,16 @@ impl EditTextBuilder {
                 args.queue.push(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget.id));
             }))
             .add_handler(WidgetFocusHandler)
-            .add_handler(PropChangeHandler);
+            .add_handler_fn(property::prop_change_handle);
 
 
         let text_style = vec![TextStyleField::VertAlign(Value::Single(Align::Start))];
         let mut text_widget = WidgetBuilder::new();
         text_widget
             .set_drawable_with_style(TextDrawable::default(), text_style)
-            .add_handler(EditTextKeyboardHandler)
-            .add_handler(TextChangeHandler)
-            .add_handler(PropChangeHandler);
+            .add_handler_fn(edit_text_handle_char)
+            .add_handler_fn(text_change_handle)
+            .add_handler_fn(property::prop_change_handle);
         text_widget.layout().bound_left(&widget.layout()).padding(5.0);
         text_widget.layout().bound_right(&widget.layout()).padding(5.0);
 

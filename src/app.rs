@@ -3,11 +3,11 @@ use std::collections::HashMap;
 
 use backend::Window;
 
-use ui::{self, Ui, RedrawHandler};
+use ui::{self, Ui};
 use event::{Queue, Target};
 
-use layout::solver::LayoutChangeHandler;
-use input::InputHandler;
+use layout::solver;
+use input;
 
 pub struct App {
     pub ui: Ui,
@@ -29,9 +29,9 @@ impl App {
     }
 
     fn initialize_handlers(&mut self) {
-        self.add_handler(RedrawHandler);
-        self.add_handler(LayoutChangeHandler);
-        self.add_handler(InputHandler);
+        self.add_handler_fn(ui::handle_redraw);
+        self.add_handler_fn(solver::handle_layout_change);
+        self.add_handler_fn(input::handle_input);
 
         self.add_mouse_handlers();
         self.add_keyboard_handlers();

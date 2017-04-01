@@ -130,19 +130,17 @@ impl LimnSolver {
 }
 
 pub struct LayoutChanged(Vec<(WidgetId, Variable, f64)>);
-pub struct LayoutChangeHandler;
-impl ui::EventHandler<LayoutChanged> for LayoutChangeHandler {
-    fn handle(&mut self, event: &LayoutChanged, args: ui::EventArgs) { 
-        let ref changes = event.0;
-        for &(widget_id, var, value) in changes {
-            if let Some(widget) = args.ui.graph.get_widget(widget_id) {
-                widget.layout.update_val(var, value);
-            }
+
+pub fn handle_layout_change(event: &LayoutChanged, args: ui::EventArgs) { 
+    let ref changes = event.0;
+    for &(widget_id, var, value) in changes {
+        if let Some(widget) = args.ui.graph.get_widget(widget_id) {
+            widget.layout.update_val(var, value);
         }
-        // redraw everything when layout changes, for now
-        args.queue.push(Target::Ui, RedrawEvent);
-        args.ui.redraw();
     }
+    // redraw everything when layout changes, for now
+    args.queue.push(Target::Ui, RedrawEvent);
+    args.ui.redraw();
 }
 
 fn debug_constraint(constraint: &Constraint) {

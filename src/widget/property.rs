@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use widget::{EventHandler, EventArgs};
+use widget::EventArgs;
 
 #[derive(Debug)]
 pub enum PropChange {
@@ -32,13 +32,10 @@ pub mod states {
     }
 }
 
-pub struct PropChangeHandler;
-impl EventHandler<PropChange> for PropChangeHandler {
-    fn handle(&mut self, event: &PropChange, mut args: EventArgs) {
-        match *event {
-            PropChange::Add(ref property) => args.widget.props.insert(property.clone()),
-            PropChange::Remove(ref property) => args.widget.props.remove(&property),
-        };
-        args.widget.apply_style();
-    }
+pub fn prop_change_handle(event: &PropChange, mut args: EventArgs) {
+    match *event {
+        PropChange::Add(ref property) => args.widget.props.insert(property.clone()),
+        PropChange::Remove(ref property) => args.widget.props.remove(&property),
+    };
+    args.widget.apply_style();
 }

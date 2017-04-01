@@ -3,10 +3,10 @@ use glutin;
 use text_layout::Align;
 
 use event::Target;
-use widget::{WidgetBuilder, EventHandler, CallbackHandler, EventArgs};
+use widget::{WidgetBuilder, CallbackHandler, EventArgs};
 use widget::{WidgetBuilderCore, BuildWidget};
 use widget::style::{Value, Selector};
-use widget::property::{Property, PropChange, PropChangeHandler};
+use widget::property::{self, Property, PropChange};
 use widget::property::states::*;
 use input::mouse::{ClickEvent, WidgetMouseButton};
 use drawable::rect::{RectDrawable, RectStyleField};
@@ -33,16 +33,13 @@ lazy_static! {
 }
 
 // show whether button is held down or not
-pub struct ButtonDownHandler;
-impl EventHandler<WidgetMouseButton> for ButtonDownHandler {
-    fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
-        let &WidgetMouseButton(state, _) = event;
-        let event = match state {
-            glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
-            glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
-        };
-        args.queue.push(Target::SubTree(args.widget.id), event);
-    }
+fn button_handle_mouse_down(event: &WidgetMouseButton, args: EventArgs) {
+    let &WidgetMouseButton(state, _) = event;
+    let event = match state {
+        glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
+        glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
+    };
+    args.queue.push(Target::SubTree(args.widget.id), event);
 }
 
 pub enum ToggleEvent {
@@ -50,17 +47,14 @@ pub enum ToggleEvent {
     Off,
 }
 // show whether toggle button is activated
-pub struct ToggleEventHandler;
-impl EventHandler<WidgetMouseButton> for ToggleEventHandler {
-    fn handle(&mut self, event: &WidgetMouseButton, args: EventArgs) {
-        if let &WidgetMouseButton(glutin::ElementState::Released, _) = event {
-            let (toggle_event, prop_event) = match args.widget.props.contains(&Property::Activated) {
-                true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
-                false => (ToggleEvent::On, PropChange::Add(Property::Activated)),
-            };
-            args.queue.push(Target::Widget(args.widget.id), toggle_event);
-            args.queue.push(Target::SubTree(args.widget.id), prop_event);
-        }
+fn toggle_button_handle_mouse(event: &WidgetMouseButton, args: EventArgs) {
+    if let &WidgetMouseButton(glutin::ElementState::Released, _) = event {
+        let (toggle_event, prop_event) = match args.widget.props.contains(&Property::Activated) {
+            true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
+            false => (ToggleEvent::On, PropChange::Add(Property::Activated)),
+        };
+        args.queue.push(Target::Widget(args.widget.id), toggle_event);
+        args.queue.push(Target::SubTree(args.widget.id), prop_event);
     }
 }
 
@@ -79,13 +73,12 @@ impl BuildWidget for ToggleButtonBuilder {
 }
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
-
         let mut widget = WidgetBuilder::new();
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
-            .add_handler(ButtonDownHandler)
-            .add_handler(ToggleEventHandler)
-            .add_handler(PropChangeHandler);
+            .add_handler_fn(button_handle_mouse_down)
+            .add_handler_fn(toggle_button_handle_mouse)
+            .add_handler_fn(property::prop_change_handle);
         widget.layout().dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
@@ -104,7 +97,7 @@ impl ToggleButtonBuilder {
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
             .set_drawable_with_style(button_text_drawable, text_style)
-            .add_handler(PropChangeHandler);
+            .add_handler_fn(property::prop_change_handle);
         button_text_widget.layout().center(&self.widget.layout().vars);
 
         self.widget.add_child(button_text_widget);
@@ -135,7 +128,7 @@ impl PushButtonBuilder {
         let mut widget = WidgetBuilder::new();
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
-            .add_handler(PropChangeHandler);
+            .add_handler_fn(property::prop_change_handle);
 
         widget.layout().dimensions(Dimensions {
             width: 100.0,
@@ -152,7 +145,7 @@ impl PushButtonBuilder {
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
             .set_drawable_with_style(drawable, text_style)
-            .add_handler(PropChangeHandler);
+            .add_handler_fn(property::prop_change_handle);
         button_text_widget.layout().center(self.layout());
 
         self.widget.add_child(button_text_widget);

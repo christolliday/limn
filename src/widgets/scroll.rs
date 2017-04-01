@@ -14,27 +14,21 @@ pub struct WidgetScroll {
     parent_bounds: Rectangle,
 }
 
-pub struct ScrollHandler;
-impl EventHandler<WidgetMouseWheel> for ScrollHandler {
-    fn handle(&mut self, event: &WidgetMouseWheel, args: EventArgs) {
-        let EventArgs { widget, queue, .. } = args;
-        let widget_bounds = widget.layout.bounds();
-        let event = WidgetScroll {
-            event: event.0,
-            parent_bounds: widget_bounds,
-        };
-        queue.push(Target::Child(widget.id), event);
-    }
+fn scroll_handle_mouse_wheel(event: &WidgetMouseWheel, args: EventArgs) {
+    let EventArgs { widget, queue, .. } = args;
+    let widget_bounds = widget.layout.bounds();
+    let event = WidgetScroll {
+        event: event.0,
+        parent_bounds: widget_bounds,
+    };
+    queue.push(Target::Child(widget.id), event);
 }
 
-pub struct ScrollChildAddedHandler;
-impl EventHandler<ChildAttachedEvent> for ScrollChildAddedHandler {
-    fn handle(&mut self, event: &ChildAttachedEvent, args: EventArgs) {
-        let &ChildAttachedEvent(_, ref child_layout) = event;
-        args.widget.update_layout(|layout| {
-            layout.scroll_parent(child_layout);
-        }, args.solver);
-    }
+fn scroll_handle_child_added(event: &ChildAttachedEvent, args: EventArgs) {
+    let &ChildAttachedEvent(_, ref child_layout) = event;
+    args.widget.update_layout(|layout| {
+        layout.scroll_parent(child_layout);
+    }, args.solver);
 }
 
 pub struct WidgetScrollHandler {
@@ -91,8 +85,8 @@ impl EventHandler<WidgetScroll> for WidgetScrollHandler {
 impl WidgetBuilder {
     pub fn contents_scroll(&mut self) -> &mut Self {
         self.bound_children = false;
-        self.add_handler(ScrollChildAddedHandler);
-        self.add_handler(ScrollHandler)
+        self.add_handler_fn(scroll_handle_child_added);
+        self.add_handler_fn(scroll_handle_mouse_wheel)
     }
     pub fn make_scrollable(&mut self) -> &mut Self {
         self.add_handler(WidgetScrollHandler::new())

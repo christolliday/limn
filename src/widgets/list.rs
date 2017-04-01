@@ -1,5 +1,6 @@
 use event::Target;
 use widget::{EventArgs, EventHandler};
+use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::style::{Value, Selector};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
@@ -46,12 +47,8 @@ impl EventHandler<WidgetListItemSelected> for ListHandler {
     }
 }
 
-pub struct ListDeselectHandler;
-impl EventHandler<ClickEvent> for ListDeselectHandler {
-    fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
-        let event = WidgetListItemSelected { widget: None };
-        args.queue.push(Target::Widget(args.widget.id), event);
-    }
+fn list_handle_deselect(_: &ClickEvent, mut args: EventArgs) {
+    args.queue.push(Target::Widget(args.widget.id), WidgetListItemSelected { widget: None });
 }
 
 pub struct ListItemHandler {
@@ -73,12 +70,10 @@ impl EventHandler<ClickEvent> for ListItemHandler {
     }
 }
 
-use widget::WidgetBuilder;
-use widget::WidgetBuilderCore;
 impl WidgetBuilder {
     pub fn make_vertical_list(&mut self) -> &mut Self {
         self.add_handler(ListHandler::new())
-            .add_handler(ListDeselectHandler)
+            .add_handler_fn(list_handle_deselect)
             .vbox()
             .make_scrollable()
     }

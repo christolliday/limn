@@ -113,12 +113,9 @@ impl EventHandler<LinearLayoutEvent> for LinearLayoutHandler {
     }
 }
 
-struct LinearLayoutChildAttachedHandler;
-impl EventHandler<ChildAttachedEvent> for LinearLayoutChildAttachedHandler {
-    fn handle(&mut self, event: &ChildAttachedEvent, args: EventArgs) {
-        let &ChildAttachedEvent(child_id, ref child_layout) = event;
-        args.queue.push(Target::Widget(args.widget.id), LinearLayoutEvent::AddWidget(child_id, child_layout.clone()));
-    }
+fn linear_layout_handle_child_added(event: &ChildAttachedEvent, args: EventArgs) {
+    let &ChildAttachedEvent(child_id, ref child_layout) = event;
+    args.queue.push(Target::Widget(args.widget.id), LinearLayoutEvent::AddWidget(child_id, child_layout.clone()));
 }
 
 fn beginning(orientation: Orientation, layout: &LayoutVars) -> Variable {
@@ -138,11 +135,11 @@ impl WidgetBuilder {
     pub fn vbox(&mut self) -> &mut Self {
         let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout().vars);
         self.add_handler(handler);
-        self.add_handler(LinearLayoutChildAttachedHandler)
+        self.add_handler_fn(linear_layout_handle_child_added)
     }
     pub fn hbox(&mut self) -> &mut Self {
         let handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout().vars);
         self.add_handler(handler);
-        self.add_handler(LinearLayoutChildAttachedHandler)
+        self.add_handler_fn(linear_layout_handle_child_added)
     }
 }

@@ -183,7 +183,7 @@ impl EventHandler<PropChange> for PersonHandler {
     }
 }
 
-use limn::widgets::edit_text::TextChangeHandler;
+use limn::widgets::edit_text;
 pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget_id: WidgetId) {
     let list_item_widget = {
         let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
@@ -199,7 +199,7 @@ pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
-            .add_handler(TextChangeHandler);
+            .add_handler_fn(edit_text::text_change_handle);
         list_text_widget.layout().center(&list_item_widget.layout());
         list_item_widget.add_child(list_text_widget);
         list_item_widget

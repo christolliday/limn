@@ -19,7 +19,7 @@ use layout::{LayoutBuilder, LayoutVars};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
-use self::property::{PropSet, Property, PropChangeHandler};
+use self::property::{PropSet, Property};
 use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 
@@ -143,7 +143,7 @@ impl WidgetController {
         let mut controller = WidgetController {
             handlers: Vec::new(),
         };
-        controller.add_handler(PropChangeHandler);
+        controller.add_handler_fn(property::prop_change_handle);
         controller
     }
     pub fn add_handler<H: EventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {

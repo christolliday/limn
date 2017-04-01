@@ -1,5 +1,5 @@
 use event::Target;
-use widget::{WidgetBuilder, EventArgs, EventHandler};
+use widget::{WidgetBuilder, EventArgs};
 use widget::WidgetBuilderCore;
 use widget::property::{Property, PropChange};
 
@@ -9,19 +9,16 @@ pub enum Hover {
     Out,
 }
 
-pub struct HoverHandler;
-impl EventHandler<Hover> for HoverHandler {
-    fn handle(&mut self, event: &Hover, mut args: EventArgs) {
-        let event = match *event {
-            Hover::Over => PropChange::Add(Property::Hover),
-            Hover::Out => PropChange::Remove(Property::Hover),
-        };
-        args.queue.push(Target::SubTree(args.widget.id), event);
-    }
+fn handle_hover(event: &Hover, mut args: EventArgs) {
+    let event = match *event {
+        Hover::Over => PropChange::Add(Property::Hover),
+        Hover::Out => PropChange::Remove(Property::Hover),
+    };
+    args.queue.push(Target::SubTree(args.widget.id), event);
 }
 
 impl WidgetBuilder {
     pub fn enable_hover(&mut self) -> &mut Self {
-        self.add_handler(HoverHandler)
+        self.add_handler_fn(handle_hover)
     }
 }
