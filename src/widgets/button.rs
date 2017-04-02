@@ -162,7 +162,7 @@ impl<B> WidgetClickable for B where B: AsMut<WidgetBuilder> {
     {
         self.add_handler(CallbackHandler::new(move |event, mut args| {
             (on_click)(event, &mut args);
-            args.event_state.handled = true;
+            *args.handled = true;
         }))
     }
 }

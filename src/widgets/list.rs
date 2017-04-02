@@ -64,7 +64,7 @@ impl WidgetEventHandler<ClickEvent> for ListItemHandler {
             args.queue.push(Target::SubTree(args.widget.id), PropChange::Add(Property::Selected));
             let event = WidgetListItemSelected { widget: Some(args.widget.id) };
             args.queue.push(Target::Widget(self.list_id), event);
-            args.event_state.handled = true;
+            *args.handled = true;
         }
     }
 }

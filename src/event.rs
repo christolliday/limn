@@ -51,15 +51,11 @@ impl Queue {
     }
 }
 
-// allows event handlers to communicate with event dispatcher
-pub struct EventState {
-    pub handled: bool,
-}
 pub struct WidgetEventArgs<'a> {
     pub widget: &'a mut Widget,
     pub queue: &'a mut Queue,
     pub solver: &'a mut LimnSolver,
-    pub event_state: &'a mut EventState,
+    pub handled: &'a mut bool,
 }
 
 pub trait WidgetEventHandler<T> {

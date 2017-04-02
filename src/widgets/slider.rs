@@ -60,7 +60,7 @@ impl<F> WidgetEventHandler<MovedSliderWidgetEvent> for SliderHandler<F>
         let range = bounds.width - (event.slider_right - event.slider_left);
         let val = (event.slider_left - bounds.left) / range;
         (self.callback)(val);
-        args.event_state.handled = true;
+        *args.handled = true;
     }
 }
 

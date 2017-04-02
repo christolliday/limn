@@ -14,7 +14,7 @@ use cassowary::Constraint;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use event::{Queue, WidgetEventHandler, WidgetEventArgs, EventState, WidgetHandlerWrapper};
+use event::{Queue, WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::solver::LimnSolver;
 use layout::{LayoutBuilder, LayoutVars};
 use resources::{resources, WidgetId};
@@ -190,21 +190,19 @@ impl WidgetContainer {
                          queue: &mut Queue,
                          solver: &mut LimnSolver)
                          -> bool {
-
-        let mut event_state = EventState { handled: false };
-
+        let mut handled = false;
         if let Some(handlers) = self.controller.handlers.get_mut(&type_id) {
             for event_handler in handlers.iter_mut() {
                 let event_args = WidgetEventArgs {
                     widget: &mut self.widget,
                     queue: queue,
                     solver: solver,
-                    event_state: &mut event_state,
+                    handled: &mut handled,
                 };
                 event_handler.handle(event, event_args);
             }
         }
-        event_state.handled
+        handled
     }
 }
 pub struct Widget {
