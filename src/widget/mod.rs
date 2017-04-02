@@ -3,6 +3,7 @@ pub mod property;
 pub mod drawable;
 
 use std::any::{TypeId, Any};
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
 use graphics::Context;
@@ -136,21 +137,23 @@ impl WidgetBuilder {
 }
 
 pub struct WidgetController {
-    handlers: Vec<WidgetHandlerWrapper>,
+    handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
 }
 impl WidgetController {
     pub fn new() -> Self {
         let mut controller = WidgetController {
-            handlers: Vec::new(),
+            handlers: HashMap::new(),
         };
         controller.add_handler_fn(property::prop_change_handle);
         controller
     }
     pub fn add_handler<H: WidgetEventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        self.handlers.push(WidgetHandlerWrapper::new(handler));
+        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
+        handlers.push(WidgetHandlerWrapper::new(handler));
     }
     pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, WidgetEventArgs)) {
-        self.handlers.push(WidgetHandlerWrapper::new_from_fn(handler));
+        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
+        handlers.push(WidgetHandlerWrapper::new_from_fn(handler));
     }
 }
 
@@ -189,9 +192,9 @@ impl WidgetContainer {
                          -> bool {
 
         let mut event_state = EventState { handled: false };
-        for ref mut event_handler in self.controller.handlers.iter_mut() {
-            let event_handler: &mut WidgetHandlerWrapper = event_handler;
-            if event_handler.handles(type_id) {
+
+        if let Some(handlers) = self.controller.handlers.get_mut(&type_id) {
+            for event_handler in handlers.iter_mut() {
                 let event_args = WidgetEventArgs {
                     widget: &mut self.widget,
                     queue: queue,

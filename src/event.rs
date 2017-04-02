@@ -76,7 +76,6 @@ pub trait UiEventHandler<T> {
 }
 
 pub struct WidgetHandlerWrapper {
-    type_id: TypeId,
     handler: Box<Any>,
     handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, WidgetEventArgs)>,
 }
@@ -91,7 +90,6 @@ impl WidgetHandlerWrapper {
             handler.handle(event, args);
         };
         WidgetHandlerWrapper {
-            type_id: TypeId::of::<E>(),
             handler: Box::new(handler),
             handle_fn: Box::new(handle_fn),
         }
@@ -103,13 +101,9 @@ impl WidgetHandlerWrapper {
             handler(event, args);
         };
         WidgetHandlerWrapper {
-            type_id: TypeId::of::<E>(),
             handler: Box::new(handler),
             handle_fn: Box::new(handle_fn),
         }
-    }
-    pub fn handles(&self, type_id: TypeId) -> bool {
-        self.type_id == type_id
     }
     pub fn handle(&mut self, event: &Box<Any + Send>, args: WidgetEventArgs) {
         (self.handle_fn)(&mut self.handler, event, args);
