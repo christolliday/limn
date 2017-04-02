@@ -11,8 +11,10 @@ use self::font::Font;
 use self::image::Texture;
 
 lazy_static! {
-    pub static ref RES: Mutex<Resources> = Mutex::new(Resources::new());
+    static ref RES: Mutex<Resources> = Mutex::new(Resources::new());
 }
+
+// Allow global access to Resources
 pub fn resources() -> MutexGuard<'static, Resources> {
     RES.lock().unwrap()
 }
@@ -21,6 +23,7 @@ pub trait Id: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {
     fn new(index: usize) -> Self;
 }
 
+/// Create a new simple id type, wrapper around a usize that can be created via IdGen
 #[macro_export]
 macro_rules! named_id {
     ($name:ident) => {
@@ -38,6 +41,8 @@ named_id!(WidgetId);
 named_id!(FontId);
 named_id!(ImageId);
 
+/// Generates named Ids, wrappers around increasing usize values.
+/// For Ids to be unique, just needs to be one IdGen per Id type.
 pub struct IdGen<I> {
     id: usize,
     phantom: PhantomData<I>,
@@ -56,13 +61,13 @@ impl<I: Id> IdGen<I> {
     }
 }
 
+/// Map for a given `Id` and resource type.
 pub struct Map<I, T> {
     id_gen: IdGen<I>,
     map: HashMap<I, T>,
 }
 
 impl<I: Id, T> Map<I, T> {
-    /// Construct the new, empty `Map`.
     pub fn new() -> Self {
         Map {
             id_gen: IdGen::new(),
@@ -73,7 +78,6 @@ impl<I: Id, T> Map<I, T> {
     pub fn get(&self, id: I) -> Option<&T> {
         self.map.get(&id)
     }
-
     /// Adds the given resource to the `Map` and returns a unique `Id` for it.
     pub fn insert(&mut self, resource: T) -> I {
         let id = self.id_gen.next();
