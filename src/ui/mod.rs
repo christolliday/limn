@@ -86,6 +86,7 @@ impl Ui {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
             solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
         });
+        self.needs_redraw = true;
     }
 
     pub fn redraw(&mut self) {
