@@ -7,7 +7,7 @@ use petgraph::Direction;
 use petgraph::visit::Visitable;
 use petgraph::stable_graph::WalkNeighbors;
 
-use widget::{Widget, WidgetContainer, WidgetController};
+use widget::{Widget, WidgetContainer};
 use widget::property::PropSet;
 use layout::LayoutVars;
 use util::Point;
@@ -40,7 +40,7 @@ impl WidgetGraph {
         let mut graph = Graph::new();
         let dummy_container = WidgetContainer {
             widget: Widget::new(WidgetId(0), None, PropSet::new(), LayoutVars::new(), false, None, None),
-            controller: WidgetController::new(),
+            handlers: HashMap::new(),
         };
         let null_index = graph.add_node(dummy_container);
         WidgetGraph {

@@ -51,6 +51,14 @@ impl Queue {
     }
 }
 
+pub trait UiHandler {
+    fn wrapper(self) -> UiHandlerWrapper;
+}
+
+pub trait WidgetHandler<E> {
+    fn wrapper(self) -> WidgetHandlerWrapper;
+}
+
 pub struct WidgetEventArgs<'a> {
     pub widget: &'a mut Widget,
     pub queue: &'a mut Queue,
@@ -90,10 +98,13 @@ impl WidgetHandlerWrapper {
             handle_fn: Box::new(handle_fn),
         }
     }
-    pub fn new_from_fn<E: 'static>(handler: fn(&E, WidgetEventArgs)) -> Self {
+    pub fn new_from_fn<H, E>(handler: H) -> Self
+        where H: Fn(&E, WidgetEventArgs) + 'static,
+              E: 'static
+    {
         let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: WidgetEventArgs| {
             let event: &E = event.downcast_ref().unwrap();
-            let handler: &fn(&E, WidgetEventArgs) = handler.downcast_ref().unwrap();
+            let handler: &mut H = handler.downcast_mut().unwrap();
             handler(event, args);
         };
         WidgetHandlerWrapper {
@@ -125,10 +136,13 @@ impl UiHandlerWrapper {
             handle_fn: Box::new(handle_fn),
         }
     }
-    pub fn new_from_fn<E: 'static>(handler: fn(&E, UiEventArgs)) -> Self {
+    pub fn new_from_fn<H, E>(handler: H) -> Self
+        where H: Fn(&E, UiEventArgs) + 'static,
+              E: 'static
+    {
         let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: UiEventArgs| {
             let event: &E = event.downcast_ref().unwrap();
-            let handler: &fn(&E, UiEventArgs) = handler.downcast_ref().unwrap();
+            let handler: &H = handler.downcast_ref().unwrap();
             handler(event, args);
         };
         UiHandlerWrapper {

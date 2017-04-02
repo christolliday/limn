@@ -65,11 +65,11 @@ impl App {
     }
 
     pub fn add_handler<H: UiEventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
-        handlers.push(UiHandlerWrapper::new(handler));
+        self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
+            .push(UiHandlerWrapper::new(handler));
     }
     pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, UiEventArgs)) {
-        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
-        handlers.push(UiHandlerWrapper::new_from_fn(handler));
+        self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
+            .push(UiHandlerWrapper::new_from_fn(handler));
     }
 }

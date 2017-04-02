@@ -30,7 +30,7 @@ pub struct WidgetBuilder {
     props: PropSet,
     layout: LayoutBuilder,
     pub bound_children: bool,
-    controller: WidgetController,
+    handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
     debug_name: Option<String>,
     debug_color: Option<Color>,
     children: Vec<WidgetBuilder>,
@@ -54,7 +54,7 @@ pub trait WidgetBuilderCore {
     fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self;
     fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self;
     fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self;
-    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, WidgetEventArgs)) -> &mut Self;
+    fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self;
     fn set_debug_name(&mut self, name: &str) -> &mut Self;
     fn set_debug_color(&mut self, color: Color) -> &mut Self;
     fn set_inactive(&mut self) -> &mut Self;
@@ -73,11 +73,13 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self
     }
     fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.as_mut().controller.add_handler(handler);
+        self.as_mut().handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
+            .push(WidgetHandlerWrapper::new(handler));
         self
     }
-    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, WidgetEventArgs)) -> &mut Self {
-        self.as_mut().controller.add_handler_fn(handler);
+    fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+        self.as_mut().handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
+            .push(WidgetHandlerWrapper::new_from_fn(handler));
         self
     }
     fn set_debug_name(&mut self, name: &str) -> &mut Self {
@@ -105,21 +107,22 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
 }
 impl WidgetBuilder {
     pub fn new() -> Self {
-        WidgetBuilder {
+        let mut builder = WidgetBuilder {
             id: resources().widget_id(),
             drawable: None,
             props: PropSet::new(),
             layout: LayoutBuilder::new(),
             bound_children: true,
-            controller: WidgetController::new(),
+            handlers: HashMap::new(),
             debug_name: None,
             debug_color: None,
             children: Vec::new(),
-        }
+        };
+        builder.add_handler_fn(property::prop_change_handle);
+        builder
     }
 
     pub fn build(self) -> (Vec<WidgetBuilder>, Vec<Constraint>, WidgetContainer) {
-
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
@@ -131,29 +134,8 @@ impl WidgetBuilder {
          self.layout.constraints,
          WidgetContainer {
              widget: widget,
-             controller: self.controller,
+             handlers: self.handlers,
          })
-    }
-}
-
-pub struct WidgetController {
-    handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
-}
-impl WidgetController {
-    pub fn new() -> Self {
-        let mut controller = WidgetController {
-            handlers: HashMap::new(),
-        };
-        controller.add_handler_fn(property::prop_change_handle);
-        controller
-    }
-    pub fn add_handler<H: WidgetEventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
-        handlers.push(WidgetHandlerWrapper::new(handler));
-    }
-    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, WidgetEventArgs)) {
-        let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
-        handlers.push(WidgetHandlerWrapper::new_from_fn(handler));
     }
 }
 
@@ -181,7 +163,7 @@ impl<F, E> WidgetEventHandler<E> for CallbackHandler<F, E>
 
 pub struct WidgetContainer {
     pub widget: Widget,
-    pub controller: WidgetController,
+    pub handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
 }
 impl WidgetContainer {
     pub fn trigger_event(&mut self,
@@ -191,7 +173,7 @@ impl WidgetContainer {
                          solver: &mut LimnSolver)
                          -> bool {
         let mut handled = false;
-        if let Some(handlers) = self.controller.handlers.get_mut(&type_id) {
+        if let Some(handlers) = self.handlers.get_mut(&type_id) {
             for event_handler in handlers.iter_mut() {
                 let event_args = WidgetEventArgs {
                     widget: &mut self.widget,
