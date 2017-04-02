@@ -58,7 +58,6 @@ pub fn set_root_and_loop(mut window: Window,
                             width: width as f64,
                             height: height as f64,
                         });
-                        events.update();
                     }
                     Event::Awakened => {
                         app.handle_events();

@@ -28,7 +28,7 @@ pub struct Ui {
     pub solver: LimnSolver,
     queue: Queue,
     glyph_cache: GlyphCache,
-    redraw: u32,
+    needs_redraw: bool,
     should_close: bool,
     debug_draw_bounds: bool,
 }
@@ -40,7 +40,7 @@ impl Ui {
             solver: LimnSolver::new(queue.clone()),
             queue: queue.clone(),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
-            redraw: 2,
+            needs_redraw: false,
             should_close: false,
             debug_draw_bounds: false,
         }
@@ -53,7 +53,7 @@ impl Ui {
     }
     pub fn set_debug_draw_bounds(&mut self, debug_draw_bounds: bool) {
         self.debug_draw_bounds = debug_draw_bounds;
-        self.redraw = 1;
+        self.redraw();
     }
     pub fn resize_window_to_fit(&mut self, window: &Window) {
         let window_dims = self.get_root_dims();
@@ -86,19 +86,18 @@ impl Ui {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
             solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
         });
-        self.redraw = 2;
     }
 
     pub fn redraw(&mut self) {
-        self.redraw = 2;
+        self.needs_redraw = true;
     }
     pub fn draw_if_needed(&mut self, window: &mut Window) {
-        if self.redraw > 0 {
+        if self.needs_redraw {
             window.draw_2d(|context, graphics| {
                 graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
                 self.draw(context, graphics);
             });
-            self.redraw -= 1;
+            self.needs_redraw = false;
         }
     }
     pub fn draw(&mut self, context: Context, graphics: &mut G2d) {
@@ -194,7 +193,7 @@ impl Ui {
                                                      &mut self.queue,
                                                      &mut self.solver);
             if widget_container.widget.has_updated {
-                self.redraw = 2;
+                self.needs_redraw = true;
                 widget_container.widget.has_updated = false;
             }
             handled

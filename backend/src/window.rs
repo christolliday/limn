@@ -25,6 +25,7 @@ impl Window {
         gl::load_with(|s| window.get_proc_address(s) as *const _);
 
         let context = GfxContext::new(&mut window, OpenGL::V3_2, 4);
+        window.swap_buffers().unwrap();
         Window {
             window: window,
             context: context,
