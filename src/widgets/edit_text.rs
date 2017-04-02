@@ -1,6 +1,6 @@
 use text_layout::Align;
 
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, CallbackHandler};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property;
 use widget::property::states::*;
 use widget::style::{Value, Selector};
@@ -72,12 +72,12 @@ impl EditTextBuilder {
         let mut widget = WidgetBuilder::new();
         widget
             .set_drawable_with_style(RectDrawable::new(), rect_style)
-            .add_handler(CallbackHandler::new(|_: &WidgetAttachedEvent, args| {
+            .add_handler_fn(|_: &WidgetAttachedEvent, args| {
                 args.queue.push(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget.id));
-            }))
-            .add_handler(CallbackHandler::new(|_: &WidgetDetachedEvent, args| {
+            })
+            .add_handler_fn(|_: &WidgetDetachedEvent, args| {
                 args.queue.push(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget.id));
-            }))
+            })
             .add_handler(WidgetFocusHandler)
             .add_handler_fn(property::prop_change_handle);
 
@@ -99,9 +99,9 @@ impl EditTextBuilder {
     }
 
     pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&TextUpdated, &mut WidgetEventArgs) + 'static
+        where F: Fn(&TextUpdated, WidgetEventArgs) + 'static
     {
-        self.text_widget.add_handler(CallbackHandler::new(callback));
+        self.text_widget.add_handler_fn(callback);
         self
     }
 }

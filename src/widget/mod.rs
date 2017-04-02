@@ -4,7 +4,6 @@ pub mod drawable;
 
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
-use std::marker::PhantomData;
 
 use graphics::Context;
 use graphics::types::Color;
@@ -136,28 +135,6 @@ impl WidgetBuilder {
              widget: widget,
              handlers: self.handlers,
          })
-    }
-}
-
-pub struct CallbackHandler<F, E>
-    where F: Fn(&E, &mut WidgetEventArgs)
-{
-    callback: F,
-    phantom: PhantomData<E>,
-}
-impl<F, E> CallbackHandler<F, E>
-    where F: Fn(&E, &mut WidgetEventArgs) {
-    pub fn new(callback: F) -> Self {
-        CallbackHandler {
-            callback: callback,
-            phantom: PhantomData,
-        }
-    }
-}
-impl<F, E> WidgetEventHandler<E> for CallbackHandler<F, E>
-    where F: Fn(&E, &mut WidgetEventArgs) {
-    fn handle(&mut self, event: &E, mut args: WidgetEventArgs) {
-        (self.callback)(event, &mut args);
     }
 }
 

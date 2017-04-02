@@ -3,11 +3,11 @@ use glutin;
 use text_layout::Align;
 
 use event::{Target, WidgetEventArgs};
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, CallbackHandler};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::style::{Value, Selector};
 use widget::property::{self, Property, PropChange};
 use widget::property::states::*;
-use input::mouse::{ClickEvent, WidgetMouseButton};
+use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleField};
 use drawable::text::{TextDrawable, TextStyleField};
 use util::{Dimensions, Color};
@@ -103,8 +103,9 @@ impl ToggleButtonBuilder {
         self
     }
     pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&ToggleEvent, &mut WidgetEventArgs) + 'static {
-        self.widget.add_handler(CallbackHandler::new(callback));
+        where F: Fn(&ToggleEvent, WidgetEventArgs) + 'static
+    {
+        self.widget.add_handler_fn(callback);
         self
     }
 }
@@ -160,9 +161,9 @@ impl<B> WidgetClickable for B where B: AsMut<WidgetBuilder> {
     fn on_click<F>(&mut self, on_click: F) -> &mut Self
         where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static
     {
-        self.add_handler(CallbackHandler::new(move |event, mut args| {
+        self.add_handler_fn(move |event, mut args| {
             (on_click)(event, &mut args);
             *args.handled = true;
-        }))
+        })
     }
 }
