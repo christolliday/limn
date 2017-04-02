@@ -5,9 +5,8 @@ mod util;
 
 use text_layout::Align;
 
-use limn::event::Target;
-use limn::widget::{WidgetBuilder, WidgetEventHandler, WidgetEventArgs};
-use limn::widget::WidgetBuilderCore;
+use limn::event::{Target, WidgetEventHandler, WidgetEventArgs};
+use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::drawable::text::TextDrawable;

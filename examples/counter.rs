@@ -3,12 +3,11 @@ extern crate glutin;
 
 mod util;
 
-use limn::widget::{WidgetBuilder, WidgetEventHandler, WidgetEventArgs};
-use limn::widget::WidgetBuilderCore;
+use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::style::Value;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::drawable::text::{TextDrawable, TextStyleField};
-use limn::event::Target;
+use limn::event::{Target, WidgetEventHandler, WidgetEventArgs};
 use limn::color::*;
 
 struct CounterEvent;

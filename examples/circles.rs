@@ -8,13 +8,12 @@ mod util;
 
 use cassowary::strength::*;
 
-use limn::widget::WidgetBuilder;
-use limn::widget::WidgetBuilderCore;
+use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::property::{Property, PropChange};
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::drawable::ellipse::EllipseDrawable;
-use limn::event::Target;
-use limn::ui::{self, Ui};
+use limn::event::{Target, UiEventHandler, UiEventArgs};
+use limn::ui::Ui;
 use limn::util::{Dimensions, Point};
 use limn::resources::WidgetId;
 use limn::color::*;
