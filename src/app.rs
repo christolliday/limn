@@ -29,7 +29,6 @@ impl App {
     }
 
     fn initialize_handlers(&mut self) {
-        self.add_handler_fn(ui::handle_redraw);
         self.add_handler_fn(solver::handle_layout_change);
         self.add_handler_fn(input::handle_input);
 

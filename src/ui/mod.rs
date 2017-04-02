@@ -245,9 +245,3 @@ pub struct EventArgs<'a> {
 pub trait EventHandler<T> {
     fn handle(&mut self, event: &T, args: EventArgs);
 }
-
-pub struct RedrawEvent;
-
-pub fn handle_redraw(_: &RedrawEvent, args: EventArgs) {
-    args.ui.redraw();
-}

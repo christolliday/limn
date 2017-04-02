@@ -11,7 +11,6 @@ use cassowary::{Variable, Constraint, Expression};
 use resources::WidgetId;
 use widget::Widget;
 use event::{Target, Queue};
-use ui::RedrawEvent;
 use ui;
 
 use layout::LayoutVars;
@@ -139,7 +138,6 @@ pub fn handle_layout_change(event: &LayoutChanged, args: ui::EventArgs) {
         }
     }
     // redraw everything when layout changes, for now
-    args.queue.push(Target::Ui, RedrawEvent);
     args.ui.redraw();
 }
 
