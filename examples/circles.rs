@@ -95,8 +95,8 @@ fn main() {
             }
         }
     }
-    impl ui::EventHandler<CircleEvent> for CircleEventHandler {
-        fn handle(&mut self, event: &CircleEvent, args: ui::EventArgs) {
+    impl UiEventHandler<CircleEvent> for CircleEventHandler {
+        fn handle(&mut self, event: &CircleEvent, args: UiEventArgs) {
             match *event {
                 CircleEvent::Add(point) => {
                     self.circles.push((point, create_circle(args.ui, &point)));

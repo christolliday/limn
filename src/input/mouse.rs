@@ -1,7 +1,6 @@
 use glutin;
 
-use ui;
-use event::Target;
+use event::{Target, UiEventHandler, UiEventArgs};
 use util::Point;
 use resources::WidgetId;
 use widgets::hover::Hover;
@@ -18,28 +17,28 @@ pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
 pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
 struct MouseLayoutChangeHandler;
-impl ui::EventHandler<LayoutChanged> for MouseLayoutChangeHandler {
-    fn handle(&mut self, _: &LayoutChanged, args: ui::EventArgs) {
+impl UiEventHandler<LayoutChanged> for MouseLayoutChangeHandler {
+    fn handle(&mut self, _: &LayoutChanged, args: UiEventArgs) {
         args.queue.push(Target::Ui, MouseInputEvent::LayoutChanged);
     }
 }
 struct MouseMoveHandler;
-impl ui::EventHandler<MouseMoved> for MouseMoveHandler {
-    fn handle(&mut self, event: &MouseMoved, args: ui::EventArgs) {
+impl UiEventHandler<MouseMoved> for MouseMoveHandler {
+    fn handle(&mut self, event: &MouseMoved, args: UiEventArgs) {
         let &MouseMoved(mouse) = event;
         args.queue.push(Target::Ui, MouseInputEvent::MouseMoved(mouse));
     }
 }
 struct MouseButtonHandler;
-impl ui::EventHandler<MouseButton> for MouseButtonHandler {
-    fn handle(&mut self, event: &MouseButton, args: ui::EventArgs) {
+impl UiEventHandler<MouseButton> for MouseButtonHandler {
+    fn handle(&mut self, event: &MouseButton, args: UiEventArgs) {
         let &MouseButton(state, button) = event;
         args.queue.push(Target::Ui, MouseInputEvent::MouseButton(state, button));
     }
 }
 struct MouseWheelHandler;
-impl ui::EventHandler<MouseWheel> for MouseWheelHandler {
-    fn handle(&mut self, event: &MouseWheel, args: ui::EventArgs) {
+impl UiEventHandler<MouseWheel> for MouseWheelHandler {
+    fn handle(&mut self, event: &MouseWheel, args: UiEventArgs) {
         let &MouseWheel(scroll) = event;
         args.queue.push(Target::Ui, MouseInputEvent::MouseWheel(scroll));
     }
@@ -70,9 +69,9 @@ impl MouseController {
         }
     }
 }
-impl ui::EventHandler<MouseInputEvent> for MouseController {
-    fn handle(&mut self, event: &MouseInputEvent, args: ui::EventArgs) {
-        let ui::EventArgs { ui, queue } = args;
+impl UiEventHandler<MouseInputEvent> for MouseController {
+    fn handle(&mut self, event: &MouseInputEvent, args: UiEventArgs) {
+        let UiEventArgs { ui, queue } = args;
 
         if let &MouseInputEvent::LayoutChanged = event {
             // send new mouse event, in case widget under mouse has shifted

@@ -13,7 +13,7 @@ use cassowary::Constraint;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use event::Queue;
+use event::{Queue, WidgetEventHandler, WidgetEventArgs, EventState, WidgetHandlerWrapper};
 use layout::solver::LimnSolver;
 use layout::{LayoutBuilder, LayoutVars};
 use resources::{resources, WidgetId};
@@ -52,8 +52,8 @@ impl BuildWidget for WidgetBuilder {
 pub trait WidgetBuilderCore {
     fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self;
     fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self;
-    fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self;
-    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, EventArgs)) -> &mut Self;
+    fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self;
+    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, WidgetEventArgs)) -> &mut Self;
     fn set_debug_name(&mut self, name: &str) -> &mut Self;
     fn set_debug_color(&mut self, color: Color) -> &mut Self;
     fn set_inactive(&mut self) -> &mut Self;
@@ -71,11 +71,11 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self.as_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
         self
     }
-    fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+    fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.as_mut().controller.add_handler(handler);
         self
     }
-    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, EventArgs)) -> &mut Self {
+    fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, WidgetEventArgs)) -> &mut Self {
         self.as_mut().controller.add_handler_fn(handler);
         self
     }
@@ -136,7 +136,7 @@ impl WidgetBuilder {
 }
 
 pub struct WidgetController {
-    handlers: Vec<HandlerWrapper>,
+    handlers: Vec<WidgetHandlerWrapper>,
 }
 impl WidgetController {
     pub fn new() -> Self {
@@ -146,77 +146,22 @@ impl WidgetController {
         controller.add_handler_fn(property::prop_change_handle);
         controller
     }
-    pub fn add_handler<H: EventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        self.handlers.push(HandlerWrapper::new(handler));
+    pub fn add_handler<H: WidgetEventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
+        self.handlers.push(WidgetHandlerWrapper::new(handler));
     }
-    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, EventArgs)) {
-        self.handlers.push(HandlerWrapper::new_from_fn(handler));
+    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, WidgetEventArgs)) {
+        self.handlers.push(WidgetHandlerWrapper::new_from_fn(handler));
     }
-}
-struct HandlerWrapper {
-    type_id: TypeId,
-    handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, EventArgs)>,
-}
-impl HandlerWrapper {
-    pub fn new<H, E>(handler: H) -> Self
-        where H: EventHandler<E> + 'static,
-              E: 'static
-    {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: EventArgs| {
-            let event: &E = event.downcast_ref().unwrap();
-            let handler: &mut H = handler.downcast_mut().unwrap();
-            handler.handle(event, args);
-        };
-        HandlerWrapper {
-            type_id: TypeId::of::<E>(),
-            handler: Box::new(handler),
-            handle_fn: Box::new(handle_fn),
-        }
-    }
-    pub fn new_from_fn<E: 'static>(handler: fn(&E, EventArgs)) -> Self {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: EventArgs| {
-            let event: &E = event.downcast_ref().unwrap();
-            let handler: &fn(&E, EventArgs) = handler.downcast_ref().unwrap();
-            handler(event, args);
-        };
-        HandlerWrapper {
-            type_id: TypeId::of::<E>(),
-            handler: Box::new(handler),
-            handle_fn: Box::new(handle_fn),
-        }
-    }
-    pub fn handles(&self, type_id: TypeId) -> bool {
-        self.type_id == type_id
-    }
-    pub fn handle(&mut self, event: &Box<Any + Send>, args: EventArgs) {
-        (self.handle_fn)(&mut self.handler, event, args);
-    }
-}
-
-// allows event handlers to communicate with event dispatcher
-pub struct EventState {
-    pub handled: bool,
-}
-pub struct EventArgs<'a> {
-    pub widget: &'a mut Widget,
-    pub queue: &'a mut Queue,
-    pub solver: &'a mut LimnSolver,
-    pub event_state: &'a mut EventState,
-}
-
-pub trait EventHandler<T> {
-    fn handle(&mut self, event: &T, args: EventArgs);
 }
 
 pub struct CallbackHandler<F, E>
-    where F: Fn(&E, &mut EventArgs)
+    where F: Fn(&E, &mut WidgetEventArgs)
 {
     callback: F,
     phantom: PhantomData<E>,
 }
 impl<F, E> CallbackHandler<F, E>
-    where F: Fn(&E, &mut EventArgs) {
+    where F: Fn(&E, &mut WidgetEventArgs) {
     pub fn new(callback: F) -> Self {
         CallbackHandler {
             callback: callback,
@@ -224,9 +169,9 @@ impl<F, E> CallbackHandler<F, E>
         }
     }
 }
-impl<F, E> EventHandler<E> for CallbackHandler<F, E>
-    where F: Fn(&E, &mut EventArgs) {
-    fn handle(&mut self, event: &E, mut args: EventArgs) {
+impl<F, E> WidgetEventHandler<E> for CallbackHandler<F, E>
+    where F: Fn(&E, &mut WidgetEventArgs) {
+    fn handle(&mut self, event: &E, mut args: WidgetEventArgs) {
         (self.callback)(event, &mut args);
     }
 }
@@ -245,9 +190,9 @@ impl WidgetContainer {
 
         let mut event_state = EventState { handled: false };
         for ref mut event_handler in self.controller.handlers.iter_mut() {
-            let event_handler: &mut HandlerWrapper = event_handler;
+            let event_handler: &mut WidgetHandlerWrapper = event_handler;
             if event_handler.handles(type_id) {
-                let event_args = EventArgs {
+                let event_args = WidgetEventArgs {
                     widget: &mut self.widget,
                     queue: queue,
                     solver: solver,

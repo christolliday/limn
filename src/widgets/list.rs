@@ -1,5 +1,4 @@
-use event::Target;
-use widget::{EventArgs, EventHandler};
+use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::style::{Value, Selector};
 use widget::property::{Property, PropChange};
@@ -35,8 +34,8 @@ impl ListHandler {
         ListHandler { selected: None }
     }
 }
-impl EventHandler<WidgetListItemSelected> for ListHandler {
-    fn handle(&mut self, event: &WidgetListItemSelected, mut args: EventArgs) {
+impl WidgetEventHandler<WidgetListItemSelected> for ListHandler {
+    fn handle(&mut self, event: &WidgetListItemSelected, mut args: WidgetEventArgs) {
         let selected = event.widget;
         if selected != self.selected {
             if let Some(old_selected) = self.selected {
@@ -47,7 +46,7 @@ impl EventHandler<WidgetListItemSelected> for ListHandler {
     }
 }
 
-fn list_handle_deselect(_: &ClickEvent, mut args: EventArgs) {
+fn list_handle_deselect(_: &ClickEvent, mut args: WidgetEventArgs) {
     args.queue.push(Target::Widget(args.widget.id), WidgetListItemSelected { widget: None });
 }
 
@@ -59,8 +58,8 @@ impl ListItemHandler {
         ListItemHandler { list_id: list_id }
     }
 }
-impl EventHandler<ClickEvent> for ListItemHandler {
-    fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
+impl WidgetEventHandler<ClickEvent> for ListItemHandler {
+    fn handle(&mut self, _: &ClickEvent, mut args: WidgetEventArgs) {
        if !args.widget.props.contains(&Property::Selected) {
             args.queue.push(Target::SubTree(args.widget.id), PropChange::Add(Property::Selected));
             let event = WidgetListItemSelected { widget: Some(args.widget.id) };

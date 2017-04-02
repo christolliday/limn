@@ -7,7 +7,7 @@ use graphics::Context;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use widget::{EventHandler, EventArgs};
+use event::{WidgetEventHandler, WidgetEventArgs};
 use widget::property::PropSet;
 use widget::style::Style;
 
@@ -77,8 +77,8 @@ impl<T: 'static, E> DrawableEventHandler<T, E> {
     }
 }
 
-impl<T: Drawable + 'static, E> EventHandler<E> for DrawableEventHandler<T, E> {
-    fn handle(&mut self, _: &E, args: EventArgs) {
+impl<T: Drawable + 'static, E> WidgetEventHandler<E> for DrawableEventHandler<T, E> {
+    fn handle(&mut self, _: &E, args: WidgetEventArgs) {
         args.widget.update(|state: &mut T| {
             (self.drawable_callback)(state);
         });

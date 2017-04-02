@@ -2,9 +2,8 @@ use glutin;
 
 use text_layout::Align;
 
-use event::Target;
-use widget::{WidgetBuilder, CallbackHandler, EventArgs};
-use widget::{WidgetBuilderCore, BuildWidget};
+use event::{Target, WidgetEventArgs};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, CallbackHandler};
 use widget::style::{Value, Selector};
 use widget::property::{self, Property, PropChange};
 use widget::property::states::*;
@@ -33,7 +32,7 @@ lazy_static! {
 }
 
 // show whether button is held down or not
-fn button_handle_mouse_down(event: &WidgetMouseButton, args: EventArgs) {
+fn button_handle_mouse_down(event: &WidgetMouseButton, args: WidgetEventArgs) {
     let &WidgetMouseButton(state, _) = event;
     let event = match state {
         glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
@@ -47,7 +46,7 @@ pub enum ToggleEvent {
     Off,
 }
 // show whether toggle button is activated
-fn toggle_button_handle_mouse(event: &WidgetMouseButton, args: EventArgs) {
+fn toggle_button_handle_mouse(event: &WidgetMouseButton, args: WidgetEventArgs) {
     if let &WidgetMouseButton(glutin::ElementState::Released, _) = event {
         let (toggle_event, prop_event) = match args.widget.props.contains(&Property::Activated) {
             true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
@@ -104,7 +103,7 @@ impl ToggleButtonBuilder {
         self
     }
     pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&ToggleEvent, &mut EventArgs) + 'static {
+        where F: Fn(&ToggleEvent, &mut WidgetEventArgs) + 'static {
         self.widget.add_handler(CallbackHandler::new(callback));
         self
     }
@@ -155,11 +154,11 @@ impl PushButtonBuilder {
 
 pub trait WidgetClickable {
     fn on_click<F>(&mut self, on_click: F) -> &mut Self
-        where F: Fn(&ClickEvent, &mut EventArgs) + 'static;
+        where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static;
 }
 impl<B> WidgetClickable for B where B: AsMut<WidgetBuilder> {
     fn on_click<F>(&mut self, on_click: F) -> &mut Self
-        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
+        where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static
     {
         self.add_handler(CallbackHandler::new(move |event, mut args| {
             (on_click)(event, &mut args);

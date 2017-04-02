@@ -3,12 +3,10 @@ use std::collections::HashMap;
 use stable_bst::map::TreeMap;
 use stable_bst::Bound::{Excluded, Unbounded};
 
-use widget::{EventArgs, EventHandler};
 use widget::property::{PropChange, Property};
 use resources::WidgetId;
 use input::mouse::ClickEvent;
-use event::{Target, Queue};
-use ui;
+use event::{Target, Queue, WidgetEventArgs, WidgetEventHandler, UiEventHandler, UiEventArgs};
 use app::App;
 
 use glutin;
@@ -58,8 +56,8 @@ impl FocusHandler {
         }
     }
 }
-impl ui::EventHandler<KeyboardInputEvent> for FocusHandler {
-    fn handle(&mut self, event: &KeyboardInputEvent, mut args: ui::EventArgs) {
+impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
+    fn handle(&mut self, event: &KeyboardInputEvent, mut args: UiEventArgs) {
         match event {
             &KeyboardInputEvent::AddFocusable(widget_id) => {
                 self.focusable.insert(self.focus_index_max, widget_id);
@@ -118,21 +116,21 @@ pub enum KeyboardInputEvent {
 }
 
 struct KeyboardForwarder;
-impl ui::EventHandler<KeyboardInput> for KeyboardForwarder {
-    fn handle(&mut self, event: &KeyboardInput, mut args: ui::EventArgs) {
+impl UiEventHandler<KeyboardInput> for KeyboardForwarder {
+    fn handle(&mut self, event: &KeyboardInput, mut args: UiEventArgs) {
         args.queue.push(Target::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
     }
 }
 struct KeyboardCharForwarder;
-impl ui::EventHandler<ReceivedCharacter> for KeyboardCharForwarder {
-    fn handle(&mut self, event: &ReceivedCharacter, mut args: ui::EventArgs) {
+impl UiEventHandler<ReceivedCharacter> for KeyboardCharForwarder {
+    fn handle(&mut self, event: &ReceivedCharacter, mut args: UiEventArgs) {
         args.queue.push(Target::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
     }
 }
 
 pub struct WidgetFocusHandler;
-impl EventHandler<ClickEvent> for WidgetFocusHandler {
-    fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
+impl WidgetEventHandler<ClickEvent> for WidgetFocusHandler {
+    fn handle(&mut self, _: &ClickEvent, mut args: WidgetEventArgs) {
         args.queue.push(Target::Ui, KeyboardInputEvent::FocusChange(Some(args.widget.id)));
     }
 }

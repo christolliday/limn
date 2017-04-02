@@ -3,8 +3,7 @@ pub mod keyboard;
 
 use glutin;
 
-use ui;
-use event::Target;
+use event::{Target, UiEventHandler, UiEventArgs};
 use input::mouse::{MouseMoved, MouseButton, MouseWheel};
 use input::keyboard::{KeyboardInput, ReceivedCharacter};
 use util::Point;
@@ -12,7 +11,7 @@ use util::Point;
 #[derive(Clone)]
 pub struct InputEvent(pub glutin::Event);
 
-pub fn handle_input(event: &InputEvent, args: ui::EventArgs) {
+pub fn handle_input(event: &InputEvent, args: UiEventArgs) {
     let queue = args.queue;
     let InputEvent(event) = event.clone();
     match event {
@@ -41,8 +40,8 @@ pub fn handle_input(event: &InputEvent, args: ui::EventArgs) {
 }
 
 pub struct EscKeyCloseHandler;
-impl ui::EventHandler<KeyboardInput> for EscKeyCloseHandler {
-    fn handle(&mut self, event: &KeyboardInput, args: ui::EventArgs) {
+impl UiEventHandler<KeyboardInput> for EscKeyCloseHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: UiEventArgs) {
         if let &KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = event {
             args.ui.close();
         }
@@ -59,8 +58,8 @@ impl DebugSettingsHandler {
     }
 }
 use glutin::ElementState;
-impl ui::EventHandler<KeyboardInput> for DebugSettingsHandler {
-    fn handle(&mut self, event: &KeyboardInput, args: ui::EventArgs) {
+impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: UiEventArgs) {
         if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = event {
             self.debug_on = !self.debug_on;
             args.ui.set_debug_draw_bounds(self.debug_on);

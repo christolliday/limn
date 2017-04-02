@@ -4,12 +4,11 @@ use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 use cassowary::Variable;
 
-use widget::{WidgetBuilder, EventHandler, EventArgs};
-use widget::WidgetBuilderCore;
+use widget::{WidgetBuilder, WidgetBuilderCore};
 use layout::LayoutVars;
 use ui::ChildAttachedEvent;
 use resources::WidgetId;
-use event::Target;
+use event::{Target, WidgetEventHandler, WidgetEventArgs};
 
 #[derive(Copy, Clone)]
 pub enum Orientation {
@@ -47,8 +46,8 @@ pub enum LinearLayoutEvent {
     AddWidget(WidgetId, LayoutVars),
     RemoveWidget(WidgetId),
 }
-impl EventHandler<LinearLayoutEvent> for LinearLayoutHandler {
-    fn handle(&mut self, event: &LinearLayoutEvent, args: EventArgs) {
+impl WidgetEventHandler<LinearLayoutEvent> for LinearLayoutHandler {
+    fn handle(&mut self, event: &LinearLayoutEvent, args: WidgetEventArgs) {
         match *event {
             LinearLayoutEvent::AddWidget(child_id, ref child_layout) => {
 
@@ -113,7 +112,7 @@ impl EventHandler<LinearLayoutEvent> for LinearLayoutHandler {
     }
 }
 
-fn linear_layout_handle_child_added(event: &ChildAttachedEvent, args: EventArgs) {
+fn linear_layout_handle_child_added(event: &ChildAttachedEvent, args: WidgetEventArgs) {
     let &ChildAttachedEvent(child_id, ref child_layout) = event;
     args.queue.push(Target::Widget(args.widget.id), LinearLayoutEvent::AddWidget(child_id, child_layout.clone()));
 }

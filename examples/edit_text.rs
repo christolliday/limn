@@ -6,7 +6,7 @@ mod util;
 use text_layout::Align;
 
 use limn::event::Target;
-use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
+use limn::widget::{WidgetBuilder, WidgetEventHandler, WidgetEventArgs};
 use limn::widget::WidgetBuilderCore;
 use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
@@ -20,8 +20,8 @@ enum EditTextSettingsEvent {
     BottomAlign,
 }
 struct EditTextSettingsHandler;
-impl EventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
-    fn handle(&mut self, event: &EditTextSettingsEvent, args: EventArgs) {
+impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
+    fn handle(&mut self, event: &EditTextSettingsEvent, args: WidgetEventArgs) {
         args.widget.update(|drawable: &mut TextDrawable| {
             match *event {
                 EditTextSettingsEvent::LeftAlign => drawable.align = Align::Start,

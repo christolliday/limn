@@ -1,7 +1,6 @@
 use text_layout::Align;
 
-use widget::{WidgetBuilder, EventArgs, CallbackHandler};
-use widget::{WidgetBuilderCore, BuildWidget};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, CallbackHandler};
 use widget::property;
 use widget::property::states::*;
 use widget::style::{Value, Selector};
@@ -9,12 +8,12 @@ use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::{RectDrawable, RectStyleField};
 use drawable::text::{TextDrawable, TextStyleField};
-use event::Target;
+use event::{Target, WidgetEventArgs};
 use color::*;
 
 const BACKSPACE: char = '\u{8}';
 
-fn edit_text_handle_char(event: &WidgetReceivedCharacter, args: EventArgs) {
+fn edit_text_handle_char(event: &WidgetReceivedCharacter, args: WidgetEventArgs) {
     let &WidgetReceivedCharacter(char) = event;
     let mut text = args.widget.drawable::<TextDrawable>().unwrap().text.clone();
     match char {
@@ -37,7 +36,7 @@ fn edit_text_handle_char(event: &WidgetReceivedCharacter, args: EventArgs) {
 
 pub struct TextUpdated(pub String);
 
-pub fn text_change_handle(event: &TextUpdated, args: EventArgs) {
+pub fn text_change_handle(event: &TextUpdated, args: WidgetEventArgs) {
     args.widget.update(|state: &mut TextDrawable| state.text = event.0.clone());
 }
 
@@ -100,7 +99,7 @@ impl EditTextBuilder {
     }
 
     pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&TextUpdated, &mut EventArgs) + 'static
+        where F: Fn(&TextUpdated, &mut WidgetEventArgs) + 'static
     {
         self.text_widget.add_handler(CallbackHandler::new(callback));
         self

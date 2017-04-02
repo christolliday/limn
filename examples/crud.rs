@@ -9,7 +9,7 @@ use std::mem;
 use std::collections::HashMap;
 
 use limn::event::Target;
-use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
+use limn::widget::{WidgetBuilder, WidgetEventHandler, WidgetEventArgs};
 use limn::widget::WidgetBuilderCore;
 use limn::widget::style::Value;
 use limn::widget::property::PropChange;
@@ -105,8 +105,8 @@ impl PeopleHandler {
         }
     }
 }
-impl ui::EventHandler<PeopleEvent> for PeopleHandler {
-    fn handle(&mut self, event: &PeopleEvent, args: ui::EventArgs) {
+impl UiEventHandler<PeopleEvent> for PeopleHandler {
+    fn handle(&mut self, event: &PeopleEvent, args: UiEventArgs) {
 
         let was_valid = self.person.is_valid();
         match event.clone() {
@@ -170,8 +170,8 @@ impl PersonHandler {
     }
 }
 use limn::widget::property::Property;
-impl EventHandler<PropChange> for PersonHandler {
-    fn handle(&mut self, event: &PropChange, args: EventArgs) {
+impl WidgetEventHandler<PropChange> for PersonHandler {
+    fn handle(&mut self, event: &PropChange, args: WidgetEventArgs) {
         match *event {
             PropChange::Add(Property::Selected) => {
                 args.queue.push(Target::Ui, PeopleEvent::PersonSelected(self.person_id, args.widget.id));

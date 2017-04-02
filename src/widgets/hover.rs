@@ -1,6 +1,5 @@
-use event::Target;
-use widget::{WidgetBuilder, EventArgs};
-use widget::WidgetBuilderCore;
+use event::{Target, WidgetEventArgs};
+use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::property::{Property, PropChange};
 
 #[derive(Debug)]
@@ -9,7 +8,7 @@ pub enum Hover {
     Out,
 }
 
-fn handle_hover(event: &Hover, mut args: EventArgs) {
+fn handle_hover(event: &Hover, mut args: WidgetEventArgs) {
     let event = match *event {
         Hover::Over => PropChange::Add(Property::Hover),
         Hover::Out => PropChange::Remove(Property::Hover),

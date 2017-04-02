@@ -1,9 +1,8 @@
 use glutin;
 use cassowary::strength::*;
 
-use event::Target;
-use widget::{WidgetBuilder, EventArgs, EventHandler};
-use widget::WidgetBuilderCore;
+use event::{Target, WidgetEventArgs, WidgetEventHandler};
+use widget::{WidgetBuilder, WidgetBuilderCore};
 use ui::ChildAttachedEvent;
 use util::{Point, Rectangle};
 
@@ -14,8 +13,8 @@ pub struct WidgetScroll {
     parent_bounds: Rectangle,
 }
 
-fn scroll_handle_mouse_wheel(event: &WidgetMouseWheel, args: EventArgs) {
-    let EventArgs { widget, queue, .. } = args;
+fn scroll_handle_mouse_wheel(event: &WidgetMouseWheel, args: WidgetEventArgs) {
+    let WidgetEventArgs { widget, queue, .. } = args;
     let widget_bounds = widget.layout.bounds();
     let event = WidgetScroll {
         event: event.0,
@@ -24,7 +23,7 @@ fn scroll_handle_mouse_wheel(event: &WidgetMouseWheel, args: EventArgs) {
     queue.push(Target::Child(widget.id), event);
 }
 
-fn scroll_handle_child_added(event: &ChildAttachedEvent, args: EventArgs) {
+fn scroll_handle_child_added(event: &ChildAttachedEvent, args: WidgetEventArgs) {
     let &ChildAttachedEvent(_, ref child_layout) = event;
     args.widget.update_layout(|layout| {
         layout.scroll_parent(child_layout);
@@ -39,9 +38,9 @@ impl WidgetScrollHandler {
         WidgetScrollHandler { offset: Point { x: 0.0, y: 0.0 } }
     }
 }
-impl EventHandler<WidgetScroll> for WidgetScrollHandler {
-    fn handle(&mut self, event: &WidgetScroll, args: EventArgs) {
-        let EventArgs { widget, solver, .. } = args;
+impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
+    fn handle(&mut self, event: &WidgetScroll, args: WidgetEventArgs) {
+        let WidgetEventArgs { widget, solver, .. } = args;
         let ref layout = widget.layout;
         let &WidgetScroll { event, parent_bounds } = event;
 

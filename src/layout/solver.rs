@@ -10,8 +10,7 @@ use cassowary::{Variable, Constraint, Expression};
 
 use resources::WidgetId;
 use widget::Widget;
-use event::{Target, Queue};
-use ui;
+use event::{Target, Queue, UiEventArgs};
 
 use layout::LayoutVars;
 
@@ -130,7 +129,7 @@ impl LimnSolver {
 
 pub struct LayoutChanged(Vec<(WidgetId, Variable, f64)>);
 
-pub fn handle_layout_change(event: &LayoutChanged, args: ui::EventArgs) { 
+pub fn handle_layout_change(event: &LayoutChanged, args: UiEventArgs) { 
     let ref changes = event.0;
     for &(widget_id, var, value) in changes {
         if let Some(widget) = args.ui.graph.get_widget(widget_id) {

@@ -1,8 +1,7 @@
 use cassowary::strength::*;
 
-use event::Target;
-use widget::{WidgetBuilder, EventHandler, EventArgs};
-use widget::WidgetBuilderCore;
+use event::{Target, WidgetEventHandler, WidgetEventArgs};
+use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::style::Value;
 use widgets::drag::{DragEvent, WidgetDrag};
 use drawable::rect::{RectDrawable, RectStyleField};
@@ -54,9 +53,9 @@ impl<F: Fn(f64)> SliderHandler<F> {
         SliderHandler { callback: callback }
     }
 }
-impl<F> EventHandler<MovedSliderWidgetEvent> for SliderHandler<F>
+impl<F> WidgetEventHandler<MovedSliderWidgetEvent> for SliderHandler<F>
     where F: Fn(f64) {
-    fn handle(&mut self, event: &MovedSliderWidgetEvent, mut args: EventArgs) {
+    fn handle(&mut self, event: &MovedSliderWidgetEvent, mut args: WidgetEventArgs) {
         let bounds = args.widget.layout.bounds();
         let range = bounds.width - (event.slider_right - event.slider_left);
         let val = (event.slider_left - bounds.left) / range;
@@ -78,9 +77,9 @@ impl DragHandler {
         DragHandler { container: container, start_pos: 0.0 }
     }
 }
-impl EventHandler<WidgetDrag> for DragHandler {
-    fn handle(&mut self, event: &WidgetDrag, args: EventArgs) {
-        let EventArgs { solver, widget, .. } = args;
+impl WidgetEventHandler<WidgetDrag> for DragHandler {
+    fn handle(&mut self, event: &WidgetDrag, args: WidgetEventArgs) {
+        let WidgetEventArgs { solver, widget, .. } = args;
         let ref layout = widget.layout;
         let bounds = layout.bounds();
         let &WidgetDrag { ref drag_type, position } = event;

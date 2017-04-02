@@ -236,12 +236,3 @@ impl Ui {
 pub struct WidgetAttachedEvent;
 pub struct WidgetDetachedEvent;
 pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
-
-pub struct EventArgs<'a> {
-    pub ui: &'a mut Ui,
-    pub queue: &'a mut Queue,
-}
-
-pub trait EventHandler<T> {
-    fn handle(&mut self, event: &T, args: EventArgs);
-}

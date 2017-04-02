@@ -3,7 +3,7 @@ extern crate glutin;
 
 mod util;
 
-use limn::widget::{WidgetBuilder, EventHandler, EventArgs};
+use limn::widget::{WidgetBuilder, WidgetEventHandler, WidgetEventArgs};
 use limn::widget::WidgetBuilderCore;
 use limn::widget::style::Value;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
@@ -26,8 +26,8 @@ fn main() {
     root_widget.add_child(left_spacer);
 
     struct CountHandler;
-    impl EventHandler<CountEvent> for CountHandler {
-        fn handle(&mut self, event: &CountEvent, args: EventArgs) {
+    impl WidgetEventHandler<CountEvent> for CountHandler {
+        fn handle(&mut self, event: &CountEvent, args: WidgetEventArgs) {
             let &CountEvent(count) = event;
             args.widget.update(|state: &mut TextDrawable| state.text = format!("{}", count));
         }
@@ -65,8 +65,8 @@ fn main() {
             CounterHandler { count: 0 }
         }
     }
-    impl EventHandler<CounterEvent> for CounterHandler {
-        fn handle(&mut self, _: &CounterEvent, args: EventArgs) {
+    impl WidgetEventHandler<CounterEvent> for CounterHandler {
+        fn handle(&mut self, _: &CounterEvent, args: WidgetEventArgs) {
             self.count += 1;
             let address = Target::SubTree(args.widget.id);
             args.queue.push(address, CountEvent(self.count));

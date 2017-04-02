@@ -1,10 +1,10 @@
-use std::any::{Any, TypeId};
+use std::any::TypeId;
 use std::collections::HashMap;
 
 use backend::Window;
 
-use ui::{self, Ui};
-use event::{Queue, Target};
+use ui::Ui;
+use event::{Queue, Target, UiHandlerWrapper, UiEventHandler, UiEventArgs};
 
 use layout::solver;
 use input;
@@ -49,7 +49,7 @@ impl App {
                 Target::Ui => {
                     if let Some(handlers) = self.handlers.get_mut(&type_id) {
                         for event_handler in handlers.iter_mut() {
-                            let args = ui::EventArgs {
+                            let args = UiEventArgs {
                                 ui: &mut self.ui,
                                 queue: &mut self.queue,
                             };
@@ -64,47 +64,12 @@ impl App {
         }
     }
 
-    pub fn add_handler<H: ui::EventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
+    pub fn add_handler<H: UiEventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
         let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
         handlers.push(UiHandlerWrapper::new(handler));
     }
-    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, ui::EventArgs)) {
+    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, UiEventArgs)) {
         let handlers = self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new());
         handlers.push(UiHandlerWrapper::new_from_fn(handler));
-    }
-}
-
-struct UiHandlerWrapper {
-    handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, ui::EventArgs)>,
-}
-impl UiHandlerWrapper {
-    pub fn new<H, E>(handler: H) -> Self
-        where H: ui::EventHandler<E> + 'static,
-              E: 'static
-    {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: ui::EventArgs| {
-            let event: &E = event.downcast_ref().unwrap();
-            let handler: &mut H = handler.downcast_mut().unwrap();
-            handler.handle(event, args);
-        };
-        UiHandlerWrapper {
-            handler: Box::new(handler),
-            handle_fn: Box::new(handle_fn),
-        }
-    }
-    pub fn new_from_fn<E: 'static>(handler: fn(&E, ui::EventArgs)) -> Self {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: ui::EventArgs| {
-            let event: &E = event.downcast_ref().unwrap();
-            let handler: &fn(&E, ui::EventArgs) = handler.downcast_ref().unwrap();
-            handler(event, args);
-        };
-        UiHandlerWrapper {
-            handler: Box::new(handler),
-            handle_fn: Box::new(handle_fn),
-        }
-    }
-    pub fn handle(&mut self, event: &Box<Any + Send>, args: ui::EventArgs) {
-        (self.handle_fn)(&mut self.handler, event, args);
     }
 }
