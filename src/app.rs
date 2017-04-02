@@ -1,13 +1,15 @@
 use std::any::TypeId;
 use std::collections::HashMap;
 
-use backend::Window;
+use backend::{Window, WindowEvents};
+use backend::events::WindowEvent;
+use glutin::Event;
 
 use ui::Ui;
+use input::{self, InputEvent};
 use event::{Queue, Target, UiHandlerWrapper, UiEventHandler, UiEventArgs};
-
 use layout::solver;
-use input;
+use util::Dimensions;
 
 pub struct App {
     pub ui: Ui,
@@ -27,6 +29,11 @@ impl App {
         app.initialize_handlers();
         app
     }
+    pub fn resize_window_to_fit(&mut self, window: &Window) {
+        // handle layout change events, needed to measure widgets before resizing window
+        self.handle_events();
+        self.ui.resize_window_to_fit(&window);
+    }
 
     fn initialize_handlers(&mut self) {
         self.add_handler_fn(solver::handle_layout_change);
@@ -37,8 +44,34 @@ impl App {
         self.add_drag_handlers();
     }
 
-    pub fn render(&mut self, window: &mut Window) {
-        self.ui.draw_if_needed(window);
+    pub fn main_loop(&mut self, window: &mut Window) {
+        let mut events = WindowEvents::new();
+        while !self.ui.should_close() {
+            let event = events.next(&mut window.window);
+            match event {
+                WindowEvent::Input(event) => {
+                    match event {
+                        Event::Resized(width, height) => {
+                            window.window_resized();
+                            self.ui.window_resized(Dimensions {
+                                width: width as f64,
+                                height: height as f64,
+                            });
+                        }
+                        Event::Awakened => {
+                            self.handle_events();
+                        }
+                        _ => {
+                            self.queue.push(Target::Ui, InputEvent(event));
+                            self.handle_events();
+                        },
+                    }
+                }
+                WindowEvent::Render => {
+                    self.ui.draw_if_needed(window);
+                }
+            }
+        }
     }
 
     pub fn handle_events(&mut self) {
