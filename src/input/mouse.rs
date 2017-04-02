@@ -16,35 +16,6 @@ pub struct MouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
 pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
-struct MouseLayoutChangeHandler;
-impl UiEventHandler<LayoutChanged> for MouseLayoutChangeHandler {
-    fn handle(&mut self, _: &LayoutChanged, args: UiEventArgs) {
-        args.queue.push(Target::Ui, MouseInputEvent::LayoutChanged);
-    }
-}
-struct MouseMoveHandler;
-impl UiEventHandler<MouseMoved> for MouseMoveHandler {
-    fn handle(&mut self, event: &MouseMoved, args: UiEventArgs) {
-        let &MouseMoved(mouse) = event;
-        args.queue.push(Target::Ui, MouseInputEvent::MouseMoved(mouse));
-    }
-}
-struct MouseButtonHandler;
-impl UiEventHandler<MouseButton> for MouseButtonHandler {
-    fn handle(&mut self, event: &MouseButton, args: UiEventArgs) {
-        let &MouseButton(state, button) = event;
-        args.queue.push(Target::Ui, MouseInputEvent::MouseButton(state, button));
-    }
-}
-struct MouseWheelHandler;
-impl UiEventHandler<MouseWheel> for MouseWheelHandler {
-    fn handle(&mut self, event: &MouseWheel, args: UiEventArgs) {
-        let &MouseWheel(scroll) = event;
-        args.queue.push(Target::Ui, MouseInputEvent::MouseWheel(scroll));
-    }
-}
-
-
 pub enum MouseInputEvent {
     LayoutChanged,
     MouseMoved(Point),
@@ -111,10 +82,23 @@ impl UiEventHandler<MouseInputEvent> for MouseController {
 
 impl App {
     pub fn add_mouse_handlers(&mut self) {
+        // adapters to create MouseInputEvents for MouseController
+        self.add_handler_fn(| _: &LayoutChanged, args| {
+            args.queue.push(Target::Ui, MouseInputEvent::LayoutChanged);
+        });
+        self.add_handler_fn(|event: &MouseMoved, args| {
+            let &MouseMoved(mouse) = event;
+            args.queue.push(Target::Ui, MouseInputEvent::MouseMoved(mouse));
+        });
+        self.add_handler_fn(|event: &MouseButton, args| {
+            let &MouseButton(state, button) = event;
+            args.queue.push(Target::Ui, MouseInputEvent::MouseButton(state, button));
+        });
+        self.add_handler_fn(|event: &MouseWheel, args| {
+            let &MouseWheel(scroll) = event;
+            args.queue.push(Target::Ui, MouseInputEvent::MouseWheel(scroll));
+        });
+
         self.add_handler(MouseController::new());
-        self.add_handler(MouseLayoutChangeHandler);
-        self.add_handler(MouseMoveHandler);
-        self.add_handler(MouseButtonHandler);
-        self.add_handler(MouseWheelHandler);
     }
 }

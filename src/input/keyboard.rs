@@ -3,10 +3,11 @@ use std::collections::HashMap;
 use stable_bst::map::TreeMap;
 use stable_bst::Bound::{Excluded, Unbounded};
 
+use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::property::{PropChange, Property};
 use resources::WidgetId;
 use input::mouse::ClickEvent;
-use event::{Target, Queue, WidgetEventArgs, WidgetEventHandler, UiEventHandler, UiEventArgs};
+use event::{Target, Queue, UiEventHandler, UiEventArgs};
 use app::App;
 
 use glutin;
@@ -115,30 +116,22 @@ pub enum KeyboardInputEvent {
     ReceivedCharacter(ReceivedCharacter),
 }
 
-struct KeyboardForwarder;
-impl UiEventHandler<KeyboardInput> for KeyboardForwarder {
-    fn handle(&mut self, event: &KeyboardInput, mut args: UiEventArgs) {
-        args.queue.push(Target::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
-    }
-}
-struct KeyboardCharForwarder;
-impl UiEventHandler<ReceivedCharacter> for KeyboardCharForwarder {
-    fn handle(&mut self, event: &ReceivedCharacter, mut args: UiEventArgs) {
-        args.queue.push(Target::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
-    }
-}
-
-pub struct WidgetFocusHandler;
-impl WidgetEventHandler<ClickEvent> for WidgetFocusHandler {
-    fn handle(&mut self, _: &ClickEvent, mut args: WidgetEventArgs) {
-        args.queue.push(Target::Ui, KeyboardInputEvent::FocusChange(Some(args.widget.id)));
+impl WidgetBuilder {
+    pub fn make_focusable(&mut self) -> &mut Self {
+        self.add_handler_fn(|_: &ClickEvent, args| {
+            args.queue.push(Target::Ui, KeyboardInputEvent::FocusChange(Some(args.widget.id)));
+        })
     }
 }
 
 impl App {
     pub fn add_keyboard_handlers(&mut self) {
-        self.add_handler(KeyboardForwarder);
-        self.add_handler(KeyboardCharForwarder);
+        self.add_handler_fn(|event: &KeyboardInput, args| {
+            args.queue.push(Target::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
+        });
+        self.add_handler_fn(|event: &ReceivedCharacter, args| {
+            args.queue.push(Target::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
+        });
         self.add_handler(FocusHandler::new());
     }
 }

@@ -115,8 +115,9 @@ impl App {
             .push(UiHandlerWrapper::new(handler));
     }
     /// Add a new stateless global event handler
-    pub fn add_handler_fn<E: 'static>(&mut self, handler: fn(&E, UiEventArgs)) {
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, UiEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
         self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
             .push(UiHandlerWrapper::new_from_fn(handler));
+        self
     }
 }

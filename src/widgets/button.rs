@@ -5,7 +5,7 @@ use text_layout::Align;
 use event::{Target, WidgetEventArgs};
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::style::{Value, Selector};
-use widget::property::{self, Property, PropChange};
+use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleField};
@@ -76,8 +76,7 @@ impl ToggleButtonBuilder {
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
-            .add_handler_fn(toggle_button_handle_mouse)
-            .add_handler_fn(property::prop_change_handle);
+            .add_handler_fn(toggle_button_handle_mouse);
         widget.layout().dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
@@ -95,8 +94,7 @@ impl ToggleButtonBuilder {
         let button_text_drawable = TextDrawable::default();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
-            .set_drawable_with_style(button_text_drawable, text_style)
-            .add_handler_fn(property::prop_change_handle);
+            .set_drawable_with_style(button_text_drawable, text_style);
         button_text_widget.layout().center(&self.widget.layout().vars);
 
         self.widget.add_child(button_text_widget);
@@ -126,9 +124,7 @@ impl BuildWidget for PushButtonBuilder {
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new();
-        widget
-            .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
-            .add_handler_fn(property::prop_change_handle);
+        widget.set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone());
 
         widget.layout().dimensions(Dimensions {
             width: 100.0,
@@ -144,8 +140,7 @@ impl PushButtonBuilder {
         let drawable = TextDrawable::default();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
-            .set_drawable_with_style(drawable, text_style)
-            .add_handler_fn(property::prop_change_handle);
+            .set_drawable_with_style(drawable, text_style);
         button_text_widget.layout().center(self.layout());
 
         self.widget.add_child(button_text_widget);

@@ -1,11 +1,10 @@
 use text_layout::Align;
 
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
-use widget::property;
 use widget::property::states::*;
 use widget::style::{Value, Selector};
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
-use input::keyboard::{WidgetFocusHandler, WidgetReceivedCharacter, KeyboardInputEvent};
+use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::{RectDrawable, RectStyleField};
 use drawable::text::{TextDrawable, TextStyleField};
 use event::{Target, WidgetEventArgs};
@@ -78,8 +77,7 @@ impl EditTextBuilder {
             .add_handler_fn(|_: &WidgetDetachedEvent, args| {
                 args.queue.push(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget.id));
             })
-            .add_handler(WidgetFocusHandler)
-            .add_handler_fn(property::prop_change_handle);
+            .make_focusable();
 
 
         let text_style = vec![TextStyleField::VertAlign(Value::Single(Align::Start))];
@@ -87,8 +85,7 @@ impl EditTextBuilder {
         text_widget
             .set_drawable_with_style(TextDrawable::default(), text_style)
             .add_handler_fn(edit_text_handle_char)
-            .add_handler_fn(text_change_handle)
-            .add_handler_fn(property::prop_change_handle);
+            .add_handler_fn(text_change_handle);
         text_widget.layout().bound_left(&widget.layout()).padding(5.0);
         text_widget.layout().bound_right(&widget.layout()).padding(5.0);
 
