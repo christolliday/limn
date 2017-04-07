@@ -55,7 +55,7 @@ fn main() {
         (undo_id, redo_id)
     }
 
-    fn create_circle(ui: &mut Ui, center: &Point) -> WidgetId {
+    fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetId) -> WidgetId {
         let border = graphics::ellipse::Border {
             color: BLACK,
             radius: 2.0,
@@ -73,22 +73,23 @@ fn main() {
 
         widget.layout().top_left(top_left).strength(STRONG);
         let id = widget.id();
-        let root_id = ui.graph.root_id;
-        ui.add_widget(widget, root_id);
+        ui.add_widget(widget, parent_id);
         id
     }
 
     struct CircleEventHandler {
+        circle_canvas_id: WidgetId,
         undo_id: WidgetId,
         redo_id: WidgetId,
         circles: Vec<(Point, WidgetId)>,
         undo: Vec<Point>,
     }
     impl CircleEventHandler {
-        fn new(undo_id: WidgetId, redo_id: WidgetId) -> Self {
+        fn new(circle_canvas_id: WidgetId, undo_id: WidgetId, redo_id: WidgetId) -> Self {
             CircleEventHandler {
                 circles: Vec::new(),
                 undo: Vec::new(),
+                circle_canvas_id: circle_canvas_id,
                 undo_id: undo_id,
                 redo_id: redo_id,
             }
@@ -98,7 +99,7 @@ fn main() {
         fn handle(&mut self, event: &CircleEvent, args: UiEventArgs) {
             match *event {
                 CircleEvent::Add(point) => {
-                    self.circles.push((point, create_circle(args.ui, &point)));
+                    self.circles.push((point, create_circle(args.ui, &point, self.circle_canvas_id)));
                     self.undo.clear();
 
                     args.queue.push(Target::SubTree(self.undo_id), PropChange::Remove(Property::Inactive));
@@ -118,7 +119,7 @@ fn main() {
                 CircleEvent::Redo => {
                     if self.undo.len() > 0 {
                         let point = self.undo.pop().unwrap();
-                        self.circles.push((point, create_circle(args.ui, &point)));
+                        self.circles.push((point, create_circle(args.ui, &point, self.circle_canvas_id)));
                         if self.undo.len() == 0 {
                             args.queue.push(Target::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
                         }
@@ -128,19 +129,21 @@ fn main() {
         }
     }
     let mut root_widget = WidgetBuilder::new();
-    root_widget.on_click(|event, args| {
-        let event = CircleEvent::Add(event.position);
-        args.queue.push(Target::Ui, event);
-    });
     root_widget.layout().dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
     });
 
-
+    let mut circle_canvas = WidgetBuilder::new();
+    circle_canvas.on_click(|event, args| {
+        let event = CircleEvent::Add(event.position);
+        args.queue.push(Target::Ui, event);
+    });
+    let circle_canvas_id = circle_canvas.id();
+    root_widget.add_child(circle_canvas);
     let (undo_id, redo_id) = create_undo_redo_buttons(&mut root_widget);
 
-    ui.add_handler(CircleEventHandler::new(undo_id, redo_id));
+    ui.add_handler(CircleEventHandler::new(circle_canvas_id, undo_id, redo_id));
 
     util::set_root_and_loop(window, ui, root_widget);
 }
