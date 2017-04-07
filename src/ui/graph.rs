@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{Dfs, DfsPostOrder};
+use petgraph::visit::{Dfs, VisitMap, GraphRef, IntoNeighbors};
 use petgraph::Direction;
 use petgraph::visit::Visitable;
 use petgraph::stable_graph::WalkNeighbors;
@@ -148,13 +148,13 @@ impl NeighborsWalker {
 
 pub struct CursorWidgetWalker {
     point: Point,
-    dfs: DfsPostOrder<NodeIndex, <Graph as Visitable>::Map>,
+    dfs: DfsLastDrawn<NodeIndex, <Graph as Visitable>::Map>,
 }
 impl CursorWidgetWalker {
     fn new(point: Point, graph: &Graph, root_index: NodeIndex) -> Self {
         CursorWidgetWalker {
             point: point,
-            dfs: DfsPostOrder::new(graph, root_index),
+            dfs: DfsLastDrawn::new(graph, root_index),
         }
     }
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
@@ -182,5 +182,60 @@ impl DfsWalker {
         } else {
             None
         }
+    }
+}
+
+/// Based on petgraph DfsPostOrder, identical except that
+/// it visits the deepest node on the last inserted branch first
+/// ie. the last drawn nodes, to find the first node that intersects the cursor
+#[derive(Clone, Debug)]
+pub struct DfsLastDrawn<N, VM> {
+    /// The stack of nodes to visit
+    pub stack: Vec<N>,
+    /// The map of discovered nodes
+    pub discovered: VM,
+    /// The map of finished nodes
+    pub finished: VM,
+}
+
+impl<N, VM> DfsLastDrawn<N, VM>
+    where N: Copy + PartialEq,
+          VM: VisitMap<N>,
+{
+    /// Create a new `DfsPostOrder` using the graph's visitor map, and put
+    /// `start` in the stack of nodes to visit.
+    pub fn new<G>(graph: G, start: N) -> Self
+        where G: GraphRef + Visitable<NodeId=N, Map=VM>
+    {
+        DfsLastDrawn {
+            stack: vec![start],
+            discovered: graph.visit_map(),
+            finished: graph.visit_map(),
+        }
+    }
+
+    /// Return the next node in the traversal, or `None` if the traversal is done.
+    pub fn next<G>(&mut self, graph: G) -> Option<N>
+        where G: IntoNeighbors<NodeId=N>,
+    {
+        while let Some(&nx) = self.stack.last() {
+            if self.discovered.visit(nx) {
+                // First time visiting `nx`: Push neighbors, don't pop `nx`
+                let mut neighbors: Vec<N> = graph.neighbors(nx).collect();
+                neighbors.reverse();
+                for succ in neighbors {
+                    if !self.discovered.is_visited(&succ) {
+                        self.stack.push(succ);
+                    }
+                }
+            } else {
+                self.stack.pop();
+                if self.finished.visit(nx) {
+                    // Second time: All reachable nodes must have been finished
+                    return Some(nx);
+                }
+            }
+        }
+        None
     }
 }
