@@ -91,6 +91,9 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
     }
     fn set_inactive(&mut self) -> &mut Self {
         self.as_mut().props.insert(Property::Inactive);
+        for child in &mut self.as_mut().children {
+            child.props.insert(Property::Inactive);
+        }
         self
     }
     fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self {

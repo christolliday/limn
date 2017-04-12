@@ -10,14 +10,18 @@ use widget::property::states::*;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleField};
 use drawable::text::{TextDrawable, TextStyleField};
-use util::{Dimensions, Color};
+use util::{Scalar, Dimensions, Color};
 use color::*;
 
-static COLOR_BUTTON_DEFAULT: Color = RED;
-static COLOR_BUTTON_PRESSED: Color = [0.8, 0.0, 0.0, 1.0];
-static COLOR_BUTTON_ACTIVATED: Color = WHITE;
-static COLOR_BUTTON_ACTIVATED_PRESSED: Color = [0.9, 0.9, 0.9, 1.0];
-static COLOR_BUTTON_INACTIVE: Color = [0.3, 0.3, 0.3, 1.0];
+static COLOR_BUTTON_DEFAULT: Color = [0.8, 0.8, 0.8, 1.0];
+static COLOR_BUTTON_PRESSED: Color = [0.6, 0.6, 0.6, 1.0];
+static COLOR_BUTTON_ACTIVATED: Color = [0.4, 0.4, 0.4, 1.0];
+static COLOR_BUTTON_ACTIVATED_PRESSED: Color = [0.3, 0.3, 0.3, 1.0];
+static COLOR_BUTTON_INACTIVE: Color = [0.9, 0.9, 0.9, 1.0];
+static COLOR_BUTTON_TEXT_INACTIVE: Color = [0.7, 0.7, 0.7, 1.0];
+
+static BUTTON_BORDER: (Scalar, Color) = (1.0, [0.4, 0.4, 0.4, 1.0]);
+static BUTTON_BORDER_INACTIVE: (Scalar, Color) = (1.0, [0.7, 0.7, 0.7, 1.0]);
 
 lazy_static! {
     pub static ref STYLE_BUTTON: Vec<RectStyleField> = {
@@ -27,18 +31,31 @@ lazy_static! {
         selector.insert(&PRESSED, COLOR_BUTTON_PRESSED);
         selector.insert(&INACTIVE, COLOR_BUTTON_INACTIVE);
 
-        vec!{ RectStyleField::BackgroundColor(Value::Selector(selector)), RectStyleField::CornerRadius(Value::Single(Some(8.0))) }
+        let mut border_selector = Selector::new(Some(BUTTON_BORDER));
+        border_selector.insert(&INACTIVE, Some(BUTTON_BORDER_INACTIVE));
+        vec!{
+            RectStyleField::BackgroundColor(Value::Selector(selector)),
+            RectStyleField::CornerRadius(Value::Single(Some(5.0))),
+            RectStyleField::Border(Value::Selector(border_selector)),
+        }
+    };
+    pub static ref STYLE_BUTTON_TEXT: Vec<TextStyleField> = {
+        let mut selector = Selector::new(BLACK);
+        selector.insert(&INACTIVE, COLOR_BUTTON_TEXT_INACTIVE);
+        vec!{ TextStyleField::TextColor(Value::Selector(selector)) }
     };
 }
 
 // show whether button is held down or not
 fn button_handle_mouse_down(event: &WidgetMouseButton, args: WidgetEventArgs) {
-    let &WidgetMouseButton(state, _) = event;
-    let event = match state {
-        glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
-        glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
-    };
-    args.queue.push(Target::SubTree(args.widget.id), event);
+    if !args.widget.props.contains(&Property::Inactive) {
+        let &WidgetMouseButton(state, _) = event;
+        let event = match state {
+            glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
+            glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
+        };
+        args.queue.push(Target::SubTree(args.widget.id), event);
+    }
 }
 
 pub enum ToggleEvent {
@@ -78,8 +95,8 @@ impl ToggleButtonBuilder {
             .add_handler_fn(button_handle_mouse_down)
             .add_handler_fn(toggle_button_handle_mouse);
         widget.layout().dimensions(Dimensions {
-            width: 100.0,
-            height: 50.0,
+            width: 70.0,
+            height: 30.0,
         });
 
         ToggleButtonBuilder { widget: widget }
@@ -88,13 +105,14 @@ impl ToggleButtonBuilder {
 
         let mut selector = Selector::new(off_text.to_owned());
         selector.insert(&ACTIVATED, on_text.to_owned());
-        let text_style = vec![TextStyleField::Text(Value::Selector(selector)),
-                              TextStyleField::Align(Value::Single(Align::Middle))];
+        let mut style = STYLE_BUTTON_TEXT.clone();
+        style.push(TextStyleField::Text(Value::Selector(selector)));
+        style.push(TextStyleField::Align(Value::Single(Align::Middle)));
 
         let button_text_drawable = TextDrawable::default();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
-            .set_drawable_with_style(button_text_drawable, text_style);
+            .set_drawable_with_style(button_text_drawable, style);
         button_text_widget.layout().center(&self.widget.layout().vars);
 
         self.widget.add_child(button_text_widget);
@@ -124,7 +142,9 @@ impl BuildWidget for PushButtonBuilder {
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new();
-        widget.set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone());
+        widget
+            .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
+            .add_handler_fn(button_handle_mouse_down);
 
         widget.layout().dimensions(Dimensions {
             width: 100.0,
@@ -134,13 +154,13 @@ impl PushButtonBuilder {
         PushButtonBuilder { widget: widget }
     }
     pub fn set_text(&mut self, text: &'static str) -> &mut Self {
-
-        let text_style = vec![TextStyleField::Text(Value::Single(text.to_owned())),
-                              TextStyleField::Align(Value::Single(Align::Middle))];
+        let mut style = STYLE_BUTTON_TEXT.clone();
+        style.push(TextStyleField::Text(Value::Single(text.to_owned())));
+        style.push(TextStyleField::Align(Value::Single(Align::Middle)));
         let drawable = TextDrawable::default();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
-            .set_drawable_with_style(drawable, text_style);
+            .set_drawable_with_style(drawable, style);
         button_text_widget.layout().center(self.layout());
 
         self.widget.add_child(button_text_widget);
