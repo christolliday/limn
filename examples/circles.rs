@@ -10,8 +10,10 @@ use cassowary::strength::*;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::property::{Property, PropChange};
+use limn::widget::property::states::SELECTED;
+use limn::widget::style::{Value, Selector};
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
-use limn::drawable::ellipse::EllipseDrawable;
+use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleField};
 use limn::event::{Target, UiEventHandler, UiEventArgs};
 use limn::ui::Ui;
 use limn::util::{Dimensions, Point};
@@ -22,6 +24,7 @@ enum CircleEvent {
     Add(Point),
     Undo,
     Redo,
+    Select(Option<WidgetId>),
 }
 
 fn main() {
@@ -56,12 +59,14 @@ fn main() {
     }
 
     fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetId) -> WidgetId {
-        let border = graphics::ellipse::Border {
-            color: BLACK,
-            radius: 2.0,
-        };
+
+        let mut selector = Selector::new(WHITE);
+        selector.insert(&SELECTED, RED);
+        let style = vec![EllipseStyleField::BackgroundColor(Value::Selector(selector)),
+                         EllipseStyleField::Border(Value::Single(Some((1.0, BLACK))))];
+
         let mut widget = WidgetBuilder::new();
-        widget.set_drawable(EllipseDrawable::new(RED, Some(border)));
+        widget.set_drawable_with_style(EllipseDrawable::new(), style);
         widget.layout().dimensions(Dimensions {
             width: 30.0,
             height: 30.0,
@@ -70,9 +75,11 @@ fn main() {
             x: center.x - 15.0,
             y: center.y - 15.0,
         };
-
         widget.layout().top_left(top_left).strength(STRONG);
         let id = widget.id();
+        widget.on_click(move |_, args| {
+            args.queue.push(Target::Ui, CircleEvent::Select(Some(id)));
+        });
         ui.add_widget(widget, parent_id);
         id
     }
@@ -83,6 +90,7 @@ fn main() {
         redo_id: WidgetId,
         circles: Vec<(Point, WidgetId)>,
         undo: Vec<Point>,
+        selected: Option<WidgetId>,
     }
     impl CircleEventHandler {
         fn new(circle_canvas_id: WidgetId, undo_id: WidgetId, redo_id: WidgetId) -> Self {
@@ -92,6 +100,7 @@ fn main() {
                 circle_canvas_id: circle_canvas_id,
                 undo_id: undo_id,
                 redo_id: redo_id,
+                selected: None,
             }
         }
     }
@@ -104,6 +113,7 @@ fn main() {
 
                     args.queue.push(Target::SubTree(self.undo_id), PropChange::Remove(Property::Inactive));
                     args.queue.push(Target::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
+                    args.queue.push(Target::Ui, CircleEvent::Select(None));
                 }
                 CircleEvent::Undo => {
                     if self.circles.len() > 0 {
@@ -123,6 +133,15 @@ fn main() {
                         if self.undo.len() == 0 {
                             args.queue.push(Target::SubTree(self.redo_id), PropChange::Add(Property::Inactive));
                         }
+                    }
+                }
+                CircleEvent::Select(new_selected) => {
+                    if let Some(selected) = self.selected {
+                        args.queue.push(Target::SubTree(selected), PropChange::Remove(Property::Selected));
+                    }
+                    self.selected = new_selected;
+                    if let Some(selected) = self.selected {
+                        args.queue.push(Target::SubTree(selected), PropChange::Add(Property::Selected));
                     }
                 }
             }
