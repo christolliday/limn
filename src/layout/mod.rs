@@ -140,7 +140,13 @@ impl LayoutBuilder {
         WidgetConstraint::new_set(self, constraints)
     }
     pub fn shrink(&mut self) {
+        self.shrink_horizontal();
+        self.shrink_vertical();
+    }
+    pub fn shrink_horizontal(&mut self) {
         self.width(0.0).strength(WEAK);
+    }
+    pub fn shrink_vertical(&mut self) {
         self.height(0.0).strength(WEAK);
     }
     pub fn top_left(&mut self, point: Point) -> WidgetConstraint {

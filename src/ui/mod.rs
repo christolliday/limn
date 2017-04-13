@@ -26,7 +26,7 @@ use event::Queue;
 pub struct Ui {
     pub graph: WidgetGraph,
     pub solver: LimnSolver,
-    queue: Queue,
+    pub queue: Queue,
     glyph_cache: GlyphCache,
     needs_redraw: bool,
     should_close: bool,

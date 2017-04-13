@@ -1,7 +1,8 @@
 use cassowary::strength::*;
 
 use event::{Target, WidgetEventHandler, WidgetEventArgs};
-use widget::{WidgetBuilder, WidgetBuilderCore};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
+use widget::property::Property;
 use widget::style::Value;
 use widgets::drag::{DragEvent, WidgetDrag};
 use drawable::rect::{RectDrawable, RectStyleField};
@@ -38,28 +39,39 @@ impl SliderBuilder {
         SliderBuilder { widget: widget }
     }
     pub fn on_val_changed<F>(&mut self, on_val_changed: F) -> &mut Self
-        where F: Fn(f64) + 'static
+        where F: Fn(f64, &mut WidgetEventArgs) + 'static
     {
         self.widget.add_handler(SliderHandler::new(on_val_changed));
         self
     }
 }
 
-pub struct SliderHandler<F: Fn(f64)> {
+impl AsMut<WidgetBuilder> for SliderBuilder {
+    fn as_mut(&mut self) -> &mut WidgetBuilder {
+        &mut self.widget
+    }
+}
+impl BuildWidget for SliderBuilder {
+    fn build(self) -> WidgetBuilder {
+        self.widget
+    }
+}
+
+pub struct SliderHandler<F: Fn(f64, &mut WidgetEventArgs)> {
     callback: F,
 }
-impl<F: Fn(f64)> SliderHandler<F> {
+impl<F: Fn(f64, &mut WidgetEventArgs)> SliderHandler<F> {
     pub fn new(callback: F) -> Self {
         SliderHandler { callback: callback }
     }
 }
 impl<F> WidgetEventHandler<MovedSliderWidgetEvent> for SliderHandler<F>
-    where F: Fn(f64) {
+    where F: Fn(f64, &mut WidgetEventArgs) {
     fn handle(&mut self, event: &MovedSliderWidgetEvent, mut args: WidgetEventArgs) {
         let bounds = args.widget.layout.bounds();
         let range = bounds.width - (event.slider_right - event.slider_left);
         let val = (event.slider_left - bounds.left) / range;
-        (self.callback)(val);
+        (self.callback)(val, &mut args);
         *args.handled = true;
     }
 }
@@ -79,6 +91,9 @@ impl DragHandler {
 }
 impl WidgetEventHandler<WidgetDrag> for DragHandler {
     fn handle(&mut self, event: &WidgetDrag, args: WidgetEventArgs) {
+        if args.widget.props.contains(&Property::Inactive) {
+            return;
+        }
         let WidgetEventArgs { solver, widget, .. } = args;
         let ref layout = widget.layout;
         let bounds = layout.bounds();
