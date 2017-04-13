@@ -17,7 +17,8 @@ use backend::gfx::G2d;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
-use limn::drawable::ellipse::EllipseDrawable;
+use limn::widget::style::Value;
+use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleField};
 use limn::event::{Target, Queue};
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
 use limn::color::*;
@@ -71,13 +72,11 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new(mut queue: Queue) -> Self {
 
-        let border = graphics::ellipse::Border {
-            color: BLACK,
-            radius: 2.0,
-        };
-        let drawable = EllipseDrawable::new(WHITE, Some(border));
+        let style = vec![
+            EllipseStyleField::BackgroundColor(Value::Single(WHITE)),
+            EllipseStyleField::Border(Value::Single(Some((2.0, BLACK)))) ];
         let mut widget = WidgetBuilder::new();
-        widget.set_drawable(drawable);
+        widget.set_drawable_with_style(EllipseDrawable::new(), style);
         widget.layout().dimensions(Dimensions {
             width: 200.0,
             height: 200.0,

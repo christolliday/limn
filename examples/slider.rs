@@ -19,7 +19,7 @@ fn main() {
     });
 
     let mut slider = SliderBuilder::new();
-    slider.on_val_changed(|val| {
+    slider.on_val_changed(|val, _| {
         println!("val {}", val);
     });
     let mut slider = slider.widget;
