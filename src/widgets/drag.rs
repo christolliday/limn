@@ -7,12 +7,13 @@ use resources::WidgetId;
 use util::Point;
 use app::App;
 
+#[derive(Clone)]
 pub struct WidgetDrag {
     pub drag_type: DragEvent,
     pub position: Point,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DragEvent {
     DragStart,
     Drag,
