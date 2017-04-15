@@ -74,15 +74,15 @@ fn main() {
             }
         });
 
-    h_align_button.layout().align_top(&root_widget.layout()).padding(20.0);
-    h_align_button.layout().align_left(&root_widget.layout()).padding(20.0);
-    v_align_button.layout().align_top(&root_widget.layout()).padding(20.0);
-    v_align_button.layout().align_right(&root_widget.layout()).padding(20.0);
+    h_align_button.layout().align_top(&root_widget).padding(20.0);
+    h_align_button.layout().align_left(&root_widget).padding(20.0);
+    v_align_button.layout().align_top(&root_widget).padding(20.0);
+    v_align_button.layout().align_right(&root_widget).padding(20.0);
 
-    edit_text_box.layout().below(&h_align_button.layout()).padding(20.0);
-    edit_text_box.layout().align_bottom(&root_widget.layout()).padding(20.0);
-    edit_text_box.layout().align_left(&root_widget.layout()).padding(20.0);
-    edit_text_box.layout().align_right(&root_widget.layout()).padding(20.0);
+    edit_text_box.layout().below(&h_align_button).padding(20.0);
+    edit_text_box.layout().align_bottom(&root_widget).padding(20.0);
+    edit_text_box.layout().align_left(&root_widget).padding(20.0);
+    edit_text_box.layout().align_right(&root_widget).padding(20.0);
 
     root_widget.add_child(h_align_button);
     root_widget.add_child(v_align_button);

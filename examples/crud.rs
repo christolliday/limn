@@ -198,7 +198,7 @@ pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
             .add_handler_fn(edit_text::text_change_handle);
-        list_text_widget.layout().center(&list_item_widget.layout());
+        list_text_widget.layout().center(&list_item_widget);
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
@@ -215,24 +215,24 @@ fn main() {
         height: 300.0,
     });
     let mut container = WidgetBuilder::new();
-    container.layout().bound_by(&root_widget.layout()).padding(20.0);
+    container.layout().bound_by(&root_widget).padding(20.0);
 
     let create_name_group = |title, container: &mut WidgetBuilder| {
         let mut name_container = WidgetBuilder::new();
-        name_container.layout().match_width(container.layout());
+        name_container.layout().match_width(container);
 
         let mut static_text = WidgetBuilder::new();
         let text = TextDrawable::new(title);
         let text_dims = text.measure();
         static_text.set_drawable(text);
-        static_text.layout().center_vertical(&name_container.layout());
+        static_text.layout().center_vertical(&name_container);
         static_text.layout().dimensions(text_dims);
 
         let mut text_box = EditTextBuilder::new();
         text_box.layout().min_height(30.0);
         text_box.layout().min_width(200.0);
-        text_box.layout().align_right(&name_container.layout());
-        text_box.layout().to_right_of(&static_text.layout()).padding(20.0);
+        text_box.layout().align_right(&name_container);
+        text_box.layout().to_right_of(&static_text).padding(20.0);
         name_container.add_child(static_text);
         (name_container, text_box)
     };
@@ -240,8 +240,8 @@ fn main() {
     let (mut first_name_container, mut first_name_box) = create_name_group("First name:", &mut container);
     let (mut last_name_container, mut last_name_box) = create_name_group("Last name:", &mut container);
 
-    first_name_container.layout().align_top(&container.layout());
-    last_name_container.layout().below(&first_name_container.layout()).padding(20.0);
+    first_name_container.layout().align_top(&container);
+    last_name_container.layout().below(&first_name_container).padding(20.0);
     first_name_box.on_text_changed(|text, args| {
         args.queue.push(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
     });
@@ -254,7 +254,7 @@ fn main() {
     last_name_container.add_child(last_name_box);
 
     let mut button_container = WidgetBuilder::new();
-    button_container.layout().below(&last_name_container.layout()).padding(20.0);
+    button_container.layout().below(&last_name_container).padding(20.0);
 
     let mut create_button = PushButtonBuilder::new();
     create_button.set_text("Create");
@@ -271,18 +271,18 @@ fn main() {
     delete_button.on_click(|_, args| {
         args.queue.push(Target::Ui, PeopleEvent::Delete);
     });
-    update_button.layout().to_right_of(&create_button.layout()).padding(20.0);
-    delete_button.layout().to_right_of(&update_button.layout()).padding(20.0);
+    update_button.layout().to_right_of(&create_button).padding(20.0);
+    delete_button.layout().to_right_of(&update_button).padding(20.0);
 
     let mut scroll_container = WidgetBuilder::new();
     scroll_container.set_drawable(RectDrawable::new());
-    scroll_container.layout().below(&button_container.layout()).padding(20.0);
+    scroll_container.layout().below(&button_container).padding(20.0);
     scroll_container.layout().min_height(260.0);
     scroll_container.contents_scroll();
 
     let mut list_widget = WidgetBuilder::new();
     list_widget.make_vertical_list();
-    list_widget.layout().match_width(&scroll_container.layout());
+    list_widget.layout().match_width(&scroll_container);
     let list_widget_id = list_widget.id();
     scroll_container.add_child(list_widget);
 

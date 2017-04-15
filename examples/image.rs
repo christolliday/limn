@@ -16,8 +16,8 @@ fn main() {
     let mut image_widget = WidgetBuilder::new();
     image_widget.set_drawable(image_drawable);
     image_widget.layout().dimensions(image_dims);
-    image_widget.layout().center(&root_widget.layout());
-    image_widget.layout().bound_by(&root_widget.layout()).padding(50.0);
+    image_widget.layout().center(&root_widget);
+    image_widget.layout().bound_by(&root_widget).padding(50.0);
     root_widget.add_child(image_widget);
 
     util::set_root_and_loop(window, ui, root_widget);

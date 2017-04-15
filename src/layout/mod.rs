@@ -62,16 +62,26 @@ impl LayoutVars {
     }
 }
 
-impl AsRef<LayoutVars> for LayoutBuilder {
-    fn as_ref(&self) -> &LayoutVars {
+pub trait LayoutRef {
+    fn layout_ref(&self) -> &LayoutVars;
+}
+
+impl<'a> LayoutRef for &'a mut LayoutBuilder {
+    fn layout_ref(&self) -> &LayoutVars {
         &self.vars
     }
 }
-impl AsRef<LayoutVars> for LayoutVars {
-    fn as_ref(&self) -> &LayoutVars {
+impl LayoutRef for LayoutBuilder {
+    fn layout_ref(&self) -> &LayoutVars {
+        &self.vars
+    }
+}
+impl LayoutRef for LayoutVars {
+    fn layout_ref(&self) -> &LayoutVars {
         self
     }
 }
+
 pub struct LayoutBuilder {
     pub vars: LayoutVars,
     pub constraints: Vec<Constraint>,
@@ -89,8 +99,8 @@ impl LayoutBuilder {
             constraints: Vec::new(),
         }
     }
-    pub fn match_layout<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> WidgetConstraint {
-        let widget = widget.as_ref();
+    pub fn match_layout<T: LayoutRef>(&mut self, widget: &T) -> WidgetConstraint {
+        let widget = widget.layout_ref();
         let constraints = vec![
             self.vars.left | EQ(REQUIRED) | widget.left,
             self.vars.right | EQ(REQUIRED) | widget.right,
@@ -99,13 +109,13 @@ impl LayoutBuilder {
         ];
         WidgetConstraint::new_set(self, constraints)
     }
-    pub fn match_width<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> WidgetConstraint {
-        let widget = widget.as_ref();
+    pub fn match_width<T: LayoutRef>(&mut self, widget: &T) -> WidgetConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.right - self.vars.left | EQ(REQUIRED) | widget.right - widget.left;
         WidgetConstraint::new(self, constraint)
     }
-    pub fn match_height<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> WidgetConstraint {
-        let widget = widget.as_ref();
+    pub fn match_height<T: LayoutRef>(&mut self, widget: &T) -> WidgetConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.bottom - self.vars.top | EQ(REQUIRED) | widget.bottom - widget.top;
         WidgetConstraint::new(self, constraint)
     }
@@ -156,90 +166,90 @@ impl LayoutBuilder {
         ];
         WidgetConstraint::new_set(self, constraints)
     }
-    pub fn center<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> WidgetConstraint {
-        let widget = widget.as_ref();
+    pub fn center<T: LayoutRef>(&mut self, widget: &T) -> WidgetConstraint {
+        let widget = widget.layout_ref();
         let constraints = vec![
             self.vars.left - widget.left | EQ(REQUIRED) | widget.right - self.vars.right,
             self.vars.top - widget.top | EQ(REQUIRED) | widget.bottom - self.vars.bottom,
         ];
         WidgetConstraint::new_set(self, constraints)
     }
-    pub fn center_horizontal<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> WidgetConstraint {
-        let widget = widget.as_ref();
+    pub fn center_horizontal<T: LayoutRef>(&mut self, widget: &T) -> WidgetConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.left - widget.left | EQ(REQUIRED) | widget.right - self.vars.right;
         WidgetConstraint::new(self, constraint)
     }
-    pub fn center_vertical<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> WidgetConstraint {
-        let widget = widget.as_ref();
+    pub fn center_vertical<T: LayoutRef>(&mut self, widget: &T) -> WidgetConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.top - widget.top | EQ(REQUIRED) | widget.bottom - self.vars.bottom;
         WidgetConstraint::new(self, constraint)
     }
 
-    pub fn align_top<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn align_top<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.top - widget.top | EQ(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn align_bottom<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn align_bottom<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = widget.bottom - self.vars.bottom | EQ(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn align_left<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn align_left<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.left - widget.left | EQ(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn align_right<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn align_right<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = widget.right - self.vars.right | EQ(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
 
-    pub fn above<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn above<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.bottom - widget.top | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn below<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn below<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.top - widget.bottom | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn to_left_of<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn to_left_of<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = widget.left - self.vars.right | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn to_right_of<T: AsRef<LayoutVars>>(&mut self, widget: &T) -> PaddableConstraint {
-        let widget = widget.as_ref();
+    pub fn to_right_of<T: LayoutRef>(&mut self, widget: &T) -> PaddableConstraint {
+        let widget = widget.layout_ref();
         let constraint = self.vars.left - widget.right | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
 
-    pub fn bound_left<T: AsRef<LayoutVars>>(&mut self, outer: &T) -> PaddableConstraint {
-        let outer = outer.as_ref();
+    pub fn bound_left<T: LayoutRef>(&mut self, outer: &T) -> PaddableConstraint {
+        let outer = outer.layout_ref();
         let constraint = self.vars.left - outer.left | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn bound_top<T: AsRef<LayoutVars>>(&mut self, outer: &T) -> PaddableConstraint {
-        let outer = outer.as_ref();
+    pub fn bound_top<T: LayoutRef>(&mut self, outer: &T) -> PaddableConstraint {
+        let outer = outer.layout_ref();
         let constraint = self.vars.top - outer.top | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn bound_right<T: AsRef<LayoutVars>>(&mut self, outer: &T) -> PaddableConstraint {
-        let outer = outer.as_ref();
+    pub fn bound_right<T: LayoutRef>(&mut self, outer: &T) -> PaddableConstraint {
+        let outer = outer.layout_ref();
         let constraint = outer.right - self.vars.right | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
-    pub fn bound_bottom<T: AsRef<LayoutVars>>(&mut self, outer: &T) -> PaddableConstraint {
-        let outer = outer.as_ref();
+    pub fn bound_bottom<T: LayoutRef>(&mut self, outer: &T) -> PaddableConstraint {
+        let outer = outer.layout_ref();
         let constraint = outer.bottom - self.vars.bottom | GE(REQUIRED) | 0.0;
         PaddableConstraint::new(self, constraint)
     }
 
-    pub fn bound_by<T: AsRef<LayoutVars>>(&mut self, outer: &T) -> PaddableConstraint {
-        let outer = outer.as_ref();
+    pub fn bound_by<T: LayoutRef>(&mut self, outer: &T) -> PaddableConstraint {
+        let outer = outer.layout_ref();
         let constraints = vec![
             self.vars.left - outer.left | GE(REQUIRED) | 0.0,
             self.vars.top - outer.top | GE(REQUIRED) | 0.0,
@@ -249,14 +259,38 @@ impl LayoutBuilder {
         PaddableConstraint::new_set(self, constraints)
     }
 
-    pub fn scroll_parent<T: AsRef<LayoutVars>>(&mut self, inner: &T) {
-        let inner = inner.as_ref();
+    pub fn scroll_parent<T: LayoutRef>(&mut self, inner: &T) {
+        let inner = inner.layout_ref();
         self.constraints.push(inner.left | LE(REQUIRED) | self.vars.left);
         self.constraints.push(inner.top | LE(REQUIRED) | self.vars.top);
         // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
         self.constraints.push(inner.right | GE(STRONG) | self.vars.right);
         self.constraints.push(inner.bottom | GE(STRONG) | self.vars.bottom);
     }
+}
+
+#[macro_export]
+macro_rules! layout {
+    (parent: $parent:expr, $($type:path: $val:expr),*) => {
+        {
+            use $crate::widget::style::Value;
+            let mut style = $parent.clone();
+            $(
+                style.push($type(Value::from($val)));
+            )*
+            style
+        }
+    };
+    ($($type:path: $val:expr),*) => {
+        {
+            use $crate::widget::style::Value;
+            vec![
+                $(
+                    $type(Value::from($val)),
+                )*
+            ]
+        }
+    };
 }
 
 pub struct WidgetConstraint<'a> {

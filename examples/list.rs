@@ -18,7 +18,7 @@ fn main() {
 
     let mut scroll_widget = WidgetBuilder::new();
     scroll_widget.contents_scroll();
-    scroll_widget.layout().bound_by(&root_widget.layout()).padding(50.0);
+    scroll_widget.layout().bound_by(&root_widget).padding(50.0);
     scroll_widget.layout().dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
@@ -26,7 +26,7 @@ fn main() {
 
     let mut list_widget = WidgetBuilder::new();
     list_widget.make_vertical_list();
-    list_widget.layout().match_width(&scroll_widget.layout());
+    list_widget.layout().match_width(&scroll_widget);
 
     let list_item_widgets = {
         let mut list_item_widgets = Vec::new();
@@ -47,7 +47,7 @@ fn main() {
             list_text_widget
                 .set_drawable_with_style(text_drawable, text_style)
                 .set_debug_name("text");
-            list_text_widget.layout().center(&list_item_widget.layout());
+            list_text_widget.layout().center(&list_item_widget);
             list_item_widget.add_child(list_text_widget);
 
             list_item_widgets.push(list_item_widget);

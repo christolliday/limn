@@ -16,7 +16,7 @@ use backend::glyph::GlyphCache;
 
 use event::{Queue, WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::solver::LimnSolver;
-use layout::{LayoutBuilder, LayoutVars};
+use layout::{LayoutBuilder, LayoutVars, LayoutRef};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
@@ -41,12 +41,22 @@ impl AsMut<WidgetBuilder> for WidgetBuilder {
         self
     }
 }
+impl AsRef<WidgetBuilder> for WidgetBuilder {
+    fn as_ref(&self) -> &WidgetBuilder {
+        self
+    }
+}
 pub trait BuildWidget: AsMut<WidgetBuilder> {
     fn build(self) -> WidgetBuilder;
 }
 impl BuildWidget for WidgetBuilder {
     fn build(self) -> WidgetBuilder {
         self
+    }
+}
+impl<B: AsRef<WidgetBuilder>> LayoutRef for B {
+    fn layout_ref(&self) -> &LayoutVars {
+        &self.as_ref().layout.vars
     }
 }
 

@@ -80,8 +80,8 @@ impl EditTextBuilder {
             .set_drawable_with_style(TextDrawable::default(), text_style)
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);
-        text_widget.layout().bound_left(&widget.layout()).padding(5.0);
-        text_widget.layout().bound_right(&widget.layout()).padding(5.0);
+        text_widget.layout().bound_left(&widget).padding(5.0);
+        text_widget.layout().bound_right(&widget).padding(5.0);
 
         EditTextBuilder {
             widget: widget,

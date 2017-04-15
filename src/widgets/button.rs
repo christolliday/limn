@@ -77,6 +77,11 @@ impl AsMut<WidgetBuilder> for ToggleButtonBuilder {
         &mut self.widget
     }
 }
+impl AsRef<WidgetBuilder> for ToggleButtonBuilder {
+    fn as_ref(&self) -> &WidgetBuilder {
+        &self.widget
+    }
+}
 impl BuildWidget for ToggleButtonBuilder {
     fn build(self) -> WidgetBuilder {
         self.widget
@@ -106,7 +111,7 @@ impl ToggleButtonBuilder {
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
             .set_drawable_with_style(button_text_drawable, style);
-        button_text_widget.layout().center(&self.widget.layout().vars);
+        button_text_widget.layout().center(&self.widget);
 
         self.widget.add_child(button_text_widget);
         self
@@ -125,6 +130,11 @@ pub struct PushButtonBuilder {
 impl AsMut<WidgetBuilder> for PushButtonBuilder {
     fn as_mut(&mut self) -> &mut WidgetBuilder {
         &mut self.widget
+    }
+}
+impl AsRef<WidgetBuilder> for PushButtonBuilder {
+    fn as_ref(&self) -> &WidgetBuilder {
+        &self.widget
     }
 }
 impl BuildWidget for PushButtonBuilder {
@@ -155,7 +165,7 @@ impl PushButtonBuilder {
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
             .set_drawable_with_style(TextDrawable::default(), style);
-        button_text_widget.layout().center(self.layout());
+        button_text_widget.layout().center(self.as_mut());
 
         self.widget.add_child(button_text_widget);
         self

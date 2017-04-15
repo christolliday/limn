@@ -42,10 +42,10 @@ fn create_slider_control() -> WidgetBuilder {
         .set_drawable_with_style(TextDrawable::default(), STYLE_BUTTON_TEXT.clone())
         .add_handler_fn(edit_text::text_change_handle);
     slider_value.layout().width(80.0);
-    slider_value.layout().to_right_of(&slider_title.layout());
+    slider_value.layout().to_right_of(&slider_title);
     let mut slider_widget = SliderBuilder::new();
-    slider_widget.layout().below(&slider_title.layout());
-    slider_widget.layout().below(&slider_value.layout());
+    slider_widget.layout().below(&slider_title);
+    slider_widget.layout().below(&slider_value);
 
     let (slider_id, slider_value_id) = (slider_widget.id(), slider_value.id());
     slider_widget.on_val_changed(move |size, args| {
@@ -74,8 +74,8 @@ fn main() {
         button_container
             .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: control_color))
             .hbox();
-        button_container.layout().match_width(&root_widget.layout());
-        button_container.layout().align_bottom(&root_widget.layout());
+        button_container.layout().match_width(root_widget);
+        button_container.layout().align_bottom(root_widget);
         button_container.layout().shrink_vertical();
 
         let mut undo_widget = PushButtonBuilder::new();

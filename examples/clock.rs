@@ -123,8 +123,8 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
     let mut clock = ClockBuilder::new(ui.queue.clone()).widget;
-    clock.layout().center(&root_widget.layout());
-    clock.layout().bound_by(&root_widget.layout()).padding(50.0);
+    clock.layout().center(&root_widget);
+    clock.layout().bound_by(&root_widget).padding(50.0);
     root_widget.add_child(clock);
 
     util::set_root_and_loop(window, ui, root_widget);
