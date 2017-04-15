@@ -21,7 +21,7 @@ use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleField};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::event::{Target, UiEventHandler, UiEventArgs, WidgetEventHandler, WidgetEventArgs};
 use limn::ui::Ui;
-use limn::util::{Dimensions, Point};
+use limn::util::Point;
 use limn::resources::WidgetId;
 use limn::color::*;
 
@@ -33,11 +33,42 @@ enum CircleEvent {
     Resize(f64),
 }
 
+fn create_slider_control() -> WidgetBuilder {
+    let mut slider_container = WidgetBuilder::new();
+    let mut slider_title = WidgetBuilder::new();
+    slider_title.set_drawable_with_style(TextDrawable::new("Circle Size"), STYLE_BUTTON_TEXT.clone());
+    let mut slider_value = WidgetBuilder::new();
+    slider_value
+        .set_drawable_with_style(TextDrawable::default(), STYLE_BUTTON_TEXT.clone())
+        .add_handler_fn(edit_text::text_change_handle);
+    slider_value.layout().width(80.0);
+    slider_value.layout().to_right_of(&slider_title.layout());
+    let mut slider_widget = SliderBuilder::new();
+    slider_widget.layout().below(&slider_title.layout());
+    slider_widget.layout().below(&slider_value.layout());
+
+    let (slider_id, slider_value_id) = (slider_widget.id(), slider_value.id());
+    slider_widget.on_val_changed(move |size, args| {
+        let size = size * 100.0;
+        args.queue.push(Target::Widget(slider_value_id), TextUpdated((size as i32).to_string()));
+        args.queue.push(Target::Ui, CircleEvent::Resize(size));
+    });
+    slider_container.add_handler_fn(move |event: &SetSliderValue, args| {
+        let size = event.0;
+        args.queue.push(Target::Widget(slider_id), SetSliderValue(size / 100.0));
+        args.queue.push(Target::Widget(slider_value_id), TextUpdated((size as i32).to_string()));
+    });
+    slider_container.add_child(slider_title);
+    slider_container.add_child(slider_value);
+    slider_container.add_child(slider_widget);
+    slider_container
+}
+
 fn main() {
     let (window, mut ui) = util::init_default("Limn circles demo");
     util::load_default_font();
 
-    fn create_undo_redo_buttons(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId, WidgetId, WidgetId) {
+    fn create_undo_redo_buttons(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId, WidgetId) {
         let control_color = [0.7, 0.7, 0.7, 1.0];
         let mut button_container = WidgetBuilder::new();
         button_container
@@ -59,39 +90,16 @@ fn main() {
             .set_inactive()
             .on_click(|_, args| { args.queue.push(Target::Ui, CircleEvent::Redo); });
 
+        let mut slider_container = create_slider_control();
 
-        let mut slider_container = WidgetBuilder::new();
-        let mut slider_title = WidgetBuilder::new();
-        slider_title.set_drawable_with_style(TextDrawable::new("Circle Size"), STYLE_BUTTON_TEXT.clone());
-        let mut slider_value = WidgetBuilder::new();
-        slider_value
-            .set_drawable_with_style(TextDrawable::default(), STYLE_BUTTON_TEXT.clone())
-            .add_handler_fn(edit_text::text_change_handle);
-        slider_value.layout().width(80.0);
-        slider_value.layout().to_right_of(&slider_title.layout());
-        let mut slider_widget = SliderBuilder::new();
-        let slider_value_id = slider_value.id();
-        slider_widget.on_val_changed(move |val, args| {
-            let val = val * 100.0;
-            args.queue.push(Target::Widget(slider_value_id), TextUpdated(val.to_string()));
-            args.queue.push(Target::Ui, CircleEvent::Resize(val));
-        });
-        slider_widget.layout().below(&slider_title.layout());
-        slider_widget.layout().below(&slider_value.layout());
-
-
-        let (undo_id, redo_id, slider_container_id, slider_id) = (undo_widget.id(), redo_widget.id(), slider_container.id(), slider_widget.id());
-
-        slider_container.add_child(slider_title);
-        slider_container.add_child(slider_value);
-        slider_container.add_child(slider_widget);
+        let (undo_id, redo_id, slider_id) = (undo_widget.id(), redo_widget.id(), slider_container.id());
 
         button_container.add_child(undo_widget);
         button_container.add_child(redo_widget);
         button_container.add_child(slider_container);
 
         root_widget.add_child(button_container);
-        (undo_id, redo_id, slider_container_id, slider_id)
+        (undo_id, redo_id, slider_id)
     }
 
     fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetId, size: f64) -> WidgetId {
@@ -144,7 +152,6 @@ fn main() {
         circle_canvas_id: WidgetId,
         undo_id: WidgetId,
         redo_id: WidgetId,
-        slider_container_id: WidgetId,
         slider_id: WidgetId,
 
         circles: HashMap<WidgetId, (Point, f64)>,
@@ -153,7 +160,7 @@ fn main() {
         selected: Option<WidgetId>,
     }
     impl CircleEventHandler {
-        fn new(circle_canvas_id: WidgetId, undo_id: WidgetId, redo_id: WidgetId, slider_container_id: WidgetId, slider_id: WidgetId) -> Self {
+        fn new(circle_canvas_id: WidgetId, undo_id: WidgetId, redo_id: WidgetId, slider_id: WidgetId) -> Self {
             CircleEventHandler {
                 circles: HashMap::new(),
                 undo_queue: Vec::new(),
@@ -161,7 +168,6 @@ fn main() {
                 circle_canvas_id: circle_canvas_id,
                 undo_id: undo_id,
                 redo_id: redo_id,
-                slider_container_id: slider_container_id,
                 slider_id: slider_id,
                 selected: None,
             }
@@ -210,13 +216,12 @@ fn main() {
                     }
                     self.selected = new_selected;
                     if let Some(selected) = self.selected {
-                        let size = self.circles.get_mut(&selected).unwrap().1 / 100.0;
-                        println!("send SetSliderValue");
+                        let size = self.circles.get_mut(&selected).unwrap().1;
                         args.queue.push(Target::Widget(self.slider_id), SetSliderValue(size));
                         args.queue.push(Target::SubTree(selected), PropChange::Add(Property::Selected));
-                        args.queue.push(Target::SubTree(self.slider_container_id), PropChange::Remove(Property::Inactive));
+                        args.queue.push(Target::SubTree(self.slider_id), PropChange::Remove(Property::Inactive));
                     } else {
-                        args.queue.push(Target::SubTree(self.slider_container_id), PropChange::Add(Property::Inactive));
+                        args.queue.push(Target::SubTree(self.slider_id), PropChange::Add(Property::Inactive));
                     }
                 }
                 CircleEvent::Resize(size) => {
@@ -241,9 +246,9 @@ fn main() {
         });
     let circle_canvas_id = circle_canvas.id();
     root_widget.add_child(circle_canvas);
-    let (undo_id, redo_id, slider_container_id, slider_id) = create_undo_redo_buttons(&mut root_widget);
+    let (undo_id, redo_id, slider_id) = create_undo_redo_buttons(&mut root_widget);
 
-    ui.add_handler(CircleEventHandler::new(circle_canvas_id, undo_id, redo_id, slider_container_id, slider_id));
+    ui.add_handler(CircleEventHandler::new(circle_canvas_id, undo_id, redo_id, slider_id));
 
     util::set_root_and_loop(window, ui, root_widget);
 }
