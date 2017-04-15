@@ -15,7 +15,7 @@ use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
 use limn::widgets::list::STYLE_LIST_ITEM;
 use limn::widgets::linear_layout::LinearLayoutEvent;
-use limn::drawable::text::{TextDrawable, TextStyleField};
+use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::{Id, IdGen, WidgetId};
 use limn::ui::Ui;
@@ -184,7 +184,7 @@ impl WidgetEventHandler<PropChange> for PersonHandler {
 use limn::widgets::edit_text;
 pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget_id: WidgetId) {
     let list_item_widget = {
-        let text_style = style!(TextStyleField::TextColor: WHITE);
+        let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
         let text_dims = text_drawable.measure();
         let mut list_item_widget = WidgetBuilder::new();

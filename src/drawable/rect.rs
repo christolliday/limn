@@ -9,7 +9,7 @@ use graphics::Context;
 
 use widget::drawable::Drawable;
 use widget::property::PropSet;
-use widget::style::{Value, StyleField};
+use widget::style::{Value, Styleable};
 use util::{Scalar, Rectangle, Point};
 use color::*;
 
@@ -104,20 +104,20 @@ impl Drawable for RectDrawable {
 }
 
 #[derive(Clone)]
-pub enum RectStyleField {
+pub enum RectStyleable {
     BackgroundColor(Value<Color>),
     CornerRadius(Value<Option<Scalar>>),
     Border(Value<Option<(Scalar, Color)>>),
 }
 
-impl StyleField<RectDrawable> for RectStyleField {
+impl Styleable<RectDrawable> for RectStyleable {
     fn apply(&self, drawable: &mut RectDrawable, props: &PropSet) {
         match *self {
-            RectStyleField::BackgroundColor(ref val) => {
+            RectStyleable::BackgroundColor(ref val) => {
                 drawable.background_color = val.from_props(props)
             }
-            RectStyleField::CornerRadius(ref val) => drawable.corner_radius = val.from_props(props),
-            RectStyleField::Border(ref val) => drawable.border = val.from_props(props),
+            RectStyleable::CornerRadius(ref val) => drawable.corner_radius = val.from_props(props),
+            RectStyleable::Border(ref val) => drawable.border = val.from_props(props),
         }
     }
 }

@@ -16,8 +16,8 @@ use limn::widget::property::states::SELECTED;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable, STYLE_BUTTON_TEXT};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue};
 use limn::drawable::text::TextDrawable;
-use limn::drawable::rect::{RectDrawable, RectStyleField};
-use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleField};
+use limn::drawable::rect::{RectDrawable, RectStyleable};
+use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::event::{Target, UiEventHandler, UiEventArgs, WidgetEventHandler, WidgetEventArgs};
 use limn::ui::Ui;
@@ -72,7 +72,7 @@ fn main() {
         let control_color = [0.7, 0.7, 0.7, 1.0];
         let mut button_container = WidgetBuilder::new();
         button_container
-            .set_drawable_with_style(RectDrawable::new(), style!(RectStyleField::BackgroundColor: control_color))
+            .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: control_color))
             .hbox();
         button_container.layout().match_width(&root_widget.layout());
         button_container.layout().align_bottom(&root_widget.layout());
@@ -104,8 +104,8 @@ fn main() {
 
     fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetId, size: f64) -> WidgetId {
 
-        let style = style!(EllipseStyleField::BackgroundColor: selector!(WHITE, SELECTED: RED),
-                           EllipseStyleField::Border: Some((1.0, BLACK)));
+        let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
+                           EllipseStyleable::Border: Some((1.0, BLACK)));
 
         let mut widget = WidgetBuilder::new();
         widget.set_debug_name("circle");
@@ -237,7 +237,7 @@ fn main() {
     circle_canvas.bound_children = false;
     circle_canvas.layout().height(300.0);
     circle_canvas
-        .set_drawable_with_style(RectDrawable::new(), style!(RectStyleField::BackgroundColor: WHITE))
+        .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))
         .on_click(|event, args| {
             let event = CircleEvent::Add(event.position);
             args.queue.push(Target::Ui, event);

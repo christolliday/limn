@@ -7,8 +7,8 @@ use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use input::mouse::{WidgetMouseButton, ClickEvent};
-use drawable::rect::{RectDrawable, RectStyleField};
-use drawable::text::{TextDrawable, TextStyleField};
+use drawable::rect::{RectDrawable, RectStyleable};
+use drawable::text::{TextDrawable, TextStyleable};
 use util::{Scalar, Dimensions, Color};
 use color::*;
 
@@ -24,20 +24,20 @@ static BUTTON_BORDER_INACTIVE: (Scalar, Color) = (1.0, [0.7, 0.7, 0.7, 1.0]);
 
 
 lazy_static! {
-    pub static ref STYLE_BUTTON: Vec<RectStyleField> = {
+    pub static ref STYLE_BUTTON: Vec<RectStyleable> = {
         style!(
-            RectStyleField::BackgroundColor: selector!(COLOR_BUTTON_DEFAULT,
+            RectStyleable::BackgroundColor: selector!(COLOR_BUTTON_DEFAULT,
                 ACTIVATED_PRESSED: COLOR_BUTTON_ACTIVATED_PRESSED,
                 ACTIVATED: COLOR_BUTTON_ACTIVATED,
                 PRESSED: COLOR_BUTTON_PRESSED,
                 INACTIVE: COLOR_BUTTON_INACTIVE),
-            RectStyleField::CornerRadius: Some(5.0),
-            RectStyleField::Border: selector!(Some(BUTTON_BORDER),
+            RectStyleable::CornerRadius: Some(5.0),
+            RectStyleable::Border: selector!(Some(BUTTON_BORDER),
                 INACTIVE: Some(BUTTON_BORDER_INACTIVE))
         )
     };
-    pub static ref STYLE_BUTTON_TEXT: Vec<TextStyleField> = {
-        style!(TextStyleField::TextColor: selector!(BLACK, INACTIVE: COLOR_BUTTON_TEXT_INACTIVE))
+    pub static ref STYLE_BUTTON_TEXT: Vec<TextStyleable> = {
+        style!(TextStyleable::TextColor: selector!(BLACK, INACTIVE: COLOR_BUTTON_TEXT_INACTIVE))
     };
 }
 
@@ -99,9 +99,9 @@ impl ToggleButtonBuilder {
     pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
 
         let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyleField::Text: selector!(off_text.to_owned(),
+            TextStyleable::Text: selector!(off_text.to_owned(),
                 ACTIVATED: on_text.to_owned()),
-            TextStyleField::Align: Align::Middle);
+            TextStyleable::Align: Align::Middle);
         let button_text_drawable = TextDrawable::default();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
@@ -149,8 +149,8 @@ impl PushButtonBuilder {
     pub fn set_text(&mut self, text: &'static str) -> &mut Self {
 
         let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyleField::Text: text.to_owned(),
-            TextStyleField::Align: Align::Middle);
+            TextStyleable::Text: text.to_owned(),
+            TextStyleable::Align: Align::Middle);
 
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget

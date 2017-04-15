@@ -10,7 +10,7 @@ use resources::{FontId, resources};
 use util::{self, Dimensions, Scalar, Rectangle};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
-use widget::style::{Value, StyleField};
+use widget::style::{Value, Styleable};
 use color::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
@@ -144,7 +144,7 @@ impl Drawable for TextDrawable {
 }
 
 #[derive(Debug, Clone)]
-pub enum TextStyleField {
+pub enum TextStyleable {
     Text(Value<String>),
     FontId(Value<FontId>),
     FontSize(Value<Scalar>),
@@ -155,19 +155,19 @@ pub enum TextStyleField {
     VertAlign(Value<Align>),
 }
 
-impl StyleField<TextDrawable> for TextStyleField {
+impl Styleable<TextDrawable> for TextStyleable {
     fn apply(&self, state: &mut TextDrawable, props: &PropSet) {
         match *self {
-            TextStyleField::Text(ref val) => state.text = val.from_props(props),
-            TextStyleField::FontId(ref val) => state.font_id = val.from_props(props),
-            TextStyleField::FontSize(ref val) => state.font_size = val.from_props(props),
-            TextStyleField::TextColor(ref val) => state.text_color = val.from_props(props),
-            TextStyleField::BackgroundColor(ref val) => {
+            TextStyleable::Text(ref val) => state.text = val.from_props(props),
+            TextStyleable::FontId(ref val) => state.font_id = val.from_props(props),
+            TextStyleable::FontSize(ref val) => state.font_size = val.from_props(props),
+            TextStyleable::TextColor(ref val) => state.text_color = val.from_props(props),
+            TextStyleable::BackgroundColor(ref val) => {
                 state.background_color = val.from_props(props)
             }
-            TextStyleField::Wrap(ref val) => state.wrap = val.from_props(props),
-            TextStyleField::Align(ref val) => state.align = val.from_props(props),
-            TextStyleField::VertAlign(ref val) => state.vertical_align = val.from_props(props),
+            TextStyleable::Wrap(ref val) => state.wrap = val.from_props(props),
+            TextStyleable::Align(ref val) => state.align = val.from_props(props),
+            TextStyleable::VertAlign(ref val) => state.vertical_align = val.from_props(props),
         }
     }
 }

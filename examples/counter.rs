@@ -6,7 +6,7 @@ mod util;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
-use limn::drawable::text::{TextDrawable, TextStyleField};
+use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::event::{Target, WidgetEventHandler, WidgetEventArgs};
 use limn::color::*;
 
@@ -32,7 +32,7 @@ fn main() {
         }
     }
 
-    let text_style = style!(TextStyleField::BackgroundColor: WHITE);
+    let text_style = style!(TextStyleable::BackgroundColor: WHITE);
     let text_drawable = TextDrawable::new("0");
     let text_dims = text_drawable.measure();
     let mut text_widget = WidgetBuilder::new();

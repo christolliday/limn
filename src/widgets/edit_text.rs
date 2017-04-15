@@ -4,8 +4,8 @@ use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
-use drawable::rect::{RectDrawable, RectStyleField};
-use drawable::text::{TextDrawable, TextStyleField};
+use drawable::rect::{RectDrawable, RectStyleable};
+use drawable::text::{TextDrawable, TextStyleable};
 use event::{Target, WidgetEventArgs};
 use color::*;
 
@@ -60,8 +60,8 @@ impl EditTextBuilder {
         let default_border = Some((1.0, GRAY));
         let focused_border = Some((1.0, BLUE));
         let rect_style = style!(
-            RectStyleField::Border: selector!(default_border, FOCUSED: focused_border),
-            RectStyleField::CornerRadius: Some(3.0));
+            RectStyleable::Border: selector!(default_border, FOCUSED: focused_border),
+            RectStyleable::CornerRadius: Some(3.0));
         let mut widget = WidgetBuilder::new();
         widget
             .set_drawable_with_style(RectDrawable::new(), rect_style)
@@ -74,7 +74,7 @@ impl EditTextBuilder {
             .make_focusable();
 
 
-        let text_style = style!(TextStyleField::VertAlign: Align::Start);
+        let text_style = style!(TextStyleable::VertAlign: Align::Start);
         let mut text_widget = WidgetBuilder::new();
         text_widget
             .set_drawable_with_style(TextDrawable::default(), text_style)

@@ -5,7 +5,7 @@ mod util;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::list::STYLE_LIST_ITEM;
-use limn::drawable::text::{TextDrawable, TextStyleField};
+use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::util::Dimensions;
 use limn::color::*;
@@ -31,7 +31,7 @@ fn main() {
     let list_item_widgets = {
         let mut list_item_widgets = Vec::new();
         for _ in 1..15 {
-            let text_style = style!(TextStyleField::TextColor: WHITE);
+            let text_style = style!(TextStyleable::TextColor: WHITE);
             let text_drawable = TextDrawable::new("hello");
             let text_dims = text_drawable.measure();
 

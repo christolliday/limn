@@ -73,7 +73,7 @@ impl<T> Value<T>
 pub trait Style<D: Drawable> {
     fn apply(&self, drawable: &mut D, props: &PropSet);
 }
-impl<D: Drawable, S: StyleField<D>> Style<D> for Vec<S> {
+impl<D: Drawable, S: Styleable<D>> Style<D> for Vec<S> {
     fn apply(&self, drawable: &mut D, props: &PropSet) {
         for field in self.iter() {
             field.apply(drawable, props);
@@ -81,11 +81,11 @@ impl<D: Drawable, S: StyleField<D>> Style<D> for Vec<S> {
     }
 }
 
-pub trait StyleField<D> {
+pub trait Styleable<D> {
     fn apply(&self, state: &mut D, props: &PropSet);
 }
 
-pub fn apply_style<D, S: StyleField<D>>(state: &mut D, style: &Vec<S>, props: &PropSet) {
+pub fn apply_style<D, S: Styleable<D>>(state: &mut D, style: &Vec<S>, props: &PropSet) {
     for field in style.iter() {
         field.apply(state, props);
     }

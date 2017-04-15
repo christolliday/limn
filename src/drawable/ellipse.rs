@@ -7,7 +7,7 @@ use graphics::Context;
 
 use widget::drawable::Drawable;
 use widget::property::PropSet;
-use widget::style::{StyleField, Value};
+use widget::style::{Styleable, Value};
 use util::{Scalar, Rectangle};
 use color::*;
 
@@ -46,18 +46,18 @@ impl Drawable for EllipseDrawable {
 
 
 #[derive(Clone)]
-pub enum EllipseStyleField {
+pub enum EllipseStyleable {
     BackgroundColor(Value<Color>),
     Border(Value<Option<(Scalar, Color)>>),
 }
 
-impl StyleField<EllipseDrawable> for EllipseStyleField {
+impl Styleable<EllipseDrawable> for EllipseStyleable {
     fn apply(&self, drawable: &mut EllipseDrawable, props: &PropSet) {
         match *self {
-            EllipseStyleField::BackgroundColor(ref val) => {
+            EllipseStyleable::BackgroundColor(ref val) => {
                 drawable.background_color = val.from_props(props)
             },
-            EllipseStyleField::Border(ref val) => drawable.border = val.from_props(props),
+            EllipseStyleable::Border(ref val) => drawable.border = val.from_props(props),
         }
     }
 }

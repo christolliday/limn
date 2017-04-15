@@ -2,7 +2,7 @@ use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
-use drawable::rect::RectStyleField;
+use drawable::rect::RectStyleable;
 use resources::WidgetId;
 use input::mouse::ClickEvent;
 use util::Color;
@@ -16,8 +16,8 @@ static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
 static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
 
 lazy_static! {
-    pub static ref STYLE_LIST_ITEM: Vec<RectStyleField> = {
-        style!(RectStyleField::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
+    pub static ref STYLE_LIST_ITEM: Vec<RectStyleable> = {
+        style!(RectStyleable::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
             SELECTED: COLOR_LIST_ITEM_SELECTED,
             HOVER: COLOR_LIST_ITEM_HOVER))
     };
