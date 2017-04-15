@@ -58,9 +58,10 @@ fn create_slider_control() -> WidgetBuilder {
         args.queue.push(Target::Widget(slider_id), SetSliderValue(size / 100.0));
         args.queue.push(Target::Widget(slider_value_id), TextUpdated((size as i32).to_string()));
     });
-    slider_container.add_child(slider_title);
-    slider_container.add_child(slider_value);
-    slider_container.add_child(slider_widget);
+    slider_container
+        .add_child(slider_title)
+        .add_child(slider_value)
+        .add_child(slider_widget);
     slider_container
 }
 
@@ -94,9 +95,10 @@ fn main() {
 
         let (undo_id, redo_id, slider_id) = (undo_widget.id(), redo_widget.id(), slider_container.id());
 
-        button_container.add_child(undo_widget);
-        button_container.add_child(redo_widget);
-        button_container.add_child(slider_container);
+        button_container
+            .add_child(undo_widget)
+            .add_child(redo_widget)
+            .add_child(slider_container);
 
         root_widget.add_child(button_container);
         (undo_id, redo_id, slider_id)

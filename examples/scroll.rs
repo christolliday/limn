@@ -65,10 +65,11 @@ fn main() {
     rect_br_widget.layout().match_height(&rect_tr_widget);
     rect_br_widget.layout().match_width(&rect_bl_widget);
 
-    rect_container_widget.add_child(rect_tl_widget);
-    rect_container_widget.add_child(rect_tr_widget);
-    rect_container_widget.add_child(rect_bl_widget);
-    rect_container_widget.add_child(rect_br_widget);
+    rect_container_widget
+        .add_child(rect_tl_widget)
+        .add_child(rect_tr_widget)
+        .add_child(rect_bl_widget)
+        .add_child(rect_br_widget);
     scroll_widget.add_child(rect_container_widget);
     root_widget.add_child(scroll_widget);
 

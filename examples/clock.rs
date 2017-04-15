@@ -104,9 +104,10 @@ impl ClockBuilder {
                 state.angle = second_angle()
             }));
 
-        widget.add_child(hour_widget);
-        widget.add_child(minute_widget);
-        widget.add_child(second_widget);
+        widget
+            .add_child(hour_widget)
+            .add_child(minute_widget)
+            .add_child(second_widget);
 
         let clock_id = widget.id();
         thread::spawn(move || loop {

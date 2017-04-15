@@ -292,14 +292,16 @@ fn main() {
     let create_button_id = create_button.id();
     let update_button_id = update_button.id();
     let delete_button_id = delete_button.id();
-    button_container.add_child(create_button);
-    button_container.add_child(update_button);
-    button_container.add_child(delete_button);
+    button_container
+        .add_child(create_button)
+        .add_child(update_button)
+        .add_child(delete_button);
 
-    container.add_child(first_name_container);
-    container.add_child(last_name_container);
-    container.add_child(button_container);
-    container.add_child(scroll_container);
+    container
+        .add_child(first_name_container)
+        .add_child(last_name_container)
+        .add_child(button_container)
+        .add_child(scroll_container);
     root_widget.add_child(container);
 
     app.add_handler(PeopleHandler::new(list_widget_id, first_name_box_id, last_name_box_id, create_button_id, update_button_id, delete_button_id));

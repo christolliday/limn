@@ -53,8 +53,9 @@ fn main() {
     button_widget.layout().center(&button_container);
     button_widget.layout().bound_by(&button_container).padding(50.0);
     button_container.add_child(button_widget);
-    root_widget.add_child(text_widget);
-    root_widget.add_child(button_container);
+    root_widget
+        .add_child(text_widget)
+        .add_child(button_container);
 
     struct CounterHandler {
         count: u32,

@@ -84,9 +84,10 @@ fn main() {
     edit_text_box.layout().align_left(&root_widget).padding(20.0);
     edit_text_box.layout().align_right(&root_widget).padding(20.0);
 
-    root_widget.add_child(h_align_button);
-    root_widget.add_child(v_align_button);
-    root_widget.add_child(edit_text_box);
+    root_widget
+        .add_child(h_align_button)
+        .add_child(v_align_button)
+        .add_child(edit_text_box);
 
     util::set_root_and_loop(window, ui, root_widget);
 }
