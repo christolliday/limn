@@ -1,6 +1,5 @@
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{WidgetBuilder, WidgetBuilderCore};
-use widget::style::{Value, Selector};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use drawable::rect::RectStyleField;
@@ -18,11 +17,9 @@ static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
 
 lazy_static! {
     pub static ref STYLE_LIST_ITEM: Vec<RectStyleField> = {
-        let mut selector = Selector::new(COLOR_LIST_ITEM_DEFAULT);
-        selector.insert(&SELECTED, COLOR_LIST_ITEM_SELECTED);
-        selector.insert(&HOVER, COLOR_LIST_ITEM_HOVER);
-
-        vec!{ RectStyleField::BackgroundColor(Value::Selector(selector)) }
+        style!(RectStyleField::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
+            SELECTED: COLOR_LIST_ITEM_SELECTED,
+            HOVER: COLOR_LIST_ITEM_HOVER))
     };
 }
 

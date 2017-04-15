@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate limn;
 extern crate glutin;
 extern crate graphics;
@@ -12,7 +13,6 @@ use cassowary::strength::*;
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::property::{Property, PropChange};
 use limn::widget::property::states::SELECTED;
-use limn::widget::style::{Value, Selector};
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable, STYLE_BUTTON_TEXT};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue};
 use limn::drawable::text::TextDrawable;
@@ -72,7 +72,7 @@ fn main() {
         let control_color = [0.7, 0.7, 0.7, 1.0];
         let mut button_container = WidgetBuilder::new();
         button_container
-            .set_drawable_with_style(RectDrawable::new(), vec![RectStyleField::BackgroundColor(Value::Single(control_color))])
+            .set_drawable_with_style(RectDrawable::new(), style!(RectStyleField::BackgroundColor: control_color))
             .hbox();
         button_container.layout().match_width(&root_widget.layout());
         button_container.layout().align_bottom(&root_widget.layout());
@@ -104,10 +104,8 @@ fn main() {
 
     fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetId, size: f64) -> WidgetId {
 
-        let mut selector = Selector::new(WHITE);
-        selector.insert(&SELECTED, RED);
-        let style = vec![EllipseStyleField::BackgroundColor(Value::Selector(selector)),
-                         EllipseStyleField::Border(Value::Single(Some((1.0, BLACK))))];
+        let style = style!(EllipseStyleField::BackgroundColor: selector!(WHITE, SELECTED: RED),
+                           EllipseStyleField::Border: Some((1.0, BLACK)));
 
         let mut widget = WidgetBuilder::new();
         widget.set_debug_name("circle");
@@ -239,7 +237,7 @@ fn main() {
     circle_canvas.bound_children = false;
     circle_canvas.layout().height(300.0);
     circle_canvas
-        .set_drawable_with_style(RectDrawable::new(), vec![RectStyleField::BackgroundColor(Value::Single(WHITE))])
+        .set_drawable_with_style(RectDrawable::new(), style!(RectStyleField::BackgroundColor: WHITE))
         .on_click(|event, args| {
             let event = CircleEvent::Add(event.position);
             args.queue.push(Target::Ui, event);

@@ -3,7 +3,6 @@ use cassowary::strength::*;
 use event::{Target, WidgetEventHandler, WidgetEventArgs};
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::Property;
-use widget::style::Value;
 use widgets::drag::{DragEvent, WidgetDrag};
 use drawable::rect::{RectDrawable, RectStyleField};
 use resources::WidgetId;
@@ -14,8 +13,7 @@ pub struct SliderBuilder {
 }
 impl SliderBuilder {
     pub fn new() -> Self {
-        let rect_color = [0.1, 0.1, 0.1, 1.0];
-        let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
+        let style = style!(RectStyleField::BackgroundColor: [0.1, 0.1, 0.1, 1.0]);
         let mut widget = WidgetBuilder::new();
         widget.set_drawable_with_style(RectDrawable::new(), style);
         widget.layout().dimensions(Dimensions {
@@ -23,8 +21,7 @@ impl SliderBuilder {
             height: 30.0,
         });
 
-        let rect_color = [0.4, 0.4, 0.4, 1.0];
-        let style = vec![RectStyleField::BackgroundColor(Value::Single(rect_color))];
+        let style = style!(RectStyleField::BackgroundColor: [0.4, 0.4, 0.4, 1.0]);
         let mut slider_handle = WidgetBuilder::new();
         slider_handle
             .set_drawable_with_style(RectDrawable::new(), style)

@@ -10,7 +10,6 @@ use std::collections::HashMap;
 
 use limn::event::{Target, WidgetEventHandler, WidgetEventArgs, UiEventHandler, UiEventArgs};
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
-use limn::widget::style::Value;
 use limn::widget::property::PropChange;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
@@ -185,7 +184,7 @@ impl WidgetEventHandler<PropChange> for PersonHandler {
 use limn::widgets::edit_text;
 pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget_id: WidgetId) {
     let list_item_widget = {
-        let text_style = vec![TextStyleField::TextColor(Value::Single(WHITE))];
+        let text_style = style!(TextStyleField::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
         let text_dims = text_drawable.measure();
         let mut list_item_widget = WidgetBuilder::new();

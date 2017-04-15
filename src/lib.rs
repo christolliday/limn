@@ -17,6 +17,7 @@ extern crate maplit;
 extern crate downcast_rs;
 
 pub mod app;
+#[macro_use]
 pub mod widget;
 pub mod widgets;
 pub mod drawable;

@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate limn;
 extern crate backend;
 extern crate graphics;
@@ -17,7 +18,6 @@ use backend::gfx::G2d;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
-use limn::widget::style::Value;
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleField};
 use limn::event::{Target, Queue};
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
@@ -72,9 +72,9 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new(mut queue: Queue) -> Self {
 
-        let style = vec![
-            EllipseStyleField::BackgroundColor(Value::Single(WHITE)),
-            EllipseStyleField::Border(Value::Single(Some((2.0, BLACK)))) ];
+        let style = style!(
+            EllipseStyleField::BackgroundColor: WHITE,
+            EllipseStyleField::Border: Some((2.0, BLACK)));
         let mut widget = WidgetBuilder::new();
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
         widget.layout().dimensions(Dimensions {

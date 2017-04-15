@@ -10,13 +10,23 @@ pub enum Value<T>
     where T: Clone
 {
     Single(T),
-    // uses a linked hashmap to allow ordering of matches by priority
-    // the first ordered propset that is a subset of the widgets props will be matched
     Selector(Selector<T>),
+}
+impl<T: Clone> From<T> for Value<T> {
+    fn from(val: T) -> Self {
+        Value::Single(val)
+    }
+}
+impl<T: Clone> From<Selector<T>> for Value<T> {
+    fn from(val: Selector<T>) -> Self {
+        Value::Selector(val)
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct Selector<T> {
+    // uses a linked hashmap to allow ordering of matches by priority
+    // the first ordered propset that is a subset of the widgets props will be matched
     pub matcher: LinkedHashMap<PropSet, T>,
     pub default: T,
 }
@@ -79,4 +89,41 @@ pub fn apply_style<D, S: StyleField<D>>(state: &mut D, style: &Vec<S>, props: &P
     for field in style.iter() {
         field.apply(state, props);
     }
+}
+
+#[macro_export]
+macro_rules! selector {
+    ($default:expr, $($props:ident: $val:expr),*) => {
+        {
+            use $crate::widget::style::Selector;
+            let mut selector = Selector::new($default);
+            $(
+                selector.insert(&$props, $val);
+            )*
+            selector
+        }
+    }
+}
+#[macro_export]
+macro_rules! style {
+    (parent: $parent:expr, $($type:path: $val:expr),*) => {
+        {
+            use $crate::widget::style::Value;
+            let mut style = $parent.clone();
+            $(
+                style.push($type(Value::from($val)));
+            )*
+            style
+        }
+    };
+    ($($type:path: $val:expr),*) => {
+        {
+            use $crate::widget::style::Value;
+            vec![
+                $(
+                    $type(Value::from($val)),
+                )*
+            ]
+        }
+    };
 }

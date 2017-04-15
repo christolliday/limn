@@ -1,10 +1,10 @@
+#[macro_use]
 extern crate limn;
 extern crate glutin;
 
 mod util;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
-use limn::widget::style::Value;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::drawable::text::{TextDrawable, TextStyleField};
 use limn::event::{Target, WidgetEventHandler, WidgetEventArgs};
@@ -32,7 +32,7 @@ fn main() {
         }
     }
 
-    let text_style = vec![TextStyleField::BackgroundColor(Value::Single(WHITE))];
+    let text_style = style!(TextStyleField::BackgroundColor: WHITE);
     let text_drawable = TextDrawable::new("0");
     let text_dims = text_drawable.measure();
     let mut text_widget = WidgetBuilder::new();
