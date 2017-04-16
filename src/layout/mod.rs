@@ -1,5 +1,6 @@
 pub mod solver;
 pub mod container;
+pub mod linear_layout;
 
 use std::ops::Drop;
 

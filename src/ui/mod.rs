@@ -143,9 +143,9 @@ impl Ui {
                       mut widget: WidgetBuilder,
                       parent_id: WidgetId)
     {
-        if let Some(parent) = self.graph.get_widget(parent_id) {
+        if let Some(parent) = self.graph.get_widget_container(parent_id) {
             if let Some(ref mut container) = parent.container {
-                container.add_child(&parent.layout, &mut widget);
+                container.add_child(&parent.widget.layout, &mut widget);
             }
         }
         let layout = widget.layout().vars.clone();
@@ -171,6 +171,13 @@ impl Ui {
     }
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {
+        if let Some(parent_id) = self.graph.parent(widget_id) {
+            if let Some(parent) = self.graph.get_widget_container(parent_id) {
+                if let Some(ref mut container) = parent.container {
+                    container.remove_child(&parent.widget, widget_id, &mut self.solver);
+                }
+            }
+        }
         self.queue.push(Target::Widget(widget_id), WidgetDetachedEvent);
         if let Some(widget) = self.graph.remove_widget(widget_id) {
             self.redraw();

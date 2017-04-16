@@ -14,7 +14,6 @@ use limn::widget::property::PropChange;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
 use limn::widgets::list::STYLE_LIST_ITEM;
-use limn::widgets::linear_layout::LinearLayoutEvent;
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::{Id, IdGen, WidgetId};
@@ -128,8 +127,6 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
             PeopleEvent::Delete => {
                 if let Some((selected_person_id, selected_widget)) = self.selected_item {
                     self.people.remove(&selected_person_id);
-                    let event = LinearLayoutEvent::RemoveWidget(selected_widget);
-                    args.queue.push(Target::Widget(self.list_widget_id), event);
                     args.ui.remove_widget(selected_widget);
                 }
                 self.selected_item = None;

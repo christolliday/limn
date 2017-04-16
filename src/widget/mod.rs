@@ -148,7 +148,6 @@ impl WidgetBuilder {
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
-                                 self.container,
                                  self.layout.vars,
                                  self.debug_name,
                                  self.debug_color);
@@ -156,6 +155,7 @@ impl WidgetBuilder {
          LayoutUpdate::new(self.layout.edit_vars, self.layout.constraints),
          WidgetContainer {
              widget: widget,
+             container: self.container,
              handlers: self.handlers,
          })
     }
@@ -163,6 +163,7 @@ impl WidgetBuilder {
 
 pub struct WidgetContainer {
     pub widget: Widget,
+    pub container: Option<Box<LayoutContainer>>,
     pub handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
 }
 impl WidgetContainer {
@@ -192,7 +193,6 @@ pub struct Widget {
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub has_updated: bool,
-    pub container: Option<Box<LayoutContainer>>,
     pub layout: LayoutVars,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -202,7 +202,6 @@ impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<DrawableWrapper>,
                props: PropSet,
-               container: Option<Box<LayoutContainer>>,
                layout: LayoutVars,
                debug_name: Option<String>,
                debug_color: Option<Color>)
@@ -212,7 +211,6 @@ impl Widget {
             drawable: drawable,
             props: props,
             has_updated: false,
-            container: container,
             layout: layout,
             debug_name: debug_name,
             debug_color: debug_color,
@@ -262,7 +260,7 @@ impl Widget {
         }
     }
 
-    pub fn update_layout<F>(&mut self, f: F, solver: &mut LimnSolver)
+    pub fn update_layout<F>(&self, f: F, solver: &mut LimnSolver)
         where F: FnOnce(&mut LayoutBuilder)
     {
         let mut layout = LayoutBuilder::from(self.layout.clone());
