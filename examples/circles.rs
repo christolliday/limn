@@ -8,7 +8,6 @@ extern crate cassowary;
 mod util;
 
 use std::collections::HashMap;
-use cassowary::strength::*;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::property::{Property, PropChange};
@@ -113,15 +112,6 @@ fn main() {
         widget.set_debug_name("circle");
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
         widget.add_handler(CircleHandler { center: center.clone() });
-        {
-            let ref layout = widget.layout().vars;
-            ui.solver.update_solver(|solver| {
-                solver.add_edit_variable(layout.top, STRONG).unwrap();
-                solver.add_edit_variable(layout.left, STRONG).unwrap();
-                solver.add_edit_variable(layout.bottom, STRONG).unwrap();
-                solver.add_edit_variable(layout.right, STRONG).unwrap();
-            });
-        }
         let id = widget.id();
         ui.queue.push(Target::Widget(id), ResizeEvent(size));
         widget.on_click(move |_, args| {
@@ -137,14 +127,13 @@ fn main() {
     }
     impl WidgetEventHandler<ResizeEvent> for CircleHandler {
         fn handle(&mut self, event: &ResizeEvent, args: WidgetEventArgs) {
-            let ref layout = args.widget.layout;
             let radius = event.0 / 2.0;
-            args.solver.update_solver(move |solver| {
-                solver.suggest_value(layout.top, self.center.y - radius).unwrap();
-                solver.suggest_value(layout.left, self.center.x - radius).unwrap();
-                solver.suggest_value(layout.bottom, self.center.y + radius).unwrap();
-                solver.suggest_value(layout.right, self.center.x + radius).unwrap();
-            });
+            args.widget.update_layout(|layout| {
+                layout.edit_top().set(self.center.y - radius);
+                layout.edit_left().set(self.center.x - radius);
+                layout.edit_right().set(self.center.x + radius);
+                layout.edit_bottom().set(self.center.y + radius);
+            }, args.solver);
         }
     }
 

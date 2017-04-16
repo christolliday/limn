@@ -81,23 +81,54 @@ impl LayoutRef for LayoutVars {
         self
     }
 }
+pub struct LayoutUpdate {
+    pub edit_vars: Vec<EditVariable>,
+    pub constraints: Vec<Constraint>,
+}
+impl LayoutUpdate {
+    pub fn new(edit_vars: Vec<EditVariable>, constraints: Vec<Constraint>) -> Self {
+        LayoutUpdate {
+            edit_vars: edit_vars,
+            constraints: constraints,
+        }
+    }
+}
 
 pub struct LayoutBuilder {
     pub vars: LayoutVars,
+    pub edit_vars: Vec<EditVariable>,
     pub constraints: Vec<Constraint>,
 }
 impl LayoutBuilder {
     pub fn new() -> Self {
         LayoutBuilder {
             vars: LayoutVars::new(),
+            edit_vars: Vec::new(),
             constraints: Vec::new(),
         }
     }
     pub fn from(vars: LayoutVars) -> Self {
         LayoutBuilder {
             vars: vars,
+            edit_vars: Vec::new(),
             constraints: Vec::new(),
         }
+    }
+    pub fn edit_left(&mut self) -> VariableEditable {
+        let var = self.vars.left;
+        VariableEditable::new(self, var)
+    }
+    pub fn edit_top(&mut self) -> VariableEditable {
+        let var = self.vars.top;
+        VariableEditable::new(self, var)
+    }
+    pub fn edit_right(&mut self) -> VariableEditable {
+        let var = self.vars.right;
+        VariableEditable::new(self, var)
+    }
+    pub fn edit_bottom(&mut self) -> VariableEditable {
+        let var = self.vars.bottom;
+        VariableEditable::new(self, var)
     }
     pub fn match_layout<T: LayoutRef>(&mut self, widget: &T) -> WidgetConstraint {
         let widget = widget.layout_ref();
@@ -350,6 +381,45 @@ impl<'a> PaddableConstraint<'a> {
     }
 }
 
+pub struct EditVariable {
+    var: Variable,
+    val: f64,
+    strength: f64,
+}
+impl EditVariable {
+    fn new(editable: &VariableEditable) -> Self {
+        EditVariable {
+            var: editable.var,
+            val: editable.val,
+            strength: editable.strength,
+        }
+    }
+}
+pub struct VariableEditable<'a> {
+    pub builder: &'a mut LayoutBuilder,
+    var: Variable,
+    val: f64,
+    strength: f64,
+}
+impl<'a> VariableEditable<'a> {
+    pub fn new(builder: &'a mut LayoutBuilder, var: Variable) -> Self {
+        VariableEditable {
+            builder: builder,
+            var: var,
+            val: 0.0,
+            strength: STRONG,
+        }
+    }
+    pub fn strength(mut self, strength: f64) -> Self {
+        self.strength = strength;
+        self
+    }
+    pub fn set(mut self, val: f64) -> Self {
+        self.val = val;
+        self
+    }
+}
+
 impl<'a> Drop for PaddableConstraint<'a> {
     fn drop(&mut self) {
         self.builder.constraints.extend(self.constraints.clone());
@@ -358,6 +428,12 @@ impl<'a> Drop for PaddableConstraint<'a> {
 impl<'a> Drop for WidgetConstraint<'a> {
     fn drop(&mut self) {
         self.builder.constraints.extend(self.constraints.clone());
+    }
+}
+impl<'a> Drop for VariableEditable<'a> {
+    fn drop(&mut self) {
+        let edit_var = EditVariable::new(&self);
+        self.builder.edit_vars.push(edit_var);
     }
 }
 

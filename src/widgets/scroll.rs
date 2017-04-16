@@ -1,5 +1,4 @@
 use glutin;
-use cassowary::strength::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{WidgetBuilder, WidgetBuilderCore};
@@ -40,8 +39,6 @@ impl WidgetScrollHandler {
 }
 impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
     fn handle(&mut self, event: &WidgetScroll, args: WidgetEventArgs) {
-        let WidgetEventArgs { widget, solver, .. } = args;
-        let ref layout = widget.layout;
         let &WidgetScroll { event, parent_bounds } = event;
 
         let scroll = match event {
@@ -59,7 +56,7 @@ impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
             }
         };
 
-        let widget_bounds = layout.bounds();
+        let widget_bounds = args.widget.layout.bounds();
 
         self.offset = self.offset + scroll * 13.0;
         self.offset.x = f64::min(0.0,
@@ -68,16 +65,10 @@ impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
         self.offset.y = f64::min(0.0,
                                  f64::max(parent_bounds.height - widget_bounds.height,
                                           self.offset.y));
-        solver.update_solver(|solver| {
-            if !solver.has_edit_variable(&layout.left) {
-                solver.add_edit_variable(layout.left, STRONG).unwrap();
-            }
-            if !solver.has_edit_variable(&layout.top) {
-                solver.add_edit_variable(layout.top, STRONG).unwrap();
-            }
-            solver.suggest_value(layout.left, parent_bounds.left + self.offset.x).unwrap();
-            solver.suggest_value(layout.top, parent_bounds.top + self.offset.y).unwrap();
-        });
+        args.widget.update_layout(|layout| {
+            layout.edit_left().set(parent_bounds.left + self.offset.x);
+            layout.edit_top().set(parent_bounds.top + self.offset.y);
+        }, args.solver);
     }
 }
 

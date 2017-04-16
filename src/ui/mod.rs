@@ -159,8 +159,8 @@ impl Ui {
                      widget: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
 
-        let (children, constraints, widget) = widget.build();
-        self.solver.add_widget(&widget.widget, constraints);
+        let (children, layout, widget) = widget.build();
+        self.solver.add_widget(&widget.widget, layout);
 
         let id = widget.widget.id;
         self.graph.add_widget(widget, parent_id);

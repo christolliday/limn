@@ -9,14 +9,12 @@ use std::collections::HashMap;
 use graphics::Context;
 use graphics::types::Color;
 
-use cassowary::Constraint;
-
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
 use event::{Queue, WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::solver::LimnSolver;
-use layout::{LayoutBuilder, LayoutVars, LayoutRef};
+use layout::{LayoutBuilder, LayoutUpdate, LayoutVars, LayoutRef};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
@@ -135,7 +133,7 @@ impl WidgetBuilder {
         builder
     }
 
-    pub fn build(self) -> (Vec<WidgetBuilder>, Vec<Constraint>, WidgetContainer) {
+    pub fn build(self) -> (Vec<WidgetBuilder>, LayoutUpdate, WidgetContainer) {
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
@@ -144,7 +142,7 @@ impl WidgetBuilder {
                                  self.debug_name,
                                  self.debug_color);
         (self.children,
-         self.layout.constraints,
+         LayoutUpdate::new(self.layout.edit_vars, self.layout.constraints),
          WidgetContainer {
              widget: widget,
              handlers: self.handlers,
@@ -258,6 +256,6 @@ impl Widget {
     {
         let mut layout = LayoutBuilder::from(self.layout.clone());
         f(&mut layout);
-        solver.add_constraints(layout.constraints);
+        solver.update_from_builder(LayoutUpdate::new(layout.edit_vars, layout.constraints));
     }
 }

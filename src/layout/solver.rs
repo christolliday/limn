@@ -12,7 +12,7 @@ use resources::WidgetId;
 use widget::Widget;
 use event::{Target, Queue, UiEventArgs};
 
-use layout::LayoutVars;
+use layout::{LayoutVars, LayoutUpdate};
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
@@ -35,7 +35,7 @@ impl LimnSolver {
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
-    pub fn add_widget(&mut self, widget: &Widget, constraints: Vec<Constraint>) {
+    pub fn add_widget(&mut self, widget: &Widget, layout_update: LayoutUpdate) {
         let ref vars = widget.layout;
         self.widget_map.insert(vars.left, widget.id);
         self.widget_map.insert(vars.top, widget.id);
@@ -48,7 +48,7 @@ impl LimnSolver {
             add_debug_var_name(widget.layout.right, &format!("{}.right", debug_name));
             add_debug_var_name(widget.layout.bottom, &format!("{}.bottom", debug_name));
         }
-        self.add_constraints(constraints);
+        self.update_from_builder(layout_update);
     }
     pub fn remove_widget(&mut self, widget_vars: &LayoutVars) {
         for var in [widget_vars.left, widget_vars.top, widget_vars.right, widget_vars.bottom].iter() {
@@ -88,8 +88,14 @@ impl LimnSolver {
         self.solver.has_constraint(constraint)
     }
 
-    pub fn add_constraints(&mut self, constraints: Vec<Constraint>) {
-        for constraint in constraints {
+    pub fn update_from_builder(&mut self, layout_update: LayoutUpdate) {
+        for edit_var in layout_update.edit_vars {
+            if !self.solver.has_edit_variable(&edit_var.var) {
+                self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
+            }
+            self.solver.suggest_value(edit_var.var, edit_var.val).unwrap();
+        }
+        for constraint in layout_update.constraints {
             self.add_constraint(constraint.clone());
             let var_list = self.constraint_map.entry(constraint.clone()).or_insert(Vec::new());
             for term in &constraint.0.expression.terms {

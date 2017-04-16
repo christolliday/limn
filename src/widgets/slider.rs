@@ -1,5 +1,3 @@
-use cassowary::strength::*;
-
 use event::{Target, WidgetEventHandler, WidgetEventArgs};
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::Property;
@@ -92,10 +90,7 @@ impl DragHandler {
 }
 impl WidgetEventHandler<SliderHandleInput> for DragHandler {
     fn handle(&mut self, event: &SliderHandleInput, args: WidgetEventArgs) {
-
-        let ref layout = args.widget.layout;
-        let bounds = layout.bounds();
-
+        let bounds = args.widget.layout.bounds();
         match *event {
             SliderHandleInput::WidgetDrag(ref event) => {
                 if args.widget.props.contains(&Property::Inactive) {
@@ -108,25 +103,19 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                         self.start_pos = drag_pos - bounds.left;
                     }
                     _ => {
-                        args.solver.update_solver(|solver| {
-                            if !solver.has_edit_variable(&layout.left) {
-                                solver.add_edit_variable(layout.left, STRONG).unwrap();
-                            }
-                            solver.suggest_value(layout.left, drag_pos - self.start_pos).unwrap();
-                        });
+                        args.widget.update_layout(|layout| {
+                            layout.edit_left().set(drag_pos - self.start_pos);
+                        }, args.solver);
                         let event = MovedSliderWidgetEvent { slider_left: bounds.left, slider_right: bounds.right() };
                         args.queue.push(Target::Widget(self.container), event);
                     }
                 }
             }
             SliderHandleInput::SetValue((value, parent_width, parent_left)) => {
-                args.solver.update_solver(|solver| {
-                    let pos = value * (parent_width - bounds.width);
-                    if !solver.has_edit_variable(&layout.left) {
-                        solver.add_edit_variable(layout.left, STRONG).unwrap();
-                    }
-                    solver.suggest_value(layout.left, parent_left + pos).unwrap();
-                });
+                let pos = value * (parent_width - bounds.width);
+                args.widget.update_layout(|layout| {
+                    layout.edit_left().set(parent_left + pos);
+                }, args.solver);
             }
         }
     }
