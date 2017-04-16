@@ -26,6 +26,7 @@ struct WidgetData {
 struct LinearLayoutHandler {
     orientation: Orientation,
     top: Variable,
+    bottom: Variable,
 
     widgets: HashMap<WidgetId, WidgetData>,
     last_widget: Option<WidgetId>,
@@ -36,6 +37,7 @@ impl LinearLayoutHandler {
         LinearLayoutHandler {
             orientation: orientation,
             top: beginning(orientation, parent),
+            bottom: ending(orientation, parent),
             widgets: HashMap::new(),
             last_widget: None,
         }
@@ -64,6 +66,8 @@ impl LayoutContainer for LinearLayoutHandler {
             self.top
         };
         let constraint = child_start | EQ(REQUIRED) | end;
+        child.layout().constraints.push(constraint);
+        let constraint = child_end | LE(REQUIRED) | self.bottom;
         child.layout().constraints.push(constraint);
         if let Some(last_widget_id) = self.last_widget {
             self.widgets.insert(child.id(), WidgetData {
