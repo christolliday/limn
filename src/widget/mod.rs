@@ -15,6 +15,7 @@ use backend::glyph::GlyphCache;
 use event::{Queue, WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::solver::LimnSolver;
 use layout::{LayoutBuilder, LayoutUpdate, LayoutVars, LayoutRef};
+use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rectangle};
 
@@ -26,8 +27,8 @@ pub struct WidgetBuilder {
     id: WidgetId,
     drawable: Option<DrawableWrapper>,
     props: PropSet,
+    container: Option<Box<LayoutContainer>>,
     layout: LayoutBuilder,
-    pub bound_children: bool,
     handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
     debug_name: Option<String>,
     debug_color: Option<Color>,
@@ -67,6 +68,8 @@ pub trait WidgetBuilderCore {
     fn set_debug_color(&mut self, color: Color) -> &mut Self;
     fn set_inactive(&mut self) -> &mut Self;
     fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self;
+    fn no_container(&mut self) -> &mut Self;
+    fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self;
     fn layout(&mut self) -> &mut LayoutBuilder;
     fn id(&mut self) -> WidgetId;
 }
@@ -109,6 +112,14 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self.as_mut().children.push(widget.build());
         self
     }
+    fn no_container(&mut self) -> &mut Self {
+        self.as_mut().container = None;
+        self
+    }
+    fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self {
+        self.as_mut().container = Some(Box::new(container));
+        self
+    }
     fn layout(&mut self) -> &mut LayoutBuilder {
         &mut self.as_mut().layout
     }
@@ -122,8 +133,8 @@ impl WidgetBuilder {
             id: resources().widget_id(),
             drawable: None,
             props: PropSet::new(),
+            container: Some(Box::new(Frame)),
             layout: LayoutBuilder::new(),
-            bound_children: true,
             handlers: HashMap::new(),
             debug_name: None,
             debug_color: None,
@@ -137,8 +148,8 @@ impl WidgetBuilder {
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
+                                 self.container,
                                  self.layout.vars,
-                                 self.bound_children,
                                  self.debug_name,
                                  self.debug_color);
         (self.children,
@@ -181,8 +192,8 @@ pub struct Widget {
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub has_updated: bool,
+    pub container: Option<Box<LayoutContainer>>,
     pub layout: LayoutVars,
-    pub bound_children: bool,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
 }
@@ -191,8 +202,8 @@ impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<DrawableWrapper>,
                props: PropSet,
+               container: Option<Box<LayoutContainer>>,
                layout: LayoutVars,
-               bound_children: bool,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
@@ -201,8 +212,8 @@ impl Widget {
             drawable: drawable,
             props: props,
             has_updated: false,
+            container: container,
             layout: layout,
-            bound_children: bound_children,
             debug_name: debug_name,
             debug_color: debug_color,
         };

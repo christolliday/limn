@@ -144,8 +144,8 @@ impl Ui {
                       parent_id: WidgetId)
     {
         if let Some(parent) = self.graph.get_widget(parent_id) {
-            if parent.bound_children {
-                widget.layout().bound_by(&parent.layout);
+            if let Some(ref mut container) = parent.container {
+                container.add_child(&parent.layout, &mut widget);
             }
         }
         let layout = widget.layout().vars.clone();

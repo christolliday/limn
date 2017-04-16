@@ -225,7 +225,7 @@ fn main() {
     let mut root_widget = WidgetBuilder::new();
 
     let mut circle_canvas = WidgetBuilder::new();
-    circle_canvas.bound_children = false;
+    circle_canvas.no_container();
     circle_canvas.layout().height(300.0);
     circle_canvas
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))

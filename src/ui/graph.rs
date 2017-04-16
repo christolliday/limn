@@ -39,7 +39,7 @@ impl WidgetGraph {
     pub fn new() -> Self {
         let mut graph = Graph::new();
         let dummy_container = WidgetContainer {
-            widget: Widget::new(WidgetId(0), None, PropSet::new(), LayoutVars::new(), false, None, None),
+            widget: Widget::new(WidgetId(0), None, PropSet::new(), None, LayoutVars::new(), None, None),
             handlers: HashMap::new(),
         };
         let null_index = graph.add_node(dummy_container);

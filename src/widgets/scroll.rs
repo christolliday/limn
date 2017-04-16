@@ -74,7 +74,7 @@ impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
 
 impl WidgetBuilder {
     pub fn contents_scroll(&mut self) -> &mut Self {
-        self.bound_children = false;
+        self.no_container();
         self.add_handler_fn(scroll_handle_child_added);
         self.add_handler_fn(scroll_handle_mouse_wheel)
     }
