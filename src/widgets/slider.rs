@@ -7,6 +7,7 @@ use widgets::drag::{DragEvent, WidgetDrag};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use resources::WidgetId;
+use ui::ChildAttachedEvent;
 use util::Dimensions;
 
 pub struct SliderBuilder {
@@ -75,14 +76,22 @@ impl SliderBuilder {
         slider.add_child(slider_handle);
         SliderBuilder { widget: slider }
     }
-    pub fn on_val_changed<F>(&mut self, on_val_changed: F) -> &mut Self
+    pub fn set_value(&mut self, value: f64) -> &mut Self {
+        // need to update position after widget is created because the slider position
+        // depends on the measured width of the slider and slider handle
+        self.add_handler_fn(move |_: &ChildAttachedEvent, args| {
+            args.queue.push(Target::Widget(args.widget.id), SetSliderValue(value));
+        });
+        self
+    }
+    pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
         where F: Fn(f64, &mut WidgetEventArgs) + 'static
     {
         self.widget.add_handler_fn(move |event: &MovedSliderWidgetEvent, mut args| {
             let bounds = args.widget.layout.bounds();
             let range = bounds.width - (event.slider_right - event.slider_left);
             let val = (event.slider_left - bounds.left) / range;
-            on_val_changed(val, &mut args);
+            on_value_changed(val, &mut args);
             *args.handled = true;
         });
         self
