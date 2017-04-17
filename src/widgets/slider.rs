@@ -14,10 +14,7 @@ impl SliderBuilder {
         let style = style!(RectStyleable::BackgroundColor: [0.1, 0.1, 0.1, 1.0]);
         let mut widget = WidgetBuilder::new();
         widget.set_drawable_with_style(RectDrawable::new(), style);
-        widget.layout().dimensions(Dimensions {
-            width: 200.0,
-            height: 30.0,
-        });
+        widget.layout().height(30.0);
 
         let style = style!(RectStyleable::BackgroundColor: [0.4, 0.4, 0.4, 1.0]);
         let mut slider_handle = WidgetBuilder::new();

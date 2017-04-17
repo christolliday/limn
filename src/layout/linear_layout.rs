@@ -24,6 +24,8 @@ struct WidgetData {
     succ: Option<WidgetId>,
 }
 struct LinearLayoutHandler {
+    padding: f64,
+
     orientation: Orientation,
     top: Variable,
     bottom: Variable,
@@ -35,6 +37,7 @@ struct LinearLayoutHandler {
 impl LinearLayoutHandler {
     fn new(orientation: Orientation, parent: &LayoutVars) -> Self {
         LinearLayoutHandler {
+            padding: 0.0,
             orientation: orientation,
             top: beginning(orientation, parent),
             bottom: ending(orientation, parent),
@@ -45,15 +48,18 @@ impl LinearLayoutHandler {
 }
 
 impl LayoutContainer for LinearLayoutHandler {
+    fn set_padding(&mut self, padding: f64) {
+        self.padding = padding;
+    }
     fn add_child(&mut self, parent: &LayoutVars, child: &mut WidgetBuilder) {
         match self.orientation {
             Orientation::Horizontal => {
-                child.layout().bound_top(parent);
-                child.layout().bound_bottom(parent);
+                child.layout().bound_top(parent).padding(self.padding);
+                child.layout().bound_bottom(parent).padding(self.padding);
             }
             Orientation::Vertical => {
-                child.layout().bound_left(parent);
-                child.layout().bound_right(parent);
+                child.layout().bound_left(parent).padding(self.padding);
+                child.layout().bound_right(parent).padding(self.padding);
             }
         }
         let child_start = beginning(self.orientation, &child.layout().vars);
@@ -65,9 +71,9 @@ impl LayoutContainer for LinearLayoutHandler {
         } else {
             self.top
         };
-        let constraint = child_start | EQ(REQUIRED) | end;
+        let constraint = child_start - end | EQ(REQUIRED) | self.padding;
         child.layout().constraints.push(constraint);
-        let constraint = child_end | LE(REQUIRED) | self.bottom;
+        let constraint = self.bottom - child_end | GE(REQUIRED) | self.padding;
         child.layout().constraints.push(constraint);
         if let Some(last_widget_id) = self.last_widget {
             self.widgets.insert(child.id(), WidgetData {
@@ -104,8 +110,9 @@ impl LayoutContainer for LinearLayoutHandler {
                 let succ = self.widgets.get_mut(&succ).unwrap();
                 succ.pred = widget_data.pred;
                 let succ_start = succ.start;
+                let padding = self.padding;
                 parent.update_layout(|layout| {
-                    let constraint = pred_end | EQ(STRONG) | succ_start;
+                    let constraint = pred_end - succ_start | EQ(STRONG) | padding;
                     layout.constraints.push(constraint);
                 }, solver);
             }

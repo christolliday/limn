@@ -34,17 +34,25 @@ enum CircleEvent {
 
 fn create_slider_control() -> WidgetBuilder {
     let mut slider_container = WidgetBuilder::new();
+    slider_container.set_debug_name("slider_container");
     let mut slider_title = WidgetBuilder::new();
+    slider_title.set_debug_name("slider_title");
     slider_title.set_drawable_with_style(TextDrawable::new("Circle Size"), STYLE_BUTTON_TEXT.clone());
+    slider_title.layout().align_left(&slider_container);
+    slider_title.layout().width(150.0);
     let mut slider_value = WidgetBuilder::new();
     slider_value
+        .set_debug_name("slider_value")
         .set_drawable_with_style(TextDrawable::default(), STYLE_BUTTON_TEXT.clone())
         .add_handler_fn(edit_text::text_change_handle);
-    slider_value.layout().width(80.0);
-    slider_value.layout().to_right_of(&slider_title);
+    slider_value.layout().width(50.0);
+    slider_value.layout().align_right(&slider_container);
     let mut slider_widget = SliderBuilder::new();
-    slider_widget.layout().below(&slider_title);
-    slider_widget.layout().below(&slider_value);
+    slider_widget.set_debug_name("slider_widget");
+    slider_widget.layout().width(300.0);
+    slider_widget.layout().below(&slider_title).padding(10.0);
+    slider_widget.layout().below(&slider_value).padding(10.0);
+    slider_widget.layout().match_width(&slider_container);
 
     let (slider_id, slider_value_id) = (slider_widget.id(), slider_value.id());
     slider_widget.on_val_changed(move |size, args| {
@@ -73,7 +81,8 @@ fn main() {
         let mut button_container = WidgetBuilder::new();
         button_container
             .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: control_color))
-            .hbox();
+            .hbox()
+            .set_padding(30.0);
         button_container.layout().match_width(root_widget);
         button_container.layout().align_bottom(root_widget);
         button_container.layout().shrink_vertical();
@@ -226,7 +235,7 @@ fn main() {
 
     let mut circle_canvas = WidgetBuilder::new();
     circle_canvas.no_container();
-    circle_canvas.layout().height(300.0);
+    circle_canvas.layout().min_height(600.0);
     circle_canvas
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))
         .on_click(|event, args| {

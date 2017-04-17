@@ -109,7 +109,7 @@ impl LimnSolver {
     }
     fn add_constraint(&mut self, constraint: Constraint) {
         self.debug_constraint_list.insert(constraint.clone(), ());
-        self.solver.add_constraint(constraint).unwrap();
+        self.solver.add_constraint(constraint.clone()).expect(&format!("Failed to add constraint {}", fmt_constraint(&constraint)));
     }
 
     fn check_changes(&mut self) {

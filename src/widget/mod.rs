@@ -70,6 +70,7 @@ pub trait WidgetBuilderCore {
     fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self;
     fn no_container(&mut self) -> &mut Self;
     fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self;
+    fn set_padding(&mut self, padding: f64) -> &mut Self;
     fn layout(&mut self) -> &mut LayoutBuilder;
     fn id(&mut self) -> WidgetId;
 }
@@ -120,6 +121,10 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self.as_mut().container = Some(Box::new(container));
         self
     }
+    fn set_padding(&mut self, padding: f64) -> &mut Self {
+        self.as_mut().container.as_mut().unwrap().set_padding(padding);
+        self
+    }
     fn layout(&mut self) -> &mut LayoutBuilder {
         &mut self.as_mut().layout
     }
@@ -133,7 +138,7 @@ impl WidgetBuilder {
             id: resources().widget_id(),
             drawable: None,
             props: PropSet::new(),
-            container: Some(Box::new(Frame)),
+            container: Some(Box::new(Frame::new())),
             layout: LayoutBuilder::new(),
             handlers: HashMap::new(),
             debug_name: None,
