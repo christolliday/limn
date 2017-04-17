@@ -32,12 +32,14 @@ impl EllipseDrawable {
 
 impl Drawable for EllipseDrawable {
     fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
-        let border = self.border.and_then(|(radius, color)| {
-            Some(graphics::ellipse::Border {
+        let (bounds, border) = if let Some((radius, color)) = self.border {
+            (bounds.shrink(radius), Some(graphics::ellipse::Border {
                 radius: radius,
                 color: color,
-            })
-        });
+            }))
+        } else {
+            (bounds, None)
+        };
         graphics::Ellipse::new(self.background_color)
             .maybe_border(border)
             .draw(bounds, &context.draw_state, context.transform, graphics);

@@ -40,12 +40,7 @@ impl Drawable for RectDrawable {
             // piston graphics draws the border outside the rectangle bounds
             // so it can get cut off by the clip rect, this shrinks the rect
             // to accomodate the border.
-            bounds = Rectangle {
-                left: bounds.left + radius,
-                top: bounds.top + radius,
-                width: bounds.width - radius * 2.0,
-                height: bounds.height - radius * 2.0,
-            };
+            bounds = bounds.shrink(radius);
         }
         if let Some(radius) = self.corner_radius {
             let points_per_corner = 8;
