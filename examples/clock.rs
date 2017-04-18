@@ -22,6 +22,7 @@ use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use limn::event::{Target, Queue};
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
 use limn::color::*;
+use limn::layout::constraint::*;
 
 struct ClockTick;
 
@@ -77,10 +78,10 @@ impl ClockBuilder {
             EllipseStyleable::Border: Some((2.0, BLACK)));
         let mut widget = WidgetBuilder::new();
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
-        widget.layout().dimensions(Dimensions {
+        layout!(widget: dimensions(Dimensions {
             width: 200.0,
             height: 200.0,
-        });
+        }));
 
         let hour_angle = || 2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0;
         let minute_angle = || 2.0 * f64::consts::PI * Local::now().minute() as f64 / 60.0;
@@ -124,8 +125,9 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
     let mut clock = ClockBuilder::new(ui.queue.clone()).widget;
-    clock.layout().center(&root_widget);
-    clock.layout().bound_by(&root_widget).padding(50.0);
+    layout!(clock:
+        center(&root_widget),
+        bound_by(&root_widget).padding(50.0));
     root_widget.add_child(clock);
 
     util::set_root_and_loop(window, ui, root_widget);

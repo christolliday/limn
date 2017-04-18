@@ -21,6 +21,7 @@ use limn::ui::Ui;
 use limn::event::Queue;
 use limn::util::Dimensions;
 use limn::color::*;
+use limn::layout::constraint::*;
 
 named_id!(PersonId);
 
@@ -190,12 +191,12 @@ pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget
             .add_handler(PersonHandler::new(person_id))
             .list_item(list_widget_id)
             .enable_hover();
-        list_item_widget.layout().height(text_dims.height);
+        layout!(list_item_widget: height(text_dims.height));
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
             .add_handler_fn(edit_text::text_change_handle);
-        list_text_widget.layout().center(&list_item_widget);
+        layout!(list_text_widget: center(&list_item_widget));
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
@@ -207,29 +208,31 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    root_widget.layout().min_dimensions(Dimensions {
+    layout!(root_widget: min_dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
-    });
+    }));
     let mut container = WidgetBuilder::new();
-    container.layout().bound_by(&root_widget).padding(20.0);
+    layout!(container: bound_by(&root_widget).padding(20.0));
 
     let create_name_group = |title, container: &mut WidgetBuilder| {
         let mut name_container = WidgetBuilder::new();
-        name_container.layout().match_width(container);
+        layout!(name_container: match_width(container));
 
         let mut static_text = WidgetBuilder::new();
         let text = TextDrawable::new(title);
         let text_dims = text.measure();
         static_text.set_drawable(text);
-        static_text.layout().center_vertical(&name_container);
-        static_text.layout().dimensions(text_dims);
+        layout!(static_text:
+            center_vertical(&name_container),
+            dimensions(text_dims));
 
         let mut text_box = EditTextBuilder::new();
-        text_box.layout().min_height(30.0);
-        text_box.layout().min_width(200.0);
-        text_box.layout().align_right(&name_container);
-        text_box.layout().to_right_of(&static_text).padding(20.0);
+        layout!(text_box:
+            min_height(30.0),
+            min_width(200.0),
+            align_right(&name_container),
+            to_right_of(&static_text).padding(20.0));
         name_container.add_child(static_text);
         (name_container, text_box)
     };
@@ -237,8 +240,8 @@ fn main() {
     let (mut first_name_container, mut first_name_box) = create_name_group("First name:", &mut container);
     let (mut last_name_container, mut last_name_box) = create_name_group("Last name:", &mut container);
 
-    first_name_container.layout().align_top(&container);
-    last_name_container.layout().below(&first_name_container).padding(20.0);
+    layout!(first_name_container: align_top(&container));
+    layout!(last_name_container: below(&first_name_container).padding(20.0));
     first_name_box.on_text_changed(|text, args| {
         args.queue.push(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
     });
@@ -251,7 +254,7 @@ fn main() {
     last_name_container.add_child(last_name_box);
 
     let mut button_container = WidgetBuilder::new();
-    button_container.layout().below(&last_name_container).padding(20.0);
+    layout!(button_container: below(&last_name_container).padding(20.0));
 
     let mut create_button = PushButtonBuilder::new();
     create_button.set_text("Create");
@@ -268,18 +271,18 @@ fn main() {
     delete_button.on_click(|_, args| {
         args.queue.push(Target::Ui, PeopleEvent::Delete);
     });
-    update_button.layout().to_right_of(&create_button).padding(20.0);
-    delete_button.layout().to_right_of(&update_button).padding(20.0);
+    layout!(update_button: to_right_of(&create_button).padding(20.0));
+    layout!(delete_button: to_right_of(&update_button).padding(20.0));
 
     let mut scroll_container = WidgetBuilder::new();
     scroll_container.set_drawable(RectDrawable::new());
-    scroll_container.layout().below(&button_container).padding(20.0);
-    scroll_container.layout().min_height(260.0);
+    layout!(scroll_container: below(&button_container).padding(20.0));
+    layout!(scroll_container: min_height(260.0));
     scroll_container.contents_scroll();
 
     let mut list_widget = WidgetBuilder::new();
     list_widget.make_vertical_list();
-    list_widget.layout().match_width(&scroll_container);
+    layout!(list_widget: match_width(&scroll_container));
     let list_widget_id = list_widget.id();
     scroll_container.add_child(list_widget);
 

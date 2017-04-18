@@ -9,6 +9,7 @@ use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::event::{Target, WidgetEventHandler, WidgetEventArgs};
 use limn::color::*;
+use limn::layout::constraint::*;
 
 struct CounterEvent;
 struct CountEvent(u32);
@@ -21,7 +22,7 @@ fn main() {
     root_widget.hbox();
 
     let mut left_spacer = WidgetBuilder::new();
-    left_spacer.layout().width(50.0);
+    layout!(left_spacer: width(50.0));
     root_widget.add_child(left_spacer);
 
     struct CountHandler;
@@ -39,9 +40,10 @@ fn main() {
     text_widget
         .set_drawable_with_style(text_drawable, text_style)
         .add_handler(CountHandler);
-    text_widget.layout().width(80.0);
-    text_widget.layout().height(text_dims.height);
-    text_widget.layout().center_vertical(&root_widget);
+    layout!(text_widget:
+        width(80.0),
+        height(text_dims.height),
+        center_vertical(&root_widget));
 
     let mut button_container = WidgetBuilder::new();
     let root_id = root_widget.id();
@@ -50,8 +52,9 @@ fn main() {
     button_widget.on_click(move |_, args| {
         args.queue.push(Target::Widget(root_id), CounterEvent);
     });
-    button_widget.layout().center(&button_container);
-    button_widget.layout().bound_by(&button_container).padding(50.0);
+    layout!(button_widget:
+        center(&button_container),
+        bound_by(&button_container).padding(50.0));
     button_container.add_child(button_widget);
     root_widget
         .add_child(text_widget)

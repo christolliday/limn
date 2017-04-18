@@ -27,6 +27,7 @@ use limn::ui::Ui;
 use limn::util::Point;
 use limn::resources::WidgetId;
 use limn::color::*;
+use limn::layout::constraint::*;
 
 fn create_slider_control() -> WidgetBuilder {
 
@@ -38,22 +39,25 @@ fn create_slider_control() -> WidgetBuilder {
     let mut slider_title = WidgetBuilder::new();
     slider_title.set_debug_name("slider_title");
     slider_title.set_drawable_with_style(TextDrawable::new("Circle Size"), text_style.clone());
-    slider_title.layout().align_left(&slider_container);
-    slider_title.layout().width(150.0);
+    layout!(slider_title:
+        align_left(&slider_container),
+        width(150.0));
     let style = style!(parent: text_style, TextStyleable::Align: Align::End);
     let mut slider_value = WidgetBuilder::new();
     slider_value
         .set_debug_name("slider_value")
         .set_drawable_with_style(TextDrawable::new("30"), style)
         .add_handler_fn(edit_text::text_change_handle);
-    slider_value.layout().width(50.0);
-    slider_value.layout().align_right(&slider_container);
+    layout!(slider_value:
+        width(50.0),
+        align_right(&slider_container));
     let mut slider_widget = SliderBuilder::new();
     slider_widget.set_debug_name("slider_widget");
-    slider_widget.layout().width(300.0);
-    slider_widget.layout().below(&slider_title).padding(10.0);
-    slider_widget.layout().below(&slider_value).padding(10.0);
-    slider_widget.layout().match_width(&slider_container);
+    layout!(slider_widget:
+        width(300.0),
+        below(&slider_title).padding(10.0),
+        below(&slider_value).padding(10.0),
+        match_width(&slider_container));
 
     let (slider_id, slider_value_id) = (slider_widget.id(), slider_value.id());
     slider_widget.on_value_changed(move |size, args| {
@@ -80,9 +84,10 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId, W
         .set_drawable_with_style(RectDrawable::new(), style)
         .hbox()
         .set_padding(30.0);
-    button_container.layout().match_width(root_widget);
-    button_container.layout().align_bottom(root_widget);
-    button_container.layout().shrink_vertical();
+    layout!(button_container:
+        match_width(root_widget),
+        align_bottom(root_widget),
+        shrink_vertical());
     let mut undo_widget = PushButtonBuilder::new();
     undo_widget
         .set_text("Undo")
@@ -249,7 +254,7 @@ fn main() {
 
     let mut circle_canvas = WidgetBuilder::new();
     circle_canvas.no_container();
-    circle_canvas.layout().min_height(600.0);
+    layout!(circle_canvas: min_height(600.0));
     circle_canvas
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))
         .on_click(|event, args| {

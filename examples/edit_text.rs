@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate limn;
 extern crate text_layout;
 
@@ -11,6 +12,7 @@ use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::drawable::text::TextDrawable;
 use limn::util::Dimensions;
+use limn::layout::constraint::*;
 
 enum EditTextSettingsEvent {
     LeftAlign,
@@ -37,10 +39,10 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    root_widget.layout().min_dimensions(Dimensions {
+    layout!(root_widget: min_dimensions(Dimensions {
         width: 300.0,
         height: 300.0,
-    });
+    }));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
@@ -74,15 +76,19 @@ fn main() {
             }
         });
 
-    h_align_button.layout().align_top(&root_widget).padding(20.0);
-    h_align_button.layout().align_left(&root_widget).padding(20.0);
-    v_align_button.layout().align_top(&root_widget).padding(20.0);
-    v_align_button.layout().align_right(&root_widget).padding(20.0);
+    layout!(h_align_button:
+        align_top(&root_widget).padding(20.0),
+        align_left(&root_widget).padding(20.0));
 
-    edit_text_box.layout().below(&h_align_button).padding(20.0);
-    edit_text_box.layout().align_bottom(&root_widget).padding(20.0);
-    edit_text_box.layout().align_left(&root_widget).padding(20.0);
-    edit_text_box.layout().align_right(&root_widget).padding(20.0);
+    layout!(v_align_button:
+        align_top(&root_widget).padding(20.0),
+        align_right(&root_widget).padding(20.0));
+
+    layout!(edit_text_box:
+        below(&h_align_button).padding(20.0),
+        align_bottom(&root_widget).padding(20.0),
+        align_left(&root_widget).padding(20.0),
+        align_right(&root_widget).padding(20.0));
 
     root_widget
         .add_child(h_align_button)
