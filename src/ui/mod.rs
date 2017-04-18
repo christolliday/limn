@@ -15,6 +15,7 @@ use widget::WidgetBuilder;
 use widget::WidgetBuilderCore;
 use layout::solver::LimnSolver;
 use layout::LayoutVars;
+use layout::constraint::*;
 use util::{self, Point, Rectangle, Dimensions};
 use resources::WidgetId;
 use color::*;
@@ -61,7 +62,7 @@ impl Ui {
     }
     pub fn set_root(&mut self, mut root_widget: WidgetBuilder) {
         root_widget.set_debug_name("root");
-        root_widget.layout().top_left(Point { x: 0.0, y: 0.0 });
+        layout!(root_widget: top_left(Point { x: 0.0, y: 0.0 }));
         {
             let ref root_vars = root_widget.layout().vars;
             self.solver.update_solver(|solver| {

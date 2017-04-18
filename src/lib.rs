@@ -19,10 +19,11 @@ extern crate downcast_rs;
 pub mod app;
 #[macro_use]
 pub mod widget;
+#[macro_use]
+pub mod layout;
 pub mod widgets;
 pub mod drawable;
 pub mod ui;
-pub mod layout;
 pub mod util;
 pub mod resources;
 pub mod color;

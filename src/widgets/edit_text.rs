@@ -2,6 +2,7 @@ use text_layout::Align;
 
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::states::*;
+use layout::constraint::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
@@ -80,8 +81,9 @@ impl EditTextBuilder {
             .set_drawable_with_style(TextDrawable::default(), text_style)
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);
-        text_widget.layout().bound_left(&widget).padding(5.0);
-        text_widget.layout().bound_right(&widget).padding(5.0);
+        layout!(text_widget:
+            bound_left(&widget).padding(5.0),
+            bound_right(&widget).padding(5.0));
 
         EditTextBuilder {
             widget: widget,

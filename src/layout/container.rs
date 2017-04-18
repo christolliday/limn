@@ -1,5 +1,6 @@
 use layout::LayoutVars;
 use layout::solver::LimnSolver;
+use layout::constraint::*;
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
 use resources::WidgetId;
 
@@ -10,24 +11,21 @@ pub trait LayoutContainer {
 }
 
 pub struct Frame {
-    padding: Option<f64>,
+    padding: f64,
 }
 impl Frame {
     pub fn new() -> Self {
         Frame {
-            padding: None,
+            padding: 0.0,
         }
     }
 }
 impl LayoutContainer for Frame {
     fn set_padding(&mut self, padding: f64) {
-        self.padding = Some(padding);
+        self.padding = padding;
     }
     fn add_child(&mut self, parent: &LayoutVars, child: &mut WidgetBuilder) {
-        let constraint = child.layout().bound_by(parent);
-        if let Some(padding) = self.padding {
-            constraint.padding(padding);
-        }
+        layout!(child: bound_by(parent).padding(self.padding));
     }
     fn remove_child(&mut self, _: &Widget, _: WidgetId, _: &mut LimnSolver) {}
 }

@@ -5,6 +5,7 @@ use cassowary::WeightedRelation::*;
 use cassowary::Variable;
 
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
+use layout::constraint::*;
 use layout::LayoutVars;
 use layout::solver::LimnSolver;
 use layout::container::LayoutContainer;
@@ -54,12 +55,14 @@ impl LayoutContainer for LinearLayoutHandler {
     fn add_child(&mut self, parent: &LayoutVars, child: &mut WidgetBuilder) {
         match self.orientation {
             Orientation::Horizontal => {
-                child.layout().bound_top(parent).padding(self.padding);
-                child.layout().bound_bottom(parent).padding(self.padding);
+                layout!(child:
+                    bound_top(parent).padding(self.padding),
+                    bound_bottom(parent).padding(self.padding));
             }
             Orientation::Vertical => {
-                child.layout().bound_left(parent).padding(self.padding);
-                child.layout().bound_right(parent).padding(self.padding);
+                layout!(child:
+                    bound_left(parent).padding(self.padding),
+                    bound_right(parent).padding(self.padding));
             }
         }
         let child_start = beginning(self.orientation, &child.layout().vars);

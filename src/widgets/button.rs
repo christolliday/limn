@@ -6,6 +6,7 @@ use event::{Target, WidgetEventArgs};
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
+use layout::constraint::*;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::text::{TextDrawable, TextStyleable};
@@ -94,10 +95,10 @@ impl ToggleButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
             .add_handler_fn(toggle_button_handle_mouse);
-        widget.layout().dimensions(Dimensions {
+        layout!(widget: dimensions(Dimensions {
             width: 70.0,
             height: 30.0,
-        });
+        }));
 
         ToggleButtonBuilder { widget: widget }
     }
@@ -111,7 +112,7 @@ impl ToggleButtonBuilder {
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
             .set_drawable_with_style(button_text_drawable, style);
-        button_text_widget.layout().center(&self.widget);
+        layout!(button_text_widget: center(&self.widget));
 
         self.widget.add_child(button_text_widget);
         self
@@ -149,10 +150,10 @@ impl PushButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
 
-        widget.layout().dimensions(Dimensions {
+        layout!(widget: dimensions(Dimensions {
             width: 100.0,
             height: 50.0,
-        });
+        }));
 
         PushButtonBuilder { widget: widget }
     }
@@ -165,7 +166,7 @@ impl PushButtonBuilder {
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
             .set_drawable_with_style(TextDrawable::default(), style);
-        button_text_widget.layout().center(self.as_mut());
+        layout!(button_text_widget: center(self.as_mut()));
 
         self.widget.add_child(button_text_widget);
         self

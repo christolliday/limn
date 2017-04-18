@@ -4,6 +4,7 @@ use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
+use layout::constraint::*;
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use resources::WidgetId;
@@ -34,10 +35,10 @@ impl SliderBuilder {
             })
             .add_handler(DragHandler::new(slider.id()))
             .make_draggable();
-        slider_handle.layout().dimensions(Dimensions {
+        layout!(slider_handle: dimensions(Dimensions {
             width: 30.0,
             height: 30.0,
-        });
+        }));
 
         let mut slider_bar_left = WidgetBuilder::new();
         let bar_style = style!(
@@ -46,18 +47,21 @@ impl SliderBuilder {
         let style = style!(parent: bar_style, RectStyleable::BackgroundColor:
             selector!(blue, INACTIVE: light_gray));
         slider_bar_left.set_drawable_with_style(RectDrawable::new(), style);
-        slider_bar_left.layout().height(10.0);
-        slider_bar_left.layout().center_vertical(&slider);
-        slider_bar_left.layout().align_left(&slider).padding(15.0);
-        slider_bar_left.layout().to_left_of(&slider_handle).padding(-10.0);
+
+        layout!(slider_bar_left:
+            height(10.0),
+            center_vertical(&slider),
+            align_left(&slider).padding(15.0),
+            to_left_of(&slider_handle).padding(-10.0));
 
         let mut slider_bar_right = WidgetBuilder::new();
         let style = style!(parent: bar_style, RectStyleable::BackgroundColor: dark_gray);
         slider_bar_right.set_drawable_with_style(RectDrawable::new(), style);
-        slider_bar_right.layout().height(10.0);
-        slider_bar_right.layout().center_vertical(&slider);
-        slider_bar_right.layout().align_right(&slider).padding(15.0);
-        slider_bar_right.layout().to_right_of(&slider_handle).padding(-10.0);
+        layout!(slider_bar_right:
+            height(10.0),
+            center_vertical(&slider),
+            align_right(&slider).padding(15.0),
+            to_right_of(&slider_handle).padding(-10.0));
 
         let handle_id = slider_handle.id();
         slider.add_handler_fn(move |event: &SetSliderValue, args| {
