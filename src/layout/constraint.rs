@@ -196,6 +196,37 @@ pub trait ConstraintBuilder {
     fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint>;
 }
 
+use cassowary::{Term, Expression};
+use layout::LAYOUT;
+impl ConstraintBuilder for Constraint {
+    fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint> {
+        let widget = widget.layout_ref();
+        let cons = self.0;
+        let ref terms = cons.expression.terms;
+        let mut new_terms = Vec::new();
+        for term in terms {
+            let var = if term.variable == LAYOUT.left {
+                widget.left
+            } else if term.variable == LAYOUT.top {
+                widget.top
+            } else if term.variable == LAYOUT.right {
+                widget.right
+            } else if term.variable == LAYOUT.bottom {
+                widget.bottom
+            } else {
+                term.variable
+            };
+            new_terms.push(Term {
+                variable: var,
+                coefficient: term.coefficient,
+            });
+        }
+        let expr = Expression::new(new_terms, cons.expression.constant);
+        let cons = Constraint::new(expr, cons.op, cons.strength);
+        vec![ cons ]
+    }
+}
+
 impl ConstraintBuilder for WidgetConstraintBuilder {
     fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint> {
         let widget = widget.layout_ref();

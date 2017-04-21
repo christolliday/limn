@@ -52,7 +52,8 @@ impl LayoutContainer for LinearLayoutHandler {
     fn set_padding(&mut self, padding: f64) {
         self.padding = padding;
     }
-    fn add_child(&mut self, parent: &LayoutVars, child: &mut WidgetBuilder) {
+    fn add_child(&mut self, parent: &Widget, child: &mut WidgetBuilder) {
+        let ref parent = parent.layout;
         match self.orientation {
             Orientation::Horizontal => {
                 layout!(child:

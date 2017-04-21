@@ -210,6 +210,10 @@ macro_rules! layout {
     };
 }
 
+lazy_static! {
+    pub static ref LAYOUT: LayoutVars = LayoutVars::new();
+}
+
 pub mod solver;
 pub mod container;
 pub mod constraint;
