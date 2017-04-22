@@ -8,7 +8,7 @@ mod util;
 use std::mem;
 use std::collections::HashMap;
 
-use limn::event::{Target, WidgetEventHandler, WidgetEventArgs, UiEventHandler, UiEventArgs};
+use limn::event::{Target, WidgetEventHandler, WidgetEventArgs, UiEventHandler};
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::property::PropChange;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
@@ -18,7 +18,6 @@ use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::{Id, IdGen, WidgetId};
 use limn::ui::Ui;
-use limn::event::Queue;
 use limn::util::Dimensions;
 use limn::color::*;
 use limn::layout::constraint::*;
@@ -91,20 +90,20 @@ impl PeopleHandler {
 }
 
 impl PeopleHandler {
-    fn update_selected(&mut self, queue: &mut Queue) {
-        queue.push(Target::SubTree(self.first_name_box_id), TextUpdated(self.person.first_name.clone()));
-        queue.push(Target::SubTree(self.last_name_box_id), TextUpdated(self.person.last_name.clone()));
+    fn update_selected(&mut self) {
+        event!(Target::SubTree(self.first_name_box_id), TextUpdated(self.person.first_name.clone()));
+        event!(Target::SubTree(self.last_name_box_id), TextUpdated(self.person.last_name.clone()));
         if self.selected_item.is_some() {
-            queue.push(Target::SubTree(self.update_button_id), PropChange::Remove(Property::Inactive));
-            queue.push(Target::SubTree(self.delete_button_id), PropChange::Remove(Property::Inactive));
+            event!(Target::SubTree(self.update_button_id), PropChange::Remove(Property::Inactive));
+            event!(Target::SubTree(self.delete_button_id), PropChange::Remove(Property::Inactive));
         } else {
-            queue.push(Target::SubTree(self.update_button_id), PropChange::Add(Property::Inactive));
-            queue.push(Target::SubTree(self.delete_button_id), PropChange::Add(Property::Inactive));
+            event!(Target::SubTree(self.update_button_id), PropChange::Add(Property::Inactive));
+            event!(Target::SubTree(self.delete_button_id), PropChange::Add(Property::Inactive));
         }
     }
 }
 impl UiEventHandler<PeopleEvent> for PeopleHandler {
-    fn handle(&mut self, event: &PeopleEvent, args: UiEventArgs) {
+    fn handle(&mut self, event: &PeopleEvent, ui: &mut Ui) {
 
         let was_valid = self.person.is_valid();
         match event.clone() {
@@ -112,30 +111,30 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
                 if was_valid {
                     let person = mem::replace(&mut self.person, Person::new());
                     let id = self.id_gen.next();
-                    add_person(&person, id, args.ui, self.list_widget_id);
+                    add_person(&person, id, ui, self.list_widget_id);
                     self.people.insert(id, person);
 
                     self.selected_item = None;
-                    self.update_selected(args.queue);
+                    self.update_selected();
                 }
             },
             PeopleEvent::Update => {
                 if let Some((selected_person_id, selected_widget)) = self.selected_item {
                     self.people.insert(selected_person_id, self.person.clone());
-                    args.queue.push(Target::SubTree(selected_widget), TextUpdated(self.person.name()));
+                    event!(Target::SubTree(selected_widget), TextUpdated(self.person.name()));
                 }
             },
             PeopleEvent::Delete => {
                 if let Some((selected_person_id, selected_widget)) = self.selected_item {
                     self.people.remove(&selected_person_id);
-                    args.ui.remove_widget(selected_widget);
+                    ui.remove_widget(selected_widget);
                 }
                 self.selected_item = None;
             }
             PeopleEvent::PersonSelected(person_id, widget_id) => {
                 self.person = self.people[&person_id].clone();
                 self.selected_item = Some((person_id, widget_id));
-                self.update_selected(args.queue);
+                self.update_selected();
             },
             PeopleEvent::ChangeFirstName(name) => {
                 self.person.first_name = name;
@@ -147,9 +146,9 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
         let is_valid = self.person.is_valid();
         if was_valid != is_valid {
             if is_valid {
-                args.queue.push(Target::SubTree(self.create_button_id), PropChange::Remove(Property::Inactive));
+                event!(Target::SubTree(self.create_button_id), PropChange::Remove(Property::Inactive));
             } else {
-                args.queue.push(Target::SubTree(self.create_button_id), PropChange::Add(Property::Inactive));
+                event!(Target::SubTree(self.create_button_id), PropChange::Add(Property::Inactive));
             }
         }
     }
@@ -170,7 +169,7 @@ impl WidgetEventHandler<PropChange> for PersonHandler {
     fn handle(&mut self, event: &PropChange, args: WidgetEventArgs) {
         match *event {
             PropChange::Add(Property::Selected) => {
-                args.queue.push(Target::Ui, PeopleEvent::PersonSelected(self.person_id, args.widget.id));
+                event!(Target::Ui, PeopleEvent::PersonSelected(self.person_id, args.widget.id));
             },
             PropChange::Remove(Property::Selected) => {
                 //println!("{:?}", event);
@@ -242,11 +241,11 @@ fn main() {
 
     layout!(first_name_container: align_top(&container));
     layout!(last_name_container: below(&first_name_container).padding(20.0));
-    first_name_box.on_text_changed(|text, args| {
-        args.queue.push(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
+    first_name_box.on_text_changed(|text, _| {
+        event!(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
     });
-    last_name_box.on_text_changed(|text, args| {
-        args.queue.push(Target::Ui, PeopleEvent::ChangeLastName(text.0.clone()));
+    last_name_box.on_text_changed(|text, _| {
+        event!(Target::Ui, PeopleEvent::ChangeLastName(text.0.clone()));
     });
     let first_name_box_id = first_name_box.id();
     let last_name_box_id = last_name_box.id();
@@ -262,14 +261,14 @@ fn main() {
     let mut update_button = PushButtonBuilder::new();
     update_button.set_text("Update");
     update_button.set_inactive();
-    update_button.on_click(|_, args| {
-        args.queue.push(Target::Ui, PeopleEvent::Update);
+    update_button.on_click(|_, _| {
+        event!(Target::Ui, PeopleEvent::Update);
     });
     let mut delete_button = PushButtonBuilder::new();
     delete_button.set_text("Delete");
     delete_button.set_inactive();
-    delete_button.on_click(|_, args| {
-        args.queue.push(Target::Ui, PeopleEvent::Delete);
+    delete_button.on_click(|_, _| {
+        event!(Target::Ui, PeopleEvent::Delete);
     });
     layout!(update_button: to_right_of(&create_button).padding(20.0));
     layout!(delete_button: to_right_of(&update_button).padding(20.0));
@@ -286,8 +285,8 @@ fn main() {
     let list_widget_id = list_widget.id();
     scroll_container.add_child(list_widget);
 
-    create_button.on_click(move |_, args| {
-        args.queue.push(Target::Ui, PeopleEvent::Add);
+    create_button.on_click(|_, _| {
+        event!(Target::Ui, PeopleEvent::Add);
     });
     let create_button_id = create_button.id();
     let update_button_id = update_button.id();

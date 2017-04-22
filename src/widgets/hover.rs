@@ -8,12 +8,12 @@ pub enum Hover {
     Out,
 }
 
-fn handle_hover(event: &Hover, mut args: WidgetEventArgs) {
+fn handle_hover(event: &Hover, args: WidgetEventArgs) {
     let event = match *event {
         Hover::Over => PropChange::Add(Property::Hover),
         Hover::Out => PropChange::Remove(Property::Hover),
     };
-    args.queue.push(Target::SubTree(args.widget.id), event);
+    event!(Target::SubTree(args.widget.id), event);
 }
 
 impl WidgetBuilder {

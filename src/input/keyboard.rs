@@ -7,7 +7,8 @@ use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::property::{PropChange, Property};
 use resources::WidgetId;
 use input::mouse::ClickEvent;
-use event::{Target, Queue, UiEventHandler, UiEventArgs};
+use event::{Target, UiEventHandler};
+use ui::Ui;
 use app::App;
 
 use glutin;
@@ -45,46 +46,46 @@ impl FocusHandler {
             focus_index_max: 0,
         }
     }
-    fn set_focus(&mut self, new_focus: Option<WidgetId>, queue: &mut Queue) {
+    fn set_focus(&mut self, new_focus: Option<WidgetId>) {
         if new_focus != self.focused {
             if let Some(focused) = self.focused {
-                queue.push(Target::SubTree(focused), PropChange::Remove(Property::Focused));
+                event!(Target::SubTree(focused), PropChange::Remove(Property::Focused));
             }
             self.focused = new_focus;
             if let Some(focused) = self.focused {
-                queue.push(Target::SubTree(focused), PropChange::Add(Property::Focused));
+                event!(Target::SubTree(focused), PropChange::Add(Property::Focused));
             }
         }
     }
 }
 impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
-    fn handle(&mut self, event: &KeyboardInputEvent, mut args: UiEventArgs) {
+    fn handle(&mut self, event: &KeyboardInputEvent, _: &mut Ui) {
         match event {
             &KeyboardInputEvent::AddFocusable(widget_id) => {
                 self.focusable.insert(self.focus_index_max, widget_id);
                 self.focusable_map.insert(widget_id, self.focus_index_max);
                 self.focus_index_max += 1;
                 if self.focused.is_none() {
-                    self.set_focus(Some(widget_id), args.queue);
+                    self.set_focus(Some(widget_id));
                 }
             }
             &KeyboardInputEvent::RemoveFocusable(widget_id) => {
                 if let Some(focused) = self.focused {
                     if focused == widget_id {
-                        self.set_focus(None, args.queue);
+                        self.set_focus(None);
                     }
                 }
                 let index = self.focusable_map.remove(&widget_id).unwrap();
                 self.focusable.remove(&index);
             }
             &KeyboardInputEvent::FocusChange(new_focus) => {
-                self.set_focus(new_focus, args.queue);
+                self.set_focus(new_focus);
             }
             &KeyboardInputEvent::KeyboardInput(ref key_input) => {
                 if let Some(focused) = self.focused {
                     let &KeyboardInput(state, scan_code, maybe_keycode) = key_input;
                     let event = WidgetKeyboardInput(state, scan_code, maybe_keycode);
-                    args.queue.push(Target::SubTree(focused), event);
+                    event!(Target::SubTree(focused), event);
                 }
             }
             &KeyboardInputEvent::ReceivedCharacter(ref received_char) => {
@@ -98,10 +99,10 @@ impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
                         // focus on first, if any
                         new_focus = self.focusable.iter().next().map(|(_, v)| v.clone());
                     }
-                    self.set_focus(new_focus, args.queue);
+                    self.set_focus(new_focus);
                 } else if let Some(focused) = self.focused {
                     let event = WidgetReceivedCharacter(char);
-                    args.queue.push(Target::SubTree(focused), event);
+                    event!(Target::SubTree(focused), event);
                 }
             }
         }
@@ -119,18 +120,18 @@ pub enum KeyboardInputEvent {
 impl WidgetBuilder {
     pub fn make_focusable(&mut self) -> &mut Self {
         self.add_handler_fn(|_: &ClickEvent, args| {
-            args.queue.push(Target::Ui, KeyboardInputEvent::FocusChange(Some(args.widget.id)));
+            event!(Target::Ui, KeyboardInputEvent::FocusChange(Some(args.widget.id)));
         })
     }
 }
 
 impl App {
     pub fn add_keyboard_handlers(&mut self) {
-        self.add_handler_fn(|event: &KeyboardInput, args| {
-            args.queue.push(Target::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
+        self.add_handler_fn(|event: &KeyboardInput, _| {
+            event!(Target::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
         });
-        self.add_handler_fn(|event: &ReceivedCharacter, args| {
-            args.queue.push(Target::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
+        self.add_handler_fn(|event: &ReceivedCharacter, _| {
+            event!(Target::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
         });
         self.add_handler(FocusHandler::new());
     }

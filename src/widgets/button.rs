@@ -50,7 +50,7 @@ fn button_handle_mouse_down(event: &WidgetMouseButton, args: WidgetEventArgs) {
             glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
             glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
         };
-        args.queue.push(Target::SubTree(args.widget.id), event);
+        event!(Target::SubTree(args.widget.id), event);
     }
 }
 
@@ -65,8 +65,8 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, args: WidgetEventArgs) 
             true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
             false => (ToggleEvent::On, PropChange::Add(Property::Activated)),
         };
-        args.queue.push(Target::Widget(args.widget.id), toggle_event);
-        args.queue.push(Target::SubTree(args.widget.id), prop_event);
+        event!(Target::Widget(args.widget.id), toggle_event);
+        event!(Target::SubTree(args.widget.id), prop_event);
     }
 }
 

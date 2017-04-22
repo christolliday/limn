@@ -51,13 +51,13 @@ fn main() {
     let mut h_align_button = ToggleButtonBuilder::new();
     h_align_button
         .set_text("Right Align", "Left Align")
-        .on_toggle(move |event, args| {
+        .on_toggle(move |event, _| {
             match *event {
                 ToggleEvent::On => {
-                    args.queue.push(Target::Widget(edit_text_id), EditTextSettingsEvent::RightAlign);
+                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::RightAlign);
                 },
                 ToggleEvent::Off => {
-                    args.queue.push(Target::Widget(edit_text_id), EditTextSettingsEvent::LeftAlign);
+                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::LeftAlign);
                 },
             }
         });
@@ -65,13 +65,13 @@ fn main() {
     let mut v_align_button = ToggleButtonBuilder::new();
     v_align_button
         .set_text("Bottom Align", "Top Align")
-        .on_toggle(move |event, args| {
+        .on_toggle(move |event, _| {
             match *event {
                 ToggleEvent::On => {
-                    args.queue.push(Target::Widget(edit_text_id), EditTextSettingsEvent::BottomAlign);
+                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::BottomAlign);
                 },
                 ToggleEvent::Off => {
-                    args.queue.push(Target::Widget(edit_text_id), EditTextSettingsEvent::TopAlign);
+                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::TopAlign);
                 },
             }
         });

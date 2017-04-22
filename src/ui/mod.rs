@@ -22,12 +22,10 @@ use color::*;
 use event::Target;
 
 use ui::graph::WidgetGraph;
-use event::Queue;
 
 pub struct Ui {
     pub graph: WidgetGraph,
     pub solver: LimnSolver,
-    pub queue: Queue,
     glyph_cache: GlyphCache,
     needs_redraw: bool,
     should_close: bool,
@@ -35,11 +33,10 @@ pub struct Ui {
 }
 
 impl Ui {
-    pub fn new(window: &mut Window, queue: &Queue) -> Self {
+    pub fn new(window: &mut Window) -> Self {
         Ui {
             graph: WidgetGraph::new(),
-            solver: LimnSolver::new(queue.clone()),
-            queue: queue.clone(),
+            solver: LimnSolver::new(),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
             needs_redraw: false,
             should_close: false,
@@ -152,7 +149,7 @@ impl Ui {
         let layout = widget.layout().vars.clone();
         let id = widget.id();
         self.attach_widget(widget, Some(parent_id));
-        self.queue.push(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
+        event!(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
         self.redraw();
     }
 
@@ -165,7 +162,7 @@ impl Ui {
 
         let id = widget.widget.id;
         self.graph.add_widget(widget, parent_id);
-        self.queue.push(Target::Widget(id), WidgetAttachedEvent);
+        event!(Target::Widget(id), WidgetAttachedEvent);
         for child in children {
             self.add_widget(child, id);
         }
@@ -179,7 +176,7 @@ impl Ui {
                 }
             }
         }
-        self.queue.push(Target::Widget(widget_id), WidgetDetachedEvent);
+        event!(Target::Widget(widget_id), WidgetDetachedEvent);
         if let Some(widget) = self.graph.remove_widget(widget_id) {
             self.redraw();
             self.solver.remove_widget(&widget.widget.layout);
@@ -198,9 +195,8 @@ impl Ui {
     {
         if let Some(widget_container) = self.graph.get_widget_container(widget_id) {
             let handled = widget_container.trigger_event(type_id,
-                                                     data,
-                                                     &mut self.queue,
-                                                     &mut self.solver);
+                                                         data,
+                                                         &mut self.solver);
             if widget_container.widget.has_updated {
                 self.needs_redraw = true;
                 widget_container.widget.has_updated = false;

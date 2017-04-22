@@ -12,7 +12,7 @@ use graphics::types::Color;
 use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
-use event::{Queue, WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
+use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::solver::LimnSolver;
 use layout::{LayoutBuilder, LayoutUpdate, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
@@ -175,7 +175,6 @@ impl WidgetContainer {
     pub fn trigger_event(&mut self,
                          type_id: TypeId,
                          event: &Box<Any + Send>,
-                         queue: &mut Queue,
                          solver: &mut LimnSolver)
                          -> bool {
         let mut handled = false;
@@ -183,7 +182,6 @@ impl WidgetContainer {
             for event_handler in handlers.iter_mut() {
                 let event_args = WidgetEventArgs {
                     widget: &mut self.widget,
-                    queue: queue,
                     solver: solver,
                     handled: &mut handled,
                 };

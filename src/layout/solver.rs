@@ -10,7 +10,8 @@ use cassowary::{Variable, Constraint, Expression};
 
 use resources::WidgetId;
 use widget::Widget;
-use event::{Target, Queue, UiEventArgs};
+use event::Target;
+use ui::Ui;
 
 use layout::{LayoutVars, LayoutUpdate};
 
@@ -20,18 +21,16 @@ pub struct LimnSolver {
     var_map: HashMap<Variable, HashSet<Constraint>>,
     constraint_map: HashMap<Constraint, Vec<Variable>>,
     widget_map: HashMap<Variable, WidgetId>,
-    queue: Queue,
     debug_constraint_list: LinkedHashMap<Constraint, ()>, // LinkedHashSet (maintains insertion order)
 }
 
 impl LimnSolver {
-    pub fn new(queue: Queue) -> Self {
+    pub fn new() -> Self {
         LimnSolver {
             solver: cassowary::Solver::new(),
             var_map: HashMap::new(),
             constraint_map: HashMap::new(),
             widget_map: HashMap::new(),
-            queue: queue,
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
@@ -122,7 +121,7 @@ impl LimnSolver {
                     wchanges.push((*widget_id, var, que));
                 }
             }
-            self.queue.push(Target::Ui, LayoutChanged(wchanges));
+            event!(Target::Ui, LayoutChanged(wchanges));
         }
     }
     pub fn debug_constraints(&self) {
@@ -135,15 +134,15 @@ impl LimnSolver {
 
 pub struct LayoutChanged(Vec<(WidgetId, Variable, f64)>);
 
-pub fn handle_layout_change(event: &LayoutChanged, args: UiEventArgs) { 
+pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     let ref changes = event.0;
     for &(widget_id, var, value) in changes {
-        if let Some(widget) = args.ui.graph.get_widget(widget_id) {
+        if let Some(widget) = ui.graph.get_widget(widget_id) {
             widget.layout.update_val(var, value);
         }
     }
     // redraw everything when layout changes, for now
-    args.ui.redraw();
+    ui.redraw();
 }
 
 fn debug_constraint(constraint: &Constraint) {

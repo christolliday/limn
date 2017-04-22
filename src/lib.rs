@@ -16,6 +16,8 @@ extern crate maplit;
 #[macro_use]
 extern crate downcast_rs;
 
+#[macro_use]
+pub mod event;
 pub mod app;
 #[macro_use]
 pub mod widget;
@@ -28,4 +30,3 @@ pub mod util;
 pub mod resources;
 pub mod color;
 pub mod input;
-pub mod event;

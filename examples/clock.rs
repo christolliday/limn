@@ -19,7 +19,7 @@ use backend::gfx::G2d;
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
-use limn::event::{Target, Queue};
+use limn::event::Target;
 use limn::util::{Point, Rectangle, Dimensions, Scalar};
 use limn::color::*;
 use limn::layout::constraint::*;
@@ -71,7 +71,7 @@ struct ClockBuilder {
     widget: WidgetBuilder,
 }
 impl ClockBuilder {
-    fn new(mut queue: Queue) -> Self {
+    fn new() -> Self {
 
         let style = style!(
             EllipseStyleable::BackgroundColor: WHITE,
@@ -113,7 +113,7 @@ impl ClockBuilder {
         let clock_id = widget.id();
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
-            queue.push(Target::SubTree(clock_id), ClockTick);
+            event!(Target::SubTree(clock_id), ClockTick);
         });
 
         ClockBuilder { widget: widget }
@@ -124,7 +124,7 @@ fn main() {
     let (window, ui) = util::init_default("Limn clock demo");
 
     let mut root_widget = WidgetBuilder::new();
-    let mut clock = ClockBuilder::new(ui.queue.clone()).widget;
+    let mut clock = ClockBuilder::new().widget;
     layout!(clock:
         center(&root_widget),
         bound_by(&root_widget).padding(50.0));

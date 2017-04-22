@@ -31,7 +31,7 @@ impl SliderBuilder {
             .set_drawable_with_style(EllipseDrawable::new(), style)
             .add_handler_fn(|event: &WidgetDrag, args| {
                 let event = SliderHandleInput::WidgetDrag(event.clone());
-                args.queue.push(Target::Widget(args.widget.id), event);
+                event!(Target::Widget(args.widget.id), event);
             })
             .add_handler(DragHandler::new(slider.id()))
             .make_draggable();
@@ -67,12 +67,12 @@ impl SliderBuilder {
         slider.add_handler_fn(move |event: &SetSliderValue, args| {
             let bounds = args.widget.layout.bounds();
             let event = SliderHandleInput::SetValue((event.0, bounds.width, bounds.left));
-            args.queue.push(Target::Widget(handle_id), event);
+            event!(Target::Widget(handle_id), event);
         });
         slider.add_handler_fn(move |event: &ClickEvent, args| {
             let bounds = args.widget.layout.bounds();
             let event = SliderHandleInput::SliderClicked((event.position.x, bounds.width, bounds.left));
-            args.queue.push(Target::Widget(handle_id), event);
+            event!(Target::Widget(handle_id), event);
         });
 
         slider.add_child(slider_bar_left);
@@ -84,7 +84,7 @@ impl SliderBuilder {
         // need to update position after widget is created because the slider position
         // depends on the measured width of the slider and slider handle
         self.add_handler_fn(move |_: &ChildAttachedEvent, args| {
-            args.queue.push(Target::Widget(args.widget.id), SetSliderValue(value));
+            event!(Target::Widget(args.widget.id), SetSliderValue(value));
         });
         self
     }
@@ -152,7 +152,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                             layout.edit_left().set(drag_pos - self.start_pos);
                         }, args.solver);
                         let event = MovedSliderWidgetEvent { slider_left: bounds.left, slider_right: bounds.right() };
-                        args.queue.push(Target::Widget(self.container), event);
+                        event!(Target::Widget(self.container), event);
                     }
                 }
             }
@@ -174,7 +174,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                     layout.edit_left().set(position - handle_radius);
                 }, args.solver);
                 let event = MovedSliderWidgetEvent { slider_left: position - handle_radius, slider_right: position + handle_radius };
-                args.queue.push(Target::Widget(self.container), event);
+                event!(Target::Widget(self.container), event);
             }
         }
     }

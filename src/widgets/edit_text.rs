@@ -30,7 +30,7 @@ fn edit_text_handle_char(event: &WidgetReceivedCharacter, args: WidgetEventArgs)
     args.widget.update(|state: &mut TextDrawable| {
         state.text = text.clone()
     });
-    args.queue.push(Target::Widget(args.widget.id), TextUpdated(text.clone()));
+    event!(Target::Widget(args.widget.id), TextUpdated(text.clone()));
 }
 
 pub struct TextUpdated(pub String);
@@ -67,10 +67,10 @@ impl EditTextBuilder {
         widget
             .set_drawable_with_style(RectDrawable::new(), rect_style)
             .add_handler_fn(|_: &WidgetAttachedEvent, args| {
-                args.queue.push(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget.id));
+                event!(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget.id));
             })
             .add_handler_fn(|_: &WidgetDetachedEvent, args| {
-                args.queue.push(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget.id));
+                event!(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget.id));
             })
             .make_focusable();
 

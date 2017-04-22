@@ -33,13 +33,13 @@ pub struct WidgetScroll {
 }
 
 fn scroll_handle_mouse_wheel(event: &WidgetMouseWheel, args: WidgetEventArgs) {
-    let WidgetEventArgs { widget, queue, .. } = args;
+    let WidgetEventArgs { widget, .. } = args;
     let widget_bounds = widget.layout.bounds();
     let event = WidgetScroll {
         event: event.0,
         parent_bounds: widget_bounds,
     };
-    queue.push(Target::Child(widget.id), event);
+    event!(Target::Child(widget.id), event);
 }
 
 pub struct WidgetScrollHandler {

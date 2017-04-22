@@ -7,7 +7,7 @@ use glutin::Event;
 
 use ui::Ui;
 use input::{self, InputEvent};
-use event::{Queue, Target, UiHandlerWrapper, UiEventHandler, UiEventArgs};
+use event::{Target, UiHandlerWrapper, UiEventHandler, queue};
 use layout::solver;
 use util::Dimensions;
 
@@ -20,17 +20,15 @@ use util::Dimensions;
 /// could be configured differently for a mobile app, for example.
 pub struct App {
     pub ui: Ui,
-    pub queue: Queue,
     handlers: HashMap<TypeId, Vec<UiHandlerWrapper>>,
 }
 
 impl App {
     pub fn new(window: &mut Window) -> Self {
-        let queue = Queue::new(window);
-        let ui = Ui::new(window, &queue);
+        queue().set_window(window);
+        let ui = Ui::new(window);
         let mut app = App {
             ui: ui,
-            queue: queue,
             handlers: HashMap::new(),
         };
         app.initialize_handlers();
@@ -44,7 +42,7 @@ impl App {
     }
 
     /// Initialize the handlers that are used in a typical desktop app.
-    /// The handlers that make up the event flow in an application are configurable 
+    /// The handlers that make up the event flow in an application are configurable
     fn initialize_handlers(&mut self) {
         self.add_handler_fn(solver::handle_layout_change);
         self.add_handler_fn(input::handle_input);
@@ -73,7 +71,7 @@ impl App {
                             self.handle_events();
                         }
                         _ => {
-                            self.queue.push(Target::Ui, InputEvent(event));
+                            event!(Target::Ui, InputEvent(event));
                             self.handle_events();
                         },
                     }
@@ -87,18 +85,14 @@ impl App {
 
     /// Handle all the pending events in the event queue
     pub fn handle_events(&mut self) {
-        while !self.queue.is_empty() {
-            let (event_address, type_id, data) = self.queue.next();
+        while !queue().is_empty() {
+            let (event_address, type_id, data) = queue().next();
             let data = &data;
             match event_address {
                 Target::Ui => {
                     if let Some(handlers) = self.handlers.get_mut(&type_id) {
                         for event_handler in handlers.iter_mut() {
-                            let args = UiEventArgs {
-                                ui: &mut self.ui,
-                                queue: &mut self.queue,
-                            };
-                            event_handler.handle(data, args);
+                            event_handler.handle(data, &mut self.ui);
                         }
                     }
                 }
@@ -115,7 +109,7 @@ impl App {
             .push(UiHandlerWrapper::new(handler));
     }
     /// Add a new stateless global event handler
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, UiEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, &mut Ui) + 'static>(&mut self, handler: T) -> &mut Self {
         self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
             .push(UiHandlerWrapper::new_from_fn(handler));
         self

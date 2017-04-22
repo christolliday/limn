@@ -32,19 +32,19 @@ impl ListHandler {
     }
 }
 impl WidgetEventHandler<WidgetListItemSelected> for ListHandler {
-    fn handle(&mut self, event: &WidgetListItemSelected, mut args: WidgetEventArgs) {
+    fn handle(&mut self, event: &WidgetListItemSelected, _: WidgetEventArgs) {
         let selected = event.widget;
         if selected != self.selected {
             if let Some(old_selected) = self.selected {
-                args.queue.push(Target::SubTree(old_selected), PropChange::Remove(Property::Selected));
+                event!(Target::SubTree(old_selected), PropChange::Remove(Property::Selected));
             }
         }
         self.selected = selected;
     }
 }
 
-fn list_handle_deselect(_: &ClickEvent, mut args: WidgetEventArgs) {
-    args.queue.push(Target::Widget(args.widget.id), WidgetListItemSelected { widget: None });
+fn list_handle_deselect(_: &ClickEvent, args: WidgetEventArgs) {
+    event!(Target::Widget(args.widget.id), WidgetListItemSelected { widget: None });
 }
 
 pub struct ListItemHandler {
@@ -58,9 +58,9 @@ impl ListItemHandler {
 impl WidgetEventHandler<ClickEvent> for ListItemHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: WidgetEventArgs) {
        if !args.widget.props.contains(&Property::Selected) {
-            args.queue.push(Target::SubTree(args.widget.id), PropChange::Add(Property::Selected));
+            event!(Target::SubTree(args.widget.id), PropChange::Add(Property::Selected));
             let event = WidgetListItemSelected { widget: Some(args.widget.id) };
-            args.queue.push(Target::Widget(self.list_id), event);
+            event!(Target::Widget(self.list_id), event);
             *args.handled = true;
         }
     }
