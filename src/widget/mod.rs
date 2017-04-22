@@ -62,39 +62,38 @@ impl<B: AsRef<WidgetBuilder>> LayoutRef for B {
 #[macro_export]
 macro_rules! widget_builder {
     ($builder_type:ty) => {
-            impl AsMut<WidgetBuilder> for $builder_type {
-                fn as_mut(&mut self) -> &mut WidgetBuilder {
-                    &mut self.widget
-                }
+        impl AsMut<WidgetBuilder> for $builder_type {
+            fn as_mut(&mut self) -> &mut WidgetBuilder {
+                &mut self.widget
             }
-            impl AsRef<WidgetBuilder> for $builder_type {
-                fn as_ref(&self) -> &WidgetBuilder {
-                    &self.widget
-                }
+        }
+        impl AsRef<WidgetBuilder> for $builder_type {
+            fn as_ref(&self) -> &WidgetBuilder {
+                &self.widget
             }
-            impl BuildWidget for $builder_type {
-                fn build(self) -> WidgetBuilder {
-                    self.widget
-                }
+        }
+        impl BuildWidget for $builder_type {
+            fn build(self) -> WidgetBuilder {
+                self.widget
             }
+        }
     };
     ($builder_type:ty, build: $build_expr:expr) => {
-            impl AsMut<WidgetBuilder> for $builder_type {
-                fn as_mut(&mut self) -> &mut WidgetBuilder {
-                    &mut self.widget
-                }
+        impl AsMut<WidgetBuilder> for $builder_type {
+            fn as_mut(&mut self) -> &mut WidgetBuilder {
+                &mut self.widget
             }
-            impl AsRef<WidgetBuilder> for $builder_type {
-                fn as_ref(&self) -> &WidgetBuilder {
-                    &self.widget
-                }
+        }
+        impl AsRef<WidgetBuilder> for $builder_type {
+            fn as_ref(&self) -> &WidgetBuilder {
+                &self.widget
             }
-            impl BuildWidget for $builder_type {
-                fn build(self) -> WidgetBuilder {
-                    $build_expr(self)
-                }
+        }
+        impl BuildWidget for $builder_type {
+            fn build(self) -> WidgetBuilder {
+                $build_expr(self)
             }
-
+        }
     };
 }
 

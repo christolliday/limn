@@ -8,21 +8,19 @@ mod util;
 use std::mem;
 use std::collections::HashMap;
 
-use limn::event::{Target, WidgetEventHandler, WidgetEventArgs, UiEventHandler};
+use limn::event::{Target, UiEventHandler};
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
-use limn::widget::property::PropChange;
+use limn::widget::property::{Property, PropChange};
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
-use limn::widgets::list::STYLE_LIST_ITEM;
+use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
-use limn::resources::{Id, IdGen, WidgetId};
+use limn::resources::WidgetId;
 use limn::ui::Ui;
 use limn::util::Dimensions;
 use limn::color::*;
 use limn::layout::constraint::*;
-
-named_id!(PersonId);
 
 #[derive(Clone, Debug)]
 pub struct Person {
@@ -49,7 +47,7 @@ enum PeopleEvent {
     Add,
     Update,
     Delete,
-    PersonSelected(PersonId, WidgetId),
+    PersonSelected(Option<WidgetId>),
     ChangeFirstName(String),
     ChangeLastName(String),
 }
@@ -64,10 +62,9 @@ struct Ids {
 }
 struct PeopleHandler {
     ids: Ids,
-    selected_item: Option<(PersonId, WidgetId)>,
+    selected_item: Option<WidgetId>,
     person: Person,
-    people: HashMap<PersonId, Person>,
-    id_gen: IdGen<PersonId>,
+    people: HashMap<WidgetId, Person>,
 }
 impl PeopleHandler {
     fn new(ids: Ids) -> Self {
@@ -76,7 +73,6 @@ impl PeopleHandler {
             selected_item: None,
             person: Person::new(),
             people: HashMap::new(),
-            id_gen: IdGen::new(),
         }
     }
 }
@@ -103,8 +99,7 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
             PeopleEvent::Add => {
                 if was_valid {
                     let person = mem::replace(&mut self.person, Person::new());
-                    let id = self.id_gen.next();
-                    add_person(&person, id, ui, self.ids.list_widget);
+                    let id = add_person(&person, ui, self.ids.list_widget);
                     self.people.insert(id, person);
 
                     self.selected_item = None;
@@ -112,21 +107,25 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
                 }
             },
             PeopleEvent::Update => {
-                if let Some((selected_person_id, selected_widget)) = self.selected_item {
-                    self.people.insert(selected_person_id, self.person.clone());
-                    event!(Target::SubTree(selected_widget), TextUpdated(self.person.name()));
+                if let Some(selected_widget_id) = self.selected_item {
+                    self.people.insert(selected_widget_id, self.person.clone());
+                    event!(Target::SubTree(selected_widget_id), TextUpdated(self.person.name()));
                 }
             },
             PeopleEvent::Delete => {
-                if let Some((selected_person_id, selected_widget)) = self.selected_item {
-                    self.people.remove(&selected_person_id);
-                    ui.remove_widget(selected_widget);
+                if let Some(selected_widget_id) = self.selected_item {
+                    self.people.remove(&selected_widget_id);
+                    ui.remove_widget(selected_widget_id);
                 }
                 self.selected_item = None;
             }
-            PeopleEvent::PersonSelected(person_id, widget_id) => {
-                self.person = self.people[&person_id].clone();
-                self.selected_item = Some((person_id, widget_id));
+            PeopleEvent::PersonSelected(widget_id) => {
+                self.selected_item = widget_id;
+                if let Some(widget_id) = widget_id {
+                    self.person = self.people[&widget_id].clone();
+                } else {
+                    self.person = Person::new();
+                }
                 self.update_selected();
             },
             PeopleEvent::ChangeFirstName(name) => {
@@ -147,40 +146,15 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
     }
 }
 
-struct PersonHandler {
-    person_id: PersonId,
-}
-impl PersonHandler {
-    fn new(person_id: PersonId) -> Self {
-        PersonHandler {
-            person_id: person_id,
-        }
-    }
-}
-use limn::widget::property::Property;
-impl WidgetEventHandler<PropChange> for PersonHandler {
-    fn handle(&mut self, event: &PropChange, args: WidgetEventArgs) {
-        match *event {
-            PropChange::Add(Property::Selected) => {
-                event!(Target::Ui, PeopleEvent::PersonSelected(self.person_id, args.widget.id));
-            },
-            PropChange::Remove(Property::Selected) => {
-                //println!("{:?}", event);
-            }, _ => ()
-        }
-    }
-}
-
 use limn::widgets::edit_text;
-pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget_id: WidgetId) {
-    let list_item_widget = {
+pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetId) -> WidgetId {
+    let mut list_item_widget = {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
         let text_dims = text_drawable.measure();
         let mut list_item_widget = WidgetBuilder::new();
         list_item_widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
-            .add_handler(PersonHandler::new(person_id))
             .list_item(list_widget_id)
             .enable_hover();
         layout!(list_item_widget: height(text_dims.height));
@@ -192,7 +166,9 @@ pub fn add_person(person: &Person, person_id: PersonId, ui: &mut Ui, list_widget
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
+    let list_item_widget_id = list_item_widget.id();
     ui.add_widget(list_item_widget, list_widget_id);
+    list_item_widget_id
 }
 
 fn main() {
@@ -270,8 +246,10 @@ fn main() {
         below(&button_container).padding(20.0),
         min_height(260.0));
 
-    let mut list_widget = WidgetBuilder::new();
-    list_widget.make_vertical_list();
+    let mut list_widget = ListBuilder::new();
+    list_widget.on_item_selected(|selected, _| {
+        event!(Target::Ui, PeopleEvent::PersonSelected(selected));
+    });
     layout!(list_widget: match_width(&scroll_container));
 
     create_button.on_click(|_, _| {

@@ -1,5 +1,5 @@
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
-use widget::{WidgetBuilder, WidgetBuilderCore};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use drawable::rect::RectStyleable;
@@ -7,7 +7,7 @@ use resources::WidgetId;
 use input::mouse::ClickEvent;
 use util::Color;
 
-pub struct WidgetListItemSelected {
+pub struct ListItemSelected {
     widget: Option<WidgetId>,
 }
 
@@ -31,8 +31,8 @@ impl ListHandler {
         ListHandler { selected: None }
     }
 }
-impl WidgetEventHandler<WidgetListItemSelected> for ListHandler {
-    fn handle(&mut self, event: &WidgetListItemSelected, _: WidgetEventArgs) {
+impl WidgetEventHandler<ListItemSelected> for ListHandler {
+    fn handle(&mut self, event: &ListItemSelected, _: WidgetEventArgs) {
         let selected = event.widget;
         if selected != self.selected {
             if let Some(old_selected) = self.selected {
@@ -44,7 +44,7 @@ impl WidgetEventHandler<WidgetListItemSelected> for ListHandler {
 }
 
 fn list_handle_deselect(_: &ClickEvent, args: WidgetEventArgs) {
-    event!(Target::Widget(args.widget.id), WidgetListItemSelected { widget: None });
+    event!(Target::Widget(args.widget.id), ListItemSelected { widget: None });
 }
 
 pub struct ListItemHandler {
@@ -59,21 +59,40 @@ impl WidgetEventHandler<ClickEvent> for ListItemHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: WidgetEventArgs) {
        if !args.widget.props.contains(&Property::Selected) {
             event!(Target::SubTree(args.widget.id), PropChange::Add(Property::Selected));
-            let event = WidgetListItemSelected { widget: Some(args.widget.id) };
+            let event = ListItemSelected { widget: Some(args.widget.id) };
             event!(Target::Widget(self.list_id), event);
             *args.handled = true;
         }
     }
 }
 
-impl WidgetBuilder {
-    pub fn make_vertical_list(&mut self) -> &mut Self {
-        self.add_handler(ListHandler::new())
-            .add_handler_fn(list_handle_deselect)
-            .vbox()
-            .make_scrollable()
-    }
+pub struct ListBuilder {
+    pub widget: WidgetBuilder,
+}
+widget_builder!(ListBuilder);
 
+impl ListBuilder {
+    pub fn new() -> Self {
+        let mut widget = WidgetBuilder::new();
+        widget.add_handler(ListHandler::new())
+              .add_handler_fn(list_handle_deselect)
+              .vbox()
+              .make_scrollable();
+        ListBuilder {
+            widget: widget,
+        }
+    }
+    pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
+        where F: Fn(Option<WidgetId>, WidgetEventArgs) + 'static
+    {
+        self.widget.add_handler_fn(move |event: &ListItemSelected, args| {
+            on_item_selected(event.widget, args);
+        });
+        self
+    }
+}
+
+impl WidgetBuilder {
     pub fn list_item(&mut self, list_id: WidgetId) -> &mut Self {
         self.add_handler(ListItemHandler::new(list_id))
     }
