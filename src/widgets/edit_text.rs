@@ -43,21 +43,13 @@ pub struct EditTextBuilder {
     pub widget: WidgetBuilder,
     pub text_widget: WidgetBuilder,
 }
-impl AsMut<WidgetBuilder> for EditTextBuilder {
-    fn as_mut(&mut self) -> &mut WidgetBuilder {
-        &mut self.widget
-    }
-}
-impl BuildWidget for EditTextBuilder {
-    fn build(mut self) -> WidgetBuilder {
-        self.widget.add_child(self.text_widget);
-        self.widget
-    }
-}
+widget_builder!(EditTextBuilder, build: |mut builder: EditTextBuilder| -> WidgetBuilder {
+    builder.widget.add_child(builder.text_widget);
+    builder.widget
+});
 
 impl EditTextBuilder {
     pub fn new() -> Self {
-
         let default_border = Some((1.0, GRAY));
         let focused_border = Some((1.0, BLUE));
         let rect_style = style!(

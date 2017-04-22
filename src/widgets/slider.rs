@@ -14,6 +14,8 @@ use util::Dimensions;
 pub struct SliderBuilder {
     pub widget: WidgetBuilder,
 }
+widget_builder!(SliderBuilder);
+
 impl SliderBuilder {
     pub fn new() -> Self {
         let mut slider = WidgetBuilder::new();
@@ -99,17 +101,6 @@ impl SliderBuilder {
             *args.handled = true;
         });
         self
-    }
-}
-
-impl AsMut<WidgetBuilder> for SliderBuilder {
-    fn as_mut(&mut self) -> &mut WidgetBuilder {
-        &mut self.widget
-    }
-}
-impl BuildWidget for SliderBuilder {
-    fn build(self) -> WidgetBuilder {
-        self.widget
     }
 }
 

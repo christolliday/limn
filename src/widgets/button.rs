@@ -73,21 +73,8 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, args: WidgetEventArgs) 
 pub struct ToggleButtonBuilder {
     pub widget: WidgetBuilder,
 }
-impl AsMut<WidgetBuilder> for ToggleButtonBuilder {
-    fn as_mut(&mut self) -> &mut WidgetBuilder {
-        &mut self.widget
-    }
-}
-impl AsRef<WidgetBuilder> for ToggleButtonBuilder {
-    fn as_ref(&self) -> &WidgetBuilder {
-        &self.widget
-    }
-}
-impl BuildWidget for ToggleButtonBuilder {
-    fn build(self) -> WidgetBuilder {
-        self.widget
-    }
-}
+widget_builder!(ToggleButtonBuilder);
+
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new();
@@ -128,21 +115,8 @@ impl ToggleButtonBuilder {
 pub struct PushButtonBuilder {
     pub widget: WidgetBuilder,
 }
-impl AsMut<WidgetBuilder> for PushButtonBuilder {
-    fn as_mut(&mut self) -> &mut WidgetBuilder {
-        &mut self.widget
-    }
-}
-impl AsRef<WidgetBuilder> for PushButtonBuilder {
-    fn as_ref(&self) -> &WidgetBuilder {
-        &self.widget
-    }
-}
-impl BuildWidget for PushButtonBuilder {
-    fn build(self) -> WidgetBuilder {
-        self.widget
-    }
-}
+widget_builder!(PushButtonBuilder);
+
 impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new();
