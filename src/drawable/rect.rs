@@ -36,6 +36,8 @@ impl RectDrawable {
 impl Drawable for RectDrawable {
     fn draw(&mut self, mut bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
 
+        // using piston graphics, drawing borders and rounded edges is currently the largest performance bottleneck
+        // todo: make it faster! probably will require replacing piston graphics
         if let Some((radius, _)) = self.border {
             // piston graphics draws the border outside the rectangle bounds
             // so it can get cut off by the clip rect, this shrinks the rect
