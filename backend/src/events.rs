@@ -1,14 +1,3 @@
-//! A event loop for a typical UI application, which blocks and waits for user input when idle.
-//! Unlike `pistoncore_event_loop` it saves CPU cycles by not polling the window for new events
-//! continuously.
-//!
-//! To schedule the event loop to send a new `Update` event in time for the next frame, call `update`
-//! in between calls to `next`, otherwise the event loop will go idle until the next input event.
-//!
-//! `update` can be used to emulate the behaviour of the piston event loop if called every frame, or it 
-//! can be called only when an animation is currently running, to post updates in the absence of 
-//! user input.
-
 use std::time::{Duration, Instant};
 use std::thread;
 
@@ -20,19 +9,8 @@ pub enum WindowEvent {
     Input(glutin::Event),
 }
 
-/// An event loop iterator
-///
-/// *Warning: Because the iterator polls events from the window back-end,
-/// it must be used on the same thread as the window back-end (usually main thread),
-/// unless the window back-end supports multi-thread event polling.*
-//#[derive(Copy, Clone)]
 pub struct WindowEvents {
-    /// if false, an update should be triggered in time for the next frame,
-    /// either because an input event happened, or the UI is animating
     idle: bool,
-    /// set externally to prevent the event loop from setting `idle` to
-    /// true after the current frame, in case the UI needs to update or animate
-    updating: bool,
     last_frame_time: Instant,
     next_frame_time: Instant,
     dt_frame: Duration,
@@ -79,7 +57,6 @@ impl WindowEvents
         let frame_length = Duration::from_freq(max_fps);
         WindowEvents {
             idle: false,
-            updating: false,
             last_frame_time: start,
             next_frame_time: start,
             dt_frame: frame_length,
@@ -90,16 +67,9 @@ impl WindowEvents
         WindowEvents::new_with_fps(DEFAULT_MAX_FPS)
     }
 
-    /// Use to trigger an update event by preventing the event loop from going idle.
-    /// Call once per update loop for continuous animation, or call once to refresh the UI.
-    pub fn update(&mut self) {
-        self.updating = true;
-    }
-
     /// Returns the next event.
     ///
     /// While in the `Waiting` state, returns `Input` events up until `dt_frame` has passed, or if idle, waits indefinitely.
-    /// Once `dt_frame` has elapsed, or no longer idle, returns in order, `Update`, `Render` and `AfterRender` then resumes `Waiting` state.
     pub fn next(&mut self, window: &mut glutin::Window) -> WindowEvent
     {
         if self.idle {
@@ -120,17 +90,13 @@ impl WindowEvents
                     return WindowEvent::Input(event);
                 }
             }
-            // Handle any pending input before updating.
             if let Some(event) = window.poll_events().next() {
                 return WindowEvent::Input(event);
             }
 
-            // Just rendered, send `AfterRender`, initialize for next frame
-            // and resume `Waiting`
             self.last_frame_time = Instant::now();
             self.next_frame_time = self.last_frame_time + self.dt_frame;
-            self.idle = !self.updating;
-            self.updating = false;
+            self.idle = true;
             WindowEvent::Render
         }
     }
