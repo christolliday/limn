@@ -50,7 +50,7 @@ impl LayoutVars {
             left: self.left_val,
             top: self.top_val,
             width: self.right_val - self.left_val,
-            height: self.bottom_val - self.top_val, 
+            height: self.bottom_val - self.top_val,
         }
     }
     pub fn get_dims(&self) -> Dimensions {
@@ -202,6 +202,9 @@ pub fn change_strength(constraints: &Vec<Constraint>, strength: f64) -> Vec<Cons
 #[macro_export]
 macro_rules! layout {
     ($widget:ident: $($func:expr),*) => {
+        layout!($widget: $($func, )*);
+    };
+    ($widget:ident: $($func:expr,)*) => {
         {
             $(
                 $widget.layout().add($func);

@@ -106,6 +106,9 @@ macro_rules! selector {
 }
 #[macro_export]
 macro_rules! style {
+    (parent: $parent:expr, $($type:path: $val:expr,)*) => {
+        style!(parent: $parent, $($type:path: $val:expr),*);
+    };
     (parent: $parent:expr, $($type:path: $val:expr),*) => {
         {
             use $crate::widget::style::Value;
@@ -115,6 +118,9 @@ macro_rules! style {
             )*
             style
         }
+    };
+    ($($type:path: $val:expr,)*) => {
+        style!($($type:path: $val:expr),*);
     };
     ($($type:path: $val:expr),*) => {
         {
