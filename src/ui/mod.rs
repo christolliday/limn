@@ -215,11 +215,6 @@ impl Ui {
             Target::Widget(id) => {
                 self.handle_widget_event(id, type_id, data);
             }
-            Target::Child(id) => {
-                if let Some(child_id) = self.graph.children(id).next(&self.graph.graph) {
-                    self.handle_widget_event(child_id, type_id, data);
-                }
-            }
             Target::SubTree(id) => {
                 let mut dfs = self.graph.dfs(id);
                 while let Some(widget_id) = dfs.next(&self.graph.graph) {
