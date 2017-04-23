@@ -100,10 +100,15 @@ pub struct LayoutBuilder {
 }
 impl LayoutBuilder {
     pub fn new() -> Self {
+        let vars = LayoutVars::new();
+        let mut constraints = Vec::new();
+        // always enforce that width is positive
+        constraints.push(vars.right | GE(REQUIRED) | vars.left);
+        constraints.push(vars.bottom | GE(REQUIRED) | vars.top);
         LayoutBuilder {
-            vars: LayoutVars::new(),
+            vars: vars,
             edit_vars: Vec::new(),
-            constraints: Vec::new(),
+            constraints: constraints,
         }
     }
     pub fn from(vars: LayoutVars) -> Self {
@@ -132,15 +137,6 @@ impl LayoutBuilder {
     pub fn add<B: ConstraintBuilder>(&mut self, builder: B) {
         let constraints = builder.build(self);
         self.constraints.extend(constraints);
-    }
-
-    pub fn scroll_parent<T: LayoutRef>(&mut self, inner: &T) {
-        let inner = inner.layout_ref();
-        self.constraints.push(inner.left | LE(REQUIRED) | self.vars.left);
-        self.constraints.push(inner.top | LE(REQUIRED) | self.vars.top);
-        // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
-        self.constraints.push(inner.right | GE(STRONG) | self.vars.right);
-        self.constraints.push(inner.bottom | GE(STRONG) | self.vars.bottom);
     }
 }
 

@@ -14,7 +14,7 @@ pub fn match_width<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
 }
 pub fn match_height<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
     let widget = widget.layout_ref();
-    WidgetConstraint::MatchWidth(widget.top, widget.bottom).builder(REQUIRED)
+    WidgetConstraint::MatchHeight(widget.top, widget.bottom).builder(REQUIRED)
 }
 pub fn width(width: Scalar) -> WidgetConstraintBuilder {
     WidgetConstraint::Width(width).builder(REQUIRED)
