@@ -10,11 +10,11 @@ pub fn match_layout<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
 }
 pub fn match_width<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
     let widget = widget.layout_ref();
-    WidgetConstraint::MatchWidth(widget.left, widget.right).builder(REQUIRED)
+    WidgetConstraint::MatchWidth(widget.width).builder(REQUIRED)
 }
 pub fn match_height<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
     let widget = widget.layout_ref();
-    WidgetConstraint::MatchHeight(widget.top, widget.bottom).builder(REQUIRED)
+    WidgetConstraint::MatchHeight(widget.height).builder(REQUIRED)
 }
 pub fn width(width: Scalar) -> WidgetConstraintBuilder {
     WidgetConstraint::Width(width).builder(REQUIRED)
@@ -116,8 +116,8 @@ pub fn bound_by<T: LayoutRef>(outer: &T) -> PaddableConstraintBuilder {
 
 pub enum WidgetConstraint {
     MatchLayout(LayoutVars),
-    MatchWidth(Variable, Variable),
-    MatchHeight(Variable, Variable),
+    MatchWidth(Variable),
+    MatchHeight(Variable),
     Width(Scalar),
     Height(Scalar),
     MinWidth(Scalar),
@@ -213,6 +213,10 @@ impl ConstraintBuilder for Constraint {
                 widget.right
             } else if term.variable == LAYOUT.bottom {
                 widget.bottom
+            } else if term.variable == LAYOUT.width {
+                widget.width
+            } else if term.variable == LAYOUT.height {
+                widget.height
             } else {
                 term.variable
             };
@@ -240,47 +244,47 @@ impl ConstraintBuilder for WidgetConstraintBuilder {
                     widget.bottom | EQ(strength) | other.bottom,
                 ]
             }
-            WidgetConstraint::MatchWidth(left, right) => {
-                vec![ widget.right - widget.left | EQ(strength) | right - left ]
+            WidgetConstraint::MatchWidth(width) => {
+                vec![ widget.width | EQ(strength) | width ]
             }
-            WidgetConstraint::MatchHeight(top, bottom) => {
-                vec![ widget.bottom - widget.top | EQ(strength) | bottom - top ]
+            WidgetConstraint::MatchHeight(height) => {
+                vec![ widget.height | EQ(strength) | height ]
             }
             WidgetConstraint::Width(width) => {
-                vec![ widget.right - widget.left | EQ(strength) | width ]
+                vec![ widget.width | EQ(strength) | width ]
             }
             WidgetConstraint::Height(height) => {
-                vec![ widget.bottom - widget.top | EQ(strength) | height ]
+                vec![ widget.height | EQ(strength) | height ]
             }
             WidgetConstraint::MinWidth(width) => {
-                vec![ widget.right - widget.left | GE(strength) | width ]
+                vec![ widget.width | GE(strength) | width ]
             }
             WidgetConstraint::MinHeight(height) => {
-                vec![ widget.bottom - widget.top | GE(strength) | height ]
+                vec![ widget.height | GE(strength) | height ]
             }
             WidgetConstraint::Dimensions(dimensions) => {
                 vec![
-                    widget.right - widget.left | EQ(strength) | dimensions.width,
-                    widget.bottom - widget.top | EQ(strength) | dimensions.height,
+                    widget.width | EQ(strength) | dimensions.width,
+                    widget.height | EQ(strength) | dimensions.height,
                 ]
             }
             WidgetConstraint::MinDimensions(dimensions) => {
                 vec![
-                    widget.right - widget.left | GE(strength) | dimensions.width,
-                    widget.bottom - widget.top | GE(strength) | dimensions.height,
+                    widget.width | GE(strength) | dimensions.width,
+                    widget.height | GE(strength) | dimensions.height,
                 ]
             }
             WidgetConstraint::Shrink => {
                 vec![
-                    widget.right - widget.left | EQ(strength) | 0.0,
-                    widget.bottom - widget.top | EQ(strength) | 0.0,
+                    widget.width | EQ(strength) | 0.0,
+                    widget.height | EQ(strength) | 0.0,
                 ]
             }
             WidgetConstraint::ShrinkHorizontal => {
-                vec![ widget.right - widget.left | EQ(strength) | 0.0 ]
+                vec![ widget.width | EQ(strength) | 0.0 ]
             }
             WidgetConstraint::ShrinkVertical => {
-                vec![ widget.bottom - widget.top | EQ(strength) | 0.0 ]
+                vec![ widget.height | EQ(strength) | 0.0 ]
             }
             WidgetConstraint::TopLeft(point) => {
                 vec![

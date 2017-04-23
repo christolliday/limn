@@ -46,6 +46,8 @@ impl LimnSolver {
             add_debug_var_name(widget.layout.top, &format!("{}.top", debug_name));
             add_debug_var_name(widget.layout.right, &format!("{}.right", debug_name));
             add_debug_var_name(widget.layout.bottom, &format!("{}.bottom", debug_name));
+            add_debug_var_name(widget.layout.width, &format!("{}.width", debug_name));
+            add_debug_var_name(widget.layout.height, &format!("{}.height", debug_name));
         }
         self.update_from_builder(layout_update);
     }

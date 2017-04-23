@@ -13,6 +13,8 @@ pub struct LayoutVars {
     pub top: Variable,
     pub right: Variable,
     pub bottom: Variable,
+    pub width: Variable,
+    pub height: Variable,
 
     left_val: f64,
     top_val: f64,
@@ -26,6 +28,8 @@ impl LayoutVars {
             top: Variable::new(),
             right: Variable::new(),
             bottom: Variable::new(),
+            width: Variable::new(),
+            height: Variable::new(),
             left_val: 0.0,
             top_val: 0.0,
             right_val: 0.0,
@@ -102,9 +106,10 @@ impl LayoutBuilder {
     pub fn new() -> Self {
         let vars = LayoutVars::new();
         let mut constraints = Vec::new();
-        // always enforce that width is positive
-        constraints.push(vars.right | GE(REQUIRED) | vars.left);
-        constraints.push(vars.bottom | GE(REQUIRED) | vars.top);
+        constraints.push(vars.right - vars.left| EQ(REQUIRED) | vars.width);
+        constraints.push(vars.bottom - vars.top | EQ(REQUIRED) | vars.height);
+        constraints.push(vars.width | GE(REQUIRED) | 0.0);
+        constraints.push(vars.height | GE(REQUIRED) | 0.0);
         LayoutBuilder {
             vars: vars,
             edit_vars: Vec::new(),
