@@ -237,6 +237,17 @@ impl Ui {
             _ => ()
         }
     }
+    pub fn debug_widget_positions(&mut self) {
+        println!("WIDGET POSITIONS");
+        let root_id = self.graph.root_id;
+        let mut dfs = self.graph.dfs(root_id);
+        while let Some(widget_id) = dfs.next(&self.graph.graph) {
+            let widget = self.graph.get_widget(widget_id).unwrap();
+            let bounds = widget.layout.bounds();
+            let name = widget.debug_name.clone();
+            println!("{:?} {:?}", name, bounds);
+        }
+    }
 }
 pub struct WidgetAttachedEvent;
 pub struct WidgetDetachedEvent;
