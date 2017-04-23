@@ -2,13 +2,32 @@ use glutin;
 use cassowary::strength::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
-use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
+use widget::{Widget, WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use util::{Point, Rectangle};
 use layout::solver::LimnSolver;
 use layout::container::LayoutContainer;
 use layout::constraint::*;
 use resources::WidgetId;
 use input::mouse::WidgetMouseWheel;
+
+pub struct ScrollBuilder {
+    widget: WidgetBuilder,
+}
+impl ScrollBuilder {
+    pub fn new() -> Self {
+        let mut widget = WidgetBuilder::new();
+        widget.set_container(ScrollContainer);
+        widget.add_handler(ScrollParent::new());
+        widget.add_handler_fn(|event: &WidgetMouseWheel, args| {
+            event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
+        });
+
+        ScrollBuilder {
+            widget: widget,
+        }
+    }
+}
+widget_builder!(ScrollBuilder);
 
 struct ScrollContainer;
 impl LayoutContainer for ScrollContainer {
@@ -103,18 +122,5 @@ impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
             layout.edit_left().set(parent_bounds.left + self.offset.x);
             layout.edit_top().set(parent_bounds.top + self.offset.y);
         }, args.solver);
-    }
-}
-
-impl WidgetBuilder {
-    pub fn contents_scroll(&mut self) -> &mut Self {
-        self.set_container(ScrollContainer);
-        self.add_handler(ScrollParent::new());
-        self.add_handler_fn(|event: &WidgetMouseWheel, args| {
-            event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
-        })
-    }
-    pub fn make_scrollable(&mut self) -> &mut Self {
-        self.add_handler(WidgetScrollHandler::new())
     }
 }

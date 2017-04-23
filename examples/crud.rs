@@ -14,6 +14,7 @@ use limn::widget::property::{Property, PropChange};
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
+use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::WidgetId;
@@ -238,10 +239,9 @@ fn main() {
     layout!(update_button: to_right_of(&create_button).padding(20.0));
     layout!(delete_button: to_right_of(&update_button).padding(20.0));
 
-    let mut scroll_container = WidgetBuilder::new();
+    let mut scroll_container = ScrollBuilder::new();
     scroll_container
-        .set_drawable(RectDrawable::new())
-        .contents_scroll();
+        .set_drawable(RectDrawable::new());
     layout!(scroll_container:
         below(&button_container).padding(20.0),
         min_height(260.0));

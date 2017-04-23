@@ -5,6 +5,7 @@ mod util;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
+use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::util::Dimensions;
@@ -17,8 +18,7 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
 
-    let mut scroll_widget = WidgetBuilder::new();
-    scroll_widget.contents_scroll();
+    let mut scroll_widget = ScrollBuilder::new();
     layout!(scroll_widget:
         bound_by(&root_widget).padding(50.0),
         dimensions(Dimensions {

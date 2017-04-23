@@ -9,6 +9,7 @@ use cassowary::WeightedRelation::*;
 
 use limn::layout::LAYOUT;
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
+use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::rect::{RectDrawable, RectStyleable};
 use limn::util::Dimensions;
 use limn::color::*;
@@ -19,10 +20,8 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
 
-    let mut scroll_widget = WidgetBuilder::new();
-    scroll_widget
-        .set_debug_name("scroll")
-        .contents_scroll();
+    let mut scroll_widget = ScrollBuilder::new();
+    scroll_widget.set_debug_name("scroll");
     layout!(scroll_widget:
         dimensions(Dimensions {
             width: 200.0,
