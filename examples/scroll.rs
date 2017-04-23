@@ -32,8 +32,7 @@ fn main() {
 
     let mut rect_container_widget = WidgetBuilder::new();
     rect_container_widget
-        .set_debug_name("rect_container")
-        .make_scrollable();
+        .set_debug_name("rect_container");
     layout!(rect_container_widget: dimensions(Dimensions {
         width: 400.0,
         height: 400.0,

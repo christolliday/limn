@@ -76,8 +76,7 @@ impl ListBuilder {
         let mut widget = WidgetBuilder::new();
         widget.add_handler(ListHandler::new())
               .add_handler_fn(list_handle_deselect)
-              .vbox()
-              .make_scrollable();
+              .vbox();
         ListBuilder {
             widget: widget,
         }

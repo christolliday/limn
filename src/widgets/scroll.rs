@@ -1,45 +1,72 @@
 use glutin;
 use cassowary::strength::*;
-use cassowary::WeightedRelation::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
 use util::{Point, Rectangle};
-use layout::LAYOUT;
-use layout::container::LayoutContainer;
 use layout::solver::LimnSolver;
+use layout::container::LayoutContainer;
+use layout::constraint::*;
 use resources::WidgetId;
-
 use input::mouse::WidgetMouseWheel;
 
 struct ScrollContainer;
 impl LayoutContainer for ScrollContainer {
-    fn set_padding(&mut self, _: f64) {}
     fn add_child(&mut self, parent: &Widget, child: &mut WidgetBuilder) {
+        event!(Target::Widget(parent.id), ScrollParentEvent::ChildAttached(Some(child.id())));
         let ref parent = parent.layout;
+        // only used to set initial position
         layout!(child:
-            LAYOUT.left | LE(REQUIRED) | parent.left,
-            LAYOUT.top | LE(REQUIRED) | parent.top,
-            // STRONG not REQUIRED because not satisfiable if layout is smaller than it's parent
-            LAYOUT.right | GE(STRONG) | parent.right,
-            LAYOUT.bottom | GE(STRONG) | parent.bottom);
+            align_left(parent).strength(WEAK),
+            align_top(parent).strength(WEAK),
+        );
+        child.add_handler(WidgetScrollHandler::new());
     }
-    fn remove_child(&mut self, _: &Widget, _: WidgetId, _: &mut LimnSolver) {}
+    fn remove_child(&mut self, parent: &Widget, _: WidgetId, _: &mut LimnSolver) {
+        event!(Target::Widget(parent.id), ScrollParentEvent::ChildAttached(None));
+    }
+}
+
+enum ScrollParentEvent {
+    ChildAttached(Option<WidgetId>),
+    WidgetMouseWheel(WidgetMouseWheel),
+}
+struct ScrollParent {
+    scrollable: Option<WidgetId>,
+}
+impl ScrollParent {
+    fn new() -> Self {
+        ScrollParent {
+            scrollable: None,
+        }
+    }
+}
+impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
+    fn handle(&mut self, event: &ScrollParentEvent, args: WidgetEventArgs) {
+        match *event {
+            ScrollParentEvent::ChildAttached(ref child_id) => {
+                if self.scrollable.is_some() {
+                    panic!("Scroll parent has more than one child");
+                }
+                self.scrollable = child_id.clone();
+            }
+            ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
+                if let Some(scrollable) = self.scrollable {
+                    let widget_bounds = args.widget.layout.bounds();
+                    let event = WidgetScroll {
+                        event: mouse_wheel.0,
+                        parent_bounds: widget_bounds,
+                    };
+                    event!(Target::Widget(scrollable), event);
+                }
+            }
+        }
+    }
 }
 
 pub struct WidgetScroll {
     event: glutin::MouseScrollDelta,
     parent_bounds: Rectangle,
-}
-
-fn scroll_handle_mouse_wheel(event: &WidgetMouseWheel, args: WidgetEventArgs) {
-    let WidgetEventArgs { widget, .. } = args;
-    let widget_bounds = widget.layout.bounds();
-    let event = WidgetScroll {
-        event: event.0,
-        parent_bounds: widget_bounds,
-    };
-    event!(Target::Child(widget.id), event);
 }
 
 pub struct WidgetScrollHandler {
@@ -82,7 +109,10 @@ impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
 impl WidgetBuilder {
     pub fn contents_scroll(&mut self) -> &mut Self {
         self.set_container(ScrollContainer);
-        self.add_handler_fn(scroll_handle_mouse_wheel)
+        self.add_handler(ScrollParent::new());
+        self.add_handler_fn(|event: &WidgetMouseWheel, args| {
+            event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
+        })
     }
     pub fn make_scrollable(&mut self) -> &mut Self {
         self.add_handler(WidgetScrollHandler::new())
