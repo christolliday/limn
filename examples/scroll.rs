@@ -1,8 +1,13 @@
 #[macro_use]
 extern crate limn;
+extern crate cassowary;
 
 mod util;
 
+use cassowary::strength::*;
+use cassowary::WeightedRelation::*;
+
+use limn::layout::LAYOUT;
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::drawable::rect::{RectDrawable, RectStyleable};
 use limn::util::Dimensions;
@@ -68,11 +73,26 @@ fn main() {
 
     layout!(rect_tl_widget:
         match_width(&rect_tr_widget),
-        match_height(&rect_bl_widget));
+        match_width(&rect_bl_widget),
+        match_height(&rect_tr_widget),
+        match_height(&rect_bl_widget),
+    );
     layout!(rect_br_widget:
         match_height(&rect_tr_widget),
-        match_width(&rect_bl_widget));
+        match_height(&rect_bl_widget),
+        match_width(&rect_tr_widget),
+        match_width(&rect_bl_widget),
+    );
 
+    {
+        let ref rect_tl_widget = rect_tl_widget.layout().vars;
+        let ref rect_tr_widget = rect_tr_widget.layout().vars;
+        let ref rect_bl_widget = rect_bl_widget.layout().vars;
+        layout!(rect_container_widget:
+            LAYOUT.width | EQ(REQUIRED) | rect_tl_widget.width + rect_tr_widget.width,
+            LAYOUT.height | EQ(REQUIRED) | rect_tl_widget.height + rect_bl_widget.height,
+        );
+    }
     rect_container_widget
         .add_child(rect_tl_widget)
         .add_child(rect_tr_widget)
