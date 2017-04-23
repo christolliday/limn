@@ -4,9 +4,9 @@ use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
 use resources::WidgetId;
 
 pub trait LayoutContainer {
-    fn set_padding(&mut self, padding: f64) {}
+    fn set_padding(&mut self, _padding: f64) {}
     fn add_child(&mut self, parent: &Widget, child: &mut WidgetBuilder);
-    fn remove_child(&mut self, parent: &Widget, child_id: WidgetId, solver: &mut LimnSolver) {}
+    fn remove_child(&mut self, _parent: &Widget, _child_id: WidgetId, _solver: &mut LimnSolver) {}
 }
 
 pub struct Frame {

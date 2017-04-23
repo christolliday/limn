@@ -49,7 +49,7 @@ fn main() {
     let root_id = root_widget.id();
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");
-    button_widget.on_click(|_, _| {
+    button_widget.on_click(move |_, _| {
         event!(Target::Widget(root_id), CounterEvent);
     });
     layout!(button_widget:

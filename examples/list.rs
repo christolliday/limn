@@ -4,7 +4,7 @@ extern crate limn;
 mod util;
 
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
-use limn::widgets::list::STYLE_LIST_ITEM;
+use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::util::Dimensions;
@@ -27,8 +27,7 @@ fn main() {
         }
     ));
 
-    let mut list_widget = WidgetBuilder::new();
-    list_widget.make_vertical_list();
+    let mut list_widget = ListBuilder::new();
     layout!(list_widget: match_width(&scroll_widget));
 
     let list_item_widgets = {
