@@ -1,9 +1,10 @@
 use glutin;
 
-use event::{Target, UiEventHandler};
+use event::{Target, UiEventHandler, WidgetEventArgs};
 use util::Point;
 use resources::WidgetId;
-use widgets::hover::Hover;
+use widget::{WidgetBuilder, WidgetBuilderCore};
+use widget::property::{Property, PropChange};
 use layout::solver::LayoutChanged;
 use ui::Ui;
 use app::App;
@@ -56,10 +57,10 @@ impl UiEventHandler<MouseInputEvent> for MouseController {
             let widget_under_cursor = ui.widget_under_cursor(mouse);
             if widget_under_cursor != self.widget_under_mouse {
                 if let Some(old_widget) = self.widget_under_mouse {
-                    event!(Target::BubbleUp(old_widget), Hover::Out);
+                    event!(Target::BubbleUp(old_widget), MouseOverEvent::Out);
                 }
                 if let Some(widget_under_cursor) = widget_under_cursor {
-                    event!(Target::BubbleUp(widget_under_cursor), Hover::Over);
+                    event!(Target::BubbleUp(widget_under_cursor), MouseOverEvent::Over);
                 }
             }
             self.widget_under_mouse = widget_under_cursor;
@@ -101,5 +102,25 @@ impl App {
         });
 
         self.add_handler(MouseController::new());
+    }
+}
+
+#[derive(Debug)]
+pub enum MouseOverEvent {
+    Over,
+    Out,
+}
+
+fn handle_hover(event: &MouseOverEvent, args: WidgetEventArgs) {
+    let event = match *event {
+        MouseOverEvent::Over => PropChange::Add(Property::MouseOver),
+        MouseOverEvent::Out => PropChange::Remove(Property::MouseOver),
+    };
+    event!(Target::SubTree(args.widget.id), event);
+}
+
+impl WidgetBuilder {
+    pub fn enable_hover(&mut self) -> &mut Self {
+        self.add_handler_fn(handle_hover)
     }
 }

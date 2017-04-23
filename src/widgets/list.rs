@@ -12,14 +12,14 @@ pub struct ListItemSelected {
 }
 
 static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
-static COLOR_LIST_ITEM_HOVER: Color = [0.6, 0.6, 0.6, 1.0];
+static COLOR_LIST_ITEM_MOUSEOVER: Color = [0.6, 0.6, 0.6, 1.0];
 static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
 
 lazy_static! {
     pub static ref STYLE_LIST_ITEM: Vec<RectStyleable> = {
         style!(RectStyleable::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
             SELECTED: COLOR_LIST_ITEM_SELECTED,
-            HOVER: COLOR_LIST_ITEM_HOVER))
+            MOUSEOVER: COLOR_LIST_ITEM_MOUSEOVER))
     };
 }
 

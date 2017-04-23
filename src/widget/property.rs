@@ -10,7 +10,7 @@ pub enum PropChange {
 
 #[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
 pub enum Property {
-    Hover,
+    MouseOver,
     Activated,
     Selected,
     Pressed,
@@ -22,7 +22,7 @@ pub type PropSet = BTreeSet<Property>;
 pub mod states {
     use super::{Property, PropSet};
     lazy_static! {
-        pub static ref HOVER: PropSet = btreeset!{Property::Hover};
+        pub static ref MOUSEOVER: PropSet = btreeset!{Property::MouseOver};
         pub static ref PRESSED: PropSet = btreeset!{Property::Pressed};
         pub static ref ACTIVATED: PropSet = btreeset!{Property::Activated};
         pub static ref ACTIVATED_PRESSED: PropSet = btreeset!{Property::Activated, Property::Pressed};
