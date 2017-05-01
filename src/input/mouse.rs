@@ -38,7 +38,7 @@ struct MouseController {
 impl MouseController {
     pub fn new() -> Self {
         MouseController {
-            mouse: Point { x: 0.0, y: 0.0 },
+            mouse: Point::zero(),
             widget_under_mouse: None,
         }
     }

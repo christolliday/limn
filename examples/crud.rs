@@ -19,7 +19,7 @@ use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 use limn::resources::WidgetId;
 use limn::ui::Ui;
-use limn::util::Dimensions;
+use limn::util::Size;
 use limn::color::*;
 use limn::layout::constraint::*;
 
@@ -177,10 +177,7 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    layout!(root_widget: min_dimensions(Dimensions {
-        width: 300.0,
-        height: 300.0,
-    }));
+    layout!(root_widget: min_dimensions(Size::new(300.0, 300.0)));
     let mut container = WidgetBuilder::new();
     layout!(container: bound_by(&root_widget).padding(20.0));
 

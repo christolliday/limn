@@ -11,7 +11,7 @@ use limn::layout::LAYOUT;
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::rect::{RectDrawable, RectStyleable};
-use limn::util::Dimensions;
+use limn::util::Size;
 use limn::color::*;
 use limn::layout::constraint::*;
 
@@ -23,19 +23,13 @@ fn main() {
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.set_debug_name("scroll");
     layout!(scroll_widget:
-        dimensions(Dimensions {
-            width: 200.0,
-            height: 200.0,
-        }),
+        dimensions(Size::new(200.0, 200.0)),
         bound_by(&root_widget).padding(50.0));
 
     let mut rect_container_widget = WidgetBuilder::new();
     rect_container_widget
         .set_debug_name("rect_container");
-    layout!(rect_container_widget: dimensions(Dimensions {
-        width: 400.0,
-        height: 400.0,
-    }));
+    layout!(rect_container_widget: dimensions(Size::new(400.0, 400.0)));
 
     let style = style!(RectStyleable::BackgroundColor: RED);
     let mut rect_tl_widget = WidgetBuilder::new();

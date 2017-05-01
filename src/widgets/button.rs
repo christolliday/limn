@@ -10,7 +10,7 @@ use layout::constraint::*;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::text::{TextDrawable, TextStyleable};
-use util::{Scalar, Dimensions, Color};
+use util::{Scalar, Size, Color};
 use color::*;
 
 static COLOR_BUTTON_DEFAULT: Color = [0.8, 0.8, 0.8, 1.0];
@@ -82,10 +82,7 @@ impl ToggleButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
             .add_handler_fn(toggle_button_handle_mouse);
-        layout!(widget: dimensions(Dimensions {
-            width: 70.0,
-            height: 30.0,
-        }));
+        layout!(widget: dimensions(Size::new(70.0, 30.0)));
 
         ToggleButtonBuilder { widget: widget }
     }
@@ -124,10 +121,7 @@ impl PushButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
 
-        layout!(widget: dimensions(Dimensions {
-            width: 100.0,
-            height: 50.0,
-        }));
+        layout!(widget: dimensions(Size::new(100.0, 50.0)));
 
         PushButtonBuilder { widget: widget }
     }

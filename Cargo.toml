@@ -10,6 +10,7 @@ text_layout = { path = "text_layout" }
 cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "bcfaf0e0f767a7c75aa8987e64783a8f57bde6ce" }
 
 petgraph = "0.4.3"
+euclid = "0.11.2"
 
 rusttype = "0.2.1"
 piston2d-graphics = "0.21"

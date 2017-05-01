@@ -9,7 +9,7 @@ use ui::Ui;
 use input::{self, InputEvent};
 use event::{Target, UiHandlerWrapper, UiEventHandler, queue};
 use layout::solver;
-use util::Dimensions;
+use util::Size;
 
 /// This is contains the core of a Limn application,
 /// the Ui, event queue, and the handlers that operate
@@ -62,10 +62,7 @@ impl App {
                     match event {
                         Event::Resized(width, height) => {
                             window.window_resized();
-                            self.ui.window_resized(Dimensions {
-                                width: width as f64,
-                                height: height as f64,
-                            });
+                            self.ui.window_resized(Size::new(width as f64, height as f64));
                         }
                         Event::Awakened => {
                             self.handle_events();

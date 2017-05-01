@@ -5,40 +5,40 @@ use backend::glyph::GlyphCache;
 
 use widget::drawable::Drawable;
 use resources::{ImageId, resources};
-use util::{Dimensions, Rectangle};
+use util::{self, Rect, Size, RectBounds};
 
 pub struct ImageDrawable {
     pub image_id: ImageId,
-    pub scale: Dimensions,
+    pub scale: Size,
 }
 impl ImageDrawable {
     pub fn new(image_id: ImageId) -> Self {
         ImageDrawable {
             image_id: image_id,
-            scale: Dimensions {
-                width: 1.0,
-                height: 1.0,
-            },
+            scale: Size::new(1.0, 1.0),
         }
     }
-    pub fn measure(&self) -> Dimensions {
+    pub fn measure(&self) -> Size {
         let res = resources();
         let img = res.images.get(self.image_id).unwrap();
-        img.get_size().into()
+        util::size_from_tuple(img.get_size())
     }
-    pub fn scale(&mut self, scale: Dimensions) {
+    pub fn scale(&mut self, scale: Size) {
         self.scale = scale;
     }
 }
 impl Drawable for ImageDrawable {
-    fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         let res = resources();
         let img = res.images.get(self.image_id).unwrap();
-        let dims: Dimensions = img.get_size().into();
-        let scale = bounds.dims() / dims;
+        let dims: Size = util::size_from_tuple(img.get_size());
+        let scale = Size::new(
+            bounds.size.width / dims.width,
+            bounds.size.height / dims.height,
+        );
         let image = graphics::image::Image::new();
-        image.rect(bounds);
-        let context = context.trans(bounds.left, bounds.top).scale(scale.width, scale.height);
+        image.rect(bounds.to_slice());
+        let context = context.trans(bounds.left(), bounds.top()).scale(scale.width, scale.height);
 
         image.draw(img, &context.draw_state, context.transform, graphics);
     }

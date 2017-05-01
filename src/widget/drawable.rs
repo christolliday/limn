@@ -11,11 +11,11 @@ use event::{WidgetEventHandler, WidgetEventArgs};
 use widget::property::PropSet;
 use widget::style::Style;
 
-use util::Rectangle;
+use util::Rect;
 
 
 pub trait Drawable: Downcast {
-    fn draw(&mut self, bounds: Rectangle, crop_to: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d);
+    fn draw(&mut self, bounds: Rect, crop_to: Rect, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d);
 }
 impl_downcast!(Drawable);
 

@@ -8,7 +8,7 @@ use graphics::Context;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Styleable, Value};
-use util::{Scalar, Rectangle};
+use util::{Scalar, Rect, RectBounds};
 use color::*;
 
 pub struct EllipseDrawable {
@@ -31,9 +31,9 @@ impl EllipseDrawable {
 }
 
 impl Drawable for EllipseDrawable {
-    fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         let (bounds, border) = if let Some((radius, color)) = self.border {
-            (bounds.shrink(radius), Some(graphics::ellipse::Border {
+            (bounds.shrink_bounds(radius), Some(graphics::ellipse::Border {
                 radius: radius,
                 color: color,
             }))
@@ -42,7 +42,7 @@ impl Drawable for EllipseDrawable {
         };
         graphics::Ellipse::new(self.background_color)
             .maybe_border(border)
-            .draw(bounds, &context.draw_state, context.transform, graphics);
+            .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
     }
 }
 

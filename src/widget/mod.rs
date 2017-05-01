@@ -17,7 +17,7 @@ use layout::solver::LimnSolver;
 use layout::{LayoutBuilder, LayoutUpdate, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
-use util::{self, Point, Rectangle};
+use util::{self, Point, Rect};
 
 use self::property::{PropSet, Property};
 use self::drawable::{Drawable, DrawableWrapper};
@@ -260,7 +260,7 @@ impl Widget {
         widget
     }
     pub fn draw(&mut self,
-                crop_to: Rectangle,
+                crop_to: Rect,
                 glyph_cache: &mut GlyphCache,
                 context: Context,
                 graphics: &mut G2d) {

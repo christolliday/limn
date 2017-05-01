@@ -3,7 +3,7 @@ use cassowary::strength::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore, BuildWidget};
-use util::{Point, Rectangle};
+use util::{Point, Rect, RectBounds};
 use layout::solver::LimnSolver;
 use layout::container::LayoutContainer;
 use layout::constraint::*;
@@ -85,7 +85,7 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
 
 pub struct WidgetScroll {
     event: glutin::MouseScrollDelta,
-    parent_bounds: Rectangle,
+    parent_bounds: Rect,
 }
 
 pub struct WidgetScrollHandler {
@@ -93,7 +93,7 @@ pub struct WidgetScrollHandler {
 }
 impl WidgetScrollHandler {
     pub fn new() -> Self {
-        WidgetScrollHandler { offset: Point { x: 0.0, y: 0.0 } }
+        WidgetScrollHandler { offset: Point::zero() }
     }
 }
 fn get_scroll(event: glutin::MouseScrollDelta) -> Point {
@@ -113,14 +113,14 @@ impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
         let widget_bounds = args.widget.layout.bounds();
 
         let max_scroll = Point::new(
-            parent_bounds.width - widget_bounds.width,
-            parent_bounds.height - widget_bounds.height);
+            parent_bounds.width() - widget_bounds.width(),
+            parent_bounds.height() - widget_bounds.height());
         self.offset = self.offset + scroll * 13.0;
         self.offset.x = f64::min(0.0, f64::max(max_scroll.x, self.offset.x));
         self.offset.y = f64::min(0.0, f64::max(max_scroll.y, self.offset.y));
         args.widget.update_layout(|layout| {
-            layout.edit_left().set(parent_bounds.left + self.offset.x);
-            layout.edit_top().set(parent_bounds.top + self.offset.y);
+            layout.edit_left().set(parent_bounds.left() + self.offset.x);
+            layout.edit_top().set(parent_bounds.top() + self.offset.y);
         }, args.solver);
     }
 }

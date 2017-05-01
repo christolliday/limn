@@ -10,7 +10,7 @@ use graphics::Context;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
-use util::{Scalar, Rectangle, Point};
+use util::{Scalar, Rect, Point, RectBounds};
 use color::*;
 
 
@@ -34,7 +34,7 @@ impl RectDrawable {
     }
 }
 impl Drawable for RectDrawable {
-    fn draw(&mut self, mut bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, mut bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
 
         // using piston graphics, drawing borders and rounded edges is currently the largest performance bottleneck
         // todo: make it faster! probably will require replacing piston graphics
@@ -42,7 +42,7 @@ impl Drawable for RectDrawable {
             // piston graphics draws the border outside the rectangle bounds
             // so it can get cut off by the clip rect, this shrinks the rect
             // to accomodate the border.
-            bounds = bounds.shrink(radius);
+            bounds = bounds.shrink_bounds(radius * 2.0);
         }
         if let Some(radius) = self.corner_radius {
             let points_per_corner = 8;
@@ -51,18 +51,13 @@ impl Drawable for RectDrawable {
                 [radius * (step * angle_per_step).cos(), radius * (step * angle_per_step).sin()]
             };
             // corners are center points of four circle arcs
-            let inner_rect = Rectangle {
-                left: bounds.left + radius,
-                top: bounds.top + radius,
-                width: bounds.width - 2.0 * radius,
-                height: bounds.height - 2.0 * radius,
-            };
+            let inner_rect = bounds.shrink_bounds(radius * 2.0);
             let points: Vec<[f64; 2]> = (0..4)
                 .flat_map(|corner| {
                     let center: Point = match corner {
                         0 => inner_rect.bottom_right(),
                         1 => inner_rect.bottom_left(),
-                        2 => inner_rect.top_left(),
+                        2 => inner_rect.origin,
                         3 => inner_rect.top_right(),
                         _ => unreachable!(),
                     };
@@ -95,7 +90,7 @@ impl Drawable for RectDrawable {
             });
             graphics::Rectangle::new(self.background_color)
                 .maybe_border(border)
-                .draw(bounds, &context.draw_state, context.transform, graphics);
+                .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
         }
     }
 }

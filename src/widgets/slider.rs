@@ -9,7 +9,7 @@ use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use resources::WidgetId;
 use ui::ChildAttachedEvent;
-use util::Dimensions;
+use util::{Size, RectBounds};
 
 pub struct SliderBuilder {
     pub widget: WidgetBuilder,
@@ -37,10 +37,7 @@ impl SliderBuilder {
             })
             .add_handler(DragHandler::new(slider.id()))
             .make_draggable();
-        layout!(slider_handle: dimensions(Dimensions {
-            width: 30.0,
-            height: 30.0,
-        }));
+        layout!(slider_handle: dimensions(Size::new(30.0, 30.0)));
 
         let mut slider_bar_left = WidgetBuilder::new();
         let bar_style = style!(
@@ -68,12 +65,12 @@ impl SliderBuilder {
         let handle_id = slider_handle.id();
         slider.add_handler_fn(move |event: &SetSliderValue, args| {
             let bounds = args.widget.layout.bounds();
-            let event = SliderHandleInput::SetValue((event.0, bounds.width, bounds.left));
+            let event = SliderHandleInput::SetValue((event.0, bounds.width(), bounds.left()));
             event!(Target::Widget(handle_id), event);
         });
         slider.add_handler_fn(move |event: &ClickEvent, args| {
             let bounds = args.widget.layout.bounds();
-            let event = SliderHandleInput::SliderClicked((event.position.x, bounds.width, bounds.left));
+            let event = SliderHandleInput::SliderClicked((event.position.x, bounds.width(), bounds.left()));
             event!(Target::Widget(handle_id), event);
         });
 
@@ -95,8 +92,8 @@ impl SliderBuilder {
     {
         self.widget.add_handler_fn(move |event: &MovedSliderWidgetEvent, mut args| {
             let bounds = args.widget.layout.bounds();
-            let range = bounds.width - (event.slider_right - event.slider_left);
-            let val = (event.slider_left - bounds.left) / range;
+            let range = bounds.width() - (event.slider_right - event.slider_left);
+            let val = (event.slider_left - bounds.left()) / range;
             on_value_changed(val, &mut args);
             *args.handled = true;
         });
@@ -136,19 +133,19 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 let drag_pos = position.x;
                 match *drag_type {
                     DragEvent::DragStart => {
-                        self.start_pos = drag_pos - bounds.left;
+                        self.start_pos = drag_pos - bounds.left();
                     }
                     _ => {
                         args.widget.update_layout(|layout| {
                             layout.edit_left().set(drag_pos - self.start_pos);
                         }, args.solver);
-                        let event = MovedSliderWidgetEvent { slider_left: bounds.left, slider_right: bounds.right() };
+                        let event = MovedSliderWidgetEvent { slider_left: bounds.left(), slider_right: bounds.right() };
                         event!(Target::Widget(self.container), event);
                     }
                 }
             }
             SliderHandleInput::SetValue((value, parent_width, parent_left)) => {
-                let pos = value * (parent_width - bounds.width);
+                let pos = value * (parent_width - bounds.width());
                 args.widget.update_layout(|layout| {
                     layout.edit_left().set(parent_left + pos);
                 }, args.solver);
@@ -157,7 +154,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 if args.widget.props.contains(&Property::Inactive) {
                     return;
                 }
-                let handle_radius = bounds.width / 2.0;
+                let handle_radius = bounds.width() / 2.0;
                 let min = parent_left + handle_radius;
                 let max = parent_left + parent_width - handle_radius;
                 let position = f64::min(f64::max(position, min), max);

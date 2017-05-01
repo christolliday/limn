@@ -4,7 +4,7 @@ use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use util::{Rectangle, Dimensions};
+use util::{Rect, Point, Size};
 use layout::constraint::ConstraintBuilder;
 
 #[derive(Clone)]
@@ -49,19 +49,13 @@ impl LayoutVars {
             panic!();
         }
     }
-    pub fn bounds(&self) -> Rectangle {
-        Rectangle {
-            left: self.left_val,
-            top: self.top_val,
-            width: self.right_val - self.left_val,
-            height: self.bottom_val - self.top_val,
-        }
+    pub fn bounds(&self) -> Rect {
+        Rect::new(
+            Point::new(self.left_val, self.top_val),
+            Size::new(self.right_val - self.left_val, self.bottom_val - self.top_val))
     }
-    pub fn get_dims(&self) -> Dimensions {
-        Dimensions {
-            width: self.right_val - self.left_val,
-            height: self.bottom_val - self.top_val,
-        }
+    pub fn get_dims(&self) -> Size {
+        Size::new(self.right_val - self.left_val, self.bottom_val - self.top_val)
     }
 }
 

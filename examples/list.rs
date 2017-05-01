@@ -8,7 +8,7 @@ use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
-use limn::util::Dimensions;
+use limn::util::Size;
 use limn::color::*;
 use limn::layout::constraint::*;
 
@@ -21,11 +21,8 @@ fn main() {
     let mut scroll_widget = ScrollBuilder::new();
     layout!(scroll_widget:
         bound_by(&root_widget).padding(50.0),
-        dimensions(Dimensions {
-            width: 300.0,
-            height: 300.0,
-        }
-    ));
+        dimensions(Size::new(300.0, 300.0)),
+     );
 
     let mut list_widget = ListBuilder::new();
     layout!(list_widget: match_width(&scroll_widget));

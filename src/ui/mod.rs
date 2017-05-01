@@ -16,7 +16,7 @@ use widget::WidgetBuilderCore;
 use layout::solver::LimnSolver;
 use layout::LayoutVars;
 use layout::constraint::*;
-use util::{self, Point, Rectangle, Dimensions};
+use util::{self, Point, Rect, Size};
 use resources::WidgetId;
 use color::*;
 use event::Target;
@@ -59,7 +59,7 @@ impl Ui {
     }
     pub fn set_root(&mut self, mut root_widget: WidgetBuilder) {
         root_widget.set_debug_name("root");
-        layout!(root_widget: top_left(Point { x: 0.0, y: 0.0 }));
+        layout!(root_widget: top_left(Point::zero()));
         {
             let ref root_vars = root_widget.layout().vars;
             self.solver.update_solver(|solver| {
@@ -70,7 +70,7 @@ impl Ui {
         self.graph.root_id = root_widget.id();
         self.attach_widget(root_widget, None);
     }
-    pub fn get_root_dims(&mut self) -> Dimensions {
+    pub fn get_root_dims(&mut self) -> Size {
         let root = self.graph.get_root();
         let mut dims = root.layout.get_dims();
         // use min size to prevent window size from being set to 0 (X crashes)
@@ -78,7 +78,7 @@ impl Ui {
         dims.height = f64::max(100.0, dims.height);
         dims
     }
-    pub fn window_resized(&mut self, window_dims: Dimensions) {
+    pub fn window_resized(&mut self, window_dims: Size) {
         let root = self.graph.get_root();
         self.solver.update_solver(|solver| {
             solver.suggest_value(root.layout.right, window_dims.width).unwrap();
@@ -100,7 +100,8 @@ impl Ui {
         }
     }
     pub fn draw(&mut self, context: Context, graphics: &mut G2d) {
-        let crop_to = Rectangle::new_from_pos_dim(Point::zero(), Dimensions::max());
+        use std::f64;
+        let crop_to = Rect::new(Point::zero(), Size::new(f64::MAX, f64::MAX));
         let id = self.graph.root_id;
         self.draw_node(context, graphics, id, crop_to);
         if self.debug_draw_bounds {
@@ -118,7 +119,7 @@ impl Ui {
                      context: Context,
                      graphics: &mut G2d,
                      widget_id: WidgetId,
-                     crop_to: Rectangle) {
+                     crop_to: Rect) {
 
         let crop_to = {
             let ref mut widget = self.graph.get_widget(widget_id).unwrap();
@@ -126,7 +127,7 @@ impl Ui {
             util::crop_rect(crop_to, widget.layout.bounds())
         };
 
-        if !crop_to.no_area() {
+        if crop_to != Rect::zero() {
             let children: Vec<WidgetId> = self.graph.children(widget_id).collect(&self.graph.graph);
             // need to iterate backwards to draw in correct order, because
             // petgraph neighbours iterate in reverse order of insertion, not sure why

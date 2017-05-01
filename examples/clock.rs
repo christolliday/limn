@@ -20,7 +20,7 @@ use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use limn::event::Target;
-use limn::util::{Point, Rectangle, Dimensions, Scalar};
+use limn::util::{Point, Rect, RectBounds, Size, Scalar};
 use limn::color::*;
 use limn::layout::constraint::*;
 
@@ -43,17 +43,11 @@ impl HandDrawable {
     }
 }
 impl Drawable for HandDrawable {
-    fn draw(&mut self, bounds: Rectangle, _: Rectangle, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         let cos = self.angle.cos();
         let sin = self.angle.sin();
-        let hand_dir = Point {
-            x: sin * 1.0,
-            y: -cos * 1.0,
-        } * self.length;
-        let hand_norm = Point {
-            x: -cos * 1.0,
-            y: -sin * 1.0,
-        } * self.width;
+        let hand_dir = Point::new(sin * 1.0, -cos * 1.0) * self.length;
+        let hand_norm = Point::new(-cos * 1.0, -sin * 1.0) * self.width;
         let center = bounds.center();
         let points: Vec<[f64; 2]> = [center + hand_norm,
                                      center + hand_norm + hand_dir,
@@ -78,10 +72,7 @@ impl ClockBuilder {
             EllipseStyleable::Border: Some((2.0, BLACK)));
         let mut widget = WidgetBuilder::new();
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
-        layout!(widget: dimensions(Dimensions {
-            width: 200.0,
-            height: 200.0,
-        }));
+        layout!(widget: dimensions(Size::new(200.0, 200.0)));
 
         let hour_angle = || 2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0;
         let minute_angle = || 2.0 * f64::consts::PI * Local::now().minute() as f64 / 60.0;

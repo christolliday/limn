@@ -11,7 +11,7 @@ use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::drawable::text::TextDrawable;
-use limn::util::Dimensions;
+use limn::util::Size;
 use limn::layout::constraint::*;
 
 enum EditTextSettingsEvent {
@@ -39,10 +39,7 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    layout!(root_widget: min_dimensions(Dimensions {
-        width: 300.0,
-        height: 300.0,
-    }));
+    layout!(root_widget: min_dimensions(Size::new(300.0, 300.0)));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);

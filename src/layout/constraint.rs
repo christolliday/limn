@@ -2,7 +2,7 @@ use layout::{LayoutRef, LayoutVars};
 use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
-use util::{Scalar, Point, Dimensions};
+use util::{Scalar, Point, Size};
 
 pub fn match_layout<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
     let widget = widget.layout_ref();
@@ -28,10 +28,10 @@ pub fn min_width(width: Scalar) -> WidgetConstraintBuilder {
 pub fn min_height(height: Scalar) -> WidgetConstraintBuilder {
     WidgetConstraint::MinHeight(height).builder(REQUIRED)
 }
-pub fn dimensions(dimensions: Dimensions) -> WidgetConstraintBuilder {
+pub fn dimensions(dimensions: Size) -> WidgetConstraintBuilder {
     WidgetConstraint::Dimensions(dimensions).builder(REQUIRED)
 }
-pub fn min_dimensions(dimensions: Dimensions) -> WidgetConstraintBuilder {
+pub fn min_dimensions(dimensions: Size) -> WidgetConstraintBuilder {
     WidgetConstraint::MinDimensions(dimensions).builder(REQUIRED)
 }
 pub fn shrink() -> WidgetConstraintBuilder {
@@ -122,8 +122,8 @@ pub enum WidgetConstraint {
     Height(Scalar),
     MinWidth(Scalar),
     MinHeight(Scalar),
-    Dimensions(Dimensions),
-    MinDimensions(Dimensions),
+    Dimensions(Size),
+    MinDimensions(Size),
     Shrink,
     ShrinkHorizontal,
     ShrinkVertical,

@@ -7,7 +7,7 @@ use backend::gfx::{ImageSize, G2d};
 
 use text_layout::{self, Wrap, Align};
 use resources::{FontId, resources};
-use util::{self, Dimensions, Scalar, Rectangle};
+use util::{self, Size, Scalar, Rect, RectBounds};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
@@ -46,20 +46,21 @@ impl TextDrawable {
         drawable.text = text.to_owned();
         drawable
     }
-    pub fn measure(&self) -> Dimensions {
+    pub fn measure(&self) -> Size {
         let res = resources();
         let font = res.fonts.get(self.font_id).unwrap();
+
+        util::size_from_text_layout(
         text_layout::get_text_dimensions(&self.text,
                                          font,
                                          self.font_size,
                                          self.font_size * 1.25,
-                                         self.wrap)
-            .into()
+                                         self.wrap))
     }
     pub fn min_height(&self) -> Scalar {
         self.font_size * 1.25
     }
-    pub fn text_fits(&self, text: &str, bounds: Rectangle) -> bool {
+    pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
         let res = resources();
         let font = res.fonts.get(self.font_id).unwrap();
         let height =
@@ -68,15 +69,15 @@ impl TextDrawable {
                                          self.font_size,
                                          self.font_size * 1.25,
                                          self.wrap,
-                                         bounds.width);
-        height < bounds.height
+                                         bounds.width());
+        height < bounds.height()
     }
 }
 
 impl Drawable for TextDrawable {
-    fn draw(&mut self, bounds: Rectangle, _: Rectangle, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rect, _: Rect, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         graphics::Rectangle::new(self.background_color)
-                .draw(bounds, &context.draw_state, context.transform, graphics);
+                .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
 
             let &mut GlyphCache { texture: ref mut text_texture_cache,
                                 cache: ref mut glyph_cache,
@@ -87,7 +88,8 @@ impl Drawable for TextDrawable {
 
             let line_height = self.font_size * 1.25;
             if DEBUG_LINE_BOUNDS {
-                let line_rects = &text_layout::get_line_rects(&self.text,bounds.into(),
+                let line_rects = &text_layout::get_line_rects(&self.text,
+                                                              util::text_layout_rect(bounds),
                                                               font,
                                                               self.font_size,
                                                               line_height,
@@ -95,11 +97,12 @@ impl Drawable for TextDrawable {
                                                               self.align,
                                                               self.vertical_align);
                 for line_rect in line_rects {
-                    util::draw_rect_outline((*line_rect).into(), CYAN, context, graphics);
+                    let rect = util::rect_from_text_layout(*line_rect);
+                    util::draw_rect_outline(rect, CYAN, context, graphics);
                 }
             }
             let positioned_glyphs = &text_layout::get_positioned_glyphs(&self.text,
-                                                                        bounds.into(),
+                                                                        util::text_layout_rect(bounds),
                                                                         font,
                                                                         self.font_size,
                                                                         line_height,
@@ -120,16 +123,13 @@ impl Drawable for TextDrawable {
 
             let tex_dim = {
                 let (tex_w, tex_h) = text_texture_cache.get_size();
-                Dimensions {
-                    width: tex_w as f64,
-                    height: tex_h as f64,
-                }
+                Size::new(tex_w as f64, tex_h as f64)
             };
 
             let rectangles = positioned_glyphs.into_iter()
                 .filter_map(|g| glyph_cache.rect_for(self.font_id.0, g).ok().unwrap_or(None))
                 .map(|(uv_rect, screen_rect)| {
-                    (util::map_rect_i32(screen_rect), util::map_rect_f32(uv_rect) * tex_dim)
+                    (util::map_rect_i32(screen_rect), util::mul_size(util::map_rect_f32(uv_rect), tex_dim))
                 });
             // A re-usable buffer of rectangles describing the glyph's screen and texture positions.
             let mut glyph_rectangles = Vec::new();
