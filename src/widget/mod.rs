@@ -273,7 +273,7 @@ impl Widget {
     }
 
     pub fn is_mouse_over(&self, mouse: Point) -> bool {
-        util::point_inside_rect(mouse, self.layout.bounds())
+        self.layout.bounds().contains(&mouse)
     }
     pub fn drawable<T: Drawable>(&self) -> Option<&T> {
         if let Some(ref drawable) = self.drawable {

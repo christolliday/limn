@@ -9,7 +9,7 @@ use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use resources::WidgetId;
 use ui::ChildAttachedEvent;
-use util::{Size, RectBounds};
+use util::{Size, RectExt};
 
 pub struct SliderBuilder {
     pub widget: WidgetBuilder,

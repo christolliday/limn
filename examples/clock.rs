@@ -20,7 +20,7 @@ use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::drawable::{Drawable, DrawableEventHandler};
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use limn::event::Target;
-use limn::util::{Point, Rect, RectBounds, Size, Scalar};
+use limn::util::{Point, Rect, RectExt, Size, Scalar};
 use limn::color::*;
 use limn::layout::constraint::*;
 

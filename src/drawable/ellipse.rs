@@ -8,7 +8,7 @@ use graphics::Context;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Styleable, Value};
-use util::{Scalar, Rect, RectBounds};
+use util::{Scalar, Rect, RectExt};
 use color::*;
 
 pub struct EllipseDrawable {

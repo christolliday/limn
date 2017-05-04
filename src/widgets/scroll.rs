@@ -3,7 +3,7 @@ use cassowary::strength::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore, BuildWidget};
-use util::{Point, Rect, RectBounds};
+use util::{Point, Rect, RectExt};
 use layout::solver::LimnSolver;
 use layout::container::LayoutContainer;
 use layout::constraint::*;

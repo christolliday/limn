@@ -124,10 +124,10 @@ impl Ui {
         let crop_to = {
             let ref mut widget = self.graph.get_widget(widget_id).unwrap();
             widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
-            util::crop_rect(crop_to, widget.layout.bounds())
+            crop_to.intersection(&widget.layout.bounds())
         };
 
-        if crop_to != Rect::zero() {
+        if let Some(crop_to) = crop_to {
             let children: Vec<WidgetId> = self.graph.children(widget_id).collect(&self.graph.graph);
             // need to iterate backwards to draw in correct order, because
             // petgraph neighbours iterate in reverse order of insertion, not sure why

@@ -7,7 +7,7 @@ use backend::gfx::{ImageSize, G2d};
 
 use text_layout::{self, Wrap, Align};
 use resources::{FontId, resources};
-use util::{self, Size, Scalar, Rect, RectBounds};
+use util::{self, Point, Size, SizeExt, Scalar, Rect, RectExt};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
@@ -50,12 +50,13 @@ impl TextDrawable {
         let res = resources();
         let font = res.fonts.get(self.font_id).unwrap();
 
-        util::size_from_text_layout(
-        text_layout::get_text_dimensions(&self.text,
-                                         font,
-                                         self.font_size,
-                                         self.font_size * 1.25,
-                                         self.wrap))
+        let dims = text_layout::get_text_dimensions(
+            &self.text,
+            font,
+            self.font_size,
+            self.font_size * 1.25,
+            self.wrap);
+        Size::from_text_layout(dims)
     }
     pub fn min_height(&self) -> Scalar {
         self.font_size * 1.25
@@ -89,7 +90,7 @@ impl Drawable for TextDrawable {
             let line_height = self.font_size * 1.25;
             if DEBUG_LINE_BOUNDS {
                 let line_rects = &text_layout::get_line_rects(&self.text,
-                                                              util::text_layout_rect(bounds),
+                                                              bounds.to_text_layout(),
                                                               font,
                                                               self.font_size,
                                                               line_height,
@@ -97,12 +98,12 @@ impl Drawable for TextDrawable {
                                                               self.align,
                                                               self.vertical_align);
                 for line_rect in line_rects {
-                    let rect = util::rect_from_text_layout(*line_rect);
+                    let rect = Rect::from_text_layout(*line_rect);
                     util::draw_rect_outline(rect, CYAN, context, graphics);
                 }
             }
             let positioned_glyphs = &text_layout::get_positioned_glyphs(&self.text,
-                                                                        util::text_layout_rect(bounds),
+                                                                        bounds.to_text_layout(),
                                                                         font,
                                                                         self.font_size,
                                                                         line_height,
@@ -126,12 +127,20 @@ impl Drawable for TextDrawable {
                 Size::new(tex_w as f64, tex_h as f64)
             };
 
+            let scale_rect = |rect: Rect, size: Size| -> Rect {
+                Rect::new(
+                    Point::new(rect.left() * size.width, rect.top() * size.height),
+                    Size::new(rect.width() * size.width, rect.height() * size.height),
+                )
+            };
             let rectangles = positioned_glyphs.into_iter()
                 .filter_map(|g| glyph_cache.rect_for(self.font_id.0, g).ok().unwrap_or(None))
                 .map(|(uv_rect, screen_rect)| {
-                    (util::map_rect_i32(screen_rect), util::mul_size(util::map_rect_f32(uv_rect), tex_dim))
+                    let screen_rect = Rect::from_rusttype(screen_rect).to_slice();
+                    let uv_rect = scale_rect(Rect::from_rusttype(uv_rect), tex_dim).to_slice();
+                    (screen_rect, uv_rect)
                 });
-            // A re-usable buffer of rectangles describing the glyph's screen and texture positions.
+            // Contains each glyph's screen and texture positions.
             let mut glyph_rectangles = Vec::new();
             glyph_rectangles.extend(rectangles);
             graphics::image::draw_many(&glyph_rectangles,

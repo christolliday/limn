@@ -5,7 +5,7 @@ use backend::glyph::GlyphCache;
 
 use widget::drawable::Drawable;
 use resources::{ImageId, resources};
-use util::{self, Rect, Size, RectBounds};
+use util::{Rect, RectExt, Size, SizeExt};
 
 pub struct ImageDrawable {
     pub image_id: ImageId,
@@ -21,7 +21,7 @@ impl ImageDrawable {
     pub fn measure(&self) -> Size {
         let res = resources();
         let img = res.images.get(self.image_id).unwrap();
-        util::size_from_tuple(img.get_size())
+        Size::from_tuple(img.get_size())
     }
     pub fn scale(&mut self, scale: Size) {
         self.scale = scale;
@@ -31,7 +31,7 @@ impl Drawable for ImageDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
         let res = resources();
         let img = res.images.get(self.image_id).unwrap();
-        let dims: Size = util::size_from_tuple(img.get_size());
+        let dims = Size::from_tuple(img.get_size());
         let scale = Size::new(
             bounds.size.width / dims.width,
             bounds.size.height / dims.height,

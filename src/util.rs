@@ -4,17 +4,22 @@ use euclid::{self, Point2D, Size2D};
 
 use rusttype;
 use graphics::{self, Context};
-use graphics::types;
 
 pub use graphics::types::{Color, Scalar};
 
 use backend::gfx::G2d;
 
+use text_layout;
+
 pub type Size = Size2D<f64>;
 pub type Point = Point2D<f64>;
 pub type Rect = euclid::Rect<f64>;
 
-pub trait RectBounds<T> {
+pub trait RectExt<T> {
+    fn from_text_layout(rect: text_layout::Rectangle) -> Self;
+    fn from_rusttype<S: Into<T>>(rect: rusttype::Rect<S>) -> Self;
+    fn to_text_layout(&self) -> text_layout::Rectangle;
+    fn to_slice(&self) -> [T; 4];
     fn left(&self) -> T;
     fn top(&self) -> T;
     fn right(&self) -> T;
@@ -22,10 +27,28 @@ pub trait RectBounds<T> {
     fn width(&self) -> T;
     fn height(&self) -> T;
     fn center(&self) -> Point;
-    fn shrink_bounds(&self, size: f64) -> Self;
-    fn to_slice(&self) -> [f64; 4];
+    fn shrink_bounds(&self, size: T) -> Self;
 }
-impl RectBounds<f64> for Rect {
+impl RectExt<f64> for Rect {
+    fn from_text_layout(rect: text_layout::Rectangle) -> Self {
+        Rect::new(Point::new(rect.left, rect.top), Size::new(rect.width, rect.height))
+    }
+    fn from_rusttype<S: Into<f64>>(rect: rusttype::Rect<S>) -> Self {
+        let origin = Point::new(rect.min.x.into(), rect.min.y.into());
+        let size = Size::new(rect.max.x.into() - origin.x, rect.max.y.into() - origin.y);
+        Rect::new(origin, size)
+    }
+    fn to_text_layout(&self) -> text_layout::Rectangle {
+        text_layout::Rectangle {
+            left: self.left(),
+            top: self.top(),
+            width: self.width(),
+            height: self.height(),
+        }
+    }
+    fn to_slice(&self) -> [f64; 4] {
+        [self.left(), self.top(), self.width(), self.height()]
+    }
     fn left(&self) -> f64 {
         self.origin.x
     }
@@ -52,79 +75,33 @@ impl RectBounds<f64> for Rect {
             Point::new(self.origin.x + size / 2.0, self.origin.y + size / 2.0),
             Size::new(self.size.width - size, self.size.height - size))
     }
-    fn to_slice(&self) -> [f64; 4] {
-        [self.left(), self.top(), self.width(), self.height()]
+}
+
+pub trait SizeExt<T> {
+    fn from_array(size: [u32; 2]) -> Self;
+    fn from_tuple(size: (u32, u32)) -> Self;
+    fn from_text_layout(rect: text_layout::Dimensions) -> Self;
+}
+impl SizeExt<f64> for Size {
+    fn from_array(size: [u32; 2]) -> Self {
+        Size::new(size[0] as f64, size[1] as f64)
+    }
+    fn from_tuple(size: (u32, u32)) -> Self {
+        Size::new(size.0 as f64, size.1 as f64)
+    }
+    fn from_text_layout(rect: text_layout::Dimensions) -> Self {
+        Size::new(rect.width, rect.height)
     }
 }
 
-pub fn point_inside_rect(point: Point, rect: Rect) -> bool {
-    point.x > rect.left() && point.y > rect.top() && point.x < rect.left() + rect.width() &&
-    point.y < rect.top() + rect.height()
-}
-
 pub fn mouse_inside_ellipse(mouse: Point, bounds: Rect) -> bool {
-    let radius = Size::new(
-        bounds.width() / 2.0,
-        bounds.height() / 2.0,
-    );
-    let center = Point::new(
-        bounds.left() + radius.width,
-        bounds.top() + radius.height
-    );
+    let radius = Size::new(bounds.width() / 2.0, bounds.height() / 2.0);
+    let center = Point::new(bounds.left() + radius.width, bounds.top() + radius.height);
     point_inside_ellipse(mouse, center, radius)
 }
 pub fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
     (point.x - center.x).powi(2) / radius.width.powi(2) +
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
-}
-
-pub fn mul_size(val: [f64; 4], rhs: Size) -> [f64; 4] {
-    [val[0] * rhs.width, val[1] * rhs.height, val[2] * rhs.width, val[3] * rhs.height]
-}
-
-pub fn map_rect_i32(rect: rusttype::Rect<i32>) -> types::Rectangle {
-    [rect.min.x as f64,
-     rect.min.y as f64,
-     (rect.max.x - rect.min.x) as f64,
-     (rect.max.y - rect.min.y) as f64]
-}
-pub fn map_rect_f32(rect: rusttype::Rect<f32>) -> types::Rectangle {
-    [rect.min.x as f64,
-     rect.min.y as f64,
-     (rect.max.x - rect.min.x) as f64,
-     (rect.max.y - rect.min.y) as f64]
-}
-
-// for text_layout interop, kludgey
-use text_layout;
-pub fn rect_from_text_layout(rect: text_layout::Rectangle) -> Rect {
-    Rect::new(Point::new(rect.left, rect.top), Size::new(rect.width, rect.height))
-}
-pub fn text_layout_rect(rect: Rect) -> text_layout::Rectangle {
-    text_layout::Rectangle {
-        left: rect.left(),
-        top: rect.top(),
-        width: rect.width(),
-        height: rect.height(),
-    }
-}
-pub fn size_from_text_layout(rect: text_layout::Dimensions) -> Size {
-    Size::new(rect.width, rect.height)
-}
-
-
-pub fn size_from_slice(size: [u32; 2]) -> Size {
-    Size::new(
-        size[0] as f64,
-        size[1] as f64,
-    )
-}
-
-pub fn size_from_tuple(size: (u32, u32)) -> Size {
-    Size::new(
-        size.0 as f64,
-        size.1 as f64,
-    )
 }
 
 // Retrieve the "dots per inch" factor by dividing the window width by the view.
@@ -157,15 +134,4 @@ pub fn draw_rect_outline(rect: Rect, color: Color, context: Context, graphics: &
 pub fn crop_context(context: Context, rect: Rect) -> Context {
     let scissor_bounds = [rect.left() as u32, rect.top() as u32, rect.width() as u32, rect.height() as u32];
     Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
-}
-
-// get smallest shared region
-pub fn crop_rect(outer: Rect, inner: Rect) -> Rect {
-    let top = f64::max(outer.top(), inner.top());
-    let left = f64::max(outer.left(), inner.left());
-    let right = f64::min(outer.right(), inner.right());
-    let bottom = f64::min(outer.bottom(), inner.bottom());
-    let width = f64::max(0.0, right - left);
-    let height = f64::max(0.0, bottom - top);
-    Rect::new(Point::new(left, top), Size::new(width, height))
 }

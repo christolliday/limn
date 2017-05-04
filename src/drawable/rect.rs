@@ -10,7 +10,7 @@ use graphics::Context;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
-use util::{Scalar, Rect, Point, RectBounds};
+use util::{Scalar, Rect, Point, RectExt};
 use color::*;
 
 
