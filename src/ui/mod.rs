@@ -72,7 +72,7 @@ impl Ui {
     }
     pub fn get_root_dims(&mut self) -> Size {
         let root = self.graph.get_root();
-        let mut dims = root.layout.get_dims();
+        let mut dims = root.bounds.size;
         // use min size to prevent window size from being set to 0 (X crashes)
         dims.width = f64::max(100.0, dims.width);
         dims.height = f64::max(100.0, dims.height);
@@ -110,7 +110,7 @@ impl Ui {
             while let Some(widget_id) = dfs.next(&self.graph.graph) {
                 let widget = self.graph.get_widget(widget_id).unwrap();
                 let color = widget.debug_color.unwrap_or(GREEN);
-                let bounds = widget.layout.bounds();
+                let bounds = widget.bounds;
                 util::draw_rect_outline(bounds, color, context, graphics);
             }
         }
@@ -124,7 +124,7 @@ impl Ui {
         let crop_to = {
             let ref mut widget = self.graph.get_widget(widget_id).unwrap();
             widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
-            crop_to.intersection(&widget.layout.bounds())
+            crop_to.intersection(&widget.bounds)
         };
 
         if let Some(crop_to) = crop_to {
@@ -239,7 +239,7 @@ impl Ui {
         let mut dfs = self.graph.dfs(root_id);
         while let Some(widget_id) = dfs.next(&self.graph.graph) {
             let widget = self.graph.get_widget(widget_id).unwrap();
-            let bounds = widget.layout.bounds();
+            let bounds = widget.bounds;
             let name = widget.debug_name.clone();
             println!("{:?} {:?}", name, bounds);
         }

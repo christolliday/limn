@@ -22,7 +22,7 @@ fn edit_text_handle_char(event: &WidgetReceivedCharacter, args: WidgetEventArgs)
         _ => {
             text.push(char);
             let drawable = args.widget.drawable::<TextDrawable>().unwrap();
-            if !drawable.text_fits(&text, args.widget.layout.bounds()) {
+            if !drawable.text_fits(&text, args.widget.bounds) {
                 text.pop();
             }
         }

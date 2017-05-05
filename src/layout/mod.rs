@@ -4,7 +4,7 @@ use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use util::{Rect, Point, Size};
+use util::Rect;
 use layout::constraint::ConstraintBuilder;
 
 #[derive(Clone)]
@@ -15,11 +15,6 @@ pub struct LayoutVars {
     pub bottom: Variable,
     pub width: Variable,
     pub height: Variable,
-
-    left_val: f64,
-    top_val: f64,
-    right_val: f64,
-    bottom_val: f64,
 }
 impl LayoutVars {
     pub fn new() -> Self {
@@ -30,32 +25,20 @@ impl LayoutVars {
             bottom: Variable::new(),
             width: Variable::new(),
             height: Variable::new(),
-            left_val: 0.0,
-            top_val: 0.0,
-            right_val: 0.0,
-            bottom_val: 0.0,
         }
     }
-    pub fn update_val(&mut self, var: Variable, value: f64) {
+    pub fn update_bounds(&mut self, var: Variable, value: f64, rect: &mut Rect) {
         if var == self.left {
-            self.left_val = value;
+            rect.origin.x = value;
         } else if var == self.top {
-            self.top_val = value;
-        } else if var == self.right {
-            self.right_val = value;
-        } else if var == self.bottom {
-            self.bottom_val = value;
+            rect.origin.y = value;
+        } else if var == self.width {
+            rect.size.width = value;
+        } else if var == self.height {
+            rect.size.height = value;
         } else {
             panic!();
         }
-    }
-    pub fn bounds(&self) -> Rect {
-        Rect::new(
-            Point::new(self.left_val, self.top_val),
-            Size::new(self.right_val - self.left_val, self.bottom_val - self.top_val))
-    }
-    pub fn get_dims(&self) -> Size {
-        Size::new(self.right_val - self.left_val, self.bottom_val - self.top_val)
     }
 }
 

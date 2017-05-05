@@ -38,8 +38,8 @@ impl LimnSolver {
         let ref vars = widget.layout;
         self.widget_map.insert(vars.left, widget.id);
         self.widget_map.insert(vars.top, widget.id);
-        self.widget_map.insert(vars.right, widget.id);
-        self.widget_map.insert(vars.bottom, widget.id);
+        self.widget_map.insert(vars.width, widget.id);
+        self.widget_map.insert(vars.height, widget.id);
 
         if let Some(ref debug_name) = widget.debug_name {
             add_debug_var_name(widget.layout.left, &format!("{}.left", debug_name));
@@ -139,7 +139,7 @@ pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     let ref changes = event.0;
     for &(widget_id, var, value) in changes {
         if let Some(widget) = ui.graph.get_widget(widget_id) {
-            widget.layout.update_val(var, value);
+            widget.layout.update_bounds(var, value, &mut widget.bounds);
         }
     }
     // redraw everything when layout changes, for now

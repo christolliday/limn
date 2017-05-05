@@ -64,12 +64,12 @@ impl SliderBuilder {
 
         let handle_id = slider_handle.id();
         slider.add_handler_fn(move |event: &SetSliderValue, args| {
-            let bounds = args.widget.layout.bounds();
+            let bounds = args.widget.bounds;
             let event = SliderHandleInput::SetValue((event.0, bounds.width(), bounds.left()));
             event!(Target::Widget(handle_id), event);
         });
         slider.add_handler_fn(move |event: &ClickEvent, args| {
-            let bounds = args.widget.layout.bounds();
+            let bounds = args.widget.bounds;
             let event = SliderHandleInput::SliderClicked((event.position.x, bounds.width(), bounds.left()));
             event!(Target::Widget(handle_id), event);
         });
@@ -91,7 +91,7 @@ impl SliderBuilder {
         where F: Fn(f64, &mut WidgetEventArgs) + 'static
     {
         self.widget.add_handler_fn(move |event: &MovedSliderWidgetEvent, mut args| {
-            let bounds = args.widget.layout.bounds();
+            let bounds = args.widget.bounds;
             let range = bounds.width() - (event.slider_right - event.slider_left);
             let val = (event.slider_left - bounds.left()) / range;
             on_value_changed(val, &mut args);
@@ -123,7 +123,7 @@ impl DragHandler {
 }
 impl WidgetEventHandler<SliderHandleInput> for DragHandler {
     fn handle(&mut self, event: &SliderHandleInput, args: WidgetEventArgs) {
-        let bounds = args.widget.layout.bounds();
+        let bounds = args.widget.bounds;
         match *event {
             SliderHandleInput::WidgetDrag(ref event) => {
                 if args.widget.props.contains(&Property::Inactive) {

@@ -235,6 +235,7 @@ pub struct Widget {
     pub props: PropSet,
     pub has_updated: bool,
     pub layout: LayoutVars,
+    pub bounds: Rect,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
 }
@@ -253,6 +254,7 @@ impl Widget {
             props: props,
             has_updated: false,
             layout: layout,
+            bounds: Rect::zero(),
             debug_name: debug_name,
             debug_color: debug_color,
         };
@@ -266,14 +268,14 @@ impl Widget {
                 graphics: &mut G2d) {
 
         if let Some(drawable) = self.drawable.as_mut() {
-            let bounds = self.layout.bounds();
+            let bounds = self.bounds;
             let context = util::crop_context(context, crop_to);
             drawable.drawable.draw(bounds, crop_to, glyph_cache, context, graphics);
         }
     }
 
     pub fn is_mouse_over(&self, mouse: Point) -> bool {
-        self.layout.bounds().contains(&mouse)
+        self.bounds.contains(&mouse)
     }
     pub fn drawable<T: Drawable>(&self) -> Option<&T> {
         if let Some(ref drawable) = self.drawable {

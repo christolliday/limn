@@ -71,7 +71,7 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
             }
             ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
                 if let Some(scrollable) = self.scrollable {
-                    let widget_bounds = args.widget.layout.bounds();
+                    let widget_bounds = args.widget.bounds;
                     let event = WidgetScroll {
                         event: mouse_wheel.0,
                         parent_bounds: widget_bounds,
@@ -110,7 +110,7 @@ impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
     fn handle(&mut self, event: &WidgetScroll, args: WidgetEventArgs) {
         let &WidgetScroll { event, parent_bounds } = event;
         let scroll = get_scroll(event);
-        let widget_bounds = args.widget.layout.bounds();
+        let widget_bounds = args.widget.bounds;
 
         let max_scroll = Point::new(
             parent_bounds.width() - widget_bounds.width(),
