@@ -27,7 +27,7 @@ impl LayoutVars {
             height: Variable::new(),
         }
     }
-    pub fn update_bounds(&mut self, var: Variable, value: f64, rect: &mut Rect) {
+    pub fn update_bounds(&self, var: Variable, value: f64, rect: &mut Rect) {
         if var == self.left {
             rect.origin.x = value;
         } else if var == self.top {
@@ -59,18 +59,6 @@ impl LayoutRef for LayoutBuilder {
 impl LayoutRef for LayoutVars {
     fn layout_ref(&self) -> &LayoutVars {
         self
-    }
-}
-pub struct LayoutUpdate {
-    pub edit_vars: Vec<EditVariable>,
-    pub constraints: Vec<Constraint>,
-}
-impl LayoutUpdate {
-    pub fn new(edit_vars: Vec<EditVariable>, constraints: Vec<Constraint>) -> Self {
-        LayoutUpdate {
-            edit_vars: edit_vars,
-            constraints: constraints,
-        }
     }
 }
 
@@ -200,3 +188,5 @@ pub mod solver;
 pub mod container;
 pub mod constraint;
 pub mod linear_layout;
+
+pub use self::solver::LimnSolver;

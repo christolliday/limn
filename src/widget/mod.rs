@@ -14,7 +14,7 @@ use backend::glyph::GlyphCache;
 
 use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::solver::LimnSolver;
-use layout::{LayoutBuilder, LayoutUpdate, LayoutVars, LayoutRef};
+use layout::{LayoutBuilder, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rect};
@@ -187,15 +187,15 @@ impl WidgetBuilder {
         builder
     }
 
-    pub fn build(self) -> (Vec<WidgetBuilder>, LayoutUpdate, WidgetContainer) {
+    pub fn build(self) -> (Vec<WidgetBuilder>, LayoutBuilder, WidgetContainer) {
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
-                                 self.layout.vars,
+                                 self.layout.vars.clone(),
                                  self.debug_name,
                                  self.debug_color);
         (self.children,
-         LayoutUpdate::new(self.layout.edit_vars, self.layout.constraints),
+         self.layout,
          WidgetContainer {
              widget: widget,
              container: self.container,
@@ -308,6 +308,7 @@ impl Widget {
     {
         let mut layout = LayoutBuilder::from(self.layout.clone());
         f(&mut layout);
-        solver.update_from_builder(LayoutUpdate::new(layout.edit_vars, layout.constraints));
+        solver.update_from_builder(layout);
+        solver.check_changes();
     }
 }

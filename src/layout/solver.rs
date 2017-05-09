@@ -9,11 +9,10 @@ use cassowary::strength;
 use cassowary::{Variable, Constraint, Expression};
 
 use resources::WidgetId;
-use widget::Widget;
 use event::Target;
 use ui::Ui;
 
-use layout::{LayoutVars, LayoutUpdate};
+use layout::{LayoutVars, LayoutBuilder};
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
@@ -34,23 +33,23 @@ impl LimnSolver {
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
-    pub fn add_widget(&mut self, widget: &Widget, layout_update: LayoutUpdate) {
-        let ref vars = widget.layout;
-        self.widget_map.insert(vars.left, widget.id);
-        self.widget_map.insert(vars.top, widget.id);
-        self.widget_map.insert(vars.width, widget.id);
-        self.widget_map.insert(vars.height, widget.id);
+    pub fn add_widget(&mut self, id: WidgetId, name: &Option<String>, layout: LayoutBuilder) {
+        self.widget_map.insert(layout.vars.left, id);
+        self.widget_map.insert(layout.vars.top, id);
+        self.widget_map.insert(layout.vars.width, id);
+        self.widget_map.insert(layout.vars.height, id);
 
-        if let Some(ref debug_name) = widget.debug_name {
-            add_debug_var_name(widget.layout.left, &format!("{}.left", debug_name));
-            add_debug_var_name(widget.layout.top, &format!("{}.top", debug_name));
-            add_debug_var_name(widget.layout.right, &format!("{}.right", debug_name));
-            add_debug_var_name(widget.layout.bottom, &format!("{}.bottom", debug_name));
-            add_debug_var_name(widget.layout.width, &format!("{}.width", debug_name));
-            add_debug_var_name(widget.layout.height, &format!("{}.height", debug_name));
+        if let &Some(ref name) = name {
+            add_debug_var_name(layout.vars.left, &format!("{}.left", name));
+            add_debug_var_name(layout.vars.top, &format!("{}.top", name));
+            add_debug_var_name(layout.vars.right, &format!("{}.right", name));
+            add_debug_var_name(layout.vars.bottom, &format!("{}.bottom", name));
+            add_debug_var_name(layout.vars.width, &format!("{}.width", name));
+            add_debug_var_name(layout.vars.height, &format!("{}.height", name));
         }
-        self.update_from_builder(layout_update);
+        self.update_from_builder(layout);
     }
+
     pub fn remove_widget(&mut self, widget_vars: &LayoutVars) {
         for var in [widget_vars.left, widget_vars.top, widget_vars.right, widget_vars.bottom].iter() {
             // remove constraints that are relative to this widget from solver
@@ -73,13 +72,11 @@ impl LimnSolver {
             }
             self.widget_map.remove(&var);
         }
-        self.check_changes();
     }
     pub fn update_solver<F>(&mut self, f: F)
         where F: Fn(&mut cassowary::Solver)
     {
         f(&mut self.solver);
-        self.check_changes();
     }
 
     pub fn has_edit_variable(&mut self, v: &Variable) -> bool {
@@ -89,14 +86,14 @@ impl LimnSolver {
         self.solver.has_constraint(constraint)
     }
 
-    pub fn update_from_builder(&mut self, layout_update: LayoutUpdate) {
-        for edit_var in layout_update.edit_vars {
+    pub fn update_from_builder(&mut self, layout: LayoutBuilder) {
+        for edit_var in layout.edit_vars {
             if !self.solver.has_edit_variable(&edit_var.var) {
                 self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
             }
             self.solver.suggest_value(edit_var.var, edit_var.val).unwrap();
         }
-        for constraint in layout_update.constraints {
+        for constraint in layout.constraints {
             self.add_constraint(constraint.clone());
             let var_list = self.constraint_map.entry(constraint.clone()).or_insert(Vec::new());
             for term in &constraint.0.expression.terms {
@@ -106,23 +103,26 @@ impl LimnSolver {
                 var_list.push(variable);
             }
         }
-        self.check_changes();
     }
     fn add_constraint(&mut self, constraint: Constraint) {
         self.debug_constraint_list.insert(constraint.clone(), ());
         self.solver.add_constraint(constraint.clone()).expect(&format!("Failed to add constraint {}", fmt_constraint(&constraint)));
     }
 
-    fn check_changes(&mut self) {
-        let changes = self.solver.fetch_changes();
-        if changes.len() > 0 {
-            let mut wchanges = Vec::new();
-            for &(var, que) in changes {
-                if let Some(widget_id) = self.widget_map.get(&var) {
-                    wchanges.push((*widget_id, var, que));
-                }
+    pub fn fetch_changes(&mut self) -> Vec<(WidgetId, Variable, f64)> {
+        let mut changes = Vec::new();
+        for &(var, que) in self.solver.fetch_changes() {
+            if let Some(widget_id) = self.widget_map.get(&var) {
+                changes.push((*widget_id, var, que));
             }
-            event!(Target::Ui, LayoutChanged(wchanges));
+        }
+        changes
+    }
+
+    pub fn check_changes(&mut self) {
+        let changes = self.fetch_changes();
+        if changes.len() > 0 {
+            event!(Target::Ui, LayoutChanged(changes));
         }
     }
     pub fn debug_constraints(&self) {

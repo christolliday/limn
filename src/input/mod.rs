@@ -65,7 +65,7 @@ impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
             ui.set_debug_draw_bounds(self.debug_on);
         }
         if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F2)) = event {
-            ui.solver.debug_constraints();
+            ui.debug_constraints();
         }
         if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F3)) = event {
             ui.debug_widget_positions();
