@@ -4,10 +4,6 @@ extern crate cassowary;
 
 mod util;
 
-use cassowary::strength::*;
-use cassowary::WeightedRelation::*;
-
-use limn::layout::LAYOUT;
 use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::rect::{RectDrawable, RectStyleable};
@@ -26,71 +22,55 @@ fn main() {
         dimensions(Size::new(200.0, 200.0)),
         bound_by(&root_widget).padding(50.0));
 
-    let mut rect_container_widget = WidgetBuilder::new();
-    rect_container_widget
+    let mut rect_container = WidgetBuilder::new();
+    rect_container
         .set_debug_name("rect_container");
-    layout!(rect_container_widget: dimensions(Size::new(400.0, 400.0)));
+    layout!(rect_container: dimensions(Size::new(400.0, 400.0)));
 
-    let style = style!(RectStyleable::BackgroundColor: RED);
-    let mut rect_tl_widget = WidgetBuilder::new();
-    rect_tl_widget.set_drawable_with_style(RectDrawable::new(), style);
-    layout!(rect_tl_widget:
-        align_top(&rect_container_widget),
-        align_left(&rect_container_widget));
+    let mut rect_tl = WidgetBuilder::new();
+    rect_tl.set_drawable_with_style(RectDrawable::new(),
+        style!(RectStyleable::BackgroundColor: RED));
+    let mut rect_tr = WidgetBuilder::new();
+    rect_tr.set_drawable_with_style(RectDrawable::new(),
+        style!(RectStyleable::BackgroundColor: GREEN));
+    let mut rect_bl = WidgetBuilder::new();
+    rect_bl.set_drawable_with_style(RectDrawable::new(),
+        style!(RectStyleable::BackgroundColor: BLUE));
+    let mut rect_br = WidgetBuilder::new();
+    rect_br.set_drawable_with_style(RectDrawable::new(),
+        style!(RectStyleable::BackgroundColor: FUSCHIA));
 
-    let style = style!(RectStyleable::BackgroundColor: GREEN);
-    let mut rect_tr_widget = WidgetBuilder::new();
-    rect_tr_widget.set_drawable_with_style(RectDrawable::new(), style);
-    layout!(rect_tr_widget:
-        to_right_of(&rect_tl_widget),
-        align_top(&rect_container_widget),
-        align_right(&rect_container_widget));
+    layout!(rect_tl:
+        align_top(&rect_container),
+        align_left(&rect_container));
 
-    let style = style!(RectStyleable::BackgroundColor: BLUE);
-    let mut rect_bl_widget = WidgetBuilder::new();
-    rect_bl_widget.set_drawable_with_style(RectDrawable::new(), style);
-    layout!(rect_bl_widget:
-        below(&rect_tl_widget),
-        align_bottom(&rect_container_widget),
-        align_left(&rect_container_widget));
+    layout!(rect_tr:
+        to_right_of(&rect_tl),
+        align_top(&rect_container),
+        align_right(&rect_container),
+        match_width(&rect_tl));
 
-    let style = style!(RectStyleable::BackgroundColor: FUSCHIA);
-    let mut rect_br_widget = WidgetBuilder::new();
-    rect_br_widget.set_drawable_with_style(RectDrawable::new(), style);
-    layout!(rect_br_widget:
-        below(&rect_tr_widget),
-        to_right_of(&rect_bl_widget),
-        align_bottom(&rect_container_widget),
-        align_right(&rect_container_widget));
+    layout!(rect_bl:
+        below(&rect_tl),
+        align_bottom(&rect_container),
+        align_left(&rect_container),
+        match_width(&rect_tl),
+        match_height(&rect_tl));
 
-    layout!(rect_tl_widget:
-        match_width(&rect_tr_widget),
-        match_width(&rect_bl_widget),
-        match_height(&rect_tr_widget),
-        match_height(&rect_bl_widget),
-    );
-    layout!(rect_br_widget:
-        match_height(&rect_tr_widget),
-        match_height(&rect_bl_widget),
-        match_width(&rect_tr_widget),
-        match_width(&rect_bl_widget),
-    );
+    layout!(rect_br:
+        below(&rect_tr),
+        to_right_of(&rect_bl),
+        align_bottom(&rect_container),
+        align_right(&rect_container),
+        match_width(&rect_bl),
+        match_height(&rect_tr));
 
-    {
-        let ref rect_tl_widget = rect_tl_widget.layout().vars;
-        let ref rect_tr_widget = rect_tr_widget.layout().vars;
-        let ref rect_bl_widget = rect_bl_widget.layout().vars;
-        layout!(rect_container_widget:
-            LAYOUT.width | EQ(REQUIRED) | rect_tl_widget.width + rect_tr_widget.width,
-            LAYOUT.height | EQ(REQUIRED) | rect_tl_widget.height + rect_bl_widget.height,
-        );
-    }
-    rect_container_widget
-        .add_child(rect_tl_widget)
-        .add_child(rect_tr_widget)
-        .add_child(rect_bl_widget)
-        .add_child(rect_br_widget);
-    scroll_widget.add_child(rect_container_widget);
+    rect_container
+        .add_child(rect_tl)
+        .add_child(rect_tr)
+        .add_child(rect_bl)
+        .add_child(rect_br);
+    scroll_widget.add_child(rect_container);
     root_widget.add_child(scroll_widget);
 
     util::set_root_and_loop(window, ui, root_widget);
