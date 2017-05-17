@@ -199,6 +199,79 @@ mod test {
     use resources::{IdGen, WidgetId};
     use util::{Size, Point, Rect};
 
+    #[test]
+    fn one_widget() {
+        let mut solver = LimnSolver::new();
+        let mut id_gen = IdGen::new();
+        let mut widget_map = HashMap::new();
+
+        let mut widget = TestWidget::new(&mut id_gen, &mut widget_map);
+        layout!(widget:
+            top_left(Point::new(0.0, 0.0)),
+            dimensions(Size::new(200.0, 200.0)),
+        );
+        solver.add_widget(widget.id, &None, widget.layout);
+
+        assert!(get_layout(&mut solver, &widget_map) == hashmap!{
+            widget.id => Rect::new(Point::new(0.0, 0.0), Size::new(200.0, 200.0)),
+        });
+    }
+    #[test]
+    fn grid() {
+        let mut solver = LimnSolver::new();
+        let mut id_gen = IdGen::new();
+        let mut widget_map = HashMap::new();
+
+        let mut widget_o = TestWidget::new(&mut id_gen, &mut widget_map);
+        let mut widget_tl = TestWidget::new(&mut id_gen, &mut widget_map);
+        let mut widget_bl = TestWidget::new(&mut id_gen, &mut widget_map);
+        let mut widget_tr = TestWidget::new(&mut id_gen, &mut widget_map);
+        let mut widget_br = TestWidget::new(&mut id_gen, &mut widget_map);
+        layout!(widget_o:
+            top_left(Point::new(0.0, 0.0)),
+            dimensions(Size::new(300.0, 300.0)),
+        );
+        layout!(widget_tl:
+            align_top(&widget_o),
+            align_left(&widget_o),
+        );
+        layout!(widget_tr:
+            to_right_of(&widget_tl),
+            align_top(&widget_o),
+            align_right(&widget_o),
+            match_width(&widget_tl),
+        );
+        layout!(widget_bl:
+            below(&widget_tl),
+            align_bottom(&widget_o),
+            align_left(&widget_o),
+            match_width(&widget_tl),
+            match_height(&widget_tl),
+        );
+        layout!(widget_br:
+            below(&widget_tr),
+            to_right_of(&widget_bl),
+            align_bottom(&widget_o),
+            align_right(&widget_o),
+            match_width(&widget_bl),
+            match_height(&widget_tr),
+        );
+        solver.add_widget(widget_o.id, &Some("widget_o".to_owned()), widget_o.layout);
+        solver.add_widget(widget_tl.id, &Some("widget_tl".to_owned()), widget_tl.layout);
+        solver.add_widget(widget_tr.id, &Some("widget_tr".to_owned()), widget_tr.layout);
+        solver.add_widget(widget_bl.id, &Some("widget_bl".to_owned()), widget_bl.layout);
+        solver.add_widget(widget_br.id, &Some("widget_br".to_owned()), widget_br.layout);
+
+        assert!(get_layout(&mut solver, &widget_map) == hashmap!{
+            widget_o.id => Rect::new(Point::new(0.0, 0.0), Size::new(300.0, 300.0)),
+            widget_tl.id => Rect::new(Point::new(0.0, 0.0), Size::new(150.0, 150.0)),
+            widget_tr.id => Rect::new(Point::new(150.0, 0.0), Size::new(150.0, 150.0)),
+            widget_bl.id => Rect::new(Point::new(0.0, 150.0), Size::new(150.0, 150.0)),
+            widget_br.id => Rect::new(Point::new(150.0, 150.0), Size::new(150.0, 150.0)),
+        });
+    }
+
+    // code below is used to create a test harness for creating layouts outside of the widget graph
     struct TestWidget {
         id: WidgetId,
         layout: LayoutBuilder,
@@ -230,68 +303,5 @@ mod test {
             vars.update_bounds(var, value, rect);
         }
         map
-    }
-
-    #[test]
-    fn one_widget() {
-        let mut solver = LimnSolver::new();
-        let mut id_gen = IdGen::new();
-        let mut widget_map = HashMap::new();
-
-        let mut widget = TestWidget::new(&mut id_gen, &mut widget_map);
-        layout!(widget:
-            top_left(Point::new(0.0, 0.0)),
-            dimensions(Size::new(200.0, 200.0)),
-        );
-        solver.add_widget(widget.id, &None, widget.layout);
-
-        assert!(get_layout(&mut solver, &widget_map) == hashmap!{
-            widget.id => Rect::new(Point::new(0.0, 0.0), Size::new(200.0, 200.0)),
-        });
-    }
-    #[test]
-    fn grid() {
-        let mut solver = LimnSolver::new();
-        let mut id_gen = IdGen::new();
-        let mut widget_map = HashMap::new();
-
-        let mut widget_o = TestWidget::new(&mut id_gen, &mut widget_map);
-        let mut widget_tl = TestWidget::new(&mut id_gen, &mut widget_map);
-        let mut widget_bl = TestWidget::new(&mut id_gen, &mut widget_map);
-        let mut widget_r = TestWidget::new(&mut id_gen, &mut widget_map);
-        layout!(widget_o:
-            top_left(Point::new(0.0, 0.0)),
-            dimensions(Size::new(300.0, 300.0)),
-        );
-        layout!(widget_tl:
-            align_top(&widget_o),
-            align_left(&widget_o),
-        );
-        layout!(widget_r:
-            to_right_of(&widget_tl),
-            align_top(&widget_o),
-            align_bottom(&widget_o),
-            align_right(&widget_o),
-            match_width(&widget_tl),
-        );
-        layout!(widget_bl:
-            to_left_of(&widget_r),
-            below(&widget_tl),
-            align_bottom(&widget_o),
-            align_left(&widget_o),
-            match_width(&widget_tl),
-            match_height(&widget_tl),
-        );
-        solver.add_widget(widget_o.id, &Some("widget_o".to_owned()), widget_o.layout);
-        solver.add_widget(widget_tl.id, &Some("widget_tl".to_owned()), widget_tl.layout);
-        solver.add_widget(widget_bl.id, &Some("widget_bl".to_owned()), widget_bl.layout);
-        solver.add_widget(widget_r.id, &Some("widget_r".to_owned()), widget_r.layout);
-
-        assert!(get_layout(&mut solver, &widget_map) == hashmap!{
-            widget_o.id => Rect::new(Point::new(0.0, 0.0), Size::new(300.0, 300.0)),
-            widget_tl.id => Rect::new(Point::new(0.0, 0.0), Size::new(150.0, 150.0)),
-            widget_bl.id => Rect::new(Point::new(0.0, 150.0), Size::new(150.0, 150.0)),
-            widget_r.id => Rect::new(Point::new(150.0, 0.0), Size::new(150.0, 300.0))
-        });
     }
 }
