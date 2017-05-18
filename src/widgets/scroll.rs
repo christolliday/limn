@@ -10,9 +10,12 @@ use layout::constraint::*;
 use resources::WidgetId;
 use input::mouse::WidgetMouseWheel;
 
+use widgets::slider::{SliderBuilder, Orientation};
+
 pub struct ScrollBuilder {
     widget: WidgetBuilder,
     content_holder: WidgetBuilder,
+    scrollbars: Option<(SliderBuilder, SliderBuilder)>,
 }
 impl ScrollBuilder {
     pub fn new() -> Self {
@@ -28,15 +31,34 @@ impl ScrollBuilder {
         ScrollBuilder {
             widget: widget,
             content_holder: content_holder,
+            scrollbars: None,
         }
     }
     pub fn add_content<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
         self.content_holder.add_child(widget);
         self
     }
+    pub fn add_scrollbar(&mut self) -> &mut Self {
+        let mut scrollbar_h = SliderBuilder::new(Orientation::Horizontal);
+        layout!(scrollbar_h:
+            align_top(&self.widget),
+            match_width(&self.widget),
+        );
+        let mut scrollbar_v = SliderBuilder::new(Orientation::Vertical);
+        layout!(scrollbar_v:
+            align_right(&self.widget),
+            match_height(&self.widget),
+        );
+        self.scrollbars = Some((scrollbar_h, scrollbar_v));
+        self
+     }
 }
 widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuilder {
     builder.widget.add_child(builder.content_holder);
+    if let Some((scrollbar_h, scrollbar_v)) = builder.scrollbars {
+        builder.widget.add_child(scrollbar_h);
+        builder.widget.add_child(scrollbar_v);
+    }
     builder.widget
 });
 
