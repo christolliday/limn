@@ -4,18 +4,6 @@ use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 use util::{Scalar, Point, Size};
 
-pub fn match_layout<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
-    let widget = widget.layout_ref();
-    WidgetConstraint::MatchLayout(widget.clone()).builder(REQUIRED)
-}
-pub fn match_width<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
-    let widget = widget.layout_ref();
-    WidgetConstraint::MatchWidth(widget.width).builder(REQUIRED)
-}
-pub fn match_height<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
-    let widget = widget.layout_ref();
-    WidgetConstraint::MatchHeight(widget.height).builder(REQUIRED)
-}
 pub fn width(width: Scalar) -> WidgetConstraintBuilder {
     WidgetConstraint::Width(width).builder(REQUIRED)
 }
@@ -117,10 +105,20 @@ pub fn bound_by<T: LayoutRef>(outer: &T) -> PaddableConstraintBuilder {
     PaddableConstraint::BoundBy(outer.clone()).builder(REQUIRED)
 }
 
+pub fn match_layout<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
+    let widget = widget.layout_ref();
+    PaddableConstraint::MatchLayout(widget.clone()).builder(REQUIRED)
+}
+pub fn match_width<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
+    let widget = widget.layout_ref();
+    PaddableConstraint::MatchWidth(widget.width).builder(REQUIRED)
+}
+pub fn match_height<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
+    let widget = widget.layout_ref();
+    PaddableConstraint::MatchHeight(widget.height).builder(REQUIRED)
+}
+
 pub enum WidgetConstraint {
-    MatchLayout(LayoutVars),
-    MatchWidth(Variable),
-    MatchHeight(Variable),
     Width(Scalar),
     Height(Scalar),
     MinWidth(Scalar),
@@ -150,6 +148,9 @@ pub enum PaddableConstraint {
     BoundRight(Variable),
     BoundBottom(Variable),
     BoundBy(LayoutVars),
+    MatchLayout(LayoutVars),
+    MatchWidth(Variable),
+    MatchHeight(Variable),
 }
 impl WidgetConstraint {
     pub fn builder(self, default_strength: f64) -> WidgetConstraintBuilder {
@@ -240,20 +241,6 @@ impl ConstraintBuilder for WidgetConstraintBuilder {
         let widget = widget.layout_ref();
         let strength = self.strength;
         match self.constraint {
-            WidgetConstraint::MatchLayout(other) => {
-                vec![
-                    widget.left | EQ(strength) | other.left,
-                    widget.right | EQ(strength) | other.right,
-                    widget.top | EQ(strength) | other.top,
-                    widget.bottom | EQ(strength) | other.bottom,
-                ]
-            }
-            WidgetConstraint::MatchWidth(width) => {
-                vec![ widget.width | EQ(strength) | width ]
-            }
-            WidgetConstraint::MatchHeight(height) => {
-                vec![ widget.height | EQ(strength) | height ]
-            }
             WidgetConstraint::Width(width) => {
                 vec![ widget.width | EQ(strength) | width ]
             }
@@ -334,7 +321,7 @@ impl ConstraintBuilder for PaddableConstraintBuilder {
                 vec![ right - widget.right | EQ(strength) | padding ]
             }
             PaddableConstraint::Above(top) => {
-                vec![ widget.bottom - top | GE(strength) | padding ]
+                vec![ top - widget.bottom | GE(strength) | padding ]
             }
             PaddableConstraint::Below(bottom) => {
                 vec![ widget.top - bottom | GE(strength) | padding ]
@@ -364,6 +351,20 @@ impl ConstraintBuilder for PaddableConstraintBuilder {
                     other.right - widget.right | GE(strength) | padding,
                     other.bottom - widget.bottom | GE(strength) | padding,
                 ]
+            }
+            PaddableConstraint::MatchLayout(other) => {
+                vec![
+                    widget.left - other.left | EQ(strength) | padding,
+                    widget.top - other.top | EQ(strength) | padding,
+                    other.right - widget.right | EQ(strength) | padding,
+                    other.bottom - widget.bottom | EQ(strength) | padding,
+                ]
+            }
+            PaddableConstraint::MatchWidth(width) => {
+                vec![ width - widget.width | EQ(strength) | padding ]
+            }
+            PaddableConstraint::MatchHeight(height) => {
+                vec![ height - widget.height | EQ(strength) | padding ]
             }
         }
     }
