@@ -262,7 +262,7 @@ fn main() {
     };
     first_name_container.add_child(first_name_box);
     last_name_container.add_child(last_name_box);
-    scroll_container.add_child(list_widget);
+    scroll_container.add_content(list_widget);
     button_container
         .add_child(create_button)
         .add_child(update_button)

@@ -57,7 +57,7 @@ fn main() {
     for list_item_widget in list_item_widgets {
         list_widget.add_child(list_item_widget);
     }
-    scroll_widget.add_child(list_widget);
+    scroll_widget.add_content(list_widget);
     root_widget.add_child(scroll_widget);
 
     util::set_root_and_loop(window, ui, root_widget);

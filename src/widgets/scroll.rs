@@ -12,22 +12,33 @@ use input::mouse::WidgetMouseWheel;
 
 pub struct ScrollBuilder {
     widget: WidgetBuilder,
+    content_holder: WidgetBuilder,
 }
 impl ScrollBuilder {
     pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new();
-        widget.set_container(ScrollContainer);
-        widget.add_handler(ScrollParent::new());
-        widget.add_handler_fn(|event: &WidgetMouseWheel, args| {
+        let widget = WidgetBuilder::new();
+
+        let mut content_holder = WidgetBuilder::new();
+        content_holder.set_container(ScrollContainer);
+        content_holder.add_handler(ScrollParent::new());
+        content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
             event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
         });
 
         ScrollBuilder {
             widget: widget,
+            content_holder: content_holder,
         }
     }
+    pub fn add_content<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
+        self.content_holder.add_child(widget);
+        self
+    }
 }
-widget_builder!(ScrollBuilder);
+widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuilder {
+    builder.widget.add_child(builder.content_holder);
+    builder.widget
+});
 
 struct ScrollContainer;
 impl LayoutContainer for ScrollContainer {

@@ -70,7 +70,7 @@ fn main() {
         .add_child(rect_tr)
         .add_child(rect_bl)
         .add_child(rect_br);
-    scroll_widget.add_child(rect_container);
+    scroll_widget.add_content(rect_container);
     root_widget.add_child(scroll_widget);
 
     util::set_root_and_loop(window, ui, root_widget);
