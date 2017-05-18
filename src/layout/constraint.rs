@@ -34,6 +34,9 @@ pub fn dimensions(dimensions: Size) -> WidgetConstraintBuilder {
 pub fn min_dimensions(dimensions: Size) -> WidgetConstraintBuilder {
     WidgetConstraint::MinDimensions(dimensions).builder(REQUIRED)
 }
+pub fn aspect_ratio(aspect_ratio: Scalar) -> WidgetConstraintBuilder {
+    WidgetConstraint::AspectRatio(aspect_ratio).builder(REQUIRED)
+}
 pub fn shrink() -> WidgetConstraintBuilder {
     WidgetConstraint::Shrink.builder(WEAK)
 }
@@ -124,6 +127,7 @@ pub enum WidgetConstraint {
     MinHeight(Scalar),
     Dimensions(Size),
     MinDimensions(Size),
+    AspectRatio(Scalar),
     Shrink,
     ShrinkHorizontal,
     ShrinkVertical,
@@ -273,6 +277,9 @@ impl ConstraintBuilder for WidgetConstraintBuilder {
                     widget.width | GE(strength) | dimensions.width,
                     widget.height | GE(strength) | dimensions.height,
                 ]
+            }
+            WidgetConstraint::AspectRatio(aspect_ratio) => {
+                vec![ aspect_ratio * widget.width | EQ(strength) | widget.height ]
             }
             WidgetConstraint::Shrink => {
                 vec![
