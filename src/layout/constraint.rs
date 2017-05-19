@@ -321,16 +321,16 @@ impl ConstraintBuilder for PaddableConstraintBuilder {
                 vec![ right - widget.right | EQ(strength) | padding ]
             }
             PaddableConstraint::Above(top) => {
-                vec![ top - widget.bottom | GE(strength) | padding ]
+                vec![ top - widget.bottom | EQ(strength) | padding ]
             }
             PaddableConstraint::Below(bottom) => {
-                vec![ widget.top - bottom | GE(strength) | padding ]
+                vec![ widget.top - bottom | EQ(strength) | padding ]
             }
             PaddableConstraint::ToLeftOf(left) => {
-                vec![ left - widget.right | GE(strength) | padding ]
+                vec![ left - widget.right | EQ(strength) | padding ]
             }
             PaddableConstraint::ToRightOf(right) => {
-                vec![ widget.left - right | GE(strength) | padding ]
+                vec![ widget.left - right | EQ(strength) | padding ]
             }
             PaddableConstraint::BoundLeft(left) => {
                 vec![ widget.left - left | GE(strength) | padding ]
