@@ -16,7 +16,7 @@ use limn::widget::{WidgetBuilder, WidgetBuilderCore};
 use limn::widget::property::{Property, PropChange};
 use limn::widget::property::states::*;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
-use limn::widgets::slider::{SliderBuilder, SetSliderValue, Orientation};
+use limn::widgets::slider::{SliderBuilder, SetSliderValue};
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::{RectDrawable, RectStyleable};
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
@@ -51,7 +51,7 @@ fn create_slider_control() -> WidgetBuilder {
     layout!(slider_value:
         width(50.0),
         align_right(&slider_container));
-    let mut slider_widget = SliderBuilder::new(Orientation::Horizontal);
+    let mut slider_widget = SliderBuilder::new();
     slider_widget.set_debug_name("slider_widget");
     layout!(slider_widget:
         width(300.0),

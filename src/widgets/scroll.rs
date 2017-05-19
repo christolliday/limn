@@ -3,19 +3,20 @@ use cassowary::strength::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore, BuildWidget};
+use widgets::slider::SliderBuilder;
 use util::{Point, Rect, RectExt};
 use layout::solver::LimnSolver;
 use layout::container::LayoutContainer;
 use layout::constraint::*;
 use resources::WidgetId;
 use input::mouse::WidgetMouseWheel;
-
-use widgets::slider::{SliderBuilder, Orientation};
+use drawable::rect::{RectDrawable, RectStyleable};
+use color::*;
 
 pub struct ScrollBuilder {
     widget: WidgetBuilder,
     content_holder: WidgetBuilder,
-    scrollbars: Option<(SliderBuilder, SliderBuilder)>,
+    scrollbars: Option<(WidgetBuilder, SliderBuilder, SliderBuilder)>,
 }
 impl ScrollBuilder {
     pub fn new() -> Self {
@@ -39,23 +40,38 @@ impl ScrollBuilder {
         self
     }
     pub fn add_scrollbar(&mut self) -> &mut Self {
-        let mut scrollbar_h = SliderBuilder::new(Orientation::Horizontal);
+        let mut scrollbar_h = SliderBuilder::new();
+        scrollbar_h.scrollbar_style();
         layout!(scrollbar_h:
-            align_top(&self.widget),
-            match_width(&self.widget),
+            align_bottom(&self.widget),
+            align_left(&self.widget),
         );
-        let mut scrollbar_v = SliderBuilder::new(Orientation::Vertical);
+        let mut scrollbar_v = SliderBuilder::new();
+        scrollbar_v.make_vertical().scrollbar_style();
         layout!(scrollbar_v:
             align_right(&self.widget),
-            match_height(&self.widget),
+            align_top(&self.widget),
         );
-        self.scrollbars = Some((scrollbar_h, scrollbar_v));
+        let corner_style = style!(RectStyleable::BackgroundColor: MID_GRAY);
+        let mut corner = WidgetBuilder::new();
+        corner.set_drawable_with_style(RectDrawable::new(), corner_style);
+        layout!(corner:
+            align_bottom(&self.widget),
+            align_right(&self.widget),
+            to_right_of(&scrollbar_h),
+            below(&scrollbar_v),
+            match_height(&scrollbar_h),
+            match_width(&scrollbar_v),
+        );
+
+        self.scrollbars = Some((corner, scrollbar_h, scrollbar_v));
         self
      }
 }
 widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuilder {
     builder.widget.add_child(builder.content_holder);
-    if let Some((scrollbar_h, scrollbar_v)) = builder.scrollbars {
+    if let Some((corner, scrollbar_h, scrollbar_v)) = builder.scrollbars {
+        builder.widget.add_child(corner);
         builder.widget.add_child(scrollbar_h);
         builder.widget.add_child(scrollbar_v);
     }
