@@ -131,6 +131,20 @@ impl LimnSolver {
             debug_constraint(constraint);
         }
     }
+    pub fn debug_variables(&mut self) {
+        println!("VARIABLES");
+        let names = VAR_NAMES.lock().unwrap();
+        let mut vars: Vec<&Variable> = names.keys().collect();
+        vars.sort();
+        for variable in vars {
+            let val = self.solver.get_value(*variable);
+            if let Some(name) = names.get(&variable) {
+                println!("{} = {}", name, val);
+            } else {
+                println!("var({:?}) = {}", variable, val);
+            }
+        }
+    }
 }
 
 pub struct LayoutChanged(Vec<(WidgetId, Variable, f64)>);

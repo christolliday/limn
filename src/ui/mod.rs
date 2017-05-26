@@ -251,6 +251,9 @@ impl Ui {
     pub fn debug_constraints(&mut self) {
         self.solver.debug_constraints();
     }
+    pub fn debug_variables(&mut self) {
+        self.solver.debug_variables();
+    }
 }
 pub struct WidgetAttachedEvent;
 pub struct WidgetDetachedEvent;

@@ -70,5 +70,8 @@ impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
         if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F3)) = event {
             ui.debug_widget_positions();
         }
+        if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F4)) = event {
+            ui.debug_variables();
+        }
     }
 }
