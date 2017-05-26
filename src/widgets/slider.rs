@@ -31,7 +31,10 @@ pub enum BarStyle {
 
 pub struct SliderBuilder {
     pub widget: WidgetBuilder,
+    pub slider_handle: WidgetBuilder,
     pub orientation: Orientation,
+    pub init_value: f64,
+    pub variable_handle_size: bool,
     pub handle_style: HandleStyle,
     pub bar_style: BarStyle,
     pub border: Option<(Scalar, Color)>,
@@ -46,9 +49,20 @@ impl SliderBuilder {
         let mut slider = WidgetBuilder::new();
         slider.set_debug_name("slider");
 
+        let mut slider_handle = WidgetBuilder::new();
+        slider_handle
+            .set_debug_name("slider_handle")
+            .add_handler_fn(|event: &WidgetDrag, args| {
+                let event = SliderHandleInput::WidgetDrag(event.clone());
+                event!(Target::Widget(args.widget.id), event);
+            })
+            .make_draggable();
         SliderBuilder {
             widget: slider,
+            slider_handle: slider_handle,
             orientation: Orientation::Horizontal,
+            init_value: 0.0,
+            variable_handle_size: false,
             handle_style: HandleStyle::Round,
             bar_style: BarStyle::NarrowRound,
             border: Some((1.0, DARK_GRAY)),
@@ -63,6 +77,7 @@ impl SliderBuilder {
         self
     }
     pub fn scrollbar_style(&mut self) -> &mut Self {
+        self.variable_handle_size = true;
         self.handle_style = HandleStyle::Square;
         self.bar_style = BarStyle::Wide;
         self.border = None;
@@ -77,11 +92,7 @@ impl SliderBuilder {
         self
     }
     pub fn set_value(&mut self, value: f64) -> &mut Self {
-        // need to update position after widget is created because the slider position
-        // depends on the measured width of the slider and slider handle
-        self.add_handler_fn(move |_: &ChildAttachedEvent, args| {
-            event!(Target::Widget(args.widget.id), SetSliderValue(value));
-        });
+        self.init_value = value;
         self
     }
     pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
@@ -105,17 +116,9 @@ impl SliderBuilder {
 
 widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder {
 
-    let (mut slider, orientation) = (builder.widget, builder.orientation);
+    let (mut slider, mut slider_handle, orientation) = (builder.widget, builder.slider_handle, builder.orientation);
 
-    let mut slider_handle = WidgetBuilder::new();
-    slider_handle
-        .set_debug_name("slider_handle")
-        .add_handler_fn(|event: &WidgetDrag, args| {
-            let event = SliderHandleInput::WidgetDrag(event.clone());
-            event!(Target::Widget(args.widget.id), event);
-        })
-        .add_handler(DragHandler::new(orientation, slider.id()))
-        .make_draggable();
+    slider_handle.add_handler(DragHandler::new(orientation, slider.id()));
 
     match builder.handle_style {
         HandleStyle::Round => {
@@ -161,7 +164,9 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
         BarStyle::NarrowRound => (builder.width / 3.0, builder.width / 2.0),
     };
 
-    layout!(slider_handle: aspect_ratio(1.0));
+    if !builder.variable_handle_size {
+        layout!(slider_handle: aspect_ratio(1.0));
+    }
     match orientation {
         Orientation::Horizontal => {
             layout!(slider:
@@ -170,12 +175,12 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
                 height(bar_width),
                 center_vertical(&slider),
                 align_left(&slider).padding(bar_padding),
-                to_left_of(&slider_handle).padding(-10.0));
+                to_left_of(&slider_handle).padding(-bar_padding));
             layout!(slider_bar_post:
                 height(bar_width),
                 center_vertical(&slider),
                 align_right(&slider).padding(bar_padding),
-                to_right_of(&slider_handle).padding(-10.0));
+                to_right_of(&slider_handle).padding(-bar_padding));
             layout!(slider_handle:
                 match_height(&slider));
         }
@@ -215,6 +220,13 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
     slider.add_child(slider_bar_pre);
     slider.add_child(slider_bar_post);
     slider.add_child(slider_handle);
+
+    // need to update position after widget is created because the slider position
+    // depends on the measured width of the slider and slider handle
+    let init_value = builder.init_value;
+    slider.add_handler_fn(move |_: &ChildAttachedEvent, args| {
+        event!(Target::Widget(args.widget.id), SetSliderValue(init_value));
+    });
     slider
 });
 
