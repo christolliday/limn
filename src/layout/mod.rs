@@ -105,6 +105,14 @@ impl LayoutBuilder {
         let var = self.vars.bottom;
         VariableEditable::new(self, var)
     }
+    pub fn edit_width(&mut self) -> VariableEditable {
+        let var = self.vars.width;
+        VariableEditable::new(self, var)
+    }
+    pub fn edit_height(&mut self) -> VariableEditable {
+        let var = self.vars.height;
+        VariableEditable::new(self, var)
+    }
     pub fn add<B: ConstraintBuilder>(&mut self, builder: B) {
         let constraints = builder.build(self);
         self.constraints.extend(constraints);
@@ -113,7 +121,7 @@ impl LayoutBuilder {
 
 pub struct VariableEditable<'a> {
     pub builder: &'a mut LayoutBuilder,
-    var: Variable,
+    pub var: Variable,
     val: f64,
     strength: f64,
 }
@@ -141,7 +149,7 @@ impl<'a> Drop for VariableEditable<'a> {
         self.builder.edit_vars.push(edit_var);
     }
 }
-
+#[derive(Debug)]
 pub struct EditVariable {
     var: Variable,
     val: f64,
