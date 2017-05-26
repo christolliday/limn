@@ -89,7 +89,10 @@ impl LimnSolver {
     pub fn update_from_builder(&mut self, layout: LayoutBuilder) {
         for edit_var in layout.edit_vars {
             if !self.solver.has_edit_variable(&edit_var.var) {
+                debug!("add edit_var {:?}", edit_var);
                 self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
+            } else {
+                debug!("update edit_var {:?}", edit_var);
             }
             self.solver.suggest_value(edit_var.var, edit_var.val).unwrap();
         }
@@ -121,6 +124,7 @@ impl LimnSolver {
 
     pub fn check_changes(&mut self) {
         let changes = self.fetch_changes();
+        debug!("layout has {} changes", changes.len());
         if changes.len() > 0 {
             event!(Target::Ui, LayoutChanged(changes));
         }
@@ -154,6 +158,7 @@ pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     let ref changes = event.0;
     for &(widget_id, var, value) in changes {
         if let Some(widget) = ui.graph.get_widget(widget_id) {
+            debug!("{:?} updating bounds", widget.debug_name);
             widget.layout.update_bounds(var, value, &mut widget.bounds);
             event!(Target::Widget(widget_id), LayoutUpdated);
         }

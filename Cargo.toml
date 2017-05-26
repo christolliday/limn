@@ -11,6 +11,7 @@ cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "683d
 
 petgraph = "0.4.3"
 euclid = "0.11.2"
+log = "0.3"
 
 rusttype = "0.2.1"
 piston2d-graphics = "0.21"
@@ -27,3 +28,4 @@ downcast-rs = "1.0.0"
 [dev-dependencies]
 find_folder = "0.3.0"
 chrono = "0.2.25"
+env_logger = "0.3"

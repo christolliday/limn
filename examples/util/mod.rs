@@ -2,6 +2,8 @@ extern crate find_folder;
 extern crate graphics;
 extern crate backend;
 extern crate glutin;
+extern crate env_logger;
+extern crate log;
 
 use self::backend::Window;
 use limn::app::App;
@@ -16,6 +18,7 @@ use limn::widget::WidgetBuilder;
 /// the window is needed right now to have a GL context for creating
 /// and measuring images/text.
 pub fn init_default(title: &str) -> (Window, App) {
+    env_logger::init().unwrap();
     let window_dims = (100, 100);
     let mut window = Window::new(title, window_dims, Some(window_dims));
     let app = App::new(&mut window);
