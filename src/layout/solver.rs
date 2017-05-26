@@ -148,12 +148,14 @@ impl LimnSolver {
 }
 
 pub struct LayoutChanged(Vec<(WidgetId, Variable, f64)>);
+pub struct LayoutUpdated;
 
 pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     let ref changes = event.0;
     for &(widget_id, var, value) in changes {
         if let Some(widget) = ui.graph.get_widget(widget_id) {
             widget.layout.update_bounds(var, value, &mut widget.bounds);
+            event!(Target::Widget(widget_id), LayoutUpdated);
         }
     }
     // redraw everything when layout changes, for now
