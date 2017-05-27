@@ -4,9 +4,15 @@ use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use util::Rect;
 use layout::constraint::ConstraintBuilder;
 
+#[derive(Debug)]
+pub enum VarUpdate {
+    Left,
+    Top,
+    Width,
+    Height,
+}
 #[derive(Clone)]
 pub struct LayoutVars {
     pub left: Variable,
@@ -27,18 +33,12 @@ impl LayoutVars {
             height: Variable::new(),
         }
     }
-    pub fn update_bounds(&self, var: Variable, value: f64, rect: &mut Rect) {
-        if var == self.left {
-            rect.origin.x = value;
-        } else if var == self.top {
-            rect.origin.y = value;
-        } else if var == self.width {
-            rect.size.width = value;
-        } else if var == self.height {
-            rect.size.height = value;
-        } else {
-            panic!();
-        }
+    pub fn get_var(&self, var: Variable) -> Option<VarUpdate> {
+        if var == self.left { Some(VarUpdate::Left) }
+        else if var == self.top { Some(VarUpdate::Top) }
+        else if var == self.width { Some(VarUpdate::Width) }
+        else if var == self.height { Some(VarUpdate::Height) }
+        else { None }
     }
 }
 
@@ -202,7 +202,7 @@ pub use self::solver::LimnSolver;
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
-    use layout::{LimnSolver, LayoutBuilder, LayoutVars, LayoutRef};
+    use layout::{LimnSolver, LayoutBuilder, LayoutVars, VarUpdate, LayoutRef};
     use layout::constraint::*;
     use resources::{IdGen, WidgetId};
     use util::{Size, Point, Rect};
@@ -308,7 +308,12 @@ mod test {
         for (widget_id, var, value) in solver.fetch_changes() {
             let rect = map.entry(widget_id).or_insert(Rect::zero());
             let vars = widget_map.get(&widget_id).unwrap();
-            vars.update_bounds(var, value, rect);
+            match vars.get_var(var).unwrap() {
+                VarUpdate::Left => rect.origin.x = value,
+                VarUpdate::Top => rect.origin.y = value,
+                VarUpdate::Width => rect.size.width = value,
+                VarUpdate::Height => rect.size.height = value,
+            }
         }
         map
     }

@@ -12,7 +12,7 @@ use resources::WidgetId;
 use event::Target;
 use ui::Ui;
 
-use layout::{LayoutVars, LayoutBuilder};
+use layout::{LayoutVars, LayoutBuilder, VarUpdate};
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
@@ -158,8 +158,14 @@ pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     let ref changes = event.0;
     for &(widget_id, var, value) in changes {
         if let Some(widget) = ui.graph.get_widget(widget_id) {
-            debug!("{:?} updating bounds", widget.debug_name);
-            widget.layout.update_bounds(var, value, &mut widget.bounds);
+            let var = widget.layout.get_var(var).expect("Missing variable for widget");
+            debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
+            match var {
+                VarUpdate::Left => widget.bounds.origin.x = value,
+                VarUpdate::Top => widget.bounds.origin.y = value,
+                VarUpdate::Width => widget.bounds.size.width = value,
+                VarUpdate::Height => widget.bounds.size.height = value,
+            }
             event!(Target::Widget(widget_id), LayoutUpdated);
         }
     }
