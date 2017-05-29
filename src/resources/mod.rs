@@ -1,11 +1,12 @@
 pub mod font;
 pub mod image;
+#[macro_use]
+pub mod id;
 
 use std::sync::{Mutex, MutexGuard};
-use std::fmt::Debug;
-use std::marker::PhantomData;
-use std::hash::Hash;
 use std::collections::HashMap;
+
+use self::id::{Id, IdGen};
 
 use self::font::Font;
 use self::image::Texture;
@@ -19,47 +20,9 @@ pub fn resources() -> MutexGuard<'static, Resources> {
     RES.lock().unwrap()
 }
 
-pub trait Id: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {
-    fn new(index: usize) -> Self;
-}
-
-/// Create a new simple id type, wrapper around a usize that can be created via IdGen
-#[macro_export]
-macro_rules! named_id {
-    ($name:ident) => {
-        #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-        pub struct $name(pub usize);
-        impl Id for $name {
-            fn new(index: usize) -> Self {
-                $name(index)
-            }
-        }
-    }
-}
-
 named_id!(WidgetId);
 named_id!(FontId);
 named_id!(ImageId);
-
-/// Generates named Ids, wrappers around increasing usize values.
-/// For Ids to be unique, just needs to be one IdGen per Id type.
-pub struct IdGen<I> {
-    id: usize,
-    phantom: PhantomData<I>,
-}
-impl<I: Id> IdGen<I> {
-    pub fn new() -> Self {
-        IdGen {
-            id: 0,
-            phantom: PhantomData,
-        }
-    }
-    pub fn next(&mut self) -> I {
-        let id = self.id;
-        self.id = id.wrapping_add(1);
-        Id::new(id)
-    }
-}
 
 /// Map for a given `Id` and resource type.
 pub struct Map<I, T> {
