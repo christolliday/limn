@@ -224,6 +224,9 @@ pub use self::solver::LimnSolver;
 mod test {
     use std::collections::HashMap;
 
+    use cassowary::strength::*;
+    use super::solver;
+
     use super::{LimnSolver, LayoutId, LayoutBuilder, LayoutVars, VarUpdate, LayoutRef};
     use super::constraint::*;
     use super::{Size, Point, Rect};
@@ -297,6 +300,60 @@ mod test {
             widget_br.id => Rect::new(Point::new(150.0, 150.0), Size::new(150.0, 150.0)),
         });
     }
+    #[test]
+    fn edit_var() {
+        let mut layout = TestLayout::new();
+
+        let mut root_widget = layout.new_widget("root");
+        let mut slider = layout.new_widget("slider");
+        let mut slider_bar_pre = layout.new_widget("slider_bar_pre");
+        let mut slider_handle = layout.new_widget("slider_handle");
+        layout!(root_widget:
+            top_left(Point::new(0.0, 0.0)),
+        );
+        root_widget.layout.edit_right().set(100.0).strength(STRONG);
+        root_widget.layout.edit_bottom().set(100.0).strength(STRONG);
+        layout!(slider:
+            align_left(&root_widget).padding(50.0),
+        );
+        layout!(slider_bar_pre:
+            to_left_of(&slider_handle),
+        );
+
+        layout!(slider_handle:
+            bound_by(&slider),
+        );
+        layout!(slider_bar_pre:
+            bound_by(&slider),
+        );
+        layout!(slider:
+            bound_by(&root_widget),
+        );
+        let slider_handle_left = slider_handle.layout().vars.left;
+
+        layout.add_widget(&mut root_widget);
+        layout.update();
+
+        layout.add_widget(&mut slider);
+        layout.add_widget(&mut slider_bar_pre);
+        layout.add_widget(&mut slider_handle);
+
+        //slider_handle.layout().edit_left().set(50.0);
+        //layout.solver.update_from_builder(slider_handle.layout);
+        layout.solver.solver.add_edit_variable(slider_handle_left, STRONG).unwrap();
+        layout.solver.solver.suggest_value(slider_handle_left, 50.0).unwrap();
+
+        //solver.debug_variables();
+        //solver.debug_constraints();
+        layout.update();
+        //assert!(layout.layout[&slider.id].size.width == 50.0);
+        /*assert!(layout == hashmap!{
+            root_widget.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 100.0)),
+            slider.id => Rect::new(Point::new(50.0, 0.0), Size::new(0.0, 0.0)),
+            slider_bar_pre.id => Rect::new(Point::new(50.0, 0.0), Size::new(0.0, 0.0)),
+            slider_handle.id => Rect::new(Point::new(50.0, 0.0), Size::new(0.0, 0.0)),
+        });*/
+    }
 
     // code below is used to create a test harness for creating layouts outside of the widget graph
     struct TestWidget {
@@ -342,9 +399,11 @@ mod test {
             self.solver.add_widget(widget.id, &Some(name), layout_builder);
         }
         fn update(&mut self) {
+            use solver;
             for (widget_id, var, value) in self.solver.fetch_changes() {
                 let rect = self.layout.entry(widget_id).or_insert(Rect::zero());
                 let vars = self.widget_map.get(&widget_id).unwrap();
+                println!("{} = {}", solver::fmt_variable(var), value);
                 let var = vars.get_var(var).unwrap();
                 match var {
                     VarUpdate::Left => rect.origin.x = value,

@@ -12,7 +12,7 @@ use super::{LayoutId, LayoutVars, LayoutBuilder};
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
-    solver: cassowary::Solver,
+    pub solver: cassowary::Solver,
     var_map: HashMap<Variable, HashSet<Constraint>>,
     constraint_map: HashMap<Constraint, Vec<Variable>>,
     widget_map: HashMap<Variable, LayoutId>,
@@ -111,6 +111,7 @@ impl LimnSolver {
     pub fn fetch_changes(&mut self) -> Vec<(LayoutId, Variable, f64)> {
         let mut changes = Vec::new();
         for &(var, que) in self.solver.fetch_changes() {
+            println!("solver {} = {}", fmt_variable(var), que);
             if let Some(widget_id) = self.widget_map.get(&var) {
                 changes.push((*widget_id, var, que));
             }
@@ -195,7 +196,7 @@ fn fmt_expression(expression: &Expression) -> String {
     out
 }
 
-fn fmt_variable(variable: Variable) -> String {
+pub fn fmt_variable(variable: Variable) -> String {
     let names = VAR_NAMES.lock().unwrap();
     if let Some(name) = names.get(&variable) {
         format!("{}", name)
