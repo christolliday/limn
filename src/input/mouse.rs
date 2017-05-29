@@ -5,7 +5,7 @@ use util::Point;
 use resources::WidgetId;
 use widget::{WidgetBuilder, WidgetBuilderCore};
 use widget::property::{Property, PropChange};
-use layout::solver::LayoutChanged;
+use layout::LayoutChanged;
 use ui::Ui;
 use app::App;
 

@@ -1,0 +1,12 @@
+[package]
+name = "limn-layout"
+version = "0.1.0"
+authors = ["Chris Tolliday <ctolliday@gmail.com>"]
+
+[dependencies]
+cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "683da50a81bf48610cea429ddef4394c680ff754" }
+euclid = "0.11.2"
+log = "0.3"
+lazy_static = "0.2.2"
+linked-hash-map = "0.3.0"
+maplit = "0.1.4"

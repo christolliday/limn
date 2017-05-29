@@ -7,6 +7,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 backend = { path = "backend" }
 text_layout = { path = "text_layout" }
+limn-layout = { path = "layout" }
 cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "683da50a81bf48610cea429ddef4394c680ff754" }
 
 petgraph = "0.4.3"

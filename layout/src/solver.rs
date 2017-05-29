@@ -8,18 +8,14 @@ use cassowary;
 use cassowary::strength;
 use cassowary::{Variable, Constraint, Expression};
 
-use resources::WidgetId;
-use event::Target;
-use ui::Ui;
-
-use layout::{LayoutVars, LayoutBuilder, VarUpdate};
+use super::{LayoutId, LayoutVars, LayoutBuilder};
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
     solver: cassowary::Solver,
     var_map: HashMap<Variable, HashSet<Constraint>>,
     constraint_map: HashMap<Constraint, Vec<Variable>>,
-    widget_map: HashMap<Variable, WidgetId>,
+    widget_map: HashMap<Variable, LayoutId>,
     debug_constraint_list: LinkedHashMap<Constraint, ()>, // LinkedHashSet (maintains insertion order)
 }
 
@@ -33,7 +29,7 @@ impl LimnSolver {
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
-    pub fn add_widget(&mut self, id: WidgetId, name: &Option<String>, layout: LayoutBuilder) {
+    pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: LayoutBuilder) {
         self.widget_map.insert(layout.vars.left, id);
         self.widget_map.insert(layout.vars.top, id);
         self.widget_map.insert(layout.vars.width, id);
@@ -112,7 +108,7 @@ impl LimnSolver {
         self.solver.add_constraint(constraint.clone()).expect(&format!("Failed to add constraint {}", fmt_constraint(&constraint)));
     }
 
-    pub fn fetch_changes(&mut self) -> Vec<(WidgetId, Variable, f64)> {
+    pub fn fetch_changes(&mut self) -> Vec<(LayoutId, Variable, f64)> {
         let mut changes = Vec::new();
         for &(var, que) in self.solver.fetch_changes() {
             if let Some(widget_id) = self.widget_map.get(&var) {
@@ -122,13 +118,6 @@ impl LimnSolver {
         changes
     }
 
-    pub fn check_changes(&mut self) {
-        let changes = self.fetch_changes();
-        debug!("layout has {} changes", changes.len());
-        if changes.len() > 0 {
-            event!(Target::Ui, LayoutChanged(changes));
-        }
-    }
     pub fn debug_constraints(&self) {
         println!("CONSTRAINTS");
         for constraint in self.debug_constraint_list.keys() {
@@ -149,28 +138,6 @@ impl LimnSolver {
             }
         }
     }
-}
-
-pub struct LayoutChanged(Vec<(WidgetId, Variable, f64)>);
-pub struct LayoutUpdated;
-
-pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
-    let ref changes = event.0;
-    for &(widget_id, var, value) in changes {
-        if let Some(widget) = ui.graph.get_widget(widget_id) {
-            let var = widget.layout.get_var(var).expect("Missing variable for widget");
-            debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
-            match var {
-                VarUpdate::Left => widget.bounds.origin.x = value,
-                VarUpdate::Top => widget.bounds.origin.y = value,
-                VarUpdate::Width => widget.bounds.size.width = value,
-                VarUpdate::Height => widget.bounds.size.height = value,
-            }
-            event!(Target::Widget(widget_id), LayoutUpdated);
-        }
-    }
-    // redraw everything when layout changes, for now
-    ui.redraw();
 }
 
 fn debug_constraint(constraint: &Constraint) {

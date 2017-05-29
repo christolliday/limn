@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate limn;
+#[macro_use]
+extern crate limn_layout;
 extern crate text_layout;
 extern crate cassowary;
 

@@ -8,7 +8,7 @@ use backend::Window;
 
 use resources::WidgetId;
 use ui::Ui;
-use layout::solver::LimnSolver;
+use layout::LayoutManager;
 use widget::Widget;
 
 /// Defines the different targets that events can be delivered to.
@@ -72,7 +72,7 @@ impl Queue {
 /// to a widget and it's layout, and posting events to the Queue.
 pub struct WidgetEventArgs<'a> {
     pub widget: &'a mut Widget,
-    pub solver: &'a mut LimnSolver,
+    pub solver: &'a mut LayoutManager,
     pub handled: &'a mut bool,
 }
 

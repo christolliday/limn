@@ -1,19 +1,19 @@
-use layout::{LayoutRef, LayoutVars};
-use cassowary::{Variable, Constraint};
+use cassowary::{Variable, Constraint, Term, Expression};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
-use util::{Scalar, Point, Size};
 
-pub fn width(width: Scalar) -> WidgetConstraintBuilder {
+use super::{LAYOUT, LayoutRef, LayoutVars, Size, Point};
+
+pub fn width(width: f64) -> WidgetConstraintBuilder {
     WidgetConstraint::Width(width).builder(REQUIRED)
 }
-pub fn height(height: Scalar) -> WidgetConstraintBuilder {
+pub fn height(height: f64) -> WidgetConstraintBuilder {
     WidgetConstraint::Height(height).builder(REQUIRED)
 }
-pub fn min_width(width: Scalar) -> WidgetConstraintBuilder {
+pub fn min_width(width: f64) -> WidgetConstraintBuilder {
     WidgetConstraint::MinWidth(width).builder(REQUIRED)
 }
-pub fn min_height(height: Scalar) -> WidgetConstraintBuilder {
+pub fn min_height(height: f64) -> WidgetConstraintBuilder {
     WidgetConstraint::MinHeight(height).builder(REQUIRED)
 }
 pub fn dimensions(dimensions: Size) -> WidgetConstraintBuilder {
@@ -22,7 +22,7 @@ pub fn dimensions(dimensions: Size) -> WidgetConstraintBuilder {
 pub fn min_dimensions(dimensions: Size) -> WidgetConstraintBuilder {
     WidgetConstraint::MinDimensions(dimensions).builder(REQUIRED)
 }
-pub fn aspect_ratio(aspect_ratio: Scalar) -> WidgetConstraintBuilder {
+pub fn aspect_ratio(aspect_ratio: f64) -> WidgetConstraintBuilder {
     WidgetConstraint::AspectRatio(aspect_ratio).builder(REQUIRED)
 }
 pub fn shrink() -> WidgetConstraintBuilder {
@@ -119,13 +119,13 @@ pub fn match_height<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
 }
 
 pub enum WidgetConstraint {
-    Width(Scalar),
-    Height(Scalar),
-    MinWidth(Scalar),
-    MinHeight(Scalar),
+    Width(f64),
+    Height(f64),
+    MinWidth(f64),
+    MinHeight(f64),
     Dimensions(Size),
     MinDimensions(Size),
-    AspectRatio(Scalar),
+    AspectRatio(f64),
     Shrink,
     ShrinkHorizontal,
     ShrinkVertical,
@@ -191,7 +191,7 @@ impl PaddableConstraintBuilder {
         self.strength = strength;
         self
     }
-    pub fn padding(mut self, padding: Scalar) -> Self {
+    pub fn padding(mut self, padding: f64) -> Self {
         self.padding = padding;
         self
     }
@@ -201,8 +201,6 @@ pub trait ConstraintBuilder {
     fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint>;
 }
 
-use cassowary::{Term, Expression};
-use layout::LAYOUT;
 impl ConstraintBuilder for Constraint {
     fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint> {
         let widget = widget.layout_ref();

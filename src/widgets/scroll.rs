@@ -5,7 +5,7 @@ use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widgets::slider::SliderBuilder;
 use util::{Point, Rect, RectExt};
-use layout::solver::LimnSolver;
+use layout::{LayoutManager, LayoutVars, LayoutRef};
 use layout::container::LayoutContainer;
 use layout::constraint::*;
 use resources::WidgetId;
@@ -90,7 +90,7 @@ impl LayoutContainer for ScrollContainer {
         );
         child.add_handler(WidgetScrollHandler::new());
     }
-    fn remove_child(&mut self, parent: &Widget, _: WidgetId, _: &mut LimnSolver) {
+    fn remove_child(&mut self, parent: &Widget, _: WidgetId, _: &mut LayoutManager) {
         event!(Target::Widget(parent.id), ScrollParentEvent::ChildAttached(None));
     }
 }

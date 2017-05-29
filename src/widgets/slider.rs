@@ -5,6 +5,7 @@ use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
 use layout::constraint::*;
+use layout::{LayoutRef, LayoutVars};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use resources::WidgetId;

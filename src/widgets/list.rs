@@ -2,6 +2,7 @@ use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
+use layout::{LayoutRef, LayoutVars};
 use drawable::rect::RectStyleable;
 use resources::WidgetId;
 use input::mouse::ClickEvent;

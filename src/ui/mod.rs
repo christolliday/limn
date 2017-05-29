@@ -12,7 +12,7 @@ use graphics;
 use graphics::Context;
 
 use widget::{WidgetBuilder, WidgetBuilderCore};
-use layout::solver::LimnSolver;
+use layout::LayoutManager;
 use layout::LayoutVars;
 use layout::constraint::*;
 use util::{self, Point, Rect, Size};
@@ -24,7 +24,7 @@ use ui::graph::WidgetGraph;
 
 pub struct Ui {
     pub graph: WidgetGraph,
-    solver: LimnSolver,
+    layout: LayoutManager,
     glyph_cache: GlyphCache,
     needs_redraw: bool,
     should_close: bool,
@@ -35,7 +35,7 @@ impl Ui {
     pub fn new(window: &mut Window) -> Self {
         Ui {
             graph: WidgetGraph::new(),
-            solver: LimnSolver::new(),
+            layout: LayoutManager::new(),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
             needs_redraw: false,
             should_close: false,
@@ -61,11 +61,11 @@ impl Ui {
         layout!(root_widget: top_left(Point::zero()));
         {
             let ref root_vars = root_widget.layout().vars;
-            self.solver.update_solver(|solver| {
+            self.layout.solver.update_solver(|solver| {
                 solver.add_edit_variable(root_vars.right, STRONG).unwrap();
                 solver.add_edit_variable(root_vars.bottom, STRONG).unwrap();
             });
-            self.solver.check_changes();
+            self.layout.check_changes();
         }
         self.graph.root_id = root_widget.id();
         self.attach_widget(root_widget, None);
@@ -81,12 +81,12 @@ impl Ui {
     pub fn window_resized(&mut self, window_dims: Size) {
         {
             let root = self.graph.get_root();
-            self.solver.update_solver(|solver| {
+            self.layout.solver.update_solver(|solver| {
                 solver.suggest_value(root.layout.right, window_dims.width).unwrap();
                 solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
             });
         }
-        self.solver.check_changes();
+        self.layout.check_changes();
         self.needs_redraw = true;
     }
 
@@ -161,8 +161,8 @@ impl Ui {
                      builder: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
         let (children, layout, widget) = builder.build();
-        self.solver.add_widget(widget.widget.id, &widget.widget.debug_name, layout);
-        self.solver.check_changes();
+        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, layout);
+        self.layout.check_changes();
 
         let id = widget.widget.id;
         self.graph.add_widget(widget, parent_id);
@@ -176,14 +176,14 @@ impl Ui {
         if let Some(parent_id) = self.graph.parent(widget_id) {
             if let Some(parent) = self.graph.get_widget_container(parent_id) {
                 if let Some(ref mut container) = parent.container {
-                    container.remove_child(&parent.widget, widget_id, &mut self.solver);
+                    container.remove_child(&parent.widget, widget_id, &mut self.layout);
                 }
             }
         }
         event!(Target::Widget(widget_id), WidgetDetachedEvent);
         if let Some(widget) = self.graph.remove_widget(widget_id) {
-            self.solver.remove_widget(&widget.widget.layout);
-            self.solver.check_changes();
+            self.layout.solver.remove_widget(&widget.widget.layout);
+            self.layout.check_changes();
             self.redraw();
         }
     }
@@ -201,7 +201,7 @@ impl Ui {
         if let Some(widget_container) = self.graph.get_widget_container(widget_id) {
             let handled = widget_container.trigger_event(type_id,
                                                          data,
-                                                         &mut self.solver);
+                                                         &mut self.layout);
             if widget_container.widget.has_updated {
                 self.needs_redraw = true;
                 widget_container.widget.has_updated = false;
@@ -249,10 +249,10 @@ impl Ui {
         }
     }
     pub fn debug_constraints(&mut self) {
-        self.solver.debug_constraints();
+        self.layout.solver.debug_constraints();
     }
     pub fn debug_variables(&mut self) {
-        self.solver.debug_variables();
+        self.layout.solver.debug_variables();
     }
 }
 pub struct WidgetAttachedEvent;

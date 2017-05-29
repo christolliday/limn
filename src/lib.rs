@@ -1,5 +1,7 @@
 extern crate backend;
 extern crate text_layout;
+#[macro_use]
+extern crate limn_layout;
 extern crate graphics;
 extern crate cassowary;
 extern crate petgraph;

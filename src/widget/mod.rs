@@ -13,8 +13,7 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
 use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
-use layout::solver::LimnSolver;
-use layout::{LayoutBuilder, LayoutVars, LayoutRef};
+use layout::{LayoutManager, LayoutBuilder, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rect};
@@ -28,7 +27,7 @@ pub struct WidgetBuilder {
     drawable: Option<DrawableWrapper>,
     props: PropSet,
     container: Option<Box<LayoutContainer>>,
-    layout: LayoutBuilder,
+    pub layout: LayoutBuilder,
     handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
     debug_name: Option<String>,
     debug_color: Option<Color>,
@@ -53,7 +52,7 @@ impl BuildWidget for WidgetBuilder {
         self
     }
 }
-impl<B: AsRef<WidgetBuilder>> LayoutRef for B {
+impl LayoutRef for WidgetBuilder {
     fn layout_ref(&self) -> &LayoutVars {
         &self.as_ref().layout.vars
     }
@@ -72,6 +71,11 @@ macro_rules! widget_builder {
                 &self.widget
             }
         }
+        impl LayoutRef for $builder_type {
+            fn layout_ref(&self) -> &LayoutVars {
+                &self.as_ref().layout.vars
+            }
+        }
         impl BuildWidget for $builder_type {
             fn build(self) -> WidgetBuilder {
                 self.widget
@@ -87,6 +91,11 @@ macro_rules! widget_builder {
         impl AsRef<WidgetBuilder> for $builder_type {
             fn as_ref(&self) -> &WidgetBuilder {
                 &self.widget
+            }
+        }
+        impl LayoutRef for $builder_type {
+            fn layout_ref(&self) -> &LayoutVars {
+                &self.as_ref().layout.vars
             }
         }
         impl BuildWidget for $builder_type {
@@ -213,7 +222,7 @@ impl WidgetContainer {
     pub fn trigger_event(&mut self,
                          type_id: TypeId,
                          event: &Box<Any + Send>,
-                         solver: &mut LimnSolver)
+                         solver: &mut LayoutManager)
                          -> bool {
         let mut handled = false;
         if let Some(handlers) = self.handlers.get_mut(&type_id) {
@@ -303,12 +312,12 @@ impl Widget {
         }
     }
 
-    pub fn update_layout<F>(&self, f: F, solver: &mut LimnSolver)
+    pub fn update_layout<F>(&self, f: F, solver: &mut LayoutManager)
         where F: FnOnce(&mut LayoutBuilder)
     {
         let mut layout = LayoutBuilder::from(self.layout.clone());
         f(&mut layout);
-        solver.update_from_builder(layout);
+        solver.solver.update_from_builder(layout);
         solver.check_changes();
     }
 }
