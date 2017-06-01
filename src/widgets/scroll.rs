@@ -41,19 +41,21 @@ impl ScrollBuilder {
     }
     pub fn add_scrollbar(&mut self) -> &mut Self {
         let mut scrollbar_h = SliderBuilder::new();
+        scrollbar_h.set_debug_name("scrollbar_h");
         scrollbar_h.scrollbar_style();
         layout!(scrollbar_h:
             align_bottom(&self.widget),
             align_left(&self.widget),
         );
         let mut scrollbar_v = SliderBuilder::new();
+        scrollbar_v.set_debug_name("scrollbar_v");
         scrollbar_v.make_vertical().scrollbar_style();
         layout!(scrollbar_v:
             align_right(&self.widget),
             align_top(&self.widget),
         );
         let corner_style = style!(RectStyleable::BackgroundColor: MID_GRAY);
-        let mut corner = WidgetBuilder::new();
+        let mut corner = WidgetBuilder::new_named("corner");
         corner.set_drawable_with_style(RectDrawable::new(), corner_style);
         layout!(corner:
             align_bottom(&self.widget),

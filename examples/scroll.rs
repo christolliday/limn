@@ -20,26 +20,23 @@ fn main() {
 
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.add_scrollbar();
-    scroll_widget.set_debug_name("scroll");
     layout!(scroll_widget:
         dimensions(Size::new(200.0, 200.0)),
         match_layout(&root_widget).padding(50.0));
 
-    let mut rect_container = WidgetBuilder::new();
-    rect_container
-        .set_debug_name("rect_container");
+    let mut rect_container = WidgetBuilder::new_named("rect_container");
     layout!(rect_container: dimensions(Size::new(400.0, 400.0)));
 
-    let mut rect_tl = WidgetBuilder::new();
+    let mut rect_tl = WidgetBuilder::new_named("rect_tl");
     rect_tl.set_drawable_with_style(RectDrawable::new(),
         style!(RectStyleable::BackgroundColor: RED));
-    let mut rect_tr = WidgetBuilder::new();
+    let mut rect_tr = WidgetBuilder::new_named("rect_tr");
     rect_tr.set_drawable_with_style(RectDrawable::new(),
         style!(RectStyleable::BackgroundColor: GREEN));
-    let mut rect_bl = WidgetBuilder::new();
+    let mut rect_bl = WidgetBuilder::new_named("rect_bl");
     rect_bl.set_drawable_with_style(RectDrawable::new(),
         style!(RectStyleable::BackgroundColor: BLUE));
-    let mut rect_br = WidgetBuilder::new();
+    let mut rect_br = WidgetBuilder::new_named("rect_br");
     rect_br.set_drawable_with_style(RectDrawable::new(),
         style!(RectStyleable::BackgroundColor: FUSCHIA));
 

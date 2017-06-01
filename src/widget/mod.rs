@@ -181,6 +181,12 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
 }
 impl WidgetBuilder {
     pub fn new() -> Self {
+        WidgetBuilder::new_widget(None)
+    }
+    pub fn new_named(name: &str) -> Self {
+        WidgetBuilder::new_widget(Some(name.to_owned()))
+    }
+    fn new_widget(name: Option<String>) -> Self {
         let mut builder = WidgetBuilder {
             id: resources().widget_id(),
             drawable: None,
@@ -188,7 +194,7 @@ impl WidgetBuilder {
             container: Some(Box::new(Frame::new())),
             layout: LayoutBuilder::new(),
             handlers: HashMap::new(),
-            debug_name: None,
+            debug_name: name,
             debug_color: None,
             children: Vec::new(),
         };

@@ -85,10 +85,10 @@ impl LimnSolver {
     pub fn update_from_builder(&mut self, layout: LayoutBuilder) {
         for edit_var in layout.edit_vars {
             if !self.solver.has_edit_variable(&edit_var.var) {
-                debug!("add edit_var {:?}", edit_var);
+                debug!("add edit_var {:?}", fmt_variable(edit_var.var));
                 self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
             } else {
-                debug!("update edit_var {:?}", edit_var);
+                debug!("update edit_var {:?}", fmt_variable(edit_var.var));
             }
             self.solver.suggest_value(edit_var.var, edit_var.val).unwrap();
         }
