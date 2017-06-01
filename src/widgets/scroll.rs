@@ -1,11 +1,12 @@
 use glutin;
+use cassowary::Variable;
 use cassowary::strength::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widgets::slider::SliderBuilder;
-use util::{Point, Rect, RectExt};
-use layout::{LayoutManager, LayoutVars, LayoutRef};
+use util::{Point, Size, Rect, RectExt};
+use layout::{LayoutManager, LayoutUpdated, LayoutVars, LayoutRef};
 use layout::container::LayoutContainer;
 use layout::constraint::*;
 use resources::WidgetId;
@@ -16,27 +17,32 @@ use color::*;
 pub struct ScrollBuilder {
     widget: WidgetBuilder,
     content_holder: WidgetBuilder,
+    content: Option<WidgetBuilder>,
     scrollbars: Option<(WidgetBuilder, SliderBuilder, SliderBuilder)>,
 }
 impl ScrollBuilder {
     pub fn new() -> Self {
-        let widget = WidgetBuilder::new();
+        let widget = WidgetBuilder::new_named("scroll");
 
-        let mut content_holder = WidgetBuilder::new();
+        let mut content_holder = WidgetBuilder::new_named("content_holder");
         content_holder.set_container(ScrollContainer);
         content_holder.add_handler(ScrollParent::new());
         content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
             event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
         });
+        layout!(content_holder:
+            align_left(&widget),
+            align_top(&widget));
 
         ScrollBuilder {
             widget: widget,
             content_holder: content_holder,
+            content: None,
             scrollbars: None,
         }
     }
     pub fn add_content<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
-        self.content_holder.add_child(widget);
+        self.content = Some(widget.build());
         self
     }
     pub fn add_scrollbar(&mut self) -> &mut Self {
@@ -46,6 +52,7 @@ impl ScrollBuilder {
         layout!(scrollbar_h:
             align_bottom(&self.widget),
             align_left(&self.widget),
+            below(&self.content_holder),
         );
         let mut scrollbar_v = SliderBuilder::new();
         scrollbar_v.set_debug_name("scrollbar_v");
@@ -53,6 +60,7 @@ impl ScrollBuilder {
         layout!(scrollbar_v:
             align_right(&self.widget),
             align_top(&self.widget),
+            to_right_of(&self.content_holder),
         );
         let corner_style = style!(RectStyleable::BackgroundColor: MID_GRAY);
         let mut corner = WidgetBuilder::new_named("corner");
@@ -71,14 +79,75 @@ impl ScrollBuilder {
      }
 }
 widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuilder {
+    let widget_id = builder.widget.id();
+    builder.content_holder.add_handler_fn(move |_: &LayoutUpdated, args| {
+        event!(Target::Widget(widget_id), ScrollSizeChange::Container(args.widget.bounds.size));
+    });
+    let mut content = builder.content.expect("Scroll bar has no content");
+    content.add_handler_fn(move |_: &LayoutUpdated, args| {
+        event!(Target::Widget(widget_id), ScrollSizeChange::Content(args.widget.bounds.size));
+    });
+    builder.content_holder.add_child(content);
     builder.widget.add_child(builder.content_holder);
-    if let Some((corner, scrollbar_h, scrollbar_v)) = builder.scrollbars {
+    if let Some((corner, mut scrollbar_h, mut scrollbar_v)) = builder.scrollbars {
+        let h_handle_size = scrollbar_h.layout().edit_width().var;
+        let v_handle_size = scrollbar_v.layout().edit_height().var;
         builder.widget.add_child(corner);
         builder.widget.add_child(scrollbar_h);
         builder.widget.add_child(scrollbar_v);
+        builder.widget.add_handler(ScrollSizeHandler::new(h_handle_size, v_handle_size));
     }
     builder.widget
 });
+
+#[derive(Debug)]
+enum ScrollSizeChange {
+    Container(Size),
+    Content(Size),
+}
+
+struct ScrollSizeHandler {
+    container_size: Size,
+    content_size: Size,
+    h_handle_size: Variable,
+    v_handle_size: Variable,
+}
+impl ScrollSizeHandler {
+    fn new(h_handle_size: Variable, v_handle_size: Variable) -> Self {
+        ScrollSizeHandler {
+            container_size: Size::zero(),
+            content_size: Size::zero(),
+            h_handle_size: h_handle_size,
+            v_handle_size: v_handle_size,
+        }
+    }
+}
+impl WidgetEventHandler<ScrollSizeChange> for ScrollSizeHandler {
+    fn handle(&mut self, event: &ScrollSizeChange, args: WidgetEventArgs) {
+        let old_width_ratio = self.container_size.width / self.content_size.width;
+        let old_height_ratio = self.container_size.height / self.content_size.height;
+        match event {
+            &ScrollSizeChange::Container(size) => self.container_size = size,
+            &ScrollSizeChange::Content(size) => self.content_size = size,
+        }
+        let width_ratio = self.container_size.width / self.content_size.width;
+        let height_ratio = self.container_size.height / self.content_size.height;
+        if width_ratio.is_finite() && width_ratio != old_width_ratio {
+            let width = self.container_size.width * width_ratio;
+            println!("width_ratio {:?} {:?}", width_ratio, width);
+            args.solver.update_solver(|solver| {
+                solver.suggest_value(self.h_handle_size, width).unwrap();
+            });
+        }
+        if height_ratio.is_finite() && height_ratio != old_height_ratio {
+            let height = self.container_size.height * height_ratio;
+            println!("height_ratio {:?} {:?}", height_ratio, height);
+            args.solver.update_solver(|solver| {
+                solver.suggest_value(self.v_handle_size, height).unwrap();
+            });
+        }
+    }
+}
 
 struct ScrollContainer;
 impl LayoutContainer for ScrollContainer {
