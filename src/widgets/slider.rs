@@ -191,12 +191,12 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
                 width(bar_width),
                 center_horizontal(&slider),
                 align_top(&slider).padding(bar_padding),
-                above(&slider_handle).padding(-10.0));
+                above(&slider_handle).padding(-bar_padding));
             layout!(slider_bar_post:
                 width(bar_width),
                 center_horizontal(&slider),
                 align_bottom(&slider).padding(bar_padding),
-                below(&slider_handle).padding(-10.0));
+                below(&slider_handle).padding(-bar_padding));
             layout!(slider_handle:
                 match_width(&slider));
         }
@@ -298,14 +298,17 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 }
             }
             SliderHandleInput::SetValue((value, parent_bounds)) => {
-                let pos = if let Orientation::Horizontal = self.orientation {
-                    parent_bounds.left() + value * (parent_bounds.width() - bounds.width())
+                if let Orientation::Horizontal = self.orientation {
+                    let pos = parent_bounds.left() + value * (parent_bounds.width() - bounds.width());
+                    args.widget.update_layout(|layout| {
+                        layout.edit_left().set(pos);
+                    }, args.solver);
                 } else {
-                    parent_bounds.top() + value * (parent_bounds.height() - bounds.height())
-                };
-                args.widget.update_layout(|layout| {
-                    layout.edit_left().set(pos);
-                }, args.solver);
+                    let pos = parent_bounds.top() + value * (parent_bounds.height() - bounds.height());
+                    args.widget.update_layout(|layout| {
+                        layout.edit_top().set(pos);
+                    }, args.solver);
+                }
             }
             SliderHandleInput::SliderClicked((position, parent_bounds)) => {
                 if args.widget.props.contains(&Property::Inactive) {
