@@ -160,8 +160,8 @@ impl Ui {
     fn attach_widget(&mut self,
                      builder: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
-        let (children, layout, widget) = builder.build();
-        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, layout);
+        let (children, layout, mut widget) = builder.build();
+        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, layout, &mut widget.widget.bounds);
         self.layout.check_changes();
 
         let id = widget.widget.id;
