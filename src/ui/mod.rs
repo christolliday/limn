@@ -62,8 +62,8 @@ impl Ui {
         {
             let ref root_vars = root_widget.layout().vars;
             self.layout.solver.update_solver(|solver| {
-                solver.add_edit_variable(root_vars.right, STRONG).unwrap();
-                solver.add_edit_variable(root_vars.bottom, STRONG).unwrap();
+                solver.add_edit_variable(root_vars.right, REQUIRED - 1.0).unwrap();
+                solver.add_edit_variable(root_vars.bottom, REQUIRED - 1.0).unwrap();
             });
             self.layout.check_changes();
         }
