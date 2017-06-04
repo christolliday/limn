@@ -90,8 +90,8 @@ widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuil
     builder.content_holder.add_child(content);
     builder.widget.add_child(builder.content_holder);
     if let Some((corner, mut scrollbar_h, mut scrollbar_v)) = builder.scrollbars {
-        let h_handle_size = scrollbar_h.layout().edit_width().var;
-        let v_handle_size = scrollbar_v.layout().edit_height().var;
+        let h_handle_size = scrollbar_h.slider_handle.layout().vars.width;
+        let v_handle_size = scrollbar_v.slider_handle.layout().vars.height;
         builder.widget.add_child(corner);
         builder.widget.add_child(scrollbar_h);
         builder.widget.add_child(scrollbar_v);
@@ -134,14 +134,14 @@ impl WidgetEventHandler<ScrollSizeChange> for ScrollSizeHandler {
         let height_ratio = self.container_size.height / self.content_size.height;
         if width_ratio.is_finite() && width_ratio != old_width_ratio {
             let width = self.container_size.width * width_ratio;
-            println!("width_ratio {:?} {:?}", width_ratio, width);
+            debug!("width_ratio {:?} {:?}", width_ratio, width);
             args.solver.update_solver(|solver| {
                 solver.suggest_value(self.h_handle_size, width).unwrap();
             });
         }
         if height_ratio.is_finite() && height_ratio != old_height_ratio {
             let height = self.container_size.height * height_ratio;
-            println!("height_ratio {:?} {:?}", height_ratio, height);
+            debug!("height_ratio {:?} {:?}", height_ratio, height);
             args.solver.update_solver(|solver| {
                 solver.suggest_value(self.v_handle_size, height).unwrap();
             });

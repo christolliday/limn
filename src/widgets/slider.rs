@@ -1,3 +1,5 @@
+use cassowary::strength::*;
+
 use input::mouse::ClickEvent;
 use event::{Target, WidgetEventHandler, WidgetEventArgs};
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
@@ -183,6 +185,11 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
                 to_right_of(&slider_handle).padding(-bar_padding));
             layout!(slider_handle:
                 match_height(&slider));
+
+            if builder.variable_handle_size {
+                // STRONG + 1.0 for higher strength than handle position
+                slider_handle.layout.edit_width().set(50.0).strength(STRONG + 1.0);
+            }
         }
         Orientation::Vertical => {
             layout!(slider:
@@ -199,6 +206,11 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
                 below(&slider_handle).padding(-bar_padding));
             layout!(slider_handle:
                 match_width(&slider));
+
+            if builder.variable_handle_size {
+                // STRONG + 1.0 for higher strength than handle position
+                slider_handle.layout.edit_height().set(50.0).strength(STRONG + 1.0);
+            }
         }
     }
     let handle_id = slider_handle.id();
