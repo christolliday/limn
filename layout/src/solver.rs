@@ -13,9 +13,9 @@ use super::{LayoutId, LayoutVars, LayoutBuilder, Rect};
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
     pub solver: cassowary::Solver,
-    var_map: HashMap<Variable, HashSet<Constraint>>,
-    constraint_map: HashMap<Constraint, Vec<Variable>>,
-    widget_map: HashMap<Variable, LayoutId>,
+    var_constraints: HashMap<Variable, HashSet<Constraint>>,
+    constraint_vars: HashMap<Constraint, Vec<Variable>>,
+    var_ids: HashMap<Variable, LayoutId>,
     missing_widget_layout: HashMap<Variable, f64>,
     debug_constraint_list: LinkedHashMap<Constraint, ()>, // LinkedHashSet (maintains insertion order)
 }
@@ -24,18 +24,18 @@ impl LimnSolver {
     pub fn new() -> Self {
         LimnSolver {
             solver: cassowary::Solver::new(),
-            var_map: HashMap::new(),
-            constraint_map: HashMap::new(),
-            widget_map: HashMap::new(),
+            var_constraints: HashMap::new(),
+            constraint_vars: HashMap::new(),
+            var_ids: HashMap::new(),
             missing_widget_layout: HashMap::new(),
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
     pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: LayoutBuilder, bounds: &mut Rect) {
-        self.widget_map.insert(layout.vars.left, id);
-        self.widget_map.insert(layout.vars.top, id);
-        self.widget_map.insert(layout.vars.width, id);
-        self.widget_map.insert(layout.vars.height, id);
+        self.var_ids.insert(layout.vars.left, id);
+        self.var_ids.insert(layout.vars.top, id);
+        self.var_ids.insert(layout.vars.width, id);
+        self.var_ids.insert(layout.vars.height, id);
 
         {
             let mut check_existing = |var| { self.missing_widget_layout.remove(var).unwrap_or(0.0) };
@@ -59,18 +59,18 @@ impl LimnSolver {
     }
 
     pub fn remove_widget(&mut self, widget_vars: &LayoutVars) {
-        for var in [widget_vars.left, widget_vars.top, widget_vars.right, widget_vars.bottom].iter() {
+        for var in widget_vars.array().iter() {
             // remove constraints that are relative to this widget from solver
-            if let Some(constraint_set) = self.var_map.remove(&var) {
+            if let Some(constraint_set) = self.var_constraints.remove(&var) {
                 for constraint in constraint_set {
                     if self.solver.has_constraint(&constraint) {
                         self.debug_constraint_list.remove(&constraint);
                         self.solver.remove_constraint(&constraint).unwrap();
                         // look up other variables that references this constraint,
                         // and remove this constraint from those variables constraint sets
-                        if let Some(var_list) = self.constraint_map.get(&constraint) {
+                        if let Some(var_list) = self.constraint_vars.get(&constraint) {
                             for var in var_list {
-                                if let Some(constraint_set) = self.var_map.get_mut(&var) {
+                                if let Some(constraint_set) = self.var_constraints.get_mut(&var) {
                                     constraint_set.remove(&constraint);
                                 }
                             }
@@ -78,7 +78,7 @@ impl LimnSolver {
                     }
                 }
             }
-            self.widget_map.remove(&var);
+            self.var_ids.remove(&var);
         }
     }
     pub fn update_solver<F>(&mut self, f: F)
@@ -106,10 +106,10 @@ impl LimnSolver {
         }
         for constraint in layout.constraints {
             self.add_constraint(constraint.clone());
-            let var_list = self.constraint_map.entry(constraint.clone()).or_insert(Vec::new());
+            let var_list = self.constraint_vars.entry(constraint.clone()).or_insert(Vec::new());
             for term in &constraint.0.expression.terms {
                 let variable = term.variable;
-                let constraint_set = self.var_map.entry(variable).or_insert(HashSet::new());
+                let constraint_set = self.var_constraints.entry(variable).or_insert(HashSet::new());
                 constraint_set.insert(constraint.clone());
                 var_list.push(variable);
             }
@@ -124,7 +124,7 @@ impl LimnSolver {
         let mut changes = Vec::new();
         for &(var, val) in self.solver.fetch_changes() {
             debug!("solver {} = {}", fmt_variable(var), val);
-            if let Some(widget_id) = self.widget_map.get(&var) {
+            if let Some(widget_id) = self.var_ids.get(&var) {
                 changes.push((*widget_id, var, val));
             } else {
                 // widget doesn't exist in the widget map yet, because it hasn't been added yet

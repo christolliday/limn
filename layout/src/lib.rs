@@ -59,6 +59,9 @@ impl LayoutVars {
         else if var == self.height { Some(VarUpdate::Height) }
         else { None }
     }
+    pub fn array(&self) -> [Variable; 6] {
+        [self.left, self.top, self.right, self.bottom, self.width, self.height]
+    }
 }
 
 pub trait LayoutRef {
