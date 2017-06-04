@@ -16,11 +16,11 @@ fn main() {
 
     let mut root_widget = WidgetBuilder::new();
     let image_drawable = ImageDrawable::new(image_id);
-    let image_dims = image_drawable.measure();
+    let image_size = image_drawable.measure();
     let mut image_widget = WidgetBuilder::new();
     image_widget.set_drawable(image_drawable);
     layout!(image_widget:
-        dimensions(image_dims),
+        size(image_size),
         center(&root_widget),
         bound_by(&root_widget).padding(50.0));
     root_widget.add_child(image_widget);

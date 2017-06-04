@@ -21,11 +21,11 @@ fn main() {
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.add_scrollbar();
     layout!(scroll_widget:
-        dimensions(Size::new(200.0, 200.0)),
+        size(Size::new(200.0, 200.0)),
         match_layout(&root_widget).padding(50.0));
 
     let mut rect_container = WidgetBuilder::new_named("rect_container");
-    layout!(rect_container: dimensions(Size::new(400.0, 400.0)));
+    layout!(rect_container: size(Size::new(400.0, 400.0)));
 
     let mut rect_tl = WidgetBuilder::new_named("rect_tl");
     rect_tl.set_drawable_with_style(RectDrawable::new(),

@@ -41,7 +41,7 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    layout!(root_widget: min_dimensions(Size::new(300.0, 300.0)));
+    layout!(root_widget: min_size(Size::new(300.0, 300.0)));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);

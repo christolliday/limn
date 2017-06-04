@@ -23,7 +23,7 @@ fn main() {
     let mut scroll_widget = ScrollBuilder::new();
     layout!(scroll_widget:
         bound_by(&root_widget).padding(50.0),
-        dimensions(Size::new(300.0, 300.0)),
+        size(Size::new(300.0, 300.0)),
      );
 
     let mut list_widget = ListBuilder::new();
@@ -34,7 +34,7 @@ fn main() {
         for _ in 1..15 {
             let text_style = style!(TextStyleable::TextColor: WHITE);
             let text_drawable = TextDrawable::new("hello");
-            let text_dims = text_drawable.measure();
+            let text_size = text_drawable.measure();
 
             let mut list_item_widget = WidgetBuilder::new();
             list_item_widget
@@ -42,7 +42,7 @@ fn main() {
                 .set_debug_name("item")
                 .list_item(list_widget.id())
                 .enable_hover();
-            layout!(list_item_widget: height(text_dims.height));
+            layout!(list_item_widget: height(text_size.height));
 
             let mut list_text_widget = WidgetBuilder::new();
             list_text_widget

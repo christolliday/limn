@@ -154,13 +154,13 @@ pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetId) -> Wid
     let mut list_item_widget = {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
-        let text_dims = text_drawable.measure();
+        let text_size = text_drawable.measure();
         let mut list_item_widget = WidgetBuilder::new();
         list_item_widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
             .list_item(list_widget_id)
             .enable_hover();
-        layout!(list_item_widget: height(text_dims.height));
+        layout!(list_item_widget: height(text_size.height));
         let mut list_text_widget = WidgetBuilder::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
@@ -179,7 +179,7 @@ fn main() {
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
-    layout!(root_widget: min_dimensions(Size::new(300.0, 300.0)));
+    layout!(root_widget: min_size(Size::new(300.0, 300.0)));
     let mut container = WidgetBuilder::new();
     layout!(container: bound_by(&root_widget).padding(20.0));
 
@@ -189,11 +189,11 @@ fn main() {
 
         let mut static_text = WidgetBuilder::new();
         let text = TextDrawable::new(title);
-        let text_dims = text.measure();
+        let text_size = text.measure();
         static_text.set_drawable(text);
         layout!(static_text:
             center_vertical(&name_container),
-            dimensions(text_dims));
+            size(text_size));
 
         let mut text_box = EditTextBuilder::new();
         layout!(text_box:

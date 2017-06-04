@@ -83,7 +83,7 @@ impl ToggleButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
             .add_handler_fn(toggle_button_handle_mouse);
-        layout!(widget: dimensions(Size::new(70.0, 30.0)));
+        layout!(widget: size(Size::new(70.0, 30.0)));
 
         ToggleButtonBuilder { widget: widget }
     }
@@ -122,7 +122,7 @@ impl PushButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
 
-        layout!(widget: dimensions(Size::new(100.0, 50.0)));
+        layout!(widget: size(Size::new(100.0, 50.0)));
 
         PushButtonBuilder { widget: widget }
     }

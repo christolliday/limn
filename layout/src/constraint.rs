@@ -16,11 +16,11 @@ pub fn min_width(width: f64) -> WidgetConstraintBuilder {
 pub fn min_height(height: f64) -> WidgetConstraintBuilder {
     WidgetConstraint::MinHeight(height).builder(REQUIRED)
 }
-pub fn dimensions(dimensions: Size) -> WidgetConstraintBuilder {
-    WidgetConstraint::Dimensions(dimensions).builder(REQUIRED)
+pub fn size(size: Size) -> WidgetConstraintBuilder {
+    WidgetConstraint::Size(size).builder(REQUIRED)
 }
-pub fn min_dimensions(dimensions: Size) -> WidgetConstraintBuilder {
-    WidgetConstraint::MinDimensions(dimensions).builder(REQUIRED)
+pub fn min_size(size: Size) -> WidgetConstraintBuilder {
+    WidgetConstraint::MinSize(size).builder(REQUIRED)
 }
 pub fn aspect_ratio(aspect_ratio: f64) -> WidgetConstraintBuilder {
     WidgetConstraint::AspectRatio(aspect_ratio).builder(REQUIRED)
@@ -123,8 +123,8 @@ pub enum WidgetConstraint {
     Height(f64),
     MinWidth(f64),
     MinHeight(f64),
-    Dimensions(Size),
-    MinDimensions(Size),
+    Size(Size),
+    MinSize(Size),
     AspectRatio(f64),
     Shrink,
     ShrinkHorizontal,
@@ -251,16 +251,16 @@ impl ConstraintBuilder for WidgetConstraintBuilder {
             WidgetConstraint::MinHeight(height) => {
                 vec![ widget.height | GE(strength) | height ]
             }
-            WidgetConstraint::Dimensions(dimensions) => {
+            WidgetConstraint::Size(size) => {
                 vec![
-                    widget.width | EQ(strength) | dimensions.width,
-                    widget.height | EQ(strength) | dimensions.height,
+                    widget.width | EQ(strength) | size.width,
+                    widget.height | EQ(strength) | size.height,
                 ]
             }
-            WidgetConstraint::MinDimensions(dimensions) => {
+            WidgetConstraint::MinSize(size) => {
                 vec![
-                    widget.width | GE(strength) | dimensions.width,
-                    widget.height | GE(strength) | dimensions.height,
+                    widget.width | GE(strength) | size.width,
+                    widget.height | GE(strength) | size.height,
                 ]
             }
             WidgetConstraint::AspectRatio(aspect_ratio) => {
