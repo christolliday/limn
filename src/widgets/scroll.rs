@@ -3,11 +3,10 @@ use cassowary::Variable;
 use cassowary::strength::*;
 
 use event::{Target, WidgetEventArgs, WidgetEventHandler};
-use widget::{Widget, WidgetBuilder, WidgetBuilderCore, BuildWidget};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widgets::slider::SliderBuilder;
 use util::{Point, Size, Rect, RectExt};
-use layout::{LayoutManager, LayoutUpdated, LayoutVars, LayoutRef};
-use layout::container::LayoutContainer;
+use layout::{LayoutUpdated, LayoutVars, LayoutRef};
 use layout::constraint::*;
 use resources::WidgetId;
 use input::mouse::WidgetMouseWheel;
@@ -25,11 +24,7 @@ impl ScrollBuilder {
         let widget = WidgetBuilder::new_named("scroll");
 
         let mut content_holder = WidgetBuilder::new_named("content_holder");
-        content_holder.set_container(ScrollContainer);
-        content_holder.add_handler(ScrollParent::new());
-        content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
-            event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
-        });
+        content_holder.no_container();
         layout!(content_holder:
             align_left(&widget),
             align_top(&widget));
@@ -41,7 +36,13 @@ impl ScrollBuilder {
             scrollbars: None,
         }
     }
-    pub fn add_content<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
+    pub fn add_content<C: BuildWidget>(&mut self, mut widget: C) -> &mut Self {
+        // only used to set initial position
+        layout!(widget:
+            align_left(&self.content_holder).strength(WEAK),
+            align_top(&self.content_holder).strength(WEAK),
+        );
+        widget.add_handler(WidgetScrollHandler::new());
         self.content = Some(widget.build());
         self
     }
@@ -86,6 +87,10 @@ widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuil
     let mut content = builder.content.expect("Scroll bar has no content");
     content.add_handler_fn(move |_: &LayoutUpdated, args| {
         event!(Target::Widget(widget_id), ScrollSizeChange::Content(args.widget.bounds.size));
+    });
+    builder.content_holder.add_handler(ScrollParent::new(content.id()));
+    builder.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
+        event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
     });
     builder.content_holder.add_child(content);
     builder.widget.add_child(builder.content_holder);
@@ -149,55 +154,29 @@ impl WidgetEventHandler<ScrollSizeChange> for ScrollSizeHandler {
     }
 }
 
-struct ScrollContainer;
-impl LayoutContainer for ScrollContainer {
-    fn add_child(&mut self, parent: &Widget, child: &mut WidgetBuilder) {
-        event!(Target::Widget(parent.id), ScrollParentEvent::ChildAttached(Some(child.id())));
-        let ref parent = parent.layout;
-        // only used to set initial position
-        layout!(child:
-            align_left(parent).strength(WEAK),
-            align_top(parent).strength(WEAK),
-        );
-        child.add_handler(WidgetScrollHandler::new());
-    }
-    fn remove_child(&mut self, parent: &Widget, _: WidgetId, _: &mut LayoutManager) {
-        event!(Target::Widget(parent.id), ScrollParentEvent::ChildAttached(None));
-    }
-}
-
 enum ScrollParentEvent {
-    ChildAttached(Option<WidgetId>),
     WidgetMouseWheel(WidgetMouseWheel),
 }
 struct ScrollParent {
-    scrollable: Option<WidgetId>,
+    scrollable: WidgetId,
 }
 impl ScrollParent {
-    fn new() -> Self {
+    fn new(scrollable: WidgetId) -> Self {
         ScrollParent {
-            scrollable: None,
+            scrollable: scrollable,
         }
     }
 }
 impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
     fn handle(&mut self, event: &ScrollParentEvent, args: WidgetEventArgs) {
         match *event {
-            ScrollParentEvent::ChildAttached(ref child_id) => {
-                if self.scrollable.is_some() {
-                    panic!("Scroll parent has more than one child");
-                }
-                self.scrollable = child_id.clone();
-            }
             ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
-                if let Some(scrollable) = self.scrollable {
-                    let widget_bounds = args.widget.bounds;
-                    let event = WidgetScroll {
-                        event: mouse_wheel.0,
-                        parent_bounds: widget_bounds,
-                    };
-                    event!(Target::Widget(scrollable), event);
-                }
+                let widget_bounds = args.widget.bounds;
+                let event = WidgetScroll {
+                    event: mouse_wheel.0,
+                    parent_bounds: widget_bounds,
+                };
+                event!(Target::Widget(self.scrollable), event);
             }
         }
     }
