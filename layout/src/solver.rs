@@ -16,6 +16,7 @@ pub struct LimnSolver {
     var_constraints: HashMap<Variable, HashSet<Constraint>>,
     constraint_vars: HashMap<Constraint, Vec<Variable>>,
     var_ids: HashMap<Variable, LayoutId>,
+    hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
     missing_widget_layout: HashMap<Variable, f64>,
     debug_constraint_list: LinkedHashMap<Constraint, ()>, // LinkedHashSet (maintains insertion order)
 }
@@ -27,6 +28,7 @@ impl LimnSolver {
             var_constraints: HashMap::new(),
             constraint_vars: HashMap::new(),
             var_ids: HashMap::new(),
+            hidden_layouts: HashMap::new(),
             missing_widget_layout: HashMap::new(),
             debug_constraint_list: LinkedHashMap::new(),
         }
@@ -79,6 +81,35 @@ impl LimnSolver {
                 }
             }
             self.var_ids.remove(&var);
+        }
+    }
+    // hide/unhide are a simplified way of temporarily removing a layout, by removing
+    // only the constraints on that widget directly
+    // if the layout has children that have constraints outside of the subtree, those
+    // constraints will not be removed. todo: find an efficient way of resolving this
+    pub fn hide_widget(&mut self, id: LayoutId, vars: &LayoutVars) {
+        if !self.hidden_layouts.contains_key(&id) {
+            let mut constraints = Vec::new();
+            for var in vars.array().iter() {
+                if let Some(constraint_set) = self.var_constraints.get(&var) {
+                    for constraint in constraint_set {
+                        if self.solver.has_constraint(&constraint) {
+                            self.solver.remove_constraint(&constraint).unwrap();
+                        }
+                        constraints.push(constraint.clone());
+                    }
+                }
+            }
+            self.hidden_layouts.insert(id, constraints);
+        }
+    }
+    pub fn unhide_widget(&mut self, id: LayoutId) {
+        if let Some(constraints) = self.hidden_layouts.remove(&id) {
+            for constraint in constraints {
+                if !self.solver.has_constraint(&constraint) {
+                    self.solver.add_constraint(constraint).unwrap();
+                }
+            }
         }
     }
     pub fn update_solver<F>(&mut self, f: F)
