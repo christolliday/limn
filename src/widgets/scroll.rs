@@ -63,6 +63,16 @@ impl ScrollBuilder {
             align_top(&self.widget),
             to_right_of(&self.content_holder),
         );
+
+        let widget_id = self.content_holder.id();
+        scrollbar_h.on_value_changed(move |value, _| {
+            let event = ScrollParentEvent::OffsetX(value);
+            event!(Target::Widget(widget_id), event);
+        });
+        scrollbar_v.on_value_changed(move |value, _| {
+            let event = ScrollParentEvent::OffsetY(value);
+            event!(Target::Widget(widget_id), event);
+        });
         let corner_style = style!(RectStyleable::BackgroundColor: MID_GRAY);
         let mut corner = WidgetBuilder::new_named("corner");
         corner.set_drawable_with_style(RectDrawable::new(), corner_style);
@@ -80,39 +90,35 @@ impl ScrollBuilder {
      }
 }
 widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuilder {
-    let widget_id = builder.widget.id();
-    builder.content_holder.add_handler_fn(move |_: &LayoutUpdated, args| {
-        event!(Target::Widget(widget_id), ScrollSizeChange::Container(args.widget.bounds.size));
+    let widget_id = builder.content_holder.id();
+    builder.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
+        event!(Target::Widget(widget_id), ScrollParentEvent::ContainerSizeChange);
     });
     let mut content = builder.content.expect("Scroll bar has no content");
     content.add_handler_fn(move |_: &LayoutUpdated, args| {
-        event!(Target::Widget(widget_id), ScrollSizeChange::Content(args.widget.bounds.size));
+        event!(Target::Widget(widget_id), ScrollParentEvent::ContentSizeChange(args.widget.bounds.size));
     });
-    builder.content_holder.add_handler(ScrollParent::new(content.id()));
+    let mut scroll_parent_handler = ScrollParent::new(content.id());
+    if let Some((_, ref mut scrollbar_h, ref mut scrollbar_v)) = builder.scrollbars {
+        let h_handle_size = scrollbar_h.slider_handle.layout().vars.width;
+        let v_handle_size = scrollbar_v.slider_handle.layout().vars.height;
+        scroll_parent_handler.size_handler = Some(ScrollSizeHandler::new(h_handle_size, v_handle_size));
+    }
+    builder.content_holder.add_handler(scroll_parent_handler);
     builder.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
         event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
     });
     builder.content_holder.add_child(content);
     builder.widget.add_child(builder.content_holder);
-    if let Some((corner, mut scrollbar_h, mut scrollbar_v)) = builder.scrollbars {
-        let h_handle_size = scrollbar_h.slider_handle.layout().vars.width;
-        let v_handle_size = scrollbar_v.slider_handle.layout().vars.height;
+    if let Some((corner, scrollbar_h, scrollbar_v)) = builder.scrollbars {
         builder.widget.add_child(corner);
         builder.widget.add_child(scrollbar_h);
         builder.widget.add_child(scrollbar_v);
-        builder.widget.add_handler(ScrollSizeHandler::new(h_handle_size, v_handle_size));
     }
     builder.widget
 });
 
-#[derive(Debug)]
-enum ScrollSizeChange {
-    Container(Size),
-    Content(Size),
-}
-
 struct ScrollSizeHandler {
-    container_size: Size,
     content_size: Size,
     h_handle_size: Variable,
     v_handle_size: Variable,
@@ -120,71 +126,88 @@ struct ScrollSizeHandler {
 impl ScrollSizeHandler {
     fn new(h_handle_size: Variable, v_handle_size: Variable) -> Self {
         ScrollSizeHandler {
-            container_size: Size::zero(),
             content_size: Size::zero(),
             h_handle_size: h_handle_size,
             v_handle_size: v_handle_size,
         }
     }
 }
-impl WidgetEventHandler<ScrollSizeChange> for ScrollSizeHandler {
-    fn handle(&mut self, event: &ScrollSizeChange, args: WidgetEventArgs) {
-        let old_width_ratio = self.container_size.width / self.content_size.width;
-        let old_height_ratio = self.container_size.height / self.content_size.height;
-        match event {
-            &ScrollSizeChange::Container(size) => self.container_size = size,
-            &ScrollSizeChange::Content(size) => self.content_size = size,
-        }
-        let width_ratio = self.container_size.width / self.content_size.width;
-        let height_ratio = self.container_size.height / self.content_size.height;
-        if width_ratio.is_finite() && width_ratio != old_width_ratio {
-            let width = self.container_size.width * width_ratio;
-            debug!("width_ratio {:?} {:?}", width_ratio, width);
-            args.solver.update_solver(|solver| {
-                solver.suggest_value(self.h_handle_size, width).unwrap();
-            });
-        }
-        if height_ratio.is_finite() && height_ratio != old_height_ratio {
-            let height = self.container_size.height * height_ratio;
-            debug!("height_ratio {:?} {:?}", height_ratio, height);
-            args.solver.update_solver(|solver| {
-                solver.suggest_value(self.v_handle_size, height).unwrap();
-            });
-        }
-    }
-}
 
 enum ScrollParentEvent {
+    ContainerSizeChange,
+    ContentSizeChange(Size),
     WidgetMouseWheel(WidgetMouseWheel),
+    OffsetX(f64),
+    OffsetY(f64),
 }
 struct ScrollParent {
     scrollable: WidgetId,
+    pub size_handler: Option<ScrollSizeHandler>,
 }
 impl ScrollParent {
     fn new(scrollable: WidgetId) -> Self {
         ScrollParent {
             scrollable: scrollable,
+            size_handler: None,
         }
     }
 }
 impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
     fn handle(&mut self, event: &ScrollParentEvent, args: WidgetEventArgs) {
         match *event {
+            ScrollParentEvent::ContainerSizeChange | ScrollParentEvent::ContentSizeChange(_) => {
+                if let Some(ref mut size_handler) = self.size_handler {
+                    let container_size = args.widget.bounds;
+                    let old_width_ratio = container_size.width() / size_handler.content_size.width;
+                    let old_height_ratio = container_size.height() / size_handler.content_size.height;
+                    match event {
+                        &ScrollParentEvent::ContentSizeChange(size) => size_handler.content_size = size,
+                        _ => (),
+                    }
+                    let width_ratio = container_size.width() / size_handler.content_size.width;
+                    let height_ratio = container_size.height() / size_handler.content_size.height;
+                    if width_ratio.is_finite() && width_ratio != old_width_ratio {
+                        let width = container_size.width() * width_ratio;
+                        debug!("width_ratio {:?} {:?}", width_ratio, width);
+                        args.solver.update_solver(|solver| {
+                            solver.suggest_value(size_handler.h_handle_size, width).unwrap();
+                        });
+                    }
+                    if height_ratio.is_finite() && height_ratio != old_height_ratio {
+                        let height = container_size.height() * height_ratio;
+                        debug!("height_ratio {:?} {:?}", height_ratio, height);
+                        args.solver.update_solver(|solver| {
+                            solver.suggest_value(size_handler.v_handle_size, height).unwrap();
+                        });
+                    }
+                }
+            }
             ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
-                let widget_bounds = args.widget.bounds;
-                let event = WidgetScroll {
-                    event: mouse_wheel.0,
-                    parent_bounds: widget_bounds,
-                };
+                let event = WidgetScroll::MouseWheel(mouse_wheel.0, args.widget.bounds);
                 event!(Target::Widget(self.scrollable), event);
+            }
+            ScrollParentEvent::OffsetX(ref offset) => {
+                if let Some(ref mut size_handler) = self.size_handler {
+                    let width_ratio = size_handler.content_size.width - args.widget.bounds.width();
+                    let event = WidgetScroll::OffsetX(-offset * width_ratio, args.widget.bounds);
+                    event!(Target::Widget(self.scrollable), event);
+                }
+            }
+            ScrollParentEvent::OffsetY(ref offset) => {
+                if let Some(ref mut size_handler) = self.size_handler {
+                    let height_ratio = size_handler.content_size.height - args.widget.bounds.height();
+                    let event = WidgetScroll::OffsetY(-offset * height_ratio, args.widget.bounds);
+                    event!(Target::Widget(self.scrollable), event);
+                }
             }
         }
     }
 }
 
-pub struct WidgetScroll {
-    event: glutin::MouseScrollDelta,
-    parent_bounds: Rect,
+pub enum WidgetScroll {
+    OffsetX(f64, Rect),
+    OffsetY(f64, Rect),
+    MouseWheel(glutin::MouseScrollDelta, Rect),
 }
 
 pub struct WidgetScrollHandler {
@@ -207,19 +230,34 @@ fn get_scroll(event: glutin::MouseScrollDelta) -> Point {
 }
 impl WidgetEventHandler<WidgetScroll> for WidgetScrollHandler {
     fn handle(&mut self, event: &WidgetScroll, args: WidgetEventArgs) {
-        let &WidgetScroll { event, parent_bounds } = event;
-        let scroll = get_scroll(event);
-        let widget_bounds = args.widget.bounds;
+        match *event {
+            WidgetScroll::MouseWheel(event, parent_bounds) => {
+                let scroll = get_scroll(event);
+                let widget_bounds = args.widget.bounds;
 
-        let max_scroll = Point::new(
-            parent_bounds.width() - widget_bounds.width(),
-            parent_bounds.height() - widget_bounds.height());
-        self.offset = self.offset + scroll * 13.0;
-        self.offset.x = f64::min(0.0, f64::max(max_scroll.x, self.offset.x));
-        self.offset.y = f64::min(0.0, f64::max(max_scroll.y, self.offset.y));
-        args.widget.update_layout(|layout| {
-            layout.edit_left().set(parent_bounds.left() + self.offset.x);
-            layout.edit_top().set(parent_bounds.top() + self.offset.y);
-        }, args.solver);
+                let max_scroll = Point::new(
+                    parent_bounds.width() - widget_bounds.width(),
+                    parent_bounds.height() - widget_bounds.height());
+                self.offset = self.offset + scroll * 13.0;
+                self.offset.x = f64::min(0.0, f64::max(max_scroll.x, self.offset.x));
+                self.offset.y = f64::min(0.0, f64::max(max_scroll.y, self.offset.y));
+                args.widget.update_layout(|layout| {
+                    layout.edit_left().set(parent_bounds.left() + self.offset.x);
+                    layout.edit_top().set(parent_bounds.top() + self.offset.y);
+                }, args.solver);
+            }
+            WidgetScroll::OffsetX(offset, parent_bounds) => {
+                self.offset.x = offset;
+                args.widget.update_layout(|layout| {
+                    layout.edit_left().set(parent_bounds.left() + self.offset.x);
+                }, args.solver);
+            }
+            WidgetScroll::OffsetY(offset, parent_bounds) => {
+                self.offset.y = offset;
+                args.widget.update_layout(|layout| {
+                    layout.edit_top().set(parent_bounds.top() + self.offset.y);
+                }, args.solver);
+            }
+        }
     }
 }
