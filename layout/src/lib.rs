@@ -147,7 +147,7 @@ impl LayoutBuilder {
 pub struct VariableEditable<'a> {
     pub builder: &'a mut LayoutBuilder,
     pub var: Variable,
-    val: f64,
+    val: Option<f64>,
     strength: f64,
 }
 impl<'a> VariableEditable<'a> {
@@ -155,7 +155,7 @@ impl<'a> VariableEditable<'a> {
         VariableEditable {
             builder: builder,
             var: var,
-            val: 0.0,
+            val: None,
             strength: STRONG,
         }
     }
@@ -164,7 +164,7 @@ impl<'a> VariableEditable<'a> {
         self
     }
     pub fn set(mut self, val: f64) -> Self {
-        self.val = val;
+        self.val = Some(val);
         self
     }
 }
@@ -177,7 +177,7 @@ impl<'a> Drop for VariableEditable<'a> {
 #[derive(Debug)]
 pub struct EditVariable {
     var: Variable,
-    val: f64,
+    val: Option<f64>,
     strength: f64,
 }
 impl EditVariable {

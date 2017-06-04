@@ -17,6 +17,7 @@ pub struct LimnSolver {
     constraint_vars: HashMap<Constraint, Vec<Variable>>,
     var_ids: HashMap<Variable, LayoutId>,
     hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
+    edit_strengths: HashMap<Variable, f64>,
     missing_widget_layout: HashMap<Variable, f64>,
     debug_constraint_list: LinkedHashMap<Constraint, ()>, // LinkedHashSet (maintains insertion order)
 }
@@ -29,6 +30,7 @@ impl LimnSolver {
             constraint_vars: HashMap::new(),
             var_ids: HashMap::new(),
             hidden_layouts: HashMap::new(),
+            edit_strengths: HashMap::new(),
             missing_widget_layout: HashMap::new(),
             debug_constraint_list: LinkedHashMap::new(),
         }
@@ -125,15 +127,25 @@ impl LimnSolver {
         self.solver.has_constraint(constraint)
     }
 
+    pub fn edit_variable(&mut self, var: Variable, val: f64) {
+        if !self.solver.has_edit_variable(&var) {
+            let strength = self.edit_strengths.remove(&var).unwrap_or(strength::STRONG);
+            self.solver.add_edit_variable(var, strength).unwrap();
+        }
+        self.solver.suggest_value(var, val).unwrap();
+    }
+
     pub fn update_from_builder(&mut self, layout: LayoutBuilder) {
         for edit_var in layout.edit_vars {
-            if !self.solver.has_edit_variable(&edit_var.var) {
-                debug!("add edit_var {:?}", fmt_variable(edit_var.var));
-                self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
+            if let Some(val) = edit_var.val {
+                if !self.solver.has_edit_variable(&edit_var.var) {
+                    debug!("add edit_var {:?}", fmt_variable(edit_var.var));
+                    self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
+                }
+                self.solver.suggest_value(edit_var.var, val).unwrap();
             } else {
-                debug!("update edit_var {:?}", fmt_variable(edit_var.var));
+                self.edit_strengths.insert(edit_var.var, edit_var.strength);
             }
-            self.solver.suggest_value(edit_var.var, edit_var.val).unwrap();
         }
         for constraint in layout.constraints {
             self.add_constraint(constraint.clone());

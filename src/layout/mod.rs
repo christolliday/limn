@@ -1,4 +1,4 @@
-use cassowary::{self, Variable};
+use cassowary::Variable;
 
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
 
@@ -55,9 +55,9 @@ impl LayoutManager {
         }
     }
     pub fn update_solver<F>(&mut self, f: F)
-        where F: Fn(&mut cassowary::Solver)
+        where F: Fn(&mut LimnSolver)
     {
-        f(&mut self.solver.solver);
+        f(&mut self.solver);
         self.check_changes();
     }
 

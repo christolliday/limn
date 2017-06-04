@@ -176,14 +176,14 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                         self.width_ratio = width_ratio;
                         let width = container_size.width * width_ratio;
                         args.solver.update_solver(|solver| {
-                            solver.suggest_value(size_handler.h_handle_size, width).unwrap();
+                            solver.edit_variable(size_handler.h_handle_size, width);
                         });
                     }
                     if height_ratio.is_finite() && height_ratio != self.height_ratio {
                         self.height_ratio = height_ratio;
                         let height = container_size.height * height_ratio;
                         args.solver.update_solver(|solver| {
-                            solver.suggest_value(size_handler.v_handle_size, height).unwrap();
+                            solver.edit_variable(size_handler.v_handle_size, height);
                         });
                     }
                 }
@@ -201,12 +201,8 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                 self.offset.y = f64::min(0.0, f64::max(max_scroll.y, self.offset.y));
 
                 args.solver.update_solver(|solver| {
-                    if !solver.has_edit_variable(&self.scrollable_left) {
-                        solver.add_edit_variable(self.scrollable_left, STRONG).unwrap();
-                        solver.add_edit_variable(self.scrollable_top, STRONG).unwrap();
-                    }
-                    solver.suggest_value(self.scrollable_left, parent_bounds.left() + self.offset.x).unwrap();
-                    solver.suggest_value(self.scrollable_top, parent_bounds.top() + self.offset.y).unwrap();
+                    solver.edit_variable(self.scrollable_left, parent_bounds.left() + self.offset.x);
+                    solver.edit_variable(self.scrollable_top, parent_bounds.top() + self.offset.y);
                 });
 
                 if let Some(ref mut size_handler) = self.size_handler {
@@ -220,20 +216,14 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                 self.offset.x = -offset * (self.content_size.width - args.widget.bounds.width());
                 let parent_bounds = args.widget.bounds;
                 args.solver.update_solver(|solver| {
-                    if !solver.has_edit_variable(&self.scrollable_left) {
-                        solver.add_edit_variable(self.scrollable_left, STRONG).unwrap();
-                    }
-                    solver.suggest_value(self.scrollable_left, parent_bounds.left() + self.offset.x).unwrap();
+                    solver.edit_variable(self.scrollable_left, parent_bounds.left() + self.offset.x);
                 });
             }
             ScrollParentEvent::OffsetY(ref offset) => {
                 self.offset.y = -offset * (self.content_size.height - args.widget.bounds.height());
                 let parent_bounds = args.widget.bounds;
                 args.solver.update_solver(|solver| {
-                    if !solver.has_edit_variable(&self.scrollable_top) {
-                        solver.add_edit_variable(self.scrollable_top, STRONG).unwrap();
-                    }
-                    solver.suggest_value(self.scrollable_top, parent_bounds.top() + self.offset.y).unwrap();
+                    solver.edit_variable(self.scrollable_top, parent_bounds.top() + self.offset.y);
                 });
             }
         }
