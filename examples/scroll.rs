@@ -14,14 +14,13 @@ use limn::color::*;
 use limn::layout::constraint::*;
 
 fn main() {
-    let (window, ui) = util::init_default("Limn scroll demo");
+    let (window, ui) = util::init_default_min_size("Limn scroll demo", Size::new(300.0, 300.0));
 
     let mut root_widget = WidgetBuilder::new();
 
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.add_scrollbar();
     layout!(scroll_widget:
-        size(Size::new(200.0, 200.0)),
         match_layout(&root_widget).padding(50.0));
 
     let mut rect_container = WidgetBuilder::new_named("rect_container");

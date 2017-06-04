@@ -10,6 +10,7 @@ use limn::app::App;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::resources::{FontId, ImageId, resources};
 use limn::widget::WidgetBuilder;
+use limn::util::Size;
 
 /// Create the window and initialize the app.
 /// The window size is initialized to 100x100 and then resized later based
@@ -18,9 +19,17 @@ use limn::widget::WidgetBuilder;
 /// the window is needed right now to have a GL context for creating
 /// and measuring images/text.
 pub fn init_default(title: &str) -> (Window, App) {
+    init(title, None)
+}
+
+pub fn init_default_min_size(title: &str, size: Size) -> (Window, App) {
+    init(title, Some((size.width as u32, size.height as u32)))
+}
+
+fn init(title: &str, size: Option<(u32, u32)>) -> (Window, App) {
     env_logger::init().unwrap();
-    let window_dims = (100, 100);
-    let mut window = Window::new(title, window_dims, Some(window_dims));
+    let window_size = size.unwrap_or((100, 100));
+    let mut window = Window::new(title, window_size, Some(window_size));
     let app = App::new(&mut window);
     (window, app)
 }

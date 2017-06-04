@@ -143,6 +143,8 @@ struct ScrollParent {
     scrollable_left: Variable,
     scrollable_top: Variable,
     content_size: Size,
+    width_ratio: f64,
+    height_ratio: f64,
     offset: Point,
     pub size_handler: Option<ScrollSizeHandler>,
 }
@@ -152,6 +154,8 @@ impl ScrollParent {
             scrollable_left: scrollable.layout().vars.left,
             scrollable_top: scrollable.layout().vars.top,
             content_size: Size::zero(),
+            width_ratio: 0.0,
+            height_ratio: 0.0,
             offset: Point::zero(),
             size_handler: None,
         }
@@ -161,30 +165,27 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
     fn handle(&mut self, event: &ScrollParentEvent, args: WidgetEventArgs) {
         match *event {
             ScrollParentEvent::ContainerSizeChange | ScrollParentEvent::ContentSizeChange(_) => {
+                if let &ScrollParentEvent::ContentSizeChange(size) = event {
+                    self.content_size = size
+                }
                 if let Some(ref mut size_handler) = self.size_handler {
-                    let container_size = args.widget.bounds;
-                    let old_width_ratio = container_size.width() / self.content_size.width;
-                    let old_height_ratio = container_size.height() / self.content_size.height;
-
-                    if let &ScrollParentEvent::ContentSizeChange(size) = event {
-                        self.content_size = size
-                    }
-                    let width_ratio = container_size.width() / self.content_size.width;
-                    let height_ratio = container_size.height() / self.content_size.height;
-                    if width_ratio.is_finite() && width_ratio != old_width_ratio {
-                        let width = container_size.width() * width_ratio;
+                    let container_size = args.widget.bounds.size;
+                    let width_ratio = container_size.width / self.content_size.width;
+                    let height_ratio = container_size.height / self.content_size.height;
+                    if width_ratio.is_finite() && width_ratio != self.width_ratio {
+                        self.width_ratio = width_ratio;
+                        let width = container_size.width * width_ratio;
                         args.solver.update_solver(|solver| {
                             solver.suggest_value(size_handler.h_handle_size, width).unwrap();
                         });
                     }
-                    if height_ratio.is_finite() && height_ratio != old_height_ratio {
-                        let height = container_size.height() * height_ratio;
+                    if height_ratio.is_finite() && height_ratio != self.height_ratio {
+                        self.height_ratio = height_ratio;
+                        let height = container_size.height * height_ratio;
                         args.solver.update_solver(|solver| {
                             solver.suggest_value(size_handler.v_handle_size, height).unwrap();
                         });
                     }
-                } else if let &ScrollParentEvent::ContentSizeChange(size) = event {
-                    self.content_size = size;
                 }
             }
             ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
