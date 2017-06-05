@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 backend = { path = "backend" }
 text_layout = { path = "text_layout" }
 limn-layout = { path = "layout" }
-cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "683da50a81bf48610cea429ddef4394c680ff754" }
+cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "0329f1799dd606e999f26407f06169e0b7d408f8" }
 
 petgraph = "0.4.3"
 euclid = "0.11.2"
