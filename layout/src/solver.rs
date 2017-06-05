@@ -16,6 +16,7 @@ pub struct LimnSolver {
     var_constraints: HashMap<Variable, HashSet<Constraint>>,
     constraint_vars: HashMap<Constraint, Vec<Variable>>,
     var_ids: HashMap<Variable, LayoutId>,
+    widget_vars: HashMap<LayoutId, [Variable; 6]>,
     hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
     edit_strengths: HashMap<Variable, f64>,
     missing_widget_layout: HashMap<Variable, f64>,
@@ -29,6 +30,7 @@ impl LimnSolver {
             var_constraints: HashMap::new(),
             constraint_vars: HashMap::new(),
             var_ids: HashMap::new(),
+            widget_vars: HashMap::new(),
             hidden_layouts: HashMap::new(),
             edit_strengths: HashMap::new(),
             missing_widget_layout: HashMap::new(),
@@ -40,6 +42,7 @@ impl LimnSolver {
         self.var_ids.insert(layout.vars.top, id);
         self.var_ids.insert(layout.vars.width, id);
         self.var_ids.insert(layout.vars.height, id);
+        self.widget_vars.insert(id, layout.vars.array());
 
         {
             let mut check_existing = |var| { self.missing_widget_layout.remove(var).unwrap_or(0.0) };
@@ -62,37 +65,40 @@ impl LimnSolver {
         self.update_from_builder(layout);
     }
 
-    pub fn remove_widget(&mut self, widget_vars: &LayoutVars) {
-        for var in widget_vars.array().iter() {
-            // remove constraints that are relative to this widget from solver
-            if let Some(constraint_set) = self.var_constraints.remove(&var) {
-                for constraint in constraint_set {
-                    if self.solver.has_constraint(&constraint) {
-                        self.debug_constraint_list.remove(&constraint);
-                        self.solver.remove_constraint(&constraint).unwrap();
-                        // look up other variables that references this constraint,
-                        // and remove this constraint from those variables constraint sets
-                        if let Some(var_list) = self.constraint_vars.get(&constraint) {
-                            for var in var_list {
-                                if let Some(constraint_set) = self.var_constraints.get_mut(&var) {
-                                    constraint_set.remove(&constraint);
+    pub fn remove_widget(&mut self, id: LayoutId) {
+        if let Some(vars) = self.widget_vars.remove(&id) {
+            for var in vars.iter() {
+                // remove constraints that are relative to this widget from solver
+                if let Some(constraint_set) = self.var_constraints.remove(&var) {
+                    for constraint in constraint_set {
+                        if self.solver.has_constraint(&constraint) {
+                            self.debug_constraint_list.remove(&constraint);
+                            self.solver.remove_constraint(&constraint).unwrap();
+                            // look up other variables that references this constraint,
+                            // and remove this constraint from those variables constraint sets
+                            if let Some(var_list) = self.constraint_vars.get(&constraint) {
+                                for var in var_list {
+                                    if let Some(constraint_set) = self.var_constraints.get_mut(&var) {
+                                        constraint_set.remove(&constraint);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                self.var_ids.remove(&var);
             }
-            self.var_ids.remove(&var);
         }
     }
     // hide/unhide are a simplified way of temporarily removing a layout, by removing
     // only the constraints on that widget directly
     // if the layout has children that have constraints outside of the subtree, those
     // constraints will not be removed. todo: find an efficient way of resolving this
-    pub fn hide_widget(&mut self, id: LayoutId, vars: &LayoutVars) {
+    pub fn hide_widget(&mut self, id: LayoutId) {
         if !self.hidden_layouts.contains_key(&id) {
             let mut constraints = Vec::new();
-            for var in vars.array().iter() {
+            let vars = self.widget_vars[&id];
+            for var in vars.iter() {
                 if let Some(constraint_set) = self.var_constraints.get(&var) {
                     for constraint in constraint_set {
                         if self.solver.has_constraint(&constraint) {

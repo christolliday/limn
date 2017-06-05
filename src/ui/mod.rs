@@ -181,8 +181,8 @@ impl Ui {
             }
         }
         event!(Target::Widget(widget_id), WidgetDetachedEvent);
-        if let Some(widget) = self.graph.remove_widget(widget_id) {
-            self.layout.solver.remove_widget(&widget.widget.layout);
+        if let Some(_) = self.graph.remove_widget(widget_id) {
+            self.layout.solver.remove_widget(widget_id.0);
             self.layout.check_changes();
             self.redraw();
         }
