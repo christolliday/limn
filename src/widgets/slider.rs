@@ -310,16 +310,18 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 }
             }
             SliderHandleInput::SetValue((value, parent_bounds)) => {
-                if let Orientation::Horizontal = self.orientation {
-                    let pos = parent_bounds.left() + value * (parent_bounds.width() - bounds.width());
-                    args.widget.update_layout(|layout| {
-                        layout.edit_left().set(pos);
-                    }, args.solver);
-                } else {
-                    let pos = parent_bounds.top() + value * (parent_bounds.height() - bounds.height());
-                    args.widget.update_layout(|layout| {
-                        layout.edit_top().set(pos);
-                    }, args.solver);
+                if value.is_finite() {
+                    if let Orientation::Horizontal = self.orientation {
+                        let pos = parent_bounds.left() + value * (parent_bounds.width() - bounds.width());
+                        args.widget.update_layout(|layout| {
+                            layout.edit_left().set(pos);
+                        }, args.solver);
+                    } else {
+                        let pos = parent_bounds.top() + value * (parent_bounds.height() - bounds.height());
+                        args.widget.update_layout(|layout| {
+                            layout.edit_top().set(pos);
+                        }, args.solver);
+                    }
                 }
             }
             SliderHandleInput::SliderClicked((position, parent_bounds)) => {
