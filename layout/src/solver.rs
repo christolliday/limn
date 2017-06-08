@@ -138,17 +138,26 @@ impl LimnSolver {
             let strength = self.edit_strengths.remove(&var).unwrap_or(strength::STRONG);
             self.solver.add_edit_variable(var, strength).unwrap();
         }
-        self.solver.suggest_value(var, val).unwrap();
+        self.suggest_value(var, val);
+    }
+
+    fn suggest_value(&mut self, var: Variable, val: f64) {
+        if val.is_finite() {
+            self.solver.suggest_value(var, val).unwrap();
+            debug!("suggest edit_var {} {}", fmt_variable(var), val);
+        } else {
+            debug!("invalid edit_var {} {}", fmt_variable(var), val);
+        }
     }
 
     pub fn update_from_builder(&mut self, layout: LayoutBuilder) {
         for edit_var in layout.edit_vars {
             if let Some(val) = edit_var.val {
                 if !self.solver.has_edit_variable(&edit_var.var) {
-                    debug!("add edit_var {:?}", fmt_variable(edit_var.var));
+                    debug!("add edit_var {}", fmt_variable(edit_var.var));
                     self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
                 }
-                self.solver.suggest_value(edit_var.var, val).unwrap();
+                self.suggest_value(edit_var.var, val);
             } else {
                 self.edit_strengths.insert(edit_var.var, edit_var.strength);
             }
