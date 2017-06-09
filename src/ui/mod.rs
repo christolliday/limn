@@ -82,8 +82,8 @@ impl Ui {
         {
             let root = self.graph.get_root();
             self.layout.solver.update_solver(|solver| {
-                solver.suggest_value(root.layout.right, window_dims.width).unwrap();
-                solver.suggest_value(root.layout.bottom, window_dims.height).unwrap();
+                solver.suggest_value(root.layout.vars.right, window_dims.width).unwrap();
+                solver.suggest_value(root.layout.vars.bottom, window_dims.height).unwrap();
             });
         }
         self.layout.check_changes();
@@ -147,7 +147,7 @@ impl Ui {
     {
         if let Some(parent) = self.graph.get_widget_container(parent_id) {
             if let Some(ref mut container) = parent.container {
-                container.add_child(&parent.widget, &mut widget);
+                container.add_child(&mut parent.widget, &mut widget);
             }
         }
         let layout = widget.layout().vars.clone();
@@ -160,8 +160,8 @@ impl Ui {
     fn attach_widget(&mut self,
                      builder: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
-        let (children, layout, mut widget) = builder.build();
-        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, layout, &mut widget.widget.bounds);
+        let (children, mut widget) = builder.build();
+        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, &mut widget.widget.layout, &mut widget.widget.bounds);
         self.layout.check_changes();
 
         let id = widget.widget.id;
@@ -176,7 +176,7 @@ impl Ui {
         if let Some(parent_id) = self.graph.parent(widget_id) {
             if let Some(parent) = self.graph.get_widget_container(parent_id) {
                 if let Some(ref mut container) = parent.container {
-                    container.remove_child(&parent.widget, widget_id, &mut self.layout);
+                    container.remove_child(&mut parent.widget, widget_id, &mut self.layout);
                 }
             }
         }

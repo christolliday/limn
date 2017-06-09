@@ -9,7 +9,7 @@ use petgraph::stable_graph::WalkNeighbors;
 
 use widget::{Widget, WidgetContainer};
 use widget::property::PropSet;
-use layout::LayoutVars;
+use layout::LayoutBuilder;
 use util::Point;
 use resources::{resources, WidgetId};
 
@@ -39,7 +39,7 @@ impl WidgetGraph {
     pub fn new() -> Self {
         let mut graph = Graph::new();
         let dummy_container = WidgetContainer {
-            widget: Widget::new(WidgetId(0), None, PropSet::new(), LayoutVars::new(), None, None),
+            widget: Widget::new(WidgetId(0), None, PropSet::new(), LayoutBuilder::new(), None, None),
             container: None,
             handlers: HashMap::new(),
         };

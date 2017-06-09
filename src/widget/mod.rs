@@ -202,15 +202,14 @@ impl WidgetBuilder {
         builder
     }
 
-    pub fn build(self) -> (Vec<WidgetBuilder>, LayoutBuilder, WidgetContainer) {
+    pub fn build(self) -> (Vec<WidgetBuilder>, WidgetContainer) {
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
-                                 self.layout.vars.clone(),
+                                 self.layout,
                                  self.debug_name,
                                  self.debug_color);
         (self.children,
-         self.layout,
          WidgetContainer {
              widget: widget,
              container: self.container,
@@ -249,7 +248,7 @@ pub struct Widget {
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub has_updated: bool,
-    pub layout: LayoutVars,
+    pub layout: LayoutBuilder,
     pub bounds: Rect,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -259,7 +258,7 @@ impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<DrawableWrapper>,
                props: PropSet,
-               layout: LayoutVars,
+               layout: LayoutBuilder,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
@@ -318,12 +317,11 @@ impl Widget {
         }
     }
 
-    pub fn update_layout<F>(&self, f: F, solver: &mut LayoutManager)
+    pub fn update_layout<F>(&mut self, f: F, solver: &mut LayoutManager)
         where F: FnOnce(&mut LayoutBuilder)
     {
-        let mut layout = LayoutBuilder::from(self.layout.clone());
-        f(&mut layout);
-        solver.solver.update_from_builder(layout);
+        f(&mut self.layout);
+        solver.solver.update_from_builder(&mut self.layout);
         solver.check_changes();
     }
 }

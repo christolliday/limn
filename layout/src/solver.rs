@@ -37,7 +37,7 @@ impl LimnSolver {
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
-    pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: LayoutBuilder, bounds: &mut Rect) {
+    pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: &mut LayoutBuilder, bounds: &mut Rect) {
         self.var_ids.insert(layout.vars.left, id);
         self.var_ids.insert(layout.vars.top, id);
         self.var_ids.insert(layout.vars.width, id);
@@ -150,8 +150,8 @@ impl LimnSolver {
         }
     }
 
-    pub fn update_from_builder(&mut self, layout: LayoutBuilder) {
-        for edit_var in layout.edit_vars {
+    pub fn update_from_builder(&mut self, layout: &mut LayoutBuilder) {
+        for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
                 if !self.solver.has_edit_variable(&edit_var.var) {
                     debug!("add edit_var {}", fmt_variable(edit_var.var));
@@ -162,7 +162,7 @@ impl LimnSolver {
                 self.edit_strengths.insert(edit_var.var, edit_var.strength);
             }
         }
-        for constraint in layout.constraints {
+        for constraint in layout.get_constraints() {
             self.add_constraint(constraint.clone());
             let var_list = self.constraint_vars.entry(constraint.clone()).or_insert(Vec::new());
             for term in &constraint.0.expression.terms {

@@ -9,6 +9,7 @@ extern crate linked_hash_map;
 extern crate maplit;
 
 use std::ops::Drop;
+use std::mem;
 
 use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
@@ -86,33 +87,28 @@ impl LayoutRef for LayoutVars {
 
 pub struct LayoutBuilder {
     pub vars: LayoutVars,
-    pub edit_vars: Vec<EditVariable>,
-    pub constraints: Vec<Constraint>,
+    edit_vars: Vec<EditVariable>,
+    constraints: Vec<Constraint>,
+    new_constraints: Vec<Constraint>,
 }
 impl LayoutBuilder {
     pub fn new() -> Self {
         let vars = LayoutVars::new();
-        let mut constraints = Vec::new();
-        constraints.push(vars.right - vars.left| EQ(REQUIRED) | vars.width);
-        constraints.push(vars.bottom - vars.top | EQ(REQUIRED) | vars.height);
+        let mut new_constraints = Vec::new();
+        new_constraints.push(vars.right - vars.left| EQ(REQUIRED) | vars.width);
+        new_constraints.push(vars.bottom - vars.top | EQ(REQUIRED) | vars.height);
         // temporarily disabling this, as it tends to cause width/height to snap to 0
         //constraints.push(vars.width | GE(REQUIRED) | 0.0);
         //constraints.push(vars.height | GE(REQUIRED) | 0.0);
         LayoutBuilder {
             vars: vars,
             edit_vars: Vec::new(),
-            constraints: constraints,
+            new_constraints: new_constraints,
+            constraints: Vec::new(),
         }
     }
     pub fn layout(&mut self) -> &mut Self {
         self
-    }
-    pub fn from(vars: LayoutVars) -> Self {
-        LayoutBuilder {
-            vars: vars,
-            edit_vars: Vec::new(),
-            constraints: Vec::new(),
-        }
     }
     pub fn edit_left(&mut self) -> VariableEditable {
         let var = self.vars.left;
@@ -139,8 +135,16 @@ impl LayoutBuilder {
         VariableEditable::new(self, var)
     }
     pub fn add<B: ConstraintBuilder>(&mut self, builder: B) {
-        let constraints = builder.build(self);
-        self.constraints.extend(constraints);
+        let new_constraints = builder.build(self);
+        self.new_constraints.extend(new_constraints);
+    }
+    pub fn get_constraints(&mut self) -> Vec<Constraint> {
+        let new_constraints = mem::replace(&mut self.new_constraints, Vec::new());
+        self.constraints.extend(new_constraints.clone());
+        new_constraints
+    }
+    pub fn get_edit_vars(&mut self) -> Vec<EditVariable> {
+        mem::replace(&mut self.edit_vars, Vec::new())
     }
 }
 

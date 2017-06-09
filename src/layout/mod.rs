@@ -20,11 +20,11 @@ impl LayoutContainer for LinearLayoutHandler {
     fn set_padding(&mut self, padding: f64) {
         self.padding = padding;
     }
-    fn add_child(&mut self, parent: &Widget, child: &mut WidgetBuilder) {
+    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder) {
         let child_id = child.id();
-        self.add_child_layout(&parent.layout, child.layout(), child_id.0);
+        self.add_child_layout(&parent.layout.vars, child.layout(), child_id.0);
     }
-    fn remove_child(&mut self, parent: &Widget, child_id: WidgetId, solver: &mut LayoutManager) {
+    fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId, solver: &mut LayoutManager) {
         parent.update_layout(|layout| {
             self.remove_child_layout(layout, child_id.0);
         }, solver);
@@ -78,7 +78,7 @@ pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     for &(widget_id, var, value) in changes {
         let widget_id = WidgetId(widget_id);
         if let Some(widget) = ui.graph.get_widget(widget_id) {
-            let var = widget.layout.get_var(var).expect("Missing variable for widget");
+            let var = widget.layout.vars.get_var(var).expect("Missing variable for widget");
             debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
             match var {
                 VarUpdate::Left => widget.bounds.origin.x = value,
