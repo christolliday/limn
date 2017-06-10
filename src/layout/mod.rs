@@ -1,4 +1,5 @@
 use cassowary::Variable;
+use multi_mut::HashMapMultiMut;
 
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
 
@@ -20,14 +21,16 @@ impl LayoutContainer for LinearLayoutHandler {
     fn set_padding(&mut self, padding: f64) {
         self.padding = padding;
     }
-    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder) {
+    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
         let child_id = child.id();
-        self.add_child_layout(&parent.layout.vars, child.layout(), child_id.0);
+        solver.update_layouts(child.id(), parent.id, |child, parent| {
+            self.add_child_layout(&parent.vars, child, child_id.0);
+        });
     }
     fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId, solver: &mut LayoutManager) {
-        parent.update_layout(|layout| {
+        solver.update_layout(parent.id, |layout| {
             self.remove_child_layout(layout, child_id.0);
-        }, solver);
+        });
     }
 }
 
@@ -54,6 +57,26 @@ impl LayoutManager {
             solver: LimnSolver::new(),
         }
     }
+    pub fn update_layout<F>(&mut self, id: WidgetId, f: F)
+        where F: FnOnce(&mut Layout)
+    {
+        {
+            let layout = self.solver.widget_vars.get_mut(&id.0).unwrap();
+            f(layout);
+        }
+        self.solver.update_from_builder(id.0);
+        self.check_changes();
+    }
+    pub fn update_layouts<F>(&mut self, id: WidgetId, id2: WidgetId, f: F)
+        where F: FnOnce(&mut Layout, &mut Layout)
+    {
+        {
+            let (layout, layout2) = self.solver.widget_vars.get_pair_mut(&id.0, &id2.0).unwrap();
+            f(layout, layout2);
+        }
+        self.solver.update_from_builder(id.0);
+        self.check_changes();
+    }
     pub fn update_solver<F>(&mut self, f: F)
         where F: Fn(&mut LimnSolver)
     {
@@ -78,7 +101,8 @@ pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     for &(widget_id, var, value) in changes {
         let widget_id = WidgetId(widget_id);
         if let Some(widget) = ui.graph.get_widget(widget_id) {
-            let var = widget.layout.vars.get_var(var).expect("Missing variable for widget");
+            let vars = &ui.layout.solver.widget_vars[&widget_id.0].vars;
+            let var = vars.get_var(var).expect("Missing variable for widget");
             debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
             match var {
                 VarUpdate::Left => widget.bounds.origin.x = value,

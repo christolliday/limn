@@ -20,6 +20,7 @@ extern crate downcast_rs;
 extern crate euclid;
 #[macro_use]
 extern crate log;
+extern crate multi_mut;
 
 #[macro_use]
 pub mod event;

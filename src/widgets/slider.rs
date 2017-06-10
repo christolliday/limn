@@ -293,13 +293,13 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                     }
                     _ => {
                         let drag_to = drag_pos - self.start_pos;
-                        args.widget.update_layout(|layout| {
+                        args.solver.update_layout(args.widget.id, |layout| {
                             if let Orientation::Horizontal = self.orientation {
                                 layout.edit_left().set(drag_to);
                             } else {
                                 layout.edit_top().set(drag_to);
                             }
-                        }, args.solver);
+                        });
                         let event = MovedSliderWidgetEvent {
                             orientation: self.orientation,
                             slider_pos: (bounds_start + bounds_end) / 2.0,
@@ -313,14 +313,14 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 if value.is_finite() {
                     if let Orientation::Horizontal = self.orientation {
                         let pos = parent_bounds.left() + value * (parent_bounds.width() - bounds.width());
-                        args.widget.update_layout(|layout| {
+                        args.solver.update_layout(args.widget.id, |layout| {
                             layout.edit_left().set(pos);
-                        }, args.solver);
+                        });
                     } else {
                         let pos = parent_bounds.top() + value * (parent_bounds.height() - bounds.height());
-                        args.widget.update_layout(|layout| {
+                        args.solver.update_layout(args.widget.id, |layout| {
                             layout.edit_top().set(pos);
-                        }, args.solver);
+                        });
                     }
                 }
             }
@@ -332,17 +332,17 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                     let min = parent_bounds.left() + handle_radius;
                     let max = parent_bounds.left() + parent_bounds.width() - handle_radius;
                     let position = f64::min(f64::max(position, min), max);
-                    args.widget.update_layout(|layout| {
+                    args.solver.update_layout(args.widget.id, |layout| {
                         layout.edit_left().set(position - handle_radius);
-                    }, args.solver);
+                    });
                     position
                 } else {
                     let min = parent_bounds.top() + handle_radius;
                     let max = parent_bounds.top() + parent_bounds.height() - handle_radius;
                     let position = f64::min(f64::max(position, min), max);
-                    args.widget.update_layout(|layout| {
+                    args.solver.update_layout(args.widget.id, |layout| {
                         layout.edit_top().set(position - handle_radius);
-                    }, args.solver);
+                    });
                     position
                 };
                 let event = MovedSliderWidgetEvent {

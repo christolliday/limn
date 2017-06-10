@@ -24,7 +24,7 @@ use ui::graph::WidgetGraph;
 
 pub struct Ui {
     pub graph: WidgetGraph,
-    layout: LayoutManager,
+    pub layout: LayoutManager,
     glyph_cache: GlyphCache,
     needs_redraw: bool,
     should_close: bool,
@@ -79,13 +79,10 @@ impl Ui {
         dims
     }
     pub fn window_resized(&mut self, window_dims: Size) {
-        {
-            let root = self.graph.get_root();
-            self.layout.solver.update_solver(|solver| {
-                solver.suggest_value(root.layout.vars.right, window_dims.width).unwrap();
-                solver.suggest_value(root.layout.vars.bottom, window_dims.height).unwrap();
-            });
-        }
+        self.layout.update_layout(self.graph.root_id, |layout| {
+            layout.edit_right().set(window_dims.width);
+            layout.edit_bottom().set(window_dims.height);
+        });
         self.layout.check_changes();
         self.needs_redraw = true;
     }
@@ -147,7 +144,7 @@ impl Ui {
     {
         if let Some(parent) = self.graph.get_widget_container(parent_id) {
             if let Some(ref mut container) = parent.container {
-                container.add_child(&mut parent.widget, &mut widget);
+                container.add_child(&mut parent.widget, &mut widget, &mut self.layout);
             }
         }
         let layout = widget.layout().vars.clone();
@@ -160,8 +157,8 @@ impl Ui {
     fn attach_widget(&mut self,
                      builder: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
-        let (children, mut widget) = builder.build();
-        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, &mut widget.widget.layout, &mut widget.widget.bounds);
+        let (children, layout, mut widget) = builder.build();
+        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, layout, &mut widget.widget.bounds);
         self.layout.check_changes();
 
         let id = widget.widget.id;
