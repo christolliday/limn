@@ -8,7 +8,7 @@ use cassowary;
 use cassowary::strength;
 use cassowary::{Variable, Constraint, Expression};
 
-use super::{LayoutId, LayoutVars, LayoutBuilder, Rect};
+use super::{LayoutId, Layout, Rect};
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
@@ -37,7 +37,7 @@ impl LimnSolver {
             debug_constraint_list: LinkedHashMap::new(),
         }
     }
-    pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: &mut LayoutBuilder, bounds: &mut Rect) {
+    pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: &mut Layout, bounds: &mut Rect) {
         self.var_ids.insert(layout.vars.left, id);
         self.var_ids.insert(layout.vars.top, id);
         self.var_ids.insert(layout.vars.width, id);
@@ -150,7 +150,7 @@ impl LimnSolver {
         }
     }
 
-    pub fn update_from_builder(&mut self, layout: &mut LayoutBuilder) {
+    pub fn update_from_builder(&mut self, layout: &mut Layout) {
         for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
                 if !self.solver.has_edit_variable(&edit_var.var) {
@@ -170,6 +170,12 @@ impl LimnSolver {
                 let constraint_set = self.var_constraints.entry(variable).or_insert(HashSet::new());
                 constraint_set.insert(constraint.clone());
                 var_list.push(variable);
+            }
+        }
+        for constraint in layout.get_removed_constraints() {
+            if self.solver.has_constraint(&constraint) {
+                self.debug_constraint_list.remove(&constraint);
+                self.solver.remove_constraint(&constraint).unwrap();
             }
         }
     }

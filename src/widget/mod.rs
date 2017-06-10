@@ -13,7 +13,7 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
 use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
-use layout::{LayoutManager, LayoutBuilder, LayoutVars, LayoutRef};
+use layout::{LayoutManager, Layout, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rect};
@@ -27,7 +27,7 @@ pub struct WidgetBuilder {
     drawable: Option<DrawableWrapper>,
     props: PropSet,
     container: Option<Box<LayoutContainer>>,
-    pub layout: LayoutBuilder,
+    pub layout: Layout,
     handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
     debug_name: Option<String>,
     debug_color: Option<Color>,
@@ -118,7 +118,7 @@ pub trait WidgetBuilderCore {
     fn no_container(&mut self) -> &mut Self;
     fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self;
     fn set_padding(&mut self, padding: f64) -> &mut Self;
-    fn layout(&mut self) -> &mut LayoutBuilder;
+    fn layout(&mut self) -> &mut Layout;
     fn id(&mut self) -> WidgetId;
 }
 
@@ -172,7 +172,7 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self.as_mut().container.as_mut().unwrap().set_padding(padding);
         self
     }
-    fn layout(&mut self) -> &mut LayoutBuilder {
+    fn layout(&mut self) -> &mut Layout {
         &mut self.as_mut().layout
     }
     fn id(&mut self) -> WidgetId {
@@ -192,7 +192,7 @@ impl WidgetBuilder {
             drawable: None,
             props: PropSet::new(),
             container: Some(Box::new(Frame::new())),
-            layout: LayoutBuilder::new(),
+            layout: Layout::new(),
             handlers: HashMap::new(),
             debug_name: name,
             debug_color: None,
@@ -248,7 +248,7 @@ pub struct Widget {
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub has_updated: bool,
-    pub layout: LayoutBuilder,
+    pub layout: Layout,
     pub bounds: Rect,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -258,7 +258,7 @@ impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<DrawableWrapper>,
                props: PropSet,
-               layout: LayoutBuilder,
+               layout: Layout,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
@@ -318,7 +318,7 @@ impl Widget {
     }
 
     pub fn update_layout<F>(&mut self, f: F, solver: &mut LayoutManager)
-        where F: FnOnce(&mut LayoutBuilder)
+        where F: FnOnce(&mut Layout)
     {
         f(&mut self.layout);
         solver.solver.update_from_builder(&mut self.layout);

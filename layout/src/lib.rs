@@ -8,6 +8,7 @@ extern crate linked_hash_map;
 #[macro_use]
 extern crate maplit;
 
+use std::collections::HashSet;
 use std::ops::Drop;
 use std::mem;
 
@@ -69,12 +70,12 @@ pub trait LayoutRef {
     fn layout_ref(&self) -> &LayoutVars;
 }
 
-impl<'a> LayoutRef for &'a mut LayoutBuilder {
+impl<'a> LayoutRef for &'a mut Layout {
     fn layout_ref(&self) -> &LayoutVars {
         &self.vars
     }
 }
-impl LayoutRef for LayoutBuilder {
+impl LayoutRef for Layout {
     fn layout_ref(&self) -> &LayoutVars {
         &self.vars
     }
@@ -85,13 +86,14 @@ impl LayoutRef for LayoutVars {
     }
 }
 
-pub struct LayoutBuilder {
+pub struct Layout {
     pub vars: LayoutVars,
     edit_vars: Vec<EditVariable>,
-    constraints: Vec<Constraint>,
+    constraints: HashSet<Constraint>,
     new_constraints: Vec<Constraint>,
+    removed_constraints: Vec<Constraint>,
 }
-impl LayoutBuilder {
+impl Layout {
     pub fn new() -> Self {
         let vars = LayoutVars::new();
         let mut new_constraints = Vec::new();
@@ -100,11 +102,12 @@ impl LayoutBuilder {
         // temporarily disabling this, as it tends to cause width/height to snap to 0
         //constraints.push(vars.width | GE(REQUIRED) | 0.0);
         //constraints.push(vars.height | GE(REQUIRED) | 0.0);
-        LayoutBuilder {
+        Layout {
             vars: vars,
             edit_vars: Vec::new(),
+            constraints: HashSet::new(),
             new_constraints: new_constraints,
-            constraints: Vec::new(),
+            removed_constraints: Vec::new(),
         }
     }
     pub fn layout(&mut self) -> &mut Self {
@@ -138,10 +141,25 @@ impl LayoutBuilder {
         let new_constraints = builder.build(self);
         self.new_constraints.extend(new_constraints);
     }
+    pub fn add_constraint(&mut self, constraint: Constraint) {
+        self.new_constraints.push(constraint);
+    }
+    pub fn remove_constraint(&mut self, constraint: Constraint) {
+        self.removed_constraints.push(constraint);
+    }
     pub fn get_constraints(&mut self) -> Vec<Constraint> {
         let new_constraints = mem::replace(&mut self.new_constraints, Vec::new());
-        self.constraints.extend(new_constraints.clone());
+        for constraint in new_constraints.clone() {
+            self.constraints.insert(constraint);
+        }
         new_constraints
+    }
+    pub fn get_removed_constraints(&mut self) -> Vec<Constraint> {
+        let removed_constraints = mem::replace(&mut self.removed_constraints, Vec::new());
+        for ref constraint in &removed_constraints {
+            self.constraints.remove(constraint);
+        }
+        removed_constraints
     }
     pub fn get_edit_vars(&mut self) -> Vec<EditVariable> {
         mem::replace(&mut self.edit_vars, Vec::new())
@@ -149,13 +167,13 @@ impl LayoutBuilder {
 }
 
 pub struct VariableEditable<'a> {
-    pub builder: &'a mut LayoutBuilder,
+    pub builder: &'a mut Layout,
     pub var: Variable,
     val: Option<f64>,
     strength: f64,
 }
 impl<'a> VariableEditable<'a> {
-    pub fn new(builder: &'a mut LayoutBuilder, var: Variable) -> Self {
+    pub fn new(builder: &'a mut Layout, var: Variable) -> Self {
         VariableEditable {
             builder: builder,
             var: var,
@@ -234,7 +252,7 @@ mod test {
     use cassowary::strength::*;
     use super::solver;
 
-    use super::{LimnSolver, LayoutId, LayoutBuilder, LayoutVars, VarUpdate, LayoutRef};
+    use super::{LimnSolver, LayoutId, Layout, LayoutVars, VarUpdate, LayoutRef};
     use super::constraint::*;
     use super::{Size, Point, Rect};
 
@@ -365,10 +383,10 @@ mod test {
     // code below is used to create a test harness for creating layouts outside of the widget graph
     struct TestWidget {
         id: LayoutId,
-        layout: LayoutBuilder,
+        layout: Layout,
     }
     impl TestWidget {
-        fn layout(&mut self) -> &mut LayoutBuilder {
+        fn layout(&mut self) -> &mut Layout {
             &mut self.layout
         }
     }
@@ -390,7 +408,7 @@ mod test {
             }
         }
         fn new_widget(&mut self, name: &str) -> TestWidget {
-            let layout_builder = LayoutBuilder::new();
+            let layout_builder = Layout::new();
             let id = self.id_gen.next();
             self.widget_map.insert(id, layout_builder.vars.clone());
             self.widget_names.insert(id, name.to_owned());
@@ -402,7 +420,7 @@ mod test {
         fn add_widget(&mut self, widget: &mut TestWidget) {
             use std::mem;
             let name = self.widget_names.get(&widget.id).unwrap().clone();
-            let layout_builder = mem::replace(&mut widget.layout, LayoutBuilder::new());
+            let layout_builder = mem::replace(&mut widget.layout, Layout::new());
             self.solver.add_widget(widget.id, &Some(name), layout_builder);
         }
         fn update(&mut self) {

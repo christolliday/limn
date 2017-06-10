@@ -5,7 +5,7 @@ use cassowary::WeightedRelation::*;
 use cassowary::Variable;
 
 use super::constraint::*;
-use super::{LayoutId, LayoutVars, LayoutBuilder};
+use super::{LayoutId, LayoutVars, Layout};
 
 #[derive(Copy, Clone)]
 pub enum Orientation {
@@ -42,7 +42,7 @@ impl LinearLayoutHandler {
             last_widget: None,
         }
     }
-    pub fn add_child_layout(&mut self, parent: &LayoutVars, child: &mut LayoutBuilder, child_id: LayoutId) {
+    pub fn add_child_layout(&mut self, parent: &LayoutVars, child: &mut Layout, child_id: LayoutId) {
         match self.orientation {
             Orientation::Horizontal => {
                 layout!(child:
@@ -65,9 +65,9 @@ impl LinearLayoutHandler {
             self.top
         };
         let constraint = child_start - end | EQ(REQUIRED) | self.padding;
-        child.constraints.push(constraint);
+        child.add_constraint(constraint);
         let constraint = self.bottom - child_end | GE(REQUIRED) | self.padding;
-        child.constraints.push(constraint);
+        child.add_constraint(constraint);
         if let Some(last_widget_id) = self.last_widget {
             self.widgets.insert(child_id, WidgetData {
                 start: child_start,
@@ -85,7 +85,7 @@ impl LinearLayoutHandler {
         }
         self.last_widget = Some(child_id);
     }
-    pub fn remove_child_layout(&mut self, parent: &mut LayoutBuilder, child_id: LayoutId) {
+    pub fn remove_child_layout(&mut self, parent: &mut Layout, child_id: LayoutId) {
         if let Some(widget_data) = self.widgets.remove(&child_id) {
             if let Some(last_widget_id) = self.last_widget {
                 if last_widget_id == child_id {
@@ -103,7 +103,7 @@ impl LinearLayoutHandler {
                 let succ = self.widgets.get_mut(&succ).unwrap();
                 succ.pred = widget_data.pred;
                 let succ_start = succ.start;
-                parent.constraints.push(pred_end - succ_start | EQ(STRONG) | self.padding);
+                parent.add_constraint(pred_end - succ_start | EQ(STRONG) | self.padding);
             }
         }
     }
