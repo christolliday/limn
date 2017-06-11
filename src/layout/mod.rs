@@ -60,21 +60,23 @@ impl LayoutManager {
     pub fn update_layout<F>(&mut self, id: WidgetId, f: F)
         where F: FnOnce(&mut Layout)
     {
-        {
-            let layout = self.solver.widget_vars.get_mut(&id.0).unwrap();
+        if let Some(layout) = self.solver.layouts.get_mut(&id.0) {
             f(layout);
+        } else {
+            error!("Tried to update missing layout {:?}", id);
         }
-        self.solver.update_from_builder(id.0);
+        self.solver.update_layout(id.0);
         self.check_changes();
     }
     pub fn update_layouts<F>(&mut self, id: WidgetId, id2: WidgetId, f: F)
         where F: FnOnce(&mut Layout, &mut Layout)
     {
-        {
-            let (layout, layout2) = self.solver.widget_vars.get_pair_mut(&id.0, &id2.0).unwrap();
+        if let Some((layout, layout2)) = self.solver.layouts.get_pair_mut(&id.0, &id2.0) {
             f(layout, layout2);
+        } else {
+            error!("Tried to update missing layout pair {:?} {:?}", id, id2);
         }
-        self.solver.update_from_builder(id.0);
+        self.solver.update_layout(id.0);
         self.check_changes();
     }
     pub fn update_solver<F>(&mut self, f: F)
@@ -101,7 +103,7 @@ pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
     for &(widget_id, var, value) in changes {
         let widget_id = WidgetId(widget_id);
         if let Some(widget) = ui.graph.get_widget(widget_id) {
-            let vars = &ui.layout.solver.widget_vars[&widget_id.0].vars;
+            let vars = &ui.layout.solver.layouts[&widget_id.0].vars;
             let var = vars.get_var(var).expect("Missing variable for widget");
             debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
             match var {

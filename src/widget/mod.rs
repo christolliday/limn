@@ -192,7 +192,7 @@ impl WidgetBuilder {
             drawable: None,
             props: PropSet::new(),
             container: Some(Box::new(Frame::new())),
-            layout: Layout::new(),
+            layout: Layout::new(None),
             handlers: HashMap::new(),
             debug_name: name,
             debug_color: None,
@@ -202,7 +202,8 @@ impl WidgetBuilder {
         builder
     }
 
-    pub fn build(self) -> (Vec<WidgetBuilder>, Layout, WidgetContainer) {
+    pub fn build(mut self) -> (Vec<WidgetBuilder>, Layout, WidgetContainer) {
+        self.layout.name = self.debug_name.clone();
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,

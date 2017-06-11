@@ -24,7 +24,7 @@ impl LayoutContainer for Frame {
         self.padding = padding;
     }
     fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
-        let ref parent = solver.solver.widget_vars[&parent.id.0];
+        let ref parent = solver.solver.layouts[&parent.id.0];
         layout!(child: bound_by(parent).padding(self.padding));
     }
 }

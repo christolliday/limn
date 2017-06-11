@@ -2,25 +2,22 @@ use std::sync::Mutex;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
-use linked_hash_map::LinkedHashMap;
-
 use cassowary;
 use cassowary::strength;
 use cassowary::{Variable, Constraint, Expression};
 
 use super::{LayoutId, Layout, Rect};
 
-/// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
 pub struct LimnSolver {
     pub solver: cassowary::Solver,
     var_constraints: HashMap<Variable, HashSet<Constraint>>,
     constraint_vars: HashMap<Constraint, Vec<Variable>>,
     var_ids: HashMap<Variable, LayoutId>,
-    pub widget_vars: HashMap<LayoutId, Layout>,
+    pub layouts: HashMap<LayoutId, Layout>,
+    last_layout: LayoutId,
     hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
     edit_strengths: HashMap<Variable, f64>,
     missing_widget_layout: HashMap<Variable, f64>,
-    debug_constraint_list: LinkedHashMap<Constraint, ()>, // LinkedHashSet (maintains insertion order)
 }
 
 impl LimnSolver {
@@ -30,14 +27,17 @@ impl LimnSolver {
             var_constraints: HashMap::new(),
             constraint_vars: HashMap::new(),
             var_ids: HashMap::new(),
-            widget_vars: HashMap::new(),
+            layouts: HashMap::new(),
+            last_layout: 0,
             hidden_layouts: HashMap::new(),
             edit_strengths: HashMap::new(),
             missing_widget_layout: HashMap::new(),
-            debug_constraint_list: LinkedHashMap::new(),
         }
     }
     pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: Layout, bounds: &mut Rect) {
+        if id > self.last_layout {
+            self.last_layout = id;
+        }
         self.var_ids.insert(layout.vars.left, id);
         self.var_ids.insert(layout.vars.top, id);
         self.var_ids.insert(layout.vars.width, id);
@@ -61,18 +61,17 @@ impl LimnSolver {
             add_debug_var_name(layout.vars.width, &format!("{}.width", name));
             add_debug_var_name(layout.vars.height, &format!("{}.height", name));
         }
-        self.widget_vars.insert(id, layout);
-        self.update_from_builder(id);
+        self.layouts.insert(id, layout);
+        self.update_layout(id);
     }
 
     pub fn remove_widget(&mut self, id: LayoutId) {
-        if let Some(layout) = self.widget_vars.remove(&id) {
+        if let Some(layout) = self.layouts.remove(&id) {
             for var in layout.vars.array().iter() {
                 // remove constraints that are relative to this widget from solver
                 if let Some(constraint_set) = self.var_constraints.remove(&var) {
                     for constraint in constraint_set {
                         if self.solver.has_constraint(&constraint) {
-                            self.debug_constraint_list.remove(&constraint);
                             self.solver.remove_constraint(&constraint).unwrap();
                             // look up other variables that references this constraint,
                             // and remove this constraint from those variables constraint sets
@@ -97,7 +96,7 @@ impl LimnSolver {
     pub fn hide_widget(&mut self, id: LayoutId) {
         if !self.hidden_layouts.contains_key(&id) {
             let mut constraints = Vec::new();
-            let layout = &self.widget_vars[&id];
+            let layout = &self.layouts[&id];
             for var in layout.vars.array().iter() {
                 if let Some(constraint_set) = self.var_constraints.get(&var) {
                     for constraint in constraint_set {
@@ -150,9 +149,9 @@ impl LimnSolver {
         }
     }
 
-    pub fn update_from_builder(&mut self, id: LayoutId) {
-        let LimnSolver { ref mut widget_vars, ref mut solver, ref mut edit_strengths, ref mut constraint_vars, ref mut var_constraints, ref mut debug_constraint_list, .. } = *self;
-        let layout = widget_vars.get_mut(&id).unwrap();
+    pub fn update_layout(&mut self, id: LayoutId) {
+        let LimnSolver { ref mut layouts, ref mut solver, ref mut edit_strengths, ref mut constraint_vars, ref mut var_constraints, .. } = *self;
+        let layout = layouts.get_mut(&id).unwrap();
         for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
                 if !solver.has_edit_variable(&edit_var.var) {
@@ -170,7 +169,6 @@ impl LimnSolver {
             }
         }
         for constraint in layout.get_constraints() {
-            debug_constraint_list.insert(constraint.clone(), ());
             solver.add_constraint(constraint.clone()).expect(&format!("Failed to add constraint {}", fmt_constraint(&constraint)));
             let var_list = constraint_vars.entry(constraint.clone()).or_insert(Vec::new());
             for term in &constraint.0.expression.terms {
@@ -182,7 +180,6 @@ impl LimnSolver {
         }
         for constraint in layout.get_removed_constraints() {
             if solver.has_constraint(&constraint) {
-                debug_constraint_list.remove(&constraint);
                 solver.remove_constraint(&constraint).unwrap();
             }
         }
@@ -205,8 +202,13 @@ impl LimnSolver {
 
     pub fn debug_constraints(&self) {
         println!("CONSTRAINTS");
-        for constraint in self.debug_constraint_list.keys() {
-            debug_constraint(constraint);
+        for i in 0..self.last_layout {
+            if let Some(layout) = self.layouts.get(&i) {
+                println!("{:?}", layout.name);
+                for constraint in &layout.constraints {
+                    debug_constraint(constraint);
+                }
+            }
         }
     }
     pub fn debug_variables(&mut self) {
