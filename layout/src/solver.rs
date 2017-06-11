@@ -168,6 +168,11 @@ impl LimnSolver {
                 edit_strengths.insert(edit_var.var, edit_var.strength);
             }
         }
+        for constraint in layout.get_removed_constraints() {
+            if solver.has_constraint(&constraint) {
+                solver.remove_constraint(&constraint).unwrap();
+            }
+        }
         for constraint in layout.get_constraints() {
             solver.add_constraint(constraint.clone()).expect(&format!("Failed to add constraint {}", fmt_constraint(&constraint)));
             let var_list = constraint_vars.entry(constraint.clone()).or_insert(Vec::new());
@@ -176,11 +181,6 @@ impl LimnSolver {
                 let constraint_set = var_constraints.entry(variable).or_insert(HashSet::new());
                 constraint_set.insert(constraint.clone());
                 var_list.push(variable);
-            }
-        }
-        for constraint in layout.get_removed_constraints() {
-            if solver.has_constraint(&constraint) {
-                solver.remove_constraint(&constraint).unwrap();
             }
         }
     }

@@ -2,6 +2,7 @@ use cassowary::Variable;
 use multi_mut::HashMapMultiMut;
 
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
+use limn_layout::grid_layout::GridLayout;
 
 use resources::WidgetId;
 
@@ -23,14 +24,29 @@ impl LayoutContainer for LinearLayoutHandler {
     }
     fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
         let child_id = child.id();
-        solver.update_layouts(child.id(), parent.id, |child, parent| {
-            self.add_child_layout(&parent.vars, child, child_id.0);
+        solver.update_layout(parent.id, |parent| {
+            self.add_child_layout(&parent.vars, &mut child.layout, child_id.0);
         });
     }
     fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId, solver: &mut LayoutManager) {
         solver.update_layout(parent.id, |layout| {
             self.remove_child_layout(layout, child_id.0);
         });
+    }
+}
+
+impl LayoutContainer for GridLayout {
+    fn set_padding(&mut self, padding: f64) {
+        unimplemented!();
+    }
+    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
+        //self.add_child_layout(&parent.layout, child.layout());
+        solver.update_layout(parent.id, |parent| {
+            self.add_child_layout(parent, &mut child.layout);
+        });
+    }
+    fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId, solver: &mut LayoutManager) {
+        unimplemented!();
     }
 }
 
@@ -42,6 +58,10 @@ impl WidgetBuilder {
     pub fn hbox(&mut self) -> &mut Self {
         let handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout().vars);
         self.set_container(handler)
+    }
+    pub fn grid(&mut self, num_columns: usize) {
+        let container = GridLayout::new(self.layout(), num_columns);
+        self.set_container(container);
     }
 }
 

@@ -24,6 +24,7 @@ fn main() {
         match_layout(&root_widget).padding(50.0));
 
     let mut rect_container = WidgetBuilder::new_named("rect_container");
+    rect_container.grid(2);
     layout!(rect_container: size(Size::new(400.0, 400.0)));
 
     let mut rect_tl = WidgetBuilder::new_named("rect_tl");
@@ -38,31 +39,6 @@ fn main() {
     let mut rect_br = WidgetBuilder::new_named("rect_br");
     rect_br.set_drawable_with_style(RectDrawable::new(),
         style!(RectStyleable::BackgroundColor: FUSCHIA));
-
-    layout!(rect_tl:
-        align_top(&rect_container),
-        align_left(&rect_container));
-
-    layout!(rect_tr:
-        to_right_of(&rect_tl),
-        align_top(&rect_container),
-        align_right(&rect_container),
-        match_width(&rect_tl));
-
-    layout!(rect_bl:
-        below(&rect_tl),
-        align_bottom(&rect_container),
-        align_left(&rect_container),
-        match_width(&rect_tl),
-        match_height(&rect_tl));
-
-    layout!(rect_br:
-        below(&rect_tr),
-        to_right_of(&rect_bl),
-        align_bottom(&rect_container),
-        align_right(&rect_container),
-        match_width(&rect_bl),
-        match_height(&rect_tr));
 
     rect_container
         .add_child(rect_tl)

@@ -146,6 +146,9 @@ impl Layout {
     pub fn add_constraint(&mut self, constraint: Constraint) {
         self.new_constraints.push(constraint);
     }
+    pub fn add_constraints(&mut self, constraints: Vec<Constraint>) {
+        self.new_constraints.extend(constraints);
+    }
     pub fn remove_constraint(&mut self, constraint: Constraint) {
         self.removed_constraints.push(constraint);
     }
@@ -244,6 +247,7 @@ lazy_static! {
 pub mod solver;
 pub mod constraint;
 pub mod linear_layout;
+pub mod grid_layout;
 
 pub use self::solver::LimnSolver;
 
