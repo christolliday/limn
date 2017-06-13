@@ -6,10 +6,9 @@ use backend::events::WindowEvent;
 use glutin::Event;
 
 use ui::Ui;
-use input::{self, InputEvent};
+use input::InputEvent;
 use event::{Target, UiHandlerWrapper, UiEventHandler, queue};
 use util::Size;
-use layout;
 
 /// This is contains the core of a Limn application,
 /// the Ui, event queue, and the handlers that operate
@@ -44,8 +43,8 @@ impl App {
     /// Initialize the handlers that are used in a typical desktop app.
     /// The handlers that make up the event flow in an application are configurable
     fn initialize_handlers(&mut self) {
-        self.add_handler_fn(layout::handle_layout_change);
-        self.add_handler_fn(input::handle_input);
+        self.add_layout_handlers();
+        self.add_input_handlers();
 
         self.add_mouse_handlers();
         self.add_keyboard_handlers();

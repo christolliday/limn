@@ -6,7 +6,7 @@ use limn_layout::grid_layout::GridLayout;
 
 use resources::WidgetId;
 
-use ui::Ui;
+use app::App;
 use event::Target;
 
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
@@ -36,17 +36,11 @@ impl LayoutContainer for LinearLayoutHandler {
 }
 
 impl LayoutContainer for GridLayout {
-    fn set_padding(&mut self, padding: f64) {
-        unimplemented!();
-    }
     fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
         //self.add_child_layout(&parent.layout, child.layout());
         solver.update_layout(parent.id, |parent| {
             self.add_child_layout(parent, &mut child.layout);
         });
-    }
-    fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId, solver: &mut LayoutManager) {
-        unimplemented!();
     }
 }
 
@@ -118,23 +112,28 @@ impl LayoutManager {
 pub struct LayoutChanged(Vec<(usize, Variable, f64)>);
 pub struct LayoutUpdated;
 
-pub fn handle_layout_change(event: &LayoutChanged, ui: &mut Ui) {
-    let ref changes = event.0;
-    for &(widget_id, var, value) in changes {
-        let widget_id = WidgetId(widget_id);
-        if let Some(widget) = ui.graph.get_widget(widget_id) {
-            let vars = &ui.layout.solver.layouts[&widget_id.0].vars;
-            let var = vars.get_var(var).expect("Missing variable for widget");
-            debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
-            match var {
-                VarUpdate::Left => widget.bounds.origin.x = value,
-                VarUpdate::Top => widget.bounds.origin.y = value,
-                VarUpdate::Width => widget.bounds.size.width = value,
-                VarUpdate::Height => widget.bounds.size.height = value,
+
+impl App {
+    pub fn add_layout_handlers(&mut self) {
+        self.add_handler_fn(|event: &LayoutChanged, ui| {
+            let ref changes = event.0;
+            for &(widget_id, var, value) in changes {
+                let widget_id = WidgetId(widget_id);
+                if let Some(widget) = ui.graph.get_widget(widget_id) {
+                    let vars = &ui.layout.solver.layouts[&widget_id.0].vars;
+                    let var = vars.get_var(var).expect("Missing variable for widget");
+                    debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
+                    match var {
+                        VarUpdate::Left => widget.bounds.origin.x = value,
+                        VarUpdate::Top => widget.bounds.origin.y = value,
+                        VarUpdate::Width => widget.bounds.size.width = value,
+                        VarUpdate::Height => widget.bounds.size.height = value,
+                    }
+                    event!(Target::Widget(widget_id), LayoutUpdated);
+                }
             }
-            event!(Target::Widget(widget_id), LayoutUpdated);
-        }
+            // redraw everything when layout changes, for now
+            ui.redraw();
+        });
     }
-    // redraw everything when layout changes, for now
-    ui.redraw();
 }

@@ -1,6 +1,6 @@
 use glutin;
 
-use event::{Target, UiEventHandler, WidgetEventArgs};
+use event::{Target, UiEventHandler};
 use widget::{WidgetBuilder, WidgetBuilderCore};
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use resources::WidgetId;
@@ -68,30 +68,20 @@ impl UiEventHandler<DragInputEvent> for DragInputHandler {
     }
 }
 
-pub enum DragInputEvent {
+enum DragInputEvent {
     WidgetPressed(WidgetId),
     MouseMoved(Point),
     MouseReleased,
 }
 
-fn drag_handle_mouse_press(event: &WidgetMouseButton, args: WidgetEventArgs) {
-    if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
-        let event = DragInputEvent::WidgetPressed(args.widget.id);
-        event!(Target::Ui, event);
-    }
-}
-fn drag_handle_mouse_move(event: &MouseMoved, _: &mut Ui) {
-    event!(Target::Ui, DragInputEvent::MouseMoved(event.0));
-}
-fn drag_handle_mouse_release(event: &MouseButton, _: &mut Ui) {
-    if let &MouseButton(glutin::ElementState::Released, _) = event {
-        event!(Target::Ui, DragInputEvent::MouseReleased);
-    }
-}
-
 impl WidgetBuilder {
     pub fn make_draggable(&mut self) -> &mut Self {
-        self.as_mut().add_handler_fn(drag_handle_mouse_press);
+        self.as_mut().add_handler_fn(|event: &WidgetMouseButton, args| {
+            if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
+                let event = DragInputEvent::WidgetPressed(args.widget.id);
+                event!(Target::Ui, event);
+            }
+        });
         self
     }
 }
@@ -99,7 +89,13 @@ impl WidgetBuilder {
 impl App {
     pub fn add_drag_handlers(&mut self) {
         self.add_handler(DragInputHandler::new());
-        self.add_handler_fn(drag_handle_mouse_move);
-        self.add_handler_fn(drag_handle_mouse_release);
+        self.add_handler_fn(|event: &MouseMoved, _| {
+            event!(Target::Ui, DragInputEvent::MouseMoved(event.0));
+        });
+        self.add_handler_fn(|event: &MouseButton, _| {
+            if let &MouseButton(glutin::ElementState::Released, _) = event {
+                event!(Target::Ui, DragInputEvent::MouseReleased);
+            }
+        });
     }
 }

@@ -8,34 +8,39 @@ use input::mouse::{MouseMoved, MouseButton, MouseWheel};
 use input::keyboard::{KeyboardInput, ReceivedCharacter};
 use util::Point;
 use ui::Ui;
+use app::App;
 
 #[derive(Clone)]
 pub struct InputEvent(pub glutin::Event);
 
-pub fn handle_input(event: &InputEvent, ui: &mut Ui) {
-    let InputEvent(event) = event.clone();
-    match event {
-        glutin::Event::Closed => {
-            ui.close();
-        }
-        glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-            event!(Target::Ui, MouseWheel(mouse_scroll_delta));
-        }
-        glutin::Event::MouseInput(state, button) => {
-            event!(Target::Ui, MouseButton(state, button));
-        }
-        glutin::Event::MouseMoved(x, y) => {
-            let point = Point::new(x as f64, y as f64);
-            event!(Target::Ui, MouseMoved(point));
-        }
-        glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
-            let key_input = KeyboardInput(state, scan_code, maybe_keycode);
-            event!(Target::Ui, key_input);
-        }
-        glutin::Event::ReceivedCharacter(char) => {
-            event!(Target::Ui, ReceivedCharacter(char));
-        }
-        _ => (),
+impl App {
+    pub fn add_input_handlers(&mut self) {
+        self.add_handler_fn(|event: &InputEvent, ui| {
+            let InputEvent(event) = event.clone();
+            match event {
+                glutin::Event::Closed => {
+                    ui.close();
+                }
+                glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
+                    event!(Target::Ui, MouseWheel(mouse_scroll_delta));
+                }
+                glutin::Event::MouseInput(state, button) => {
+                    event!(Target::Ui, MouseButton(state, button));
+                }
+                glutin::Event::MouseMoved(x, y) => {
+                    let point = Point::new(x as f64, y as f64);
+                    event!(Target::Ui, MouseMoved(point));
+                }
+                glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
+                    let key_input = KeyboardInput(state, scan_code, maybe_keycode);
+                    event!(Target::Ui, key_input);
+                }
+                glutin::Event::ReceivedCharacter(char) => {
+                    event!(Target::Ui, ReceivedCharacter(char));
+                }
+                _ => (),
+            }
+        });
     }
 }
 
