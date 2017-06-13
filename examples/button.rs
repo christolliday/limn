@@ -5,10 +5,9 @@ extern crate limn_layout;
 
 mod util;
 
-use limn::widget::WidgetBuilder;
-use limn::widget::WidgetBuilderCore;
+use limn::prelude::*;
+
 use limn::widgets::button::ToggleButtonBuilder;
-use limn::layout::constraint::*;
 
 fn main() {
     let (window, ui) = util::init_default("Limn button demo");

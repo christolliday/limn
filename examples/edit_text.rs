@@ -8,13 +8,11 @@ mod util;
 
 use text_layout::Align;
 
-use limn::event::{Target, WidgetEventHandler, WidgetEventArgs};
-use limn::widget::{WidgetBuilder, WidgetBuilderCore};
+use limn::prelude::*;
+
 use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::drawable::text::TextDrawable;
-use limn::util::Size;
-use limn::layout::constraint::*;
 
 enum EditTextSettingsEvent {
     LeftAlign,

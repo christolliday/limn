@@ -18,13 +18,9 @@ use graphics::Context;
 use backend::glyph::GlyphCache;
 use backend::gfx::G2d;
 
-use limn::widget::{WidgetBuilder, WidgetBuilderCore};
-use limn::widget::drawable::{Drawable, DrawableEventHandler};
+use limn::prelude::*;
+
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
-use limn::event::Target;
-use limn::util::{Point, Rect, RectExt, Size, Scalar};
-use limn::color::*;
-use limn::layout::constraint::*;
 
 struct ClockTick;
 

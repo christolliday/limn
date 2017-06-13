@@ -5,14 +5,12 @@ extern crate limn_layout;
 
 mod util;
 
-use limn::widget::{WidgetBuilder, WidgetBuilderCore};
+use limn::prelude::*;
+
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
-use limn::util::Size;
-use limn::color::*;
-use limn::layout::constraint::*;
 
 fn main() {
     let (window, ui) = util::init_default("Limn list demo");

@@ -6,12 +6,10 @@ extern crate cassowary;
 
 mod util;
 
-use limn::widget::{WidgetBuilder, WidgetBuilderCore};
+use limn::prelude::*;
+
 use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::rect::{RectDrawable, RectStyleable};
-use limn::util::{Size, Color};
-use limn::color::*;
-use limn::layout::constraint::*;
 
 fn main() {
     let (window, ui) = util::init_default_min_size("Limn scroll demo", Size::new(300.0, 300.0));

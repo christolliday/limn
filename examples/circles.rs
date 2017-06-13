@@ -14,9 +14,8 @@ use std::collections::HashMap;
 
 use text_layout::Align;
 
-use limn::widget::{WidgetBuilder, WidgetBuilderCore};
-use limn::widget::property::{Property, PropChange};
-use limn::widget::property::states::*;
+use limn::prelude::*;
+
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue};
 use limn::drawable::text::{TextDrawable, TextStyleable};
@@ -24,12 +23,6 @@ use limn::drawable::rect::{RectDrawable, RectStyleable};
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::input::keyboard::KeyboardInput;
-use limn::event::{Target, UiEventHandler, WidgetEventHandler, WidgetEventArgs};
-use limn::ui::Ui;
-use limn::util::Point;
-use limn::resources::WidgetId;
-use limn::color::*;
-use limn::layout::constraint::*;
 
 fn create_slider_control() -> WidgetBuilder {
 

@@ -10,20 +10,14 @@ mod util;
 use std::mem;
 use std::collections::HashMap;
 
-use limn::event::{Target, UiEventHandler};
-use limn::widget::{WidgetBuilder, WidgetBuilderCore};
-use limn::widget::property::{Property, PropChange};
+use limn::prelude::*;
+
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
-use limn::resources::WidgetId;
-use limn::ui::Ui;
-use limn::util::Size;
-use limn::color::*;
-use limn::layout::constraint::*;
 
 #[derive(Clone, Debug)]
 pub struct Person {
