@@ -11,6 +11,7 @@ use widget::{Widget, WidgetContainer};
 use widget::property::PropSet;
 use util::Point;
 use resources::{resources, WidgetId};
+use layout::Layout;
 
 type Graph = StableGraph<WidgetContainer, ()>;
 
@@ -38,7 +39,7 @@ impl WidgetGraph {
     pub fn new() -> Self {
         let mut graph = Graph::new();
         let dummy_container = WidgetContainer {
-            widget: Widget::new(WidgetId(0), None, PropSet::new(), None, None),
+            widget: Widget::new(WidgetId(0), None, PropSet::new(), Layout::new(None), None, None),
             container: None,
             handlers: HashMap::new(),
         };

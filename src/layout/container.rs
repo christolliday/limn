@@ -5,8 +5,8 @@ use resources::WidgetId;
 
 pub trait LayoutContainer {
     fn set_padding(&mut self, _padding: f64) {}
-    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager);
-    fn remove_child(&mut self, _parent: &mut Widget, _child_id: WidgetId, _solver: &mut LayoutManager) {}
+    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder);
+    fn remove_child(&mut self, _parent: &mut Widget, _child_id: WidgetId) {}
 }
 
 pub struct Frame {
@@ -23,8 +23,7 @@ impl LayoutContainer for Frame {
     fn set_padding(&mut self, padding: f64) {
         self.padding = padding;
     }
-    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
-        let ref parent = solver.solver.layouts[&parent.id.0];
+    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder) {
         layout!(child: bound_by(parent).padding(self.padding));
     }
 }

@@ -1,5 +1,4 @@
 use cassowary::Variable;
-use multi_mut::HashMapMultiMut;
 
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
 use limn_layout::grid_layout::GridLayout;
@@ -22,24 +21,23 @@ impl LayoutContainer for LinearLayoutHandler {
     fn set_padding(&mut self, padding: f64) {
         self.padding = padding;
     }
-    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
+    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder) {
         let child_id = child.id();
-        solver.update_layout(parent.id, |parent| {
-            self.add_child_layout(&parent.vars, &mut child.layout, child_id.0);
+        parent.update_layout(|layout| {
+            self.add_child_layout(&layout.vars, &mut child.layout, child_id.0);
         });
     }
-    fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId, solver: &mut LayoutManager) {
-        solver.update_layout(parent.id, |layout| {
+    fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId) {
+        parent.update_layout(|layout| {
             self.remove_child_layout(layout, child_id.0);
         });
     }
 }
 
 impl LayoutContainer for GridLayout {
-    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder, solver: &mut LayoutManager) {
-        //self.add_child_layout(&parent.layout, child.layout());
-        solver.update_layout(parent.id, |parent| {
-            self.add_child_layout(parent, &mut child.layout);
+    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder) {
+        parent.update_layout(|layout| {
+            self.add_child_layout(layout, &mut child.layout);
         });
     }
 }
@@ -71,28 +69,6 @@ impl LayoutManager {
             solver: LimnSolver::new(),
         }
     }
-    pub fn update_layout<F>(&mut self, id: WidgetId, f: F)
-        where F: FnOnce(&mut Layout)
-    {
-        if let Some(layout) = self.solver.layouts.get_mut(&id.0) {
-            f(layout);
-        } else {
-            error!("Tried to update missing layout {:?}", id);
-        }
-        self.solver.update_layout(id.0);
-        self.check_changes();
-    }
-    pub fn update_layouts<F>(&mut self, id: WidgetId, id2: WidgetId, f: F)
-        where F: FnOnce(&mut Layout, &mut Layout)
-    {
-        if let Some((layout, layout2)) = self.solver.layouts.get_pair_mut(&id.0, &id2.0) {
-            f(layout, layout2);
-        } else {
-            error!("Tried to update missing layout pair {:?} {:?}", id, id2);
-        }
-        self.solver.update_layout(id.0);
-        self.check_changes();
-    }
     pub fn update_solver<F>(&mut self, f: F)
         where F: Fn(&mut LimnSolver)
     {
@@ -109,18 +85,25 @@ impl LayoutManager {
     }
 }
 
+pub struct UpdateLayout(pub WidgetId);
 pub struct LayoutChanged(Vec<(usize, Variable, f64)>);
 pub struct LayoutUpdated;
 
-
 impl App {
     pub fn add_layout_handlers(&mut self) {
+        self.add_handler_fn(|event: &UpdateLayout, ui| {
+            let &UpdateLayout(id) = event;
+            if let Some(widget) = ui.graph.get_widget(id) {
+                ui.layout.solver.update_layout(&mut widget.layout);
+                ui.layout.check_changes();
+            }
+        });
         self.add_handler_fn(|event: &LayoutChanged, ui| {
             let ref changes = event.0;
             for &(widget_id, var, value) in changes {
                 let widget_id = WidgetId(widget_id);
                 if let Some(widget) = ui.graph.get_widget(widget_id) {
-                    let vars = &ui.layout.solver.layouts[&widget_id.0].vars;
+                    let vars = &ui.layout.solver.layouts[&widget_id.0];
                     let var = vars.get_var(var).expect("Missing variable for widget");
                     debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
                     match var {

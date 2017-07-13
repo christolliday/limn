@@ -293,7 +293,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                     }
                     _ => {
                         let drag_to = drag_pos - self.start_pos;
-                        args.solver.update_layout(args.widget.id, |layout| {
+                        args.widget.update_layout(|layout| {
                             if let Orientation::Horizontal = self.orientation {
                                 layout.edit_left().set(drag_to);
                             } else {
@@ -313,12 +313,12 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 if value.is_finite() {
                     if let Orientation::Horizontal = self.orientation {
                         let pos = parent_bounds.left() + value * (parent_bounds.width() - bounds.width());
-                        args.solver.update_layout(args.widget.id, |layout| {
+                        args.widget.update_layout(|layout| {
                             layout.edit_left().set(pos);
                         });
                     } else {
                         let pos = parent_bounds.top() + value * (parent_bounds.height() - bounds.height());
-                        args.solver.update_layout(args.widget.id, |layout| {
+                        args.widget.update_layout(|layout| {
                             layout.edit_top().set(pos);
                         });
                     }
@@ -332,7 +332,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                     let min = parent_bounds.left() + handle_radius;
                     let max = parent_bounds.left() + parent_bounds.width() - handle_radius;
                     let position = f64::min(f64::max(position, min), max);
-                    args.solver.update_layout(args.widget.id, |layout| {
+                    args.widget.update_layout(|layout| {
                         layout.edit_left().set(position - handle_radius);
                     });
                     position
@@ -340,7 +340,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                     let min = parent_bounds.top() + handle_radius;
                     let max = parent_bounds.top() + parent_bounds.height() - handle_radius;
                     let position = f64::min(f64::max(position, min), max);
-                    args.solver.update_layout(args.widget.id, |layout| {
+                    args.widget.update_layout(|layout| {
                         layout.edit_top().set(position - handle_radius);
                     });
                     position

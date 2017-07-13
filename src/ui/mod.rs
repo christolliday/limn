@@ -79,7 +79,8 @@ impl Ui {
         dims
     }
     pub fn window_resized(&mut self, window_dims: Size) {
-        self.layout.update_layout(self.graph.root_id, |layout| {
+        let root = self.graph.get_root();
+        root.update_layout(|layout| {
             layout.edit_right().set(window_dims.width);
             layout.edit_bottom().set(window_dims.height);
         });
@@ -144,7 +145,7 @@ impl Ui {
     {
         if let Some(parent) = self.graph.get_widget_container(parent_id) {
             if let Some(ref mut container) = parent.container {
-                container.add_child(&mut parent.widget, &mut widget, &mut self.layout);
+                container.add_child(&mut parent.widget, &mut widget);
             }
         }
         let layout = widget.layout().vars.clone();
@@ -157,8 +158,8 @@ impl Ui {
     fn attach_widget(&mut self,
                      builder: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
-        let (children, layout, mut widget) = builder.build();
-        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, layout, &mut widget.widget.bounds);
+        let (children, mut widget) = builder.build();
+        self.layout.solver.add_widget(widget.widget.id.0, &widget.widget.debug_name, &mut widget.widget.layout, &mut widget.widget.bounds);
         self.layout.check_changes();
 
         let id = widget.widget.id;
@@ -173,7 +174,7 @@ impl Ui {
         if let Some(parent_id) = self.graph.parent(widget_id) {
             if let Some(parent) = self.graph.get_widget_container(parent_id) {
                 if let Some(ref mut container) = parent.container {
-                    container.remove_child(&mut parent.widget, widget_id, &mut self.layout);
+                    container.remove_child(&mut parent.widget, widget_id);
                 }
             }
         }

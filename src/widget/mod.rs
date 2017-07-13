@@ -17,6 +17,8 @@ use layout::{LayoutManager, Layout, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rect};
+use event::Target;
+use layout::UpdateLayout;
 
 use self::property::{PropSet, Property};
 use self::drawable::{Drawable, DrawableWrapper};
@@ -55,6 +57,11 @@ impl BuildWidget for WidgetBuilder {
 impl LayoutRef for WidgetBuilder {
     fn layout_ref(&self) -> &LayoutVars {
         &self.as_ref().layout.vars
+    }
+}
+impl LayoutRef for Widget {
+    fn layout_ref(&self) -> &LayoutVars {
+        &self.layout.vars
     }
 }
 
@@ -202,15 +209,15 @@ impl WidgetBuilder {
         builder
     }
 
-    pub fn build(mut self) -> (Vec<WidgetBuilder>, Layout, WidgetContainer) {
+    pub fn build(mut self) -> (Vec<WidgetBuilder>, WidgetContainer) {
         self.layout.name = self.debug_name.clone();
         let widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
+                                 self.layout,
                                  self.debug_name,
                                  self.debug_color);
         (self.children,
-         self.layout,
          WidgetContainer {
              widget: widget,
              container: self.container,
@@ -249,6 +256,7 @@ pub struct Widget {
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub has_updated: bool,
+    pub layout: Layout,
     pub bounds: Rect,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
@@ -258,6 +266,7 @@ impl Widget {
     pub fn new(id: WidgetId,
                drawable: Option<DrawableWrapper>,
                props: PropSet,
+               layout: Layout,
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
@@ -265,6 +274,7 @@ impl Widget {
             id: id,
             drawable: drawable,
             props: props,
+            layout: layout,
             has_updated: false,
             bounds: Rect::zero(),
             debug_name: debug_name,
@@ -305,6 +315,15 @@ impl Widget {
             let state = drawable.drawable.as_mut().downcast_mut::<T>().expect("Called update on widget with wrong drawable type");
             f(state);
         }
+    }
+
+    pub fn update_layout<F>(&mut self, f: F)
+        where F: FnOnce(&mut Layout)
+    {
+        f(&mut self.layout);
+        event!(Target::Ui, UpdateLayout(self.id));
+        //self.solver.update_layout(&mut self.layout);
+        //self.solver.check_changes();
     }
 
     pub fn apply_style(&mut self) {

@@ -126,7 +126,7 @@ struct CircleHandler {
 impl WidgetEventHandler<ResizeEvent> for CircleHandler {
     fn handle(&mut self, event: &ResizeEvent, args: WidgetEventArgs) {
         let radius = event.0 / 2.0;
-        args.solver.update_layout(args.widget.id, |layout| {
+        args.widget.update_layout(|layout| {
             layout.edit_top().set(self.center.y - radius);
             layout.edit_left().set(self.center.x - radius);
             layout.edit_right().set(self.center.x + radius);
