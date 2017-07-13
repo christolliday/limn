@@ -369,21 +369,10 @@ mod test {
         layout.add_widget(&mut slider_bar_pre);
         layout.add_widget(&mut slider_handle);
 
-        //slider_handle.layout().edit_left().set(50.0);
-        //layout.solver.update_from_builder(slider_handle.layout);
         layout.solver.solver.add_edit_variable(slider_handle_left, STRONG).unwrap();
         layout.solver.solver.suggest_value(slider_handle_left, 50.0).unwrap();
 
-        //solver.debug_variables();
-        //solver.debug_constraints();
         layout.update();
-        //assert!(layout.layout[&slider.id].size.width == 50.0);
-        /*assert!(layout == hashmap!{
-            root_widget.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 100.0)),
-            slider.id => Rect::new(Point::new(50.0, 0.0), Size::new(0.0, 0.0)),
-            slider_bar_pre.id => Rect::new(Point::new(50.0, 0.0), Size::new(0.0, 0.0)),
-            slider_handle.id => Rect::new(Point::new(50.0, 0.0), Size::new(0.0, 0.0)),
-        });*/
     }
 
     // code below is used to create a test harness for creating layouts outside of the widget graph
