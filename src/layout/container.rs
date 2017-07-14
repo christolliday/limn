@@ -1,5 +1,4 @@
 use limn_layout::constraint::*;
-use layout::LayoutManager;
 use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
 use resources::WidgetId;
 

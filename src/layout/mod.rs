@@ -85,6 +85,7 @@ impl LayoutManager {
     }
 }
 
+pub struct LayoutAdded(pub WidgetId);
 pub struct UpdateLayout(pub WidgetId);
 pub struct LayoutChanged(Vec<(usize, Variable, f64)>);
 pub struct LayoutUpdated;
@@ -96,6 +97,12 @@ impl App {
             if let Some(widget) = ui.graph.get_widget(id) {
                 ui.layout.solver.update_layout(&mut widget.layout);
                 ui.layout.check_changes();
+            }
+        });
+        self.add_handler_fn(|event: &LayoutAdded, ui| {
+            let &LayoutAdded(id) = event;
+            if let Some(widget) = ui.graph.get_widget(id) {
+                ui.layout.solver.add_widget(widget.id.0, &widget.debug_name, &mut widget.layout, &mut widget.bounds);
             }
         });
         self.add_handler_fn(|event: &LayoutChanged, ui| {
