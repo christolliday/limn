@@ -211,7 +211,7 @@ impl WidgetBuilder {
         builder
     }
 
-    pub fn build(mut self) -> (Vec<WidgetBuilder>, WidgetContainer) {
+    pub fn build(mut self) -> (Vec<WidgetBuilder>, WidgetRef) {
         self.layout.name = self.debug_name.clone();
         let mut widget = Widget::new(self.id,
                                  self.drawable,
@@ -220,18 +220,17 @@ impl WidgetBuilder {
                                  self.debug_name,
                                  self.debug_color);
         widget.apply_style();
-        let widget = WidgetRef(Rc::new(RefCell::new(widget)));
-        (self.children,
-         WidgetContainer {
-             widget: widget,
-             container: self.container,
-             handlers: self.handlers,
-         })
+        let widget = WidgetContainer {
+            widget: widget,
+            container: self.container,
+            handlers: self.handlers,
+        };
+        (self.children, WidgetRef(Rc::new(RefCell::new(widget))))
     }
 }
 
 pub struct WidgetContainer {
-    pub widget: WidgetRef,
+    pub widget: Widget,
     pub container: Option<Box<LayoutContainer>>,
     pub handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
 }
@@ -245,7 +244,7 @@ impl WidgetContainer {
         if let Some(handlers) = self.handlers.get_mut(&type_id) {
             for event_handler in handlers.iter_mut() {
                 let event_args = WidgetEventArgs {
-                    widget: &mut *self.widget.0.borrow_mut(),
+                    widget: &mut self.widget,
                     solver: solver,
                     handled: &mut handled,
                 };
@@ -257,26 +256,30 @@ impl WidgetContainer {
 }
 
 #[derive(Clone)]
-pub struct WidgetRef(pub Rc<RefCell<Widget>>);
+pub struct WidgetRef(pub Rc<RefCell<WidgetContainer>>);
 
+use std::cell::RefMut;
 impl WidgetRef {
+    pub fn widget_container(&self) -> RefMut<WidgetContainer> {
+        self.0.borrow_mut()
+    }
     pub fn id(&self) -> WidgetId {
-        self.0.borrow().id
+        self.0.borrow().widget.id
     }
     pub fn debug_name(&self) -> Option<String> {
-        self.0.borrow().debug_name.clone()
+        self.0.borrow().widget.debug_name.clone()
     }
     pub fn debug_color(&self) -> Option<Color> {
-        self.0.borrow().debug_color
+        self.0.borrow().widget.debug_color
     }
     pub fn has_updated(&self) -> bool {
-        self.0.borrow().has_updated
+        self.0.borrow().widget.has_updated
     }
     pub fn set_updated(&self, has_updated: bool) {
-        self.0.borrow_mut().has_updated = has_updated;
+        self.0.borrow_mut().widget.has_updated = has_updated;
     }
     pub fn bounds(&self) -> Rect {
-        self.0.borrow().bounds
+        self.0.borrow().widget.bounds
     }
 }
 

@@ -80,7 +80,7 @@ impl Ui {
     pub fn window_resized(&mut self, window_dims: Size) {
         let root = self.graph.get_root();
         let mut root = root.0.borrow_mut();
-        root.update_layout(|layout| {
+        root.widget.update_layout(|layout| {
             layout.edit_right().set(window_dims.width);
             layout.edit_bottom().set(window_dims.height);
         });
@@ -124,9 +124,9 @@ impl Ui {
 
         let crop_to = {
             let widget = self.graph.get_widget(widget_id).unwrap();
-            let mut widget = widget.0.borrow_mut();
-            widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
-            crop_to.intersection(&widget.bounds)
+            let mut widget = widget.widget_container();
+            widget.widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
+            crop_to.intersection(&widget.widget.bounds)
         };
 
         if let Some(crop_to) = crop_to {
@@ -144,9 +144,10 @@ impl Ui {
                       mut widget: WidgetBuilder,
                       parent_id: WidgetId)
     {
-        if let Some(parent) = self.graph.get_widget_container(parent_id) {
+        if let Some(parent) = self.graph.get_widget(parent_id) {
+            let parent = &mut *parent.widget_container();
             if let Some(ref mut container) = parent.container {
-                container.add_child(&mut *parent.widget.0.borrow_mut(), &mut widget);
+                container.add_child(&mut parent.widget, &mut widget);
             }
         }
         let layout = widget.layout().vars.clone();
@@ -160,10 +161,10 @@ impl Ui {
                      builder: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
         let (children, widget) = builder.build();
-        event!(Target::Ui, LayoutAdded(widget.widget.id()));
+        event!(Target::Ui, LayoutAdded(widget.id()));
         self.layout.check_changes();
 
-        let id = widget.widget.id();
+        let id = widget.id();
         self.graph.add_widget(widget, parent_id);
         event!(Target::Widget(id), WidgetAttachedEvent);
         for child in children {
@@ -173,9 +174,10 @@ impl Ui {
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {
         if let Some(parent_id) = self.graph.parent(widget_id) {
-            if let Some(parent) = self.graph.get_widget_container(parent_id) {
+            if let Some(parent) = self.graph.get_widget(parent_id) {
+                let parent = &mut *parent.widget_container();
                 if let Some(ref mut container) = parent.container {
-                    container.remove_child(&mut *parent.widget.0.borrow_mut(), widget_id);
+                    container.remove_child(&mut parent.widget, widget_id);
                 }
             }
         }
@@ -197,13 +199,14 @@ impl Ui {
                            type_id: TypeId,
                            data: &Box<Any + Send>) -> bool
     {
-        if let Some(widget_container) = self.graph.get_widget_container(widget_id) {
+        if let Some(widget) = self.graph.get_widget(widget_id) {
+            let mut widget_container = widget.widget_container();
             let handled = widget_container.trigger_event(type_id,
                                                          data,
                                                          &mut self.layout);
-            if widget_container.widget.has_updated() {
+            if widget.has_updated() {
                 self.needs_redraw = true;
-                widget_container.widget.set_updated(false);
+                widget.set_updated(false);
             }
             handled
         } else {

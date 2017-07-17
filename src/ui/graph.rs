@@ -15,7 +15,7 @@ use util::Point;
 use resources::{resources, WidgetId};
 use layout::Layout;
 
-type Graph = StableGraph<WidgetContainer, ()>;
+type Graph = StableGraph<WidgetRef, ()>;
 
 /**
 Most of the functionality of WidgetGraph is to wrap NodeIndex so only WidgetId is exposed to the Ui.
@@ -41,13 +41,12 @@ impl WidgetGraph {
     pub fn new() -> Self {
         let mut graph = Graph::new();
         let dummy_widget = Widget::new(WidgetId(0), None, PropSet::new(), Layout::new(None), None, None);
-        let dummy_widget = WidgetRef(Rc::new(RefCell::new(dummy_widget)));
         let dummy_container = WidgetContainer {
             widget: dummy_widget,
             container: None,
             handlers: HashMap::new(),
         };
-        let null_index = graph.add_node(dummy_container);
+        let null_index = graph.add_node(WidgetRef(Rc::new(RefCell::new(dummy_container))));
         WidgetGraph {
             graph: graph,
             widget_map: HashMap::new(),
@@ -59,26 +58,18 @@ impl WidgetGraph {
     pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<WidgetRef> {
         if let Some(node_index) = self.widget_map.get(&widget_id) {
             if let Some(widget_container) = self.graph.node_weight_mut(node_index.clone()) {
-                return Some(widget_container.widget.clone())
-            }
-        }
-        None
-    }
-    pub fn get_widget_container(&mut self, widget_id: WidgetId) -> Option<&mut WidgetContainer> {
-        if let Some(node_index) = self.widget_map.get(&widget_id) {
-            if let Some(widget_container) = self.graph.node_weight_mut(node_index.clone()) {
-                return Some(widget_container)
+                return Some(widget_container.clone())
             }
         }
         None
     }
 
     pub fn add_widget(&mut self,
-                      widget: WidgetContainer,
+                      widget: WidgetRef,
                       parent_id: Option<WidgetId>)
                       -> NodeIndex
     {
-        let id = widget.widget.id();
+        let id = widget.id();
         let widget_index = self.graph.add_node(widget);
         self.widget_map.insert(id, widget_index);
         if let Some(parent_id) = parent_id {
@@ -89,7 +80,7 @@ impl WidgetGraph {
         widget_index
     }
 
-    pub fn remove_widget(&mut self, widget_id: WidgetId) -> Option<WidgetContainer> {
+    pub fn remove_widget(&mut self, widget_id: WidgetId) -> Option<WidgetRef> {
         if let Some(node_index) = self.find_widget(widget_id) {
             self.widget_map.remove(&widget_id);
             if let Some(widget) = self.graph.remove_node(node_index) {
@@ -137,7 +128,7 @@ impl NeighborsWalker {
     }
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
         if let Some((_, node_index)) = self.neighbors.next(graph) {
-            Some(graph[node_index].widget.id())
+            Some(graph[node_index].id())
         } else {
             None
         }
@@ -164,8 +155,8 @@ impl CursorWidgetWalker {
     }
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
         while let Some(node_index) = self.dfs.next(graph) {
-            let ref widget = graph[node_index].widget;
-            if widget.0.borrow().is_mouse_over(self.point) {
+            let ref widget = graph[node_index];
+            if widget.0.borrow().widget.is_mouse_over(self.point) {
                 return Some(widget.id());
             }
         }
@@ -183,7 +174,7 @@ impl DfsWalker {
     }
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
         if let Some(node_index) = self.dfs.next(graph) {
-            Some(graph[node_index].widget.id())
+            Some(graph[node_index].id())
         } else {
             None
         }
