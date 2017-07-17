@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
@@ -7,7 +9,7 @@ use petgraph::Direction;
 use petgraph::visit::Visitable;
 use petgraph::stable_graph::WalkNeighbors;
 
-use widget::{Widget, WidgetContainer};
+use widget::{Widget, WidgetRef, WidgetContainer};
 use widget::property::PropSet;
 use util::Point;
 use resources::{resources, WidgetId};
@@ -38,8 +40,10 @@ pub struct WidgetGraph {
 impl WidgetGraph {
     pub fn new() -> Self {
         let mut graph = Graph::new();
+        let dummy_widget = Widget::new(WidgetId(0), None, PropSet::new(), Layout::new(None), None, None);
+        let dummy_widget = WidgetRef(Rc::new(RefCell::new(dummy_widget)));
         let dummy_container = WidgetContainer {
-            widget: Widget::new(WidgetId(0), None, PropSet::new(), Layout::new(None), None, None),
+            widget: dummy_widget,
             container: None,
             handlers: HashMap::new(),
         };
@@ -52,10 +56,10 @@ impl WidgetGraph {
         }
     }
 
-    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<&mut Widget> {
+    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<WidgetRef> {
         if let Some(node_index) = self.widget_map.get(&widget_id) {
             if let Some(widget_container) = self.graph.node_weight_mut(node_index.clone()) {
-                return Some(&mut widget_container.widget)
+                return Some(widget_container.widget.clone())
             }
         }
         None
@@ -74,7 +78,7 @@ impl WidgetGraph {
                       parent_id: Option<WidgetId>)
                       -> NodeIndex
     {
-        let id = widget.widget.id;
+        let id = widget.widget.id();
         let widget_index = self.graph.add_node(widget);
         self.widget_map.insert(id, widget_index);
         if let Some(parent_id) = parent_id {
@@ -100,7 +104,7 @@ impl WidgetGraph {
     fn root_index(&self) -> NodeIndex {
         self.find_widget(self.root_id).unwrap()
     }
-    pub fn get_root(&mut self) -> &mut Widget {
+    pub fn get_root(&mut self) -> WidgetRef {
         let root_id = self.root_id;
         self.get_widget(root_id).unwrap()
     }
@@ -133,7 +137,7 @@ impl NeighborsWalker {
     }
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
         if let Some((_, node_index)) = self.neighbors.next(graph) {
-            Some(graph[node_index].widget.id)
+            Some(graph[node_index].widget.id())
         } else {
             None
         }
@@ -161,8 +165,8 @@ impl CursorWidgetWalker {
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
         while let Some(node_index) = self.dfs.next(graph) {
             let ref widget = graph[node_index].widget;
-            if widget.is_mouse_over(self.point) {
-                return Some(widget.id);
+            if widget.0.borrow().is_mouse_over(self.point) {
+                return Some(widget.id());
             }
         }
         None
@@ -179,7 +183,7 @@ impl DfsWalker {
     }
     pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
         if let Some(node_index) = self.dfs.next(graph) {
-            Some(graph[node_index].widget.id)
+            Some(graph[node_index].widget.id())
         } else {
             None
         }

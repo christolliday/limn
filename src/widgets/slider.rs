@@ -269,7 +269,7 @@ impl DragHandler {
     }
 }
 impl WidgetEventHandler<SliderHandleInput> for DragHandler {
-    fn handle(&mut self, event: &SliderHandleInput, args: WidgetEventArgs) {
+    fn handle(&mut self, event: &SliderHandleInput, mut args: WidgetEventArgs) {
         let bounds = args.widget.bounds;
         let handle_radius = if let Orientation::Horizontal = self.orientation {
             bounds.width() / 2.0

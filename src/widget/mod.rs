@@ -5,6 +5,8 @@ pub mod drawable;
 
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
+use std::rc::Rc;
+use std::cell::{RefCell};
 
 use graphics::Context;
 use graphics::types::Color;
@@ -211,12 +213,14 @@ impl WidgetBuilder {
 
     pub fn build(mut self) -> (Vec<WidgetBuilder>, WidgetContainer) {
         self.layout.name = self.debug_name.clone();
-        let widget = Widget::new(self.id,
+        let mut widget = Widget::new(self.id,
                                  self.drawable,
                                  self.props,
                                  self.layout,
                                  self.debug_name,
                                  self.debug_color);
+        widget.apply_style();
+        let widget = WidgetRef(Rc::new(RefCell::new(widget)));
         (self.children,
          WidgetContainer {
              widget: widget,
@@ -227,7 +231,7 @@ impl WidgetBuilder {
 }
 
 pub struct WidgetContainer {
-    pub widget: Widget,
+    pub widget: WidgetRef,
     pub container: Option<Box<LayoutContainer>>,
     pub handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
 }
@@ -241,7 +245,7 @@ impl WidgetContainer {
         if let Some(handlers) = self.handlers.get_mut(&type_id) {
             for event_handler in handlers.iter_mut() {
                 let event_args = WidgetEventArgs {
-                    widget: &mut self.widget,
+                    widget: &mut *self.widget.0.borrow_mut(),
                     solver: solver,
                     handled: &mut handled,
                 };
@@ -251,6 +255,31 @@ impl WidgetContainer {
         handled
     }
 }
+
+#[derive(Clone)]
+pub struct WidgetRef(pub Rc<RefCell<Widget>>);
+
+impl WidgetRef {
+    pub fn id(&self) -> WidgetId {
+        self.0.borrow().id
+    }
+    pub fn debug_name(&self) -> Option<String> {
+        self.0.borrow().debug_name.clone()
+    }
+    pub fn debug_color(&self) -> Option<Color> {
+        self.0.borrow().debug_color
+    }
+    pub fn has_updated(&self) -> bool {
+        self.0.borrow().has_updated
+    }
+    pub fn set_updated(&self, has_updated: bool) {
+        self.0.borrow_mut().has_updated = has_updated;
+    }
+    pub fn bounds(&self) -> Rect {
+        self.0.borrow().bounds
+    }
+}
+
 pub struct Widget {
     pub id: WidgetId,
     pub drawable: Option<DrawableWrapper>,
@@ -270,7 +299,7 @@ impl Widget {
                debug_name: Option<String>,
                debug_color: Option<Color>)
                -> Self {
-        let mut widget = Widget {
+        let widget = Widget {
             id: id,
             drawable: drawable,
             props: props,
@@ -280,7 +309,6 @@ impl Widget {
             debug_name: debug_name,
             debug_color: debug_color,
         };
-        widget.apply_style();
         widget
     }
     pub fn draw(&mut self,
@@ -322,8 +350,6 @@ impl Widget {
     {
         f(&mut self.layout);
         event!(Target::Ui, UpdateLayout(self.id));
-        //self.solver.update_layout(&mut self.layout);
-        //self.solver.check_changes();
     }
 
     pub fn apply_style(&mut self) {

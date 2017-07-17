@@ -71,7 +71,7 @@ impl Ui {
     }
     pub fn get_root_dims(&mut self) -> Size {
         let root = self.graph.get_root();
-        let mut dims = root.bounds.size;
+        let mut dims = root.bounds().size;
         // use min size to prevent window size from being set to 0 (X crashes)
         dims.width = f64::max(100.0, dims.width);
         dims.height = f64::max(100.0, dims.height);
@@ -79,6 +79,7 @@ impl Ui {
     }
     pub fn window_resized(&mut self, window_dims: Size) {
         let root = self.graph.get_root();
+        let mut root = root.0.borrow_mut();
         root.update_layout(|layout| {
             layout.edit_right().set(window_dims.width);
             layout.edit_bottom().set(window_dims.height);
@@ -109,8 +110,8 @@ impl Ui {
             let mut dfs = self.graph.dfs(root_id);
             while let Some(widget_id) = dfs.next(&self.graph.graph) {
                 let widget = self.graph.get_widget(widget_id).unwrap();
-                let color = widget.debug_color.unwrap_or(GREEN);
-                let bounds = widget.bounds;
+                let color = widget.debug_color().unwrap_or(GREEN);
+                let bounds = widget.bounds();
                 util::draw_rect_outline(bounds, color, context, graphics);
             }
         }
@@ -122,7 +123,8 @@ impl Ui {
                      crop_to: Rect) {
 
         let crop_to = {
-            let ref mut widget = self.graph.get_widget(widget_id).unwrap();
+            let widget = self.graph.get_widget(widget_id).unwrap();
+            let mut widget = widget.0.borrow_mut();
             widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
             crop_to.intersection(&widget.bounds)
         };
@@ -144,7 +146,7 @@ impl Ui {
     {
         if let Some(parent) = self.graph.get_widget_container(parent_id) {
             if let Some(ref mut container) = parent.container {
-                container.add_child(&mut parent.widget, &mut widget);
+                container.add_child(&mut *parent.widget.0.borrow_mut(), &mut widget);
             }
         }
         let layout = widget.layout().vars.clone();
@@ -158,10 +160,10 @@ impl Ui {
                      builder: WidgetBuilder,
                      parent_id: Option<WidgetId>) {
         let (children, widget) = builder.build();
-        event!(Target::Ui, LayoutAdded(widget.widget.id));
+        event!(Target::Ui, LayoutAdded(widget.widget.id()));
         self.layout.check_changes();
 
-        let id = widget.widget.id;
+        let id = widget.widget.id();
         self.graph.add_widget(widget, parent_id);
         event!(Target::Widget(id), WidgetAttachedEvent);
         for child in children {
@@ -173,7 +175,7 @@ impl Ui {
         if let Some(parent_id) = self.graph.parent(widget_id) {
             if let Some(parent) = self.graph.get_widget_container(parent_id) {
                 if let Some(ref mut container) = parent.container {
-                    container.remove_child(&mut parent.widget, widget_id);
+                    container.remove_child(&mut *parent.widget.0.borrow_mut(), widget_id);
                 }
             }
         }
@@ -199,9 +201,9 @@ impl Ui {
             let handled = widget_container.trigger_event(type_id,
                                                          data,
                                                          &mut self.layout);
-            if widget_container.widget.has_updated {
+            if widget_container.widget.has_updated() {
                 self.needs_redraw = true;
-                widget_container.widget.has_updated = false;
+                widget_container.widget.set_updated(false);
             }
             handled
         } else {
@@ -240,8 +242,8 @@ impl Ui {
         let mut dfs = self.graph.dfs(root_id);
         while let Some(widget_id) = dfs.next(&self.graph.graph) {
             let widget = self.graph.get_widget(widget_id).unwrap();
-            let bounds = widget.bounds;
-            let name = widget.debug_name.clone();
+            let bounds = widget.bounds();
+            let name = widget.debug_name().clone();
             println!("{:?} {:?}", name, bounds);
         }
     }
