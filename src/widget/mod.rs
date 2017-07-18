@@ -314,6 +314,9 @@ impl Widget {
         };
         widget
     }
+    pub fn layout(&mut self) -> &mut Layout {
+        &mut self.layout
+    }
     pub fn draw(&mut self,
                 crop_to: Rect,
                 glyph_cache: &mut GlyphCache,

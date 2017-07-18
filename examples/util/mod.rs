@@ -22,6 +22,7 @@ pub fn init_default(title: &str) -> (Window, App) {
     init(title, None)
 }
 
+#[allow(dead_code)]
 pub fn init_default_min_size(title: &str, size: Size) -> (Window, App) {
     init(title, Some((size.width as u32, size.height as u32)))
 }

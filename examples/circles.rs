@@ -115,7 +115,7 @@ fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetId, size: f64) ->
     widget.on_click(move |_, _| {
         event!(Target::Ui, CircleEvent::Select(Some(id)));
     });
-    ui.add_widget(widget, parent_id);
+    ui.add_widget(widget, Some(parent_id));
     id
 }
 

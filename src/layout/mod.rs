@@ -21,8 +21,8 @@ impl LayoutContainer for LinearLayoutHandler {
     fn set_padding(&mut self, padding: f64) {
         self.padding = padding;
     }
-    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder) {
-        let child_id = child.id();
+    fn add_child(&mut self, parent: &mut Widget, child: &mut Widget) {
+        let child_id = child.id;
         parent.update_layout(|layout| {
             self.add_child_layout(&layout.vars, &mut child.layout, child_id.0);
         });
@@ -35,7 +35,7 @@ impl LayoutContainer for LinearLayoutHandler {
 }
 
 impl LayoutContainer for GridLayout {
-    fn add_child(&mut self, parent: &mut Widget, child: &mut WidgetBuilder) {
+    fn add_child(&mut self, parent: &mut Widget, child: &mut Widget) {
         parent.update_layout(|layout| {
             self.add_child_layout(layout, &mut child.layout);
         });

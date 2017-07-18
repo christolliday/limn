@@ -164,7 +164,7 @@ pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetId) -> Wid
         list_item_widget
     };
     let list_item_widget_id = list_item_widget.id();
-    ui.add_widget(list_item_widget, list_widget_id);
+    ui.add_widget(list_item_widget, Some(list_widget_id));
     list_item_widget_id
 }
 

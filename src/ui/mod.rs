@@ -67,7 +67,7 @@ impl Ui {
             self.layout.check_changes();
         }
         self.graph.root_id = root_widget.id();
-        self.attach_widget(root_widget, None);
+        self.add_widget(root_widget, None);
     }
     pub fn get_root_dims(&mut self) -> Size {
         let root = self.graph.get_root();
@@ -141,35 +141,31 @@ impl Ui {
     }
 
     pub fn add_widget(&mut self,
-                      mut widget: WidgetBuilder,
-                      parent_id: WidgetId)
-    {
-        if let Some(parent) = self.graph.get_widget(parent_id) {
-            let parent = &mut *parent.widget_container();
-            if let Some(ref mut container) = parent.container {
-                container.add_child(&mut parent.widget, &mut widget);
-            }
-        }
-        let layout = widget.layout().vars.clone();
-        let id = widget.id();
-        self.attach_widget(widget, Some(parent_id));
-        event!(Target::Widget(parent_id), ChildAttachedEvent(id, layout));
-        self.redraw();
-    }
-
-    fn attach_widget(&mut self,
-                     builder: WidgetBuilder,
-                     parent_id: Option<WidgetId>) {
+                  builder: WidgetBuilder,
+                  parent_id: Option<WidgetId>) {
         let (children, widget) = builder.build();
         event!(Target::Ui, LayoutAdded(widget.id()));
         self.layout.check_changes();
 
         let id = widget.id();
         self.graph.add_widget(widget, parent_id);
+
+        if let Some(parent_id) = parent_id {
+            if let Some(parent) = self.graph.get_widget(parent_id) {
+                let parent = &mut *parent.widget_container();
+                let child = self.graph.get_widget(id).unwrap();
+                let child = &mut (&mut *child.widget_container()).widget;
+                if let Some(ref mut container) = parent.container {
+                    container.add_child(&mut parent.widget, child);
+                }
+                event!(Target::Widget(parent_id), ChildAttachedEvent(id, child.layout().vars.clone()));
+            }
+        }
         event!(Target::Widget(id), WidgetAttachedEvent);
         for child in children {
-            self.add_widget(child, id);
+            self.add_widget(child, Some(id));
         }
+        self.redraw();
     }
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {
@@ -204,9 +200,9 @@ impl Ui {
             let handled = widget_container.trigger_event(type_id,
                                                          data,
                                                          &mut self.layout);
-            if widget.has_updated() {
+            if widget_container.widget.has_updated {
                 self.needs_redraw = true;
-                widget.set_updated(false);
+                widget_container.widget.has_updated = false;
             }
             handled
         } else {
