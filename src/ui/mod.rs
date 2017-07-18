@@ -149,9 +149,11 @@ impl Ui {
         let widget_ref = self.graph.get_widget(id).unwrap();
         if let Some(parent_id) = parent_id {
             if let Some(parent) = self.graph.get_widget(parent_id) {
+                let parent_weak = parent.downgrade();
                 let parent = &mut *parent.widget_container();
                 parent.widget.children.push(widget_ref.clone());
                 let widget = &mut (&mut *widget_ref.widget_container()).widget;
+                widget.parent = Some(parent_weak);
                 if let Some(ref mut container) = parent.container {
                     container.add_child(&mut parent.widget, widget);
                 }
@@ -189,23 +191,19 @@ impl Ui {
     }
 
     fn handle_widget_event(&mut self,
-                           widget_id: WidgetId,
+                           widget_ref: WidgetRef,
                            type_id: TypeId,
                            data: &Box<Any + Send>) -> bool
     {
-        if let Some(widget) = self.graph.get_widget(widget_id) {
-            let mut widget_container = widget.widget_container();
-            let handled = widget_container.trigger_event(type_id,
-                                                         data,
-                                                         &mut self.layout);
-            if widget_container.widget.has_updated {
-                self.needs_redraw = true;
-                widget_container.widget.has_updated = false;
-            }
-            handled
-        } else {
-            false
+        let mut widget_container = widget_ref.widget_container();
+        let handled = widget_container.trigger_event(type_id,
+                                                     data,
+                                                     &mut self.layout);
+        if widget_container.widget.has_updated {
+            self.needs_redraw = true;
+            widget_container.widget.has_updated = false;
         }
+        handled
     }
 
     pub fn handle_event(&mut self,
@@ -213,24 +211,31 @@ impl Ui {
                         type_id: TypeId,
                         data: &Box<Any + Send>) {
         match address {
-            Target::Widget(id) => {
-                self.handle_widget_event(id, type_id, data);
+            Target::Widget(widget_id) => {
+                let widget_ref = self.graph.get_widget(widget_id).unwrap();
+                self.handle_widget_event(widget_ref, type_id, data);
             }
-            Target::SubTree(id) => {
-                let mut dfs = self.graph.dfs(id);
-                while let Some(widget_id) = dfs.next(&self.graph.graph) {
-                    self.handle_widget_event(widget_id, type_id, data);
-                }
+            Target::SubTree(widget_id) => {
+                let widget_ref = self.graph.get_widget(widget_id).unwrap();
+                self.handle_event_subtree(widget_ref, type_id, data);
             }
-            Target::BubbleUp(id) => {
-                // bubble up event from widget, until either it reaches the root, or some widget handles it
-                let mut maybe_id = Some(id);
-                while let Some(id) = maybe_id {
-                    let handled = self.handle_widget_event(id, type_id, data);
-                    maybe_id = if handled { None } else { self.graph.parent(id) };
+            Target::BubbleUp(widget_id) => {
+                let mut maybe_widget_ref = self.graph.get_widget(widget_id);
+                while let Some(widget_ref) = maybe_widget_ref {
+                    if self.handle_widget_event(widget_ref.clone(), type_id, data) {
+                        break;
+                    }
+                    maybe_widget_ref = widget_ref.widget_container().widget.parent.as_ref().and_then(|parent| parent.upgrade());
                 }
             }
             _ => ()
+        }
+    }
+    fn handle_event_subtree(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Box<Any + Send>) {
+        self.handle_widget_event(widget_ref.clone(), type_id, data);
+        let children = &widget_ref.widget_container().widget.children;
+        for child in children {
+            self.handle_event_subtree(child.clone(), type_id, data);
         }
     }
     pub fn debug_widget_positions(&mut self) {

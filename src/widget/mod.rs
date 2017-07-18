@@ -5,7 +5,7 @@ pub mod drawable;
 
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use std::cell::{RefCell};
 
 use graphics::Context;
@@ -257,11 +257,16 @@ impl WidgetContainer {
 
 #[derive(Clone)]
 pub struct WidgetRef(pub Rc<RefCell<WidgetContainer>>);
+#[derive(Clone)]
+pub struct WidgetRefWeak(pub Weak<RefCell<WidgetContainer>>);
 
 use std::cell::RefMut;
 impl WidgetRef {
     pub fn widget_container(&self) -> RefMut<WidgetContainer> {
         self.0.borrow_mut()
+    }
+    pub fn downgrade(&self) -> WidgetRefWeak {
+        WidgetRefWeak(Rc::downgrade(&self.0))
     }
     pub fn id(&self) -> WidgetId {
         self.0.borrow().widget.id
@@ -282,6 +287,15 @@ impl WidgetRef {
         self.0.borrow().widget.bounds
     }
 }
+impl WidgetRefWeak {
+    pub fn upgrade(&self) -> Option<WidgetRef> {
+        if let Some(widget_ref) = self.0.upgrade() {
+            Some(WidgetRef(widget_ref))
+        } else {
+            None
+        }
+    }
+}
 
 pub struct Widget {
     pub id: WidgetId,
@@ -293,6 +307,7 @@ pub struct Widget {
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
     pub children: Vec<WidgetRef>,
+    pub parent: Option<WidgetRefWeak>,
 }
 
 impl Widget {
@@ -313,6 +328,7 @@ impl Widget {
             debug_name: debug_name,
             debug_color: debug_color,
             children: Vec::new(),
+            parent: None,
         };
         widget
     }
