@@ -292,6 +292,7 @@ pub struct Widget {
     pub bounds: Rect,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
+    pub children: Vec<WidgetRef>,
 }
 
 impl Widget {
@@ -311,6 +312,7 @@ impl Widget {
             bounds: Rect::zero(),
             debug_name: debug_name,
             debug_color: debug_color,
+            children: Vec::new(),
         };
         widget
     }

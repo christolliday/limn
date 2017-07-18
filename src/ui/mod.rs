@@ -11,7 +11,7 @@ use cassowary::strength::*;
 use graphics;
 use graphics::Context;
 
-use widget::{WidgetBuilder, WidgetBuilderCore};
+use widget::{WidgetRef, WidgetBuilder, WidgetBuilderCore};
 use layout::{LayoutManager, LayoutVars, LayoutAdded};
 use layout::constraint::*;
 use util::{self, Point, Rect, Size};
@@ -67,7 +67,7 @@ impl Ui {
             self.layout.check_changes();
         }
         self.graph.root_id = root_widget.id();
-        self.add_widget(root_widget, None);
+        self.graph.root = Some(self.add_widget(root_widget, None));
     }
     pub fn get_root_dims(&mut self) -> Size {
         let root = self.graph.get_root();
@@ -103,8 +103,8 @@ impl Ui {
     pub fn draw(&mut self, context: Context, graphics: &mut G2d) {
         use std::f64;
         let crop_to = Rect::new(Point::zero(), Size::new(f64::MAX, f64::MAX));
-        let id = self.graph.root_id;
-        self.draw_node(context, graphics, id, crop_to);
+        let root = self.graph.get_root();
+        self.draw_node(context, graphics, root, crop_to);
         if self.debug_draw_bounds {
             let root_id = self.graph.root_id;
             let mut dfs = self.graph.dfs(root_id);
@@ -119,30 +119,26 @@ impl Ui {
     pub fn draw_node(&mut self,
                      context: Context,
                      graphics: &mut G2d,
-                     widget_id: WidgetId,
+                     widget_ref: WidgetRef,
                      crop_to: Rect) {
 
+        let mut widget = widget_ref.widget_container();
+        let widget = &mut widget.widget;
         let crop_to = {
-            let widget = self.graph.get_widget(widget_id).unwrap();
-            let mut widget = widget.widget_container();
-            widget.widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
-            crop_to.intersection(&widget.widget.bounds)
+            widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
+            crop_to.intersection(&widget.bounds)
         };
 
         if let Some(crop_to) = crop_to {
-            let children: Vec<WidgetId> = self.graph.children(widget_id).collect(&self.graph.graph);
-            // need to iterate backwards to draw in correct order, because
-            // petgraph neighbours iterate in reverse order of insertion, not sure why
-            for child_index in children.iter().rev() {
-                let child_index = child_index.clone();
-                self.draw_node(context, graphics, child_index, crop_to);
+            for child in &widget.children {
+                self.draw_node(context, graphics, child.clone(), crop_to);
             }
         }
     }
 
     pub fn add_widget(&mut self,
-                  builder: WidgetBuilder,
-                  parent_id: Option<WidgetId>) {
+                      builder: WidgetBuilder,
+                      parent_id: Option<WidgetId>) -> WidgetRef {
         let (children, widget) = builder.build();
         event!(Target::Ui, LayoutAdded(widget.id()));
         self.layout.check_changes();
@@ -150,15 +146,16 @@ impl Ui {
         let id = widget.id();
         self.graph.add_widget(widget, parent_id);
 
+        let widget_ref = self.graph.get_widget(id).unwrap();
         if let Some(parent_id) = parent_id {
             if let Some(parent) = self.graph.get_widget(parent_id) {
                 let parent = &mut *parent.widget_container();
-                let child = self.graph.get_widget(id).unwrap();
-                let child = &mut (&mut *child.widget_container()).widget;
+                parent.widget.children.push(widget_ref.clone());
+                let widget = &mut (&mut *widget_ref.widget_container()).widget;
                 if let Some(ref mut container) = parent.container {
-                    container.add_child(&mut parent.widget, child);
+                    container.add_child(&mut parent.widget, widget);
                 }
-                event!(Target::Widget(parent_id), ChildAttachedEvent(id, child.layout().vars.clone()));
+                event!(Target::Widget(parent_id), ChildAttachedEvent(id, widget.layout().vars.clone()));
             }
         }
         event!(Target::Widget(id), WidgetAttachedEvent);
@@ -166,6 +163,7 @@ impl Ui {
             self.add_widget(child, Some(id));
         }
         self.redraw();
+        widget_ref
     }
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {

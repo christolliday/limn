@@ -34,6 +34,7 @@ is owned by the Ui.
 pub struct WidgetGraph {
     pub graph: Graph,
     pub root_id: WidgetId,
+    pub root: Option<WidgetRef>,
     widget_map: HashMap<WidgetId, NodeIndex>,
     null_index: NodeIndex, // node with no edges, used to create graph iterators/walkers that return nothing
 }
@@ -51,6 +52,7 @@ impl WidgetGraph {
             graph: graph,
             widget_map: HashMap::new(),
             root_id: resources().widget_id(),
+            root: None,
             null_index: null_index,
         }
     }
@@ -96,8 +98,7 @@ impl WidgetGraph {
         self.find_widget(self.root_id).unwrap()
     }
     pub fn get_root(&mut self) -> WidgetRef {
-        let root_id = self.root_id;
-        self.get_widget(root_id).unwrap()
+        self.root.as_ref().unwrap().clone()
     }
 
     pub fn parent(&mut self, widget_id: WidgetId) -> Option<WidgetId> {
