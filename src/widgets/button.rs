@@ -96,6 +96,7 @@ impl ToggleButtonBuilder {
         let button_text_drawable = TextDrawable::default();
         let mut button_text_widget = WidgetBuilder::new();
         button_text_widget
+            .set_debug_name("button_text")
             .set_drawable_with_style(button_text_drawable, style);
         layout!(button_text_widget: center(&self.widget));
 

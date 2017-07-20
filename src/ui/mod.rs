@@ -107,11 +107,10 @@ impl Ui {
         self.draw_node(context, graphics, root, crop_to);
         if self.debug_draw_bounds {
             let root_id = self.graph.root_id;
-            let mut dfs = self.graph.dfs(root_id);
-            while let Some(widget_id) = dfs.next(&self.graph.graph) {
-                let widget = self.graph.get_widget(widget_id).unwrap();
-                let color = widget.debug_color().unwrap_or(GREEN);
-                let bounds = widget.bounds();
+            let mut bfs = self.graph.bfs(root_id);
+            while let Some(widget_ref) = bfs.next() {
+                let color = widget_ref.debug_color().unwrap_or(GREEN);
+                let bounds = widget_ref.bounds();
                 util::draw_rect_outline(bounds, color, context, graphics);
             }
         }
@@ -122,7 +121,7 @@ impl Ui {
                      widget_ref: WidgetRef,
                      crop_to: Rect) {
 
-        let mut widget = widget_ref.widget_container();
+        let mut widget = widget_ref.widget_container_mut();
         let widget = &mut widget.widget;
         let crop_to = {
             widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
@@ -150,9 +149,9 @@ impl Ui {
         if let Some(parent_id) = parent_id {
             if let Some(parent) = self.graph.get_widget(parent_id) {
                 let parent_weak = parent.downgrade();
-                let parent = &mut *parent.widget_container();
+                let parent = &mut *parent.widget_container_mut();
                 parent.widget.children.push(widget_ref.clone());
-                let widget = &mut (&mut *widget_ref.widget_container()).widget;
+                let widget = &mut (&mut *widget_ref.widget_container_mut()).widget;
                 widget.parent = Some(parent_weak);
                 if let Some(ref mut container) = parent.container {
                     container.add_child(&mut parent.widget, widget);
@@ -169,11 +168,15 @@ impl Ui {
     }
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {
-        if let Some(parent_id) = self.graph.parent(widget_id) {
-            if let Some(parent) = self.graph.get_widget(parent_id) {
-                let parent = &mut *parent.widget_container();
-                if let Some(ref mut container) = parent.container {
-                    container.remove_child(&mut parent.widget, widget_id);
+        if let Some(widget_ref) = self.graph.get_widget(widget_id) {
+            let widget_container = widget_ref.widget_container();
+            if let Some(ref parent_ref) = widget_container.widget.parent {
+                if let Some(parent_ref) = parent_ref.upgrade() {
+                    let parent = &mut *parent_ref.widget_container_mut();
+                    if let Some(ref mut container) = parent.container {
+                        container.remove_child(&mut parent.widget, widget_container.widget.id);
+                    }
+                    parent.widget.remove_child(widget_container.widget.id);
                 }
             }
         }
@@ -187,7 +190,7 @@ impl Ui {
 
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetId> {
         // first widget found is the deepest, later will need to have z order as ordering
-        self.graph.widgets_under_cursor(point).next(&mut self.graph.graph)
+        self.graph.widgets_under_cursor(point).next()
     }
 
     fn handle_widget_event(&mut self,
@@ -195,7 +198,7 @@ impl Ui {
                            type_id: TypeId,
                            data: &Box<Any + Send>) -> bool
     {
-        let mut widget_container = widget_ref.widget_container();
+        let mut widget_container = widget_ref.widget_container_mut();
         let handled = widget_container.trigger_event(type_id,
                                                      data,
                                                      &mut self.layout);
@@ -212,12 +215,14 @@ impl Ui {
                         data: &Box<Any + Send>) {
         match address {
             Target::Widget(widget_id) => {
-                let widget_ref = self.graph.get_widget(widget_id).unwrap();
-                self.handle_widget_event(widget_ref, type_id, data);
+                if let Some(widget_ref) = self.graph.get_widget(widget_id) {
+                    self.handle_widget_event(widget_ref, type_id, data);
+                }
             }
             Target::SubTree(widget_id) => {
-                let widget_ref = self.graph.get_widget(widget_id).unwrap();
-                self.handle_event_subtree(widget_ref, type_id, data);
+                if let Some(widget_ref) = self.graph.get_widget(widget_id) {
+                    self.handle_event_subtree(widget_ref, type_id, data);
+                }
             }
             Target::BubbleUp(widget_id) => {
                 let mut maybe_widget_ref = self.graph.get_widget(widget_id);
@@ -241,11 +246,10 @@ impl Ui {
     pub fn debug_widget_positions(&mut self) {
         println!("WIDGET POSITIONS");
         let root_id = self.graph.root_id;
-        let mut dfs = self.graph.dfs(root_id);
-        while let Some(widget_id) = dfs.next(&self.graph.graph) {
-            let widget = self.graph.get_widget(widget_id).unwrap();
-            let bounds = widget.bounds();
-            let name = widget.debug_name().clone();
+        let mut bfs = self.graph.bfs(root_id);
+        while let Some(widget_ref) = bfs.next() {
+            let bounds = widget_ref.bounds();
+            let name = widget_ref.debug_name().clone();
             println!("{:?} {:?}", name, bounds);
         }
     }

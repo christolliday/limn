@@ -6,7 +6,8 @@ pub mod drawable;
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
 use std::rc::{Rc, Weak};
-use std::cell::{RefCell};
+use std::cell::{RefCell, Ref, RefMut};
+use std::hash::{Hash, Hasher};
 
 use graphics::Context;
 use graphics::types::Color;
@@ -260,10 +261,30 @@ pub struct WidgetRef(pub Rc<RefCell<WidgetContainer>>);
 #[derive(Clone)]
 pub struct WidgetRefWeak(pub Weak<RefCell<WidgetContainer>>);
 
-use std::cell::RefMut;
+impl PartialEq for WidgetRef {
+    fn eq(&self, other: &WidgetRef) -> bool {
+        self.id() == other.id()
+    }
+}
+impl Eq for WidgetRef {}
+impl Hash for WidgetRef {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id().hash(state);
+    }
+}
+use std::fmt;
+impl fmt::Debug for WidgetRef {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.widget_container().widget.debug_name.clone().unwrap_or("None".to_owned()))
+    }
+}
+
 impl WidgetRef {
-    pub fn widget_container(&self) -> RefMut<WidgetContainer> {
+    pub fn widget_container_mut(&self) -> RefMut<WidgetContainer> {
         self.0.borrow_mut()
+    }
+    pub fn widget_container(&self) -> Ref<WidgetContainer> {
+        self.0.borrow()
     }
     pub fn downgrade(&self) -> WidgetRefWeak {
         WidgetRefWeak(Rc::downgrade(&self.0))
@@ -345,6 +366,11 @@ impl Widget {
             let bounds = self.bounds;
             let context = util::crop_context(context, crop_to);
             drawable.drawable.draw(bounds, crop_to, glyph_cache, context, graphics);
+        }
+    }
+    pub fn remove_child(&mut self, child_id: WidgetId) {
+        if let Some(index) = self.children.iter().position(|widget| widget.id() == child_id) {
+            self.children.remove(index);
         }
     }
 

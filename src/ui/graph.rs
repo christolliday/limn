@@ -1,19 +1,11 @@
-use std::collections::HashMap;
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use petgraph::stable_graph::StableGraph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{Dfs, VisitMap, GraphRef, IntoNeighbors};
-use petgraph::Direction;
-use petgraph::visit::Visitable;
-use petgraph::stable_graph::WalkNeighbors;
 
-use widget::{Widget, WidgetRef, WidgetContainer};
-use widget::property::PropSet;
+use widget::WidgetRef;
 use util::Point;
 use resources::{resources, WidgetId};
-use layout::Layout;
 
 type Graph = StableGraph<WidgetRef, ()>;
 
@@ -36,24 +28,14 @@ pub struct WidgetGraph {
     pub root_id: WidgetId,
     pub root: Option<WidgetRef>,
     widget_map: HashMap<WidgetId, NodeIndex>,
-    null_index: NodeIndex, // node with no edges, used to create graph iterators/walkers that return nothing
 }
 impl WidgetGraph {
     pub fn new() -> Self {
-        let mut graph = Graph::new();
-        let dummy_widget = Widget::new(WidgetId(0), None, PropSet::new(), Layout::new(None), None, None);
-        let dummy_container = WidgetContainer {
-            widget: dummy_widget,
-            container: None,
-            handlers: HashMap::new(),
-        };
-        let null_index = graph.add_node(WidgetRef(Rc::new(RefCell::new(dummy_container))));
         WidgetGraph {
-            graph: graph,
+            graph: Graph::new(),
             widget_map: HashMap::new(),
             root_id: resources().widget_id(),
             root: None,
-            null_index: null_index,
         }
     }
 
@@ -94,144 +76,90 @@ impl WidgetGraph {
     fn find_widget(&self, widget_id: WidgetId) -> Option<NodeIndex> {
         self.widget_map.get(&widget_id).map(|index| *index)
     }
-    fn root_index(&self) -> NodeIndex {
-        self.find_widget(self.root_id).unwrap()
-    }
     pub fn get_root(&mut self) -> WidgetRef {
         self.root.as_ref().unwrap().clone()
     }
 
-    pub fn parent(&mut self, widget_id: WidgetId) -> Option<WidgetId> {
-        let node_index = self.widget_map.get(&widget_id).unwrap_or(&self.null_index).clone();
-        NeighborsWalker::new(&self.graph, node_index, Direction::Incoming).next(&self.graph)
-    }
-    pub fn children(&mut self, widget_id: WidgetId) -> NeighborsWalker {
-        let node_index = self.widget_map.get(&widget_id).unwrap_or(&self.null_index).clone();
-        NeighborsWalker::new(&self.graph, node_index, Direction::Outgoing)
-    }
     pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetWalker {
-        CursorWidgetWalker::new(point, &self.graph, self.root_index())
+        CursorWidgetWalker::new(point, self.get_root())
     }
-    pub fn dfs(&mut self, widget_id: WidgetId) -> DfsWalker {
-        let node_index = self.widget_map.get(&widget_id).unwrap_or(&self.null_index).clone();
-        DfsWalker::new(&self.graph, node_index)
-    }
-}
-
-pub struct NeighborsWalker {
-    neighbors: WalkNeighbors<u32>,
-}
-impl NeighborsWalker {
-    fn new(graph: &Graph, node_index: NodeIndex, direction: Direction) -> Self {
-        NeighborsWalker {
-            neighbors: graph.neighbors_directed(node_index, direction).detach()
-        }
-    }
-    pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
-        if let Some((_, node_index)) = self.neighbors.next(graph) {
-            Some(graph[node_index].id())
-        } else {
-            None
-        }
-    }
-    pub fn collect(&mut self, graph: &Graph) -> Vec<WidgetId> {
-        let mut ids = Vec::new();
-        while let Some(id) = self.next(graph) {
-            ids.push(id);
-        }
-        ids
+    pub fn bfs(&mut self, widget_id: WidgetId) -> Bfs {
+        let widget_ref = self.get_widget(widget_id).unwrap();
+        Bfs::new(widget_ref)
     }
 }
 
 pub struct CursorWidgetWalker {
     point: Point,
-    dfs: DfsLastDrawn<NodeIndex, <Graph as Visitable>::Map>,
+    dfs: DfsPostReverse,
 }
 impl CursorWidgetWalker {
-    fn new(point: Point, graph: &Graph, root_index: NodeIndex) -> Self {
+    fn new(point: Point, root: WidgetRef) -> Self {
         CursorWidgetWalker {
             point: point,
-            dfs: DfsLastDrawn::new(graph, root_index),
+            dfs: DfsPostReverse::new(root),
         }
     }
-    pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
-        while let Some(node_index) = self.dfs.next(graph) {
-            let ref widget = graph[node_index];
-            if widget.0.borrow().widget.is_mouse_over(self.point) {
-                return Some(widget.id());
+    pub fn next(&mut self) -> Option<WidgetId> {
+        while let Some(widget_ref) = self.dfs.next() {
+            let ref widget_container = widget_ref.widget_container();
+            if widget_container.widget.is_mouse_over(self.point) {
+                return Some(widget_container.widget.id);
             }
         }
         None
     }
 }
-pub struct DfsWalker {
-    dfs: Dfs<NodeIndex, <Graph as Visitable>::Map>,
-}
-impl DfsWalker {
-    fn new(graph: &Graph, root_index: NodeIndex) -> Self {
-        DfsWalker {
-            dfs: Dfs::new(graph, root_index),
-        }
-    }
-    pub fn next(&mut self, graph: &Graph) -> Option<WidgetId> {
-        if let Some(node_index) = self.dfs.next(graph) {
-            Some(graph[node_index].id())
-        } else {
-            None
-        }
-    }
+
+// iterates in reverse of draw order, that is, depth first post order,
+// with siblings in reverse of insertion order
+pub struct DfsPostReverse {
+    stack: Vec<WidgetRef>,
+    discovered: HashSet<WidgetRef>,
+    finished: HashSet<WidgetRef>,
 }
 
-/// Based on petgraph DfsPostOrder, identical except that
-/// it visits the deepest node on the last inserted branch first
-/// ie. the last drawn nodes, to find the first node that intersects the cursor
-#[derive(Clone, Debug)]
-pub struct DfsLastDrawn<N, VM> {
-    /// The stack of nodes to visit
-    pub stack: Vec<N>,
-    /// The map of discovered nodes
-    pub discovered: VM,
-    /// The map of finished nodes
-    pub finished: VM,
-}
-
-impl<N, VM> DfsLastDrawn<N, VM>
-    where N: Copy + PartialEq,
-          VM: VisitMap<N>,
-{
-    /// Create a new `DfsPostOrder` using the graph's visitor map, and put
-    /// `start` in the stack of nodes to visit.
-    pub fn new<G>(graph: G, start: N) -> Self
-        where G: GraphRef + Visitable<NodeId=N, Map=VM>
-    {
-        DfsLastDrawn {
-            stack: vec![start],
-            discovered: graph.visit_map(),
-            finished: graph.visit_map(),
+impl DfsPostReverse {
+    fn new(root: WidgetRef) -> Self {
+        DfsPostReverse {
+            stack: vec![root],
+            discovered: HashSet::new(),
+            finished: HashSet::new(),
         }
     }
-
-    /// Return the next node in the traversal, or `None` if the traversal is done.
-    pub fn next<G>(&mut self, graph: G) -> Option<N>
-        where G: IntoNeighbors<NodeId=N>,
-    {
-        while let Some(&nx) = self.stack.last() {
-            if self.discovered.visit(nx) {
-                // First time visiting `nx`: Push neighbors, don't pop `nx`
-                let mut neighbors: Vec<N> = graph.neighbors(nx).collect();
-                neighbors.reverse();
-                for succ in neighbors {
-                    if !self.discovered.is_visited(&succ) {
-                        self.stack.push(succ);
-                    }
+    pub fn next(&mut self) -> Option<WidgetRef> {
+        while let Some(widget_ref) = self.stack.last().map(|w| w.clone()) {
+            if self.discovered.insert(widget_ref.clone()) {
+                for child in &widget_ref.widget_container().widget.children {
+                    self.stack.push(child.clone());
                 }
             } else {
                 self.stack.pop();
-                if self.finished.visit(nx) {
-                    // Second time: All reachable nodes must have been finished
-                    return Some(nx);
+                if self.finished.insert(widget_ref.clone()) {
+                    return Some(widget_ref.clone());
                 }
             }
+        }
+        None
+    }
+}
+
+pub struct Bfs {
+    queue: VecDeque<WidgetRef>,
+}
+
+impl Bfs {
+    fn new(root: WidgetRef) -> Self {
+        let mut queue = VecDeque::new();
+        queue.push_front(root);
+        Bfs { queue: queue }
+    }
+    pub fn next(&mut self) -> Option<WidgetRef> {
+        while let Some(widget_ref) = self.queue.pop_front() {
+            for child in &widget_ref.widget_container().widget.children {
+                self.queue.push_back(child.clone());
+            }
+            return Some(widget_ref);
         }
         None
     }

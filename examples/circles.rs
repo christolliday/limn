@@ -76,6 +76,7 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetId, WidgetId, W
     let mut button_container = WidgetBuilder::new();
     let style = style!(RectStyleable::BackgroundColor: control_color);
     button_container
+        .set_debug_name("button_container")
         .set_drawable_with_style(RectDrawable::new(), style)
         .hbox()
         .set_padding(30.0);
@@ -251,6 +252,7 @@ fn main() {
     circle_canvas.no_container();
     layout!(circle_canvas: min_height(600.0));
     circle_canvas
+        .set_debug_name("circle_canvas")
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))
         .on_click(|event, _| {
             let event = CircleEvent::Add(event.position);
