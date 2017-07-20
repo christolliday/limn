@@ -66,7 +66,6 @@ impl Ui {
             });
             self.layout.check_changes();
         }
-        self.graph.root_id = root_widget.id();
         self.graph.root = Some(self.add_widget(root_widget, None));
     }
     pub fn get_root_dims(&mut self) -> Size {
@@ -106,8 +105,7 @@ impl Ui {
         let root = self.graph.get_root();
         self.draw_node(context, graphics, root, crop_to);
         if self.debug_draw_bounds {
-            let root_id = self.graph.root_id;
-            let mut bfs = self.graph.bfs(root_id);
+            let mut bfs = self.graph.bfs();
             while let Some(widget_ref) = bfs.next() {
                 let color = widget_ref.debug_color().unwrap_or(GREEN);
                 let bounds = widget_ref.bounds();
@@ -143,7 +141,7 @@ impl Ui {
         self.layout.check_changes();
 
         let id = widget.id();
-        self.graph.add_widget(widget, parent_id);
+        self.graph.add_widget(widget);
 
         let widget_ref = self.graph.get_widget(id).unwrap();
         if let Some(parent_id) = parent_id {
@@ -179,9 +177,9 @@ impl Ui {
                     parent.widget.remove_child(widget_container.widget.id);
                 }
             }
-        }
-        event!(Target::Widget(widget_id), WidgetDetachedEvent);
-        if let Some(_) = self.graph.remove_widget(widget_id) {
+            event!(Target::Widget(widget_id), WidgetDetachedEvent);
+
+            self.graph.remove_widget(widget_id);
             self.layout.solver.remove_widget(widget_id.0);
             self.layout.check_changes();
             self.redraw();
@@ -245,8 +243,7 @@ impl Ui {
     }
     pub fn debug_widget_positions(&mut self) {
         println!("WIDGET POSITIONS");
-        let root_id = self.graph.root_id;
-        let mut bfs = self.graph.bfs(root_id);
+        let mut bfs = self.graph.bfs();
         while let Some(widget_ref) = bfs.next() {
             let bounds = widget_ref.bounds();
             let name = widget_ref.debug_name().clone();

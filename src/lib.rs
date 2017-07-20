@@ -4,7 +4,6 @@ extern crate text_layout;
 extern crate limn_layout;
 extern crate graphics;
 extern crate cassowary;
-extern crate petgraph;
 extern crate rusttype;
 extern crate gfx_device_gl;
 extern crate gfx_graphics;

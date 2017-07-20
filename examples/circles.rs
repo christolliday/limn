@@ -5,7 +5,6 @@ extern crate limn_layout;
 extern crate text_layout;
 extern crate glutin;
 extern crate graphics;
-extern crate petgraph;
 extern crate cassowary;
 
 mod util;
