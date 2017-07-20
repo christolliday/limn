@@ -31,9 +31,9 @@ pub struct WidgetBuilder {
     id: WidgetId,
     drawable: Option<DrawableWrapper>,
     props: PropSet,
-    container: Option<Box<LayoutContainer>>,
+    container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
     pub layout: Layout,
-    handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
+    handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
     debug_name: Option<String>,
     debug_color: Option<Color>,
     children: Vec<WidgetBuilder>,
@@ -121,6 +121,7 @@ pub trait WidgetBuilderCore {
     fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self;
     fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self;
     fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self;
+    fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self;
     fn set_debug_name(&mut self, name: &str) -> &mut Self;
     fn set_debug_color(&mut self, color: Color) -> &mut Self;
     fn set_inactive(&mut self) -> &mut Self;
@@ -142,13 +143,14 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self
     }
     fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.as_mut().handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
-            .push(WidgetHandlerWrapper::new(handler));
-        self
+        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new(handler))
     }
     fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
-        self.as_mut().handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
-            .push(WidgetHandlerWrapper::new_from_fn(handler));
+        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new_from_fn(handler))
+    }
+    fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self {
+        self.as_mut().handlers.entry(type_id).or_insert(Vec::new())
+            .push(Rc::new(RefCell::new(handler)));
         self
     }
     fn set_debug_name(&mut self, name: &str) -> &mut Self {
@@ -175,11 +177,11 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self
     }
     fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self {
-        self.as_mut().container = Some(Box::new(container));
+        self.as_mut().container = Some(Rc::new(RefCell::new(Box::new(container))));
         self
     }
     fn set_padding(&mut self, padding: f64) -> &mut Self {
-        self.as_mut().container.as_mut().unwrap().set_padding(padding);
+        self.as_mut().container.as_mut().unwrap().borrow_mut().set_padding(padding);
         self
     }
     fn layout(&mut self) -> &mut Layout {
@@ -201,7 +203,7 @@ impl WidgetBuilder {
             id: resources().widget_id(),
             drawable: None,
             props: PropSet::new(),
-            container: Some(Box::new(Frame::new())),
+            container: Some(Rc::new(RefCell::new(Box::new(Frame::new())))),
             layout: Layout::new(None),
             handlers: HashMap::new(),
             debug_name: name,
@@ -219,47 +221,18 @@ impl WidgetBuilder {
                                  self.props,
                                  self.layout,
                                  self.debug_name,
-                                 self.debug_color);
+                                 self.debug_color,
+                                 self.container,
+                                 self.handlers);
         widget.apply_style();
-        let widget = WidgetContainer {
-            widget: widget,
-            container: self.container,
-            handlers: self.handlers,
-        };
         (self.children, WidgetRef(Rc::new(RefCell::new(widget))))
     }
 }
 
-pub struct WidgetContainer {
-    pub widget: Widget,
-    pub container: Option<Box<LayoutContainer>>,
-    pub handlers: HashMap<TypeId, Vec<WidgetHandlerWrapper>>,
-}
-impl WidgetContainer {
-    pub fn trigger_event(&mut self,
-                         type_id: TypeId,
-                         event: &Box<Any + Send>,
-                         solver: &mut LayoutManager)
-                         -> bool {
-        let mut handled = false;
-        if let Some(handlers) = self.handlers.get_mut(&type_id) {
-            for event_handler in handlers.iter_mut() {
-                let event_args = WidgetEventArgs {
-                    widget: &mut self.widget,
-                    solver: solver,
-                    handled: &mut handled,
-                };
-                event_handler.handle(event, event_args);
-            }
-        }
-        handled
-    }
-}
-
 #[derive(Clone)]
-pub struct WidgetRef(pub Rc<RefCell<WidgetContainer>>);
+pub struct WidgetRef(pub Rc<RefCell<Widget>>);
 #[derive(Clone)]
-pub struct WidgetRefWeak(pub Weak<RefCell<WidgetContainer>>);
+pub struct WidgetRefWeak(pub Weak<RefCell<Widget>>);
 
 impl PartialEq for WidgetRef {
     fn eq(&self, other: &WidgetRef) -> bool {
@@ -275,37 +248,37 @@ impl Hash for WidgetRef {
 use std::fmt;
 impl fmt::Debug for WidgetRef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.widget_container().widget.debug_name.clone().unwrap_or("None".to_owned()))
+        write!(f, "{}", self.widget().debug_name.clone().unwrap_or("None".to_owned()))
     }
 }
 
 impl WidgetRef {
-    pub fn widget_container_mut(&self) -> RefMut<WidgetContainer> {
+    pub fn widget_mut(&self) -> RefMut<Widget> {
         self.0.borrow_mut()
     }
-    pub fn widget_container(&self) -> Ref<WidgetContainer> {
+    pub fn widget(&self) -> Ref<Widget> {
         self.0.borrow()
     }
     pub fn downgrade(&self) -> WidgetRefWeak {
         WidgetRefWeak(Rc::downgrade(&self.0))
     }
     pub fn id(&self) -> WidgetId {
-        self.0.borrow().widget.id
+        self.0.borrow().id
     }
     pub fn debug_name(&self) -> Option<String> {
-        self.0.borrow().widget.debug_name.clone()
+        self.0.borrow().debug_name.clone()
     }
     pub fn debug_color(&self) -> Option<Color> {
-        self.0.borrow().widget.debug_color
+        self.0.borrow().debug_color
     }
     pub fn has_updated(&self) -> bool {
-        self.0.borrow().widget.has_updated
+        self.0.borrow().has_updated
     }
     pub fn set_updated(&self, has_updated: bool) {
-        self.0.borrow_mut().widget.has_updated = has_updated;
+        self.0.borrow_mut().has_updated = has_updated;
     }
     pub fn bounds(&self) -> Rect {
-        self.0.borrow().widget.bounds
+        self.0.borrow().bounds
     }
 }
 impl WidgetRefWeak {
@@ -329,6 +302,8 @@ pub struct Widget {
     pub debug_color: Option<Color>,
     pub children: Vec<WidgetRef>,
     pub parent: Option<WidgetRefWeak>,
+    pub container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
+    pub handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
 }
 
 impl Widget {
@@ -337,7 +312,9 @@ impl Widget {
                props: PropSet,
                layout: Layout,
                debug_name: Option<String>,
-               debug_color: Option<Color>)
+               debug_color: Option<Color>,
+               container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
+               handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>)
                -> Self {
         let widget = Widget {
             id: id,
@@ -350,6 +327,8 @@ impl Widget {
             debug_color: debug_color,
             children: Vec::new(),
             parent: None,
+            container: container,
+            handlers: handlers,
         };
         widget
     }
@@ -408,5 +387,34 @@ impl Widget {
                 self.has_updated = true;
             }
         }
+    }
+
+    pub fn trigger_event(&mut self,
+                         type_id: TypeId,
+                         event: &Box<Any + Send>,
+                         solver: &mut LayoutManager)
+                         -> bool {
+        let mut handled = false;
+
+        let handlers = {
+            let mut handlers: Vec<Rc<RefCell<WidgetHandlerWrapper>>> = Vec::new();
+            if let Some(event_handlers) = self.handlers.get_mut(&type_id) {
+                for handler in event_handlers {
+                    handlers.push(handler.clone());
+                }
+            }
+            handlers
+        };
+        for event_handler in handlers {
+            // will panic in the case of circular handler calls
+            let mut handler = event_handler.borrow_mut();
+            let event_args = WidgetEventArgs {
+                widget: self,
+                solver: solver,
+                handled: &mut handled,
+            };
+            handler.handle(event, event_args);
+        }
+        handled
     }
 }

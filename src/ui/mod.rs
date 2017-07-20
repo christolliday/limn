@@ -79,7 +79,7 @@ impl Ui {
     pub fn window_resized(&mut self, window_dims: Size) {
         let root = self.graph.get_root();
         let mut root = root.0.borrow_mut();
-        root.widget.update_layout(|layout| {
+        root.update_layout(|layout| {
             layout.edit_right().set(window_dims.width);
             layout.edit_bottom().set(window_dims.height);
         });
@@ -119,8 +119,7 @@ impl Ui {
                      widget_ref: WidgetRef,
                      crop_to: Rect) {
 
-        let mut widget = widget_ref.widget_container_mut();
-        let widget = &mut widget.widget;
+        let mut widget = widget_ref.widget_mut();
         let crop_to = {
             widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
             crop_to.intersection(&widget.bounds)
@@ -147,12 +146,13 @@ impl Ui {
         if let Some(parent_id) = parent_id {
             if let Some(parent) = self.graph.get_widget(parent_id) {
                 let parent_weak = parent.downgrade();
-                let parent = &mut *parent.widget_container_mut();
-                parent.widget.children.push(widget_ref.clone());
-                let widget = &mut (&mut *widget_ref.widget_container_mut()).widget;
+                let parent = &mut *parent.widget_mut();
+                parent.children.push(widget_ref.clone());
+                let widget = &mut *widget_ref.widget_mut();
                 widget.parent = Some(parent_weak);
-                if let Some(ref mut container) = parent.container {
-                    container.add_child(&mut parent.widget, widget);
+                if let Some(ref mut container) = parent.container.clone() {
+                    let mut container = container.borrow_mut();
+                    container.add_child(parent, widget);
                 }
                 event!(Target::Widget(parent_id), ChildAttachedEvent(id, widget.layout().vars.clone()));
             }
@@ -167,14 +167,15 @@ impl Ui {
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {
         if let Some(widget_ref) = self.graph.get_widget(widget_id) {
-            let widget_container = widget_ref.widget_container();
-            if let Some(ref parent_ref) = widget_container.widget.parent {
+            let widget = widget_ref.widget();
+            if let Some(ref parent_ref) = widget.parent {
                 if let Some(parent_ref) = parent_ref.upgrade() {
-                    let parent = &mut *parent_ref.widget_container_mut();
-                    if let Some(ref mut container) = parent.container {
-                        container.remove_child(&mut parent.widget, widget_container.widget.id);
+                    let parent = &mut *parent_ref.widget_mut();
+                    if let Some(ref mut container) = parent.container.clone() {
+                        let mut container = container.borrow_mut();
+                        container.remove_child(parent, widget.id);
                     }
-                    parent.widget.remove_child(widget_container.widget.id);
+                    parent.remove_child(widget.id);
                 }
             }
             event!(Target::Widget(widget_id), WidgetDetachedEvent);
@@ -196,13 +197,13 @@ impl Ui {
                            type_id: TypeId,
                            data: &Box<Any + Send>) -> bool
     {
-        let mut widget_container = widget_ref.widget_container_mut();
-        let handled = widget_container.trigger_event(type_id,
+        let mut widget = widget_ref.widget_mut();
+        let handled = widget.trigger_event(type_id,
                                                      data,
                                                      &mut self.layout);
-        if widget_container.widget.has_updated {
+        if widget.has_updated {
             self.needs_redraw = true;
-            widget_container.widget.has_updated = false;
+            widget.has_updated = false;
         }
         handled
     }
@@ -228,7 +229,7 @@ impl Ui {
                     if self.handle_widget_event(widget_ref.clone(), type_id, data) {
                         break;
                     }
-                    maybe_widget_ref = widget_ref.widget_container().widget.parent.as_ref().and_then(|parent| parent.upgrade());
+                    maybe_widget_ref = widget_ref.widget().parent.as_ref().and_then(|parent| parent.upgrade());
                 }
             }
             _ => ()
@@ -236,7 +237,7 @@ impl Ui {
     }
     fn handle_event_subtree(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Box<Any + Send>) {
         self.handle_widget_event(widget_ref.clone(), type_id, data);
-        let children = &widget_ref.widget_container().widget.children;
+        let children = &widget_ref.widget().children;
         for child in children {
             self.handle_event_subtree(child.clone(), type_id, data);
         }

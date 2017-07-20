@@ -52,9 +52,9 @@ impl CursorWidgetWalker {
     }
     pub fn next(&mut self) -> Option<WidgetId> {
         while let Some(widget_ref) = self.dfs.next() {
-            let ref widget_container = widget_ref.widget_container();
-            if widget_container.widget.is_mouse_over(self.point) {
-                return Some(widget_container.widget.id);
+            let ref widget = widget_ref.widget();
+            if widget.is_mouse_over(self.point) {
+                return Some(widget.id);
             }
         }
         None
@@ -80,7 +80,7 @@ impl DfsPostReverse {
     pub fn next(&mut self) -> Option<WidgetRef> {
         while let Some(widget_ref) = self.stack.last().map(|w| w.clone()) {
             if self.discovered.insert(widget_ref.clone()) {
-                for child in &widget_ref.widget_container().widget.children {
+                for child in &widget_ref.widget().children {
                     self.stack.push(child.clone());
                 }
             } else {
@@ -106,7 +106,7 @@ impl Bfs {
     }
     pub fn next(&mut self) -> Option<WidgetRef> {
         while let Some(widget_ref) = self.queue.pop_front() {
-            for child in &widget_ref.widget_container().widget.children {
+            for child in &widget_ref.widget().children {
                 self.queue.push_back(child.clone());
             }
             return Some(widget_ref);
