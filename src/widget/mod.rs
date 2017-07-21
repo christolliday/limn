@@ -417,4 +417,11 @@ impl Widget {
         }
         handled
     }
+
+    pub fn debug_constraints(&self) {
+        self.layout.debug_constraints();
+        for child in &self.children {
+            child.widget().debug_constraints();
+        }
+    }
 }

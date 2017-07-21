@@ -169,6 +169,12 @@ impl Layout {
     pub fn get_edit_vars(&mut self) -> Vec<EditVariable> {
         mem::replace(&mut self.edit_vars, Vec::new())
     }
+    pub fn debug_constraints(&self) {
+        println!("{:?}", self.name);
+        for constraint in &self.constraints {
+            solver::debug_constraint(constraint);
+        }
+    }
 }
 
 pub struct VariableEditable<'a> {

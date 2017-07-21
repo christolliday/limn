@@ -203,17 +203,6 @@ impl LimnSolver {
         changes
     }
 
-    pub fn debug_constraints(&self) {
-        println!("CONSTRAINTS");
-        /*for i in 0..self.last_layout {
-            if let Some(layout) = self.layouts.get(&i) {
-                println!("{:?}", self.layout_names[&i]);
-                for constraint in &layout.constraints {
-                    debug_constraint(constraint);
-                }
-            }
-        }*/
-    }
     pub fn debug_variables(&mut self) {
         println!("VARIABLES");
         let names = VAR_NAMES.lock().unwrap();
@@ -230,7 +219,7 @@ impl LimnSolver {
     }
 }
 
-fn debug_constraint(constraint: &Constraint) {
+pub fn debug_constraint(constraint: &Constraint) {
     println!("{}", fmt_constraint(constraint));
 }
 

@@ -252,7 +252,9 @@ impl Ui {
         }
     }
     pub fn debug_constraints(&mut self) {
-        self.layout.solver.debug_constraints();
+        println!("CONSTRAINTS");
+        let root = self.graph.get_root();
+        root.widget().debug_constraints();
     }
     pub fn debug_variables(&mut self) {
         self.layout.solver.debug_variables();
