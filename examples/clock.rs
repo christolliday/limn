@@ -99,11 +99,12 @@ impl ClockBuilder {
             .add_child(minute_widget)
             .add_child(second_widget);
 
-        let clock_id = widget.id();
+        // TODO: event! only works on main thread now, make simple way to send events off main thread
+        /*let clock_id = widget.id();
         thread::spawn(move || loop {
             thread::sleep(time::Duration::from_millis(1000));
             event!(Target::SubTree(clock_id), ClockTick);
-        });
+        });*/
 
         ClockBuilder { widget: widget }
     }

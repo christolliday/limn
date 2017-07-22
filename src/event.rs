@@ -1,5 +1,5 @@
 use std::any::{Any, TypeId};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::Mutex;
 use std::collections::VecDeque;
 
 use glutin::WindowProxy;
@@ -29,17 +29,15 @@ pub enum Target {
     Ui,
 }
 
-/// The event queue, can be cloned and passed to different threads
-#[derive(Clone)]
 pub struct Queue {
-    queue: Arc<Mutex<VecDeque<(Target, TypeId, Box<Any + Send>)>>>,
+    queue: VecDeque<(Target, TypeId, Box<Any>)>,
     window_proxy: Option<WindowProxy>,
 }
 
 impl Queue {
     fn new() -> Self {
         Queue {
-            queue: Arc::new(Mutex::new(VecDeque::new())),
+            queue: VecDeque::new(),
             window_proxy: None,
         }
     }
@@ -47,24 +45,19 @@ impl Queue {
         self.window_proxy = Some(window.window.create_window_proxy());
     }
     /// Push a new event on the queue and wake the window up if it is asleep
-    pub fn push<T>(&mut self, address: Target, data: T)
-        where T: Send + 'static
-    {
-        let mut queue = self.queue.lock().unwrap();
+    pub fn push<T: 'static>(&mut self, address: Target, data: T) {
         let type_id = TypeId::of::<T>();
-        queue.push_back((address, type_id, Box::new(data)));
+        self.queue.push_back((address, type_id, Box::new(data)));
         if let Some(ref window_proxy) = self.window_proxy {
             window_proxy.wakeup_event_loop();
         }
     }
     pub fn is_empty(&mut self) -> bool {
-        let queue = self.queue.lock().unwrap();
-        queue.len() == 0
+        self.queue.len() == 0
     }
     /// Take the next event off the Queue, should only be called by App
-    pub fn next(&mut self) -> (Target, TypeId, Box<Any + Send>) {
-        let mut queue = self.queue.lock().unwrap();
-        queue.pop_front().unwrap()
+    pub fn next(&mut self) -> (Target, TypeId, Box<Any>) {
+        self.queue.pop_front().unwrap()
     }
 }
 
@@ -89,7 +82,7 @@ pub trait UiEventHandler<T> {
 /// Non-generic WidgetEventHandler or Widget callback wrapper.
 pub struct WidgetHandlerWrapper {
     handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, WidgetEventArgs)>,
+    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any>, WidgetEventArgs)>,
 }
 // implementation for WidgetHandlerWrapper and UiHandlerWrapper can probably only be shared
 // by a macro, to make it generic over the *EventHandler and *EventArgs requires
@@ -100,7 +93,7 @@ impl WidgetHandlerWrapper {
         where H: WidgetEventHandler<E> + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: WidgetEventArgs| {
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, args: WidgetEventArgs| {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler.handle(event, args);
@@ -114,7 +107,7 @@ impl WidgetHandlerWrapper {
         where H: Fn(&E, WidgetEventArgs) + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, args: WidgetEventArgs| {
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, args: WidgetEventArgs| {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler(event, args);
@@ -124,7 +117,7 @@ impl WidgetHandlerWrapper {
             handle_fn: Box::new(handle_fn),
         }
     }
-    pub fn handle(&mut self, event: &Box<Any + Send>, args: WidgetEventArgs) {
+    pub fn handle(&mut self, event: &Box<Any>, args: WidgetEventArgs) {
         (self.handle_fn)(&mut self.handler, event, args);
     }
 }
@@ -132,14 +125,14 @@ impl WidgetHandlerWrapper {
 /// Non-generic UiEventHandler or Ui callback wrapper.
 pub struct UiHandlerWrapper {
     handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any + Send>, &mut Ui)>,
+    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any>, &mut Ui)>,
 }
 impl UiHandlerWrapper {
     pub fn new<H, E>(handler: H) -> Self
         where H: UiEventHandler<E> + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, ui: &mut Ui| {
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, ui: &mut Ui| {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler.handle(event, ui);
@@ -153,7 +146,7 @@ impl UiHandlerWrapper {
         where H: Fn(&E, &mut Ui) + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any + Send>, ui: &mut Ui| {
+        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, ui: &mut Ui| {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &H = handler.downcast_ref().unwrap();
             handler(event, ui);
@@ -163,27 +156,57 @@ impl UiHandlerWrapper {
             handle_fn: Box::new(handle_fn),
         }
     }
-    pub fn handle(&mut self, event: &Box<Any + Send>, ui: &mut Ui) {
+    pub fn handle(&mut self, event: &Box<Any>, ui: &mut Ui) {
         (self.handle_fn)(&mut self.handler, event, ui);
     }
 }
 
 lazy_static! {
-    pub static ref QUEUE: Mutex<Queue> = Mutex::new(Queue::new());
+    static ref FIRST_THREAD: Mutex<Cell<bool>> = Mutex::new(Cell::new(true));
+}
+use std::cell::{Cell, RefCell};
+
+thread_local! {
+    pub static LOCAL_QUEUE: Option<RefCell<Queue>> = {
+        let first = FIRST_THREAD.lock().unwrap();
+        if first.get() {
+            first.set(false);
+            Some(RefCell::new(Queue::new()))
+        } else {
+            None
+        }
+    }
 }
 
-// Allow global access to Resources
-pub fn queue() -> MutexGuard<'static, Queue> {
-    QUEUE.lock().unwrap()
+pub fn queue_is_empty() -> bool {
+    let mut is_empty = true;
+    LOCAL_QUEUE.with(|queue| is_empty = queue.as_ref().unwrap().borrow_mut().is_empty());
+    is_empty
+}
+pub fn queue_next() -> (Target, TypeId, Box<Any>) {
+    let mut next = None;
+    LOCAL_QUEUE.with(|queue| next = Some(queue.as_ref().unwrap().borrow_mut().next()));
+    next.unwrap()
+}
+pub fn queue_set_window(window: &Window) {
+    LOCAL_QUEUE.with(|queue| queue.as_ref().unwrap().borrow_mut().set_window(window));
+}
+
+pub fn event<T: 'static>(address: Target, data: T) {
+    LOCAL_QUEUE.with(|queue| {
+        if let Some(queue) = queue.as_ref() {
+            queue.borrow_mut().push(address, data);
+        } else {
+            eprintln!("Tried to send event off the main thread");
+        }
+    });
 }
 
 #[macro_export]
 macro_rules! event {
     ($address:expr, $data:expr) => {
         {
-            use $crate::event::QUEUE;
-            let mut queue = QUEUE.lock().unwrap();
-            queue.push($address, $data);
+            $crate::event::event($address, $data);
         }
     };
 }

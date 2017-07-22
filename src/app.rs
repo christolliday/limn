@@ -7,7 +7,7 @@ use glutin::Event;
 
 use ui::Ui;
 use input::InputEvent;
-use event::{Target, UiHandlerWrapper, UiEventHandler, queue};
+use event::{self, Target, UiHandlerWrapper, UiEventHandler};
 use util::Size;
 
 /// This is contains the core of a Limn application,
@@ -24,7 +24,7 @@ pub struct App {
 
 impl App {
     pub fn new(window: &mut Window) -> Self {
-        queue().set_window(window);
+        event::queue_set_window(window);
         let ui = Ui::new(window);
         let mut app = App {
             ui: ui,
@@ -81,8 +81,8 @@ impl App {
 
     /// Handle all the pending events in the event queue
     pub fn handle_events(&mut self) {
-        while !queue().is_empty() {
-            let (event_address, type_id, data) = queue().next();
+        while !event::queue_is_empty() {
+            let (event_address, type_id, data) = event::queue_next();
             let data = &data;
             match event_address {
                 Target::Ui => {

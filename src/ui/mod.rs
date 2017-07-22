@@ -195,12 +195,12 @@ impl Ui {
     fn handle_widget_event(&mut self,
                            widget_ref: WidgetRef,
                            type_id: TypeId,
-                           data: &Box<Any + Send>) -> bool
+                           data: &Box<Any>) -> bool
     {
         let mut widget = widget_ref.widget_mut();
         let handled = widget.trigger_event(type_id,
-                                                     data,
-                                                     &mut self.layout);
+                                           data,
+                                           &mut self.layout);
         if widget.has_updated {
             self.needs_redraw = true;
             widget.has_updated = false;
@@ -211,7 +211,7 @@ impl Ui {
     pub fn handle_event(&mut self,
                         address: Target,
                         type_id: TypeId,
-                        data: &Box<Any + Send>) {
+                        data: &Box<Any>) {
         match address {
             Target::Widget(widget_id) => {
                 if let Some(widget_ref) = self.graph.get_widget(widget_id) {
@@ -235,7 +235,7 @@ impl Ui {
             _ => ()
         }
     }
-    fn handle_event_subtree(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Box<Any + Send>) {
+    fn handle_event_subtree(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Box<Any>) {
         self.handle_widget_event(widget_ref.clone(), type_id, data);
         let children = &widget_ref.widget().children;
         for child in children {

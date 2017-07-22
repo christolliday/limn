@@ -162,7 +162,7 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         }
         self
     }
-    fn add_child<C: BuildWidget>(&mut self, mut widget: C) -> &mut Self {
+    fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
         self.as_mut().children.push(widget.build());
         self
     }
@@ -383,7 +383,7 @@ impl Widget {
 
     pub fn trigger_event(&mut self,
                          type_id: TypeId,
-                         event: &Box<Any + Send>,
+                         event: &Box<Any>,
                          solver: &mut LayoutManager)
                          -> bool {
         let mut handled = false;
