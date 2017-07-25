@@ -51,13 +51,13 @@ impl BuildWidget for WidgetBuilder {
     }
 }
 impl LayoutRef for WidgetBuilder {
-    fn layout_ref(&self) -> &LayoutVars {
-        &self.as_ref().widget.layout.vars
+    fn layout_ref(&self) -> LayoutVars {
+        self.as_ref().widget.layout.vars.clone()
     }
 }
 impl LayoutRef for Widget {
-    fn layout_ref(&self) -> &LayoutVars {
-        &self.layout.vars
+    fn layout_ref(&self) -> LayoutVars {
+        self.layout.vars.clone()
     }
 }
 
@@ -75,8 +75,8 @@ macro_rules! widget_builder {
             }
         }
         impl LayoutRef for $builder_type {
-            fn layout_ref(&self) -> &LayoutVars {
-                &self.as_ref().widget.layout.vars
+            fn layout_ref(&self) -> LayoutVars {
+                self.as_ref().widget.layout.vars.clone()
             }
         }
         impl BuildWidget for $builder_type {
@@ -97,8 +97,8 @@ macro_rules! widget_builder {
             }
         }
         impl LayoutRef for $builder_type {
-            fn layout_ref(&self) -> &LayoutVars {
-                &self.as_ref().widget.layout.vars
+            fn layout_ref(&self) -> LayoutVars {
+                self.as_ref().widget.layout.vars.clone()
             }
         }
         impl BuildWidget for $builder_type {

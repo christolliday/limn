@@ -67,22 +67,22 @@ impl LayoutVars {
 }
 
 pub trait LayoutRef {
-    fn layout_ref(&self) -> &LayoutVars;
+    fn layout_ref(&self) -> LayoutVars;
 }
 
 impl<'a> LayoutRef for &'a mut Layout {
-    fn layout_ref(&self) -> &LayoutVars {
-        &self.vars
+    fn layout_ref(&self) -> LayoutVars {
+        self.vars.clone()
     }
 }
 impl LayoutRef for Layout {
-    fn layout_ref(&self) -> &LayoutVars {
-        &self.vars
+    fn layout_ref(&self) -> LayoutVars {
+        self.vars.clone()
     }
 }
 impl LayoutRef for LayoutVars {
-    fn layout_ref(&self) -> &LayoutVars {
-        self
+    fn layout_ref(&self) -> LayoutVars {
+        self.clone()
     }
 }
 
