@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 glium = "0.15.0"
-glutin = "0.7.0"
+glutin = "0.9.1"
 piston2d-graphics = "0.21.0"
 
 gfx = "0.14.0"

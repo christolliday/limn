@@ -13,7 +13,7 @@ use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 
 fn main() {
-    let (window, ui) = util::init_default("Limn list demo");
+    let app = util::init_default("Limn list demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -60,5 +60,5 @@ fn main() {
     scroll_widget.add_content(list_widget);
     root_widget.add_child(scroll_widget);
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

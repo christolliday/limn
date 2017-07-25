@@ -12,7 +12,7 @@ use limn::widgets::scroll::ScrollBuilder;
 use limn::drawable::rect::{RectDrawable, RectStyleable};
 
 fn main() {
-    let (window, ui) = util::init_default_min_size("Limn scroll demo", Size::new(300.0, 300.0));
+    let app = util::init_default_min_size("Limn scroll demo", Size::new(300.0, 300.0));
 
     let mut root_widget = WidgetBuilder::new();
 
@@ -46,5 +46,5 @@ fn main() {
     scroll_widget.add_content(rect_container);
     root_widget.add_child(scroll_widget);
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

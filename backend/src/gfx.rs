@@ -9,6 +9,7 @@ use self::gfx::format::{DepthStencil, Format, Formatted, Srgba8};
 use self::gfx::memory::Typed;
 
 use glutin;
+use glutin::GlContext;
 
 use gfx_device_gl;
 use graphics::Viewport;
@@ -56,7 +57,7 @@ fn create_main_targets(dim: gfx::texture::Dimensions) ->
 
 impl GfxContext {
     /// Constructor for a new `GfxContext`
-    pub fn new(window: &mut glutin::Window, opengl: OpenGL, samples: u8) -> Self {
+    pub fn new(window: &mut glutin::GlWindow, opengl: OpenGL, samples: u8) -> Self {
         let (device, mut factory) = gfx_device_gl::create(|s| window.get_proc_address(s) as *const _);
 
         let draw_size: (u32, u32) = window.get_inner_size_pixels().unwrap_or((0, 0));

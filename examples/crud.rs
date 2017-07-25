@@ -169,7 +169,7 @@ pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetId) -> Wid
 }
 
 fn main() {
-    let (window, mut app) = util::init_default("Limn edit text demo");
+    let mut app = util::init_default("Limn edit text demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -273,5 +273,5 @@ fn main() {
 
     app.add_handler(PeopleHandler::new(ids));
 
-    util::set_root_and_loop(window, app, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

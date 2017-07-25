@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
@@ -10,8 +9,8 @@ use limn::prelude::*;
 use limn::drawable::image::ImageDrawable;
 
 fn main() {
-    let (mut window, ui) = util::init_default("Limn button demo");
-    let image_id = util::load_default_image(&mut window);
+    let mut app = util::init_default("Limn button demo");
+    let image_id = util::load_default_image(&mut app.window);
 
     let mut root_widget = WidgetBuilder::new();
     let image_drawable = ImageDrawable::new(image_id);
@@ -24,5 +23,5 @@ fn main() {
         bound_by(&root_widget).padding(50.0));
     root_widget.add_child(image_widget);
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

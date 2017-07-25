@@ -120,6 +120,7 @@ widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuil
     builder.widget
 });
 
+#[allow(dead_code)]
 struct ScrollSizeHandler {
     scrollbar_h_id: WidgetId,
     scrollbar_v_id: WidgetId,

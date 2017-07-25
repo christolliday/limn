@@ -15,7 +15,7 @@ struct CounterEvent;
 struct CountEvent(u32);
 
 fn main() {
-    let (window, ui) = util::init_default("Limn counter demo");
+    let app = util::init_default("Limn counter demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -77,5 +77,5 @@ fn main() {
     }
     root_widget.add_handler(CounterHandler::new());
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

@@ -2,9 +2,7 @@ use std::any::{Any, TypeId};
 use std::sync::Mutex;
 use std::collections::VecDeque;
 
-use glutin::WindowProxy;
-
-use backend::Window;
+use glutin::EventsLoopProxy;
 
 use resources::WidgetId;
 use ui::Ui;
@@ -31,25 +29,25 @@ pub enum Target {
 
 pub struct Queue {
     queue: VecDeque<(Target, TypeId, Box<Any>)>,
-    window_proxy: Option<WindowProxy>,
+    events_loop_proxy: Option<EventsLoopProxy>,
 }
 
 impl Queue {
     fn new() -> Self {
         Queue {
             queue: VecDeque::new(),
-            window_proxy: None,
+            events_loop_proxy: None,
         }
     }
-    pub fn set_window(&mut self, window: &Window) {
-        self.window_proxy = Some(window.window.create_window_proxy());
+    pub fn set_events_loop(&mut self, events_loop: EventsLoopProxy) {
+        self.events_loop_proxy = Some(events_loop);
     }
     /// Push a new event on the queue and wake the window up if it is asleep
     pub fn push<T: 'static>(&mut self, address: Target, data: T) {
         let type_id = TypeId::of::<T>();
         self.queue.push_back((address, type_id, Box::new(data)));
-        if let Some(ref window_proxy) = self.window_proxy {
-            window_proxy.wakeup_event_loop();
+        if let Some(ref events_loop_proxy) = self.events_loop_proxy {
+            events_loop_proxy.wakeup().unwrap();
         }
     }
     pub fn is_empty(&mut self) -> bool {
@@ -188,8 +186,8 @@ pub fn queue_next() -> (Target, TypeId, Box<Any>) {
     LOCAL_QUEUE.with(|queue| next = Some(queue.as_ref().unwrap().borrow_mut().next()));
     next.unwrap()
 }
-pub fn queue_set_window(window: &Window) {
-    LOCAL_QUEUE.with(|queue| queue.as_ref().unwrap().borrow_mut().set_window(window));
+pub fn queue_set_events_loop(events_loop: EventsLoopProxy) {
+    LOCAL_QUEUE.with(|queue| queue.as_ref().unwrap().borrow_mut().set_events_loop(events_loop));
 }
 
 pub fn event<T: 'static>(address: Target, data: T) {

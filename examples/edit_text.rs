@@ -35,7 +35,7 @@ impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 }
 
 fn main() {
-    let (window, ui) = util::init_default("Limn edit text demo");
+    let app = util::init_default("Limn edit text demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -92,5 +92,5 @@ fn main() {
         .add_child(v_align_button)
         .add_child(edit_text_box);
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

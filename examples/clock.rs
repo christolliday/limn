@@ -9,7 +9,8 @@ extern crate chrono;
 
 mod util;
 
-use std::{thread, time, f64};
+use std::f64;
+//use std::{thread, time};
 
 use chrono::{Local, Timelike};
 use graphics::types::Color;
@@ -111,7 +112,7 @@ impl ClockBuilder {
 }
 
 fn main() {
-    let (window, ui) = util::init_default("Limn clock demo");
+    let app = util::init_default("Limn clock demo");
 
     let mut root_widget = WidgetBuilder::new();
     let mut clock = ClockBuilder::new().widget;
@@ -120,5 +121,5 @@ fn main() {
         bound_by(&root_widget).padding(50.0));
     root_widget.add_child(clock);
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

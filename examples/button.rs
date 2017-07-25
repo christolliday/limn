@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
@@ -10,7 +9,7 @@ use limn::prelude::*;
 use limn::widgets::button::ToggleButtonBuilder;
 
 fn main() {
-    let (window, ui) = util::init_default("Limn button demo");
+    let app = util::init_default("Limn button demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -22,5 +21,5 @@ fn main() {
         bound_by(&root_widget).padding(50.0));
     root_widget.add_child(button);
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

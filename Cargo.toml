@@ -17,7 +17,7 @@ rusttype = "0.2.1"
 piston2d-graphics = "0.21"
 gfx_device_gl = "0.13.0"
 piston2d-gfx_graphics = "0.38.0"
-glutin = "0.7.0"
+glutin = "0.9.1"
 
 lazy_static = "0.2.2"
 linked-hash-map = "0.3.0"

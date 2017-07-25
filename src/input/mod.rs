@@ -11,31 +11,31 @@ use ui::Ui;
 use app::App;
 
 #[derive(Clone)]
-pub struct InputEvent(pub glutin::Event);
+pub struct InputEvent(pub glutin::WindowEvent);
 
 impl App {
     pub fn add_input_handlers(&mut self) {
         self.add_handler_fn(|event: &InputEvent, ui| {
             let InputEvent(event) = event.clone();
             match event {
-                glutin::Event::Closed => {
+                glutin::WindowEvent::Closed => {
                     ui.close();
                 }
-                glutin::Event::MouseWheel(mouse_scroll_delta, _) => {
-                    event!(Target::Ui, MouseWheel(mouse_scroll_delta));
+                glutin::WindowEvent::MouseWheel { delta, .. } => {
+                    event!(Target::Ui, MouseWheel(delta));
                 }
-                glutin::Event::MouseInput(state, button) => {
+                glutin::WindowEvent::MouseInput { state, button, .. } => {
                     event!(Target::Ui, MouseButton(state, button));
                 }
-                glutin::Event::MouseMoved(x, y) => {
-                    let point = Point::new(x as f64, y as f64);
+                glutin::WindowEvent::MouseMoved { position, .. } => {
+                    let point = Point::new(position.0, position.1);
                     event!(Target::Ui, MouseMoved(point));
                 }
-                glutin::Event::KeyboardInput(state, scan_code, maybe_keycode) => {
-                    let key_input = KeyboardInput(state, scan_code, maybe_keycode);
+                glutin::WindowEvent::KeyboardInput { input, .. } => {
+                    let key_input = KeyboardInput(input.state, input.scancode, input.virtual_keycode);
                     event!(Target::Ui, key_input);
                 }
-                glutin::Event::ReceivedCharacter(char) => {
+                glutin::WindowEvent::ReceivedCharacter(char) => {
                     event!(Target::Ui, ReceivedCharacter(char));
                 }
                 _ => (),

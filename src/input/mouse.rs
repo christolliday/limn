@@ -9,8 +9,6 @@ use layout::LayoutChanged;
 use ui::Ui;
 use app::App;
 
-use super::InputEvent;
-
 pub struct MouseMoved(pub Point);
 pub struct MouseWheel(pub glutin::MouseScrollDelta);
 pub struct MouseButton(pub glutin::ElementState, pub glutin::MouseButton);
@@ -47,9 +45,7 @@ impl UiEventHandler<MouseInputEvent> for MouseController {
     fn handle(&mut self, event: &MouseInputEvent, ui: &mut Ui) {
 
         if let &MouseInputEvent::LayoutChanged = event {
-            // send new mouse event, in case widget under mouse has shifted
-            let event = glutin::Event::MouseMoved(self.mouse.x as i32, self.mouse.y as i32);
-            event!(Target::Ui, InputEvent(event));
+            event!(Target::Ui, MouseMoved(Point::new(self.mouse.x, self.mouse.y)));
         }
         if let &MouseInputEvent::MouseMoved(mouse) = event {
             self.mouse = mouse;

@@ -242,7 +242,7 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
 }
 
 fn main() {
-    let (window, mut ui) = util::init_default("Limn circles demo");
+    let mut app = util::init_default("Limn circles demo");
     util::load_default_font();
 
     let mut root_widget = WidgetBuilder::new();
@@ -261,12 +261,12 @@ fn main() {
     root_widget.add_child(circle_canvas);
     let (undo_id, redo_id, slider_id) = create_control_bar(&mut root_widget);
 
-    ui.add_handler(CircleEventHandler::new(circle_canvas_id, undo_id, redo_id, slider_id));
-    ui.add_handler_fn(|event: &KeyboardInput, _| {
+    app.add_handler(CircleEventHandler::new(circle_canvas_id, undo_id, redo_id, slider_id));
+    app.add_handler_fn(|event: &KeyboardInput, _| {
         if let &KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Delete)) = event {
             event!(Target::Ui, CircleEvent::Delete);
         }
     });
 
-    util::set_root_and_loop(window, ui, root_widget);
+    util::set_root_and_loop(app, root_widget);
 }

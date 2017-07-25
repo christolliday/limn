@@ -25,7 +25,7 @@ pub struct Ui {
     pub graph: WidgetGraph,
     pub layout: LayoutManager,
     glyph_cache: GlyphCache,
-    needs_redraw: bool,
+    pub needs_redraw: bool,
     should_close: bool,
     debug_draw_bounds: bool,
 }
@@ -51,7 +51,7 @@ impl Ui {
         self.debug_draw_bounds = debug_draw_bounds;
         self.redraw();
     }
-    pub fn resize_window_to_fit(&mut self, window: &Window) {
+    pub fn resize_window_to_fit(&mut self, window: &mut Window) {
         let window_dims = self.get_root_dims();
         window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }

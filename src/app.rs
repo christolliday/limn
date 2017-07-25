@@ -1,9 +1,12 @@
 use std::any::TypeId;
 use std::collections::HashMap;
+use std::time::{Instant, Duration};
+use std::rc::Rc;
+use std::cell::RefCell;
 
-use backend::{Window, WindowEvents};
-use backend::events::WindowEvent;
-use glutin::Event;
+use glutin;
+
+use backend::Window;
 
 use ui::Ui;
 use input::InputEvent;
@@ -20,24 +23,30 @@ use util::Size;
 pub struct App {
     pub ui: Ui,
     handlers: HashMap<TypeId, Vec<UiHandlerWrapper>>,
+    next_frame_time: Instant,
+    events_loop: Rc<RefCell<glutin::EventsLoop>>,
+    pub window: Window,
 }
 
 impl App {
-    pub fn new(window: &mut Window) -> Self {
-        event::queue_set_window(window);
-        let ui = Ui::new(window);
+    pub fn new(mut window: Window, events_loop: glutin::EventsLoop) -> Self {
+        event::queue_set_events_loop(events_loop.create_proxy());
+        let ui = Ui::new(&mut window);
         let mut app = App {
             ui: ui,
             handlers: HashMap::new(),
+            next_frame_time: Instant::now(),
+            events_loop: Rc::new(RefCell::new(events_loop)),
+            window: window,
         };
         app.initialize_handlers();
         app
     }
     /// Resize the window based on the measured size of the UI
-    pub fn resize_window_to_fit(&mut self, window: &Window) {
+    pub fn resize_window_to_fit(&mut self) {
         // handle layout change events, needed to measure widgets before resizing window
         self.handle_events();
-        self.ui.resize_window_to_fit(&window);
+        self.ui.resize_window_to_fit(&mut self.window);
     }
 
     /// Initialize the handlers that are used in a typical desktop app.
@@ -51,29 +60,53 @@ impl App {
         self.add_drag_handlers();
     }
 
-    /// Application main loop
-    pub fn main_loop(&mut self, window: &mut Window) {
-        let mut events = WindowEvents::new();
-        while !self.ui.should_close() {
-            let event = events.next(&mut window.window);
-            match event {
-                WindowEvent::Input(event) => {
-                    match event {
-                        Event::Resized(width, height) => {
-                            window.window_resized();
-                            self.ui.window_resized(Size::new(width as f64, height as f64));
-                        }
-                        Event::Awakened => {
-                            self.handle_events();
-                        }
-                        _ => {
-                            event!(Target::Ui, InputEvent(event));
-                            self.handle_events();
-                        },
+    fn handle_window_event(&mut self, event: glutin::Event) {
+        match event {
+            glutin::Event::WindowEvent { event, .. } => {
+                match event {
+                    glutin::WindowEvent::Resized(width, height) => {
+                        self.window.window_resized();
+                        self.ui.window_resized(Size::new(width as f64, height as f64));
+                    }
+                    _ => {
+                        event!(Target::Ui, InputEvent(event));
                     }
                 }
-                WindowEvent::Render => {
-                    self.ui.draw_if_needed(window);
+            }
+            _ => ()
+        }
+    }
+    /// Application main loop
+    pub fn main_loop(&mut self) {
+        let events_loop = self.events_loop.clone();
+        let mut events_loop = events_loop.borrow_mut();
+
+        loop {
+            events_loop.poll_events(|event| {
+                self.handle_window_event(event);
+            });
+            if self.ui.should_close() {
+                return;
+            }
+            self.handle_events();
+            let now = Instant::now();
+            if now > self.next_frame_time {
+                let frame_length = Duration::new(0, 1_000_000_000 / 60);
+                if self.next_frame_time + frame_length > now {
+                    self.next_frame_time = now + frame_length;
+                } else {
+                    self.next_frame_time += frame_length;
+                }
+                self.ui.draw_if_needed(&mut self.window);
+            }
+            if !self.ui.needs_redraw {
+                let mut events = Vec::new();
+                events_loop.run_forever(|window_event| {
+                    events.push(window_event);
+                    glutin::ControlFlow::Break
+                });
+                for event in events {
+                    self.handle_window_event(event);
                 }
             }
         }
