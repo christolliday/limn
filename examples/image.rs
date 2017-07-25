@@ -10,7 +10,7 @@ use limn::drawable::image::ImageDrawable;
 
 fn main() {
     let mut app = util::init_default("Limn button demo");
-    let image_id = util::load_default_image(&mut app.window);
+    let image_id = util::load_default_image(&mut app.ui.window.borrow_mut());
 
     let mut root_widget = WidgetBuilder::new();
     let image_drawable = ImageDrawable::new(image_id);
