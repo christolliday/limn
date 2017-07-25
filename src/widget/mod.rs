@@ -338,6 +338,20 @@ impl Widget {
             let context = util::crop_context(context, crop_to);
             drawable.drawable.draw(bounds, crop_to, glyph_cache, context, graphics);
         }
+        if let Some(crop_to) = crop_to.intersection(&self.bounds) {
+            for child in &self.children {
+                let mut child = child.widget_mut();
+                child.draw(crop_to, glyph_cache, context, graphics);
+            }
+        }
+    }
+    pub fn draw_debug(&mut self, context: Context, graphics: &mut G2d) {
+        let color = self.debug_color.unwrap_or(::color::GREEN);
+        util::draw_rect_outline(self.bounds, color, context, graphics);
+        for child in &self.children {
+            let mut child = child.widget_mut();
+            child.draw_debug(context, graphics);
+        }
     }
     pub fn remove_child(&mut self, child_id: WidgetId) {
         if let Some(index) = self.children.iter().position(|widget| widget.id() == child_id) {

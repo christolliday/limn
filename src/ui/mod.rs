@@ -1,9 +1,4 @@
-pub mod graph;
-
-use backend::gfx::G2d;
-use backend::glyph::GlyphCache;
-use backend::window::Window;
-
+use std::collections::{HashSet, HashMap, VecDeque};
 use std::any::{Any, TypeId};
 
 use cassowary::strength::*;
@@ -11,18 +6,20 @@ use cassowary::strength::*;
 use graphics;
 use graphics::Context;
 
+use backend::gfx::G2d;
+use backend::glyph::GlyphCache;
+use backend::window::Window;
+
 use widget::{WidgetRef, WidgetBuilder, WidgetBuilderCore};
 use layout::{LayoutManager, LayoutVars, LayoutAdded};
 use layout::constraint::*;
-use util::{self, Point, Rect, Size};
+use util::{Point, Rect, Size};
 use resources::WidgetId;
-use color::*;
 use event::Target;
 
-use ui::graph::WidgetGraph;
-
 pub struct Ui {
-    pub graph: WidgetGraph,
+    pub root: Option<WidgetRef>,
+    widget_map: HashMap<WidgetId, WidgetRef>,
     pub layout: LayoutManager,
     glyph_cache: GlyphCache,
     pub needs_redraw: bool,
@@ -33,13 +30,24 @@ pub struct Ui {
 impl Ui {
     pub fn new(window: &mut Window) -> Self {
         Ui {
-            graph: WidgetGraph::new(),
+            widget_map: HashMap::new(),
+            root: None,
             layout: LayoutManager::new(),
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
             needs_redraw: false,
             should_close: false,
             debug_draw_bounds: false,
         }
+    }
+    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<WidgetRef> {
+        self.widget_map.get(&widget_id).map(|widget| widget.clone())
+    }
+    pub fn get_root(&mut self) -> WidgetRef {
+        self.root.as_ref().unwrap().clone()
+    }
+
+    pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetWalker {
+        CursorWidgetWalker::new(point, self.get_root())
     }
     pub fn close(&mut self) {
         self.should_close = true;
@@ -66,10 +74,10 @@ impl Ui {
             });
             self.layout.check_changes();
         }
-        self.graph.root = Some(self.add_widget(root_widget, None));
+        self.root = Some(self.add_widget(root_widget, None));
     }
     pub fn get_root_dims(&mut self) -> Size {
-        let root = self.graph.get_root();
+        let root = self.get_root();
         let mut dims = root.bounds().size;
         // use min size to prevent window size from being set to 0 (X crashes)
         dims.width = f64::max(100.0, dims.width);
@@ -77,8 +85,8 @@ impl Ui {
         dims
     }
     pub fn window_resized(&mut self, window_dims: Size) {
-        let root = self.graph.get_root();
-        let mut root = root.0.borrow_mut();
+        let root = self.get_root();
+        let mut root = root.widget_mut();
         root.update_layout(|layout| {
             layout.edit_right().set(window_dims.width);
             layout.edit_bottom().set(window_dims.height);
@@ -100,35 +108,11 @@ impl Ui {
         }
     }
     pub fn draw(&mut self, context: Context, graphics: &mut G2d) {
-        use std::f64;
-        let crop_to = Rect::new(Point::zero(), Size::new(f64::MAX, f64::MAX));
-        let root = self.graph.get_root();
-        self.draw_node(context, graphics, root, crop_to);
+        let crop_to = Rect::new(Point::zero(), Size::new(::std::f64::MAX, ::std::f64::MAX));
+        let root = self.get_root();
+        root.widget_mut().draw(crop_to, &mut self.glyph_cache, context, graphics);
         if self.debug_draw_bounds {
-            let mut bfs = self.graph.bfs();
-            while let Some(widget_ref) = bfs.next() {
-                let color = widget_ref.debug_color().unwrap_or(GREEN);
-                let bounds = widget_ref.bounds();
-                util::draw_rect_outline(bounds, color, context, graphics);
-            }
-        }
-    }
-    pub fn draw_node(&mut self,
-                     context: Context,
-                     graphics: &mut G2d,
-                     widget_ref: WidgetRef,
-                     crop_to: Rect) {
-
-        let mut widget = widget_ref.widget_mut();
-        let crop_to = {
-            widget.draw(crop_to, &mut self.glyph_cache, context, graphics);
-            crop_to.intersection(&widget.bounds)
-        };
-
-        if let Some(crop_to) = crop_to {
-            for child in &widget.children {
-                self.draw_node(context, graphics, child.clone(), crop_to);
-            }
+            root.widget_mut().draw_debug(context, graphics);
         }
     }
 
@@ -140,11 +124,11 @@ impl Ui {
         self.layout.check_changes();
 
         let id = widget.id();
-        self.graph.add_widget(widget);
+        self.widget_map.insert(id, widget);
 
-        let widget_ref = self.graph.get_widget(id).unwrap();
+        let widget_ref = self.get_widget(id).unwrap();
         if let Some(parent_id) = parent_id {
-            if let Some(parent) = self.graph.get_widget(parent_id) {
+            if let Some(parent) = self.get_widget(parent_id) {
                 let parent_weak = parent.downgrade();
                 let parent = &mut *parent.widget_mut();
                 parent.children.push(widget_ref.clone());
@@ -166,7 +150,7 @@ impl Ui {
     }
 
     pub fn remove_widget(&mut self, widget_id: WidgetId) {
-        if let Some(widget_ref) = self.graph.get_widget(widget_id) {
+        if let Some(widget_ref) = self.get_widget(widget_id) {
             let widget = widget_ref.widget();
             if let Some(ref parent_ref) = widget.parent {
                 if let Some(parent_ref) = parent_ref.upgrade() {
@@ -180,7 +164,7 @@ impl Ui {
             }
             event!(Target::Widget(widget_id), WidgetDetachedEvent);
 
-            self.graph.remove_widget(widget_id);
+            self.widget_map.remove(&widget_id);
             self.layout.solver.remove_widget(widget_id.0);
             self.layout.check_changes();
             self.redraw();
@@ -189,7 +173,10 @@ impl Ui {
 
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetId> {
         // first widget found is the deepest, later will need to have z order as ordering
-        self.graph.widgets_under_cursor(point).next()
+        self.widgets_under_cursor(point).next()
+    }
+    pub fn bfs(&mut self) -> Bfs {
+        Bfs::new(self.get_root())
     }
 
     fn handle_widget_event(&mut self,
@@ -214,17 +201,17 @@ impl Ui {
                         data: &Box<Any>) {
         match address {
             Target::Widget(widget_id) => {
-                if let Some(widget_ref) = self.graph.get_widget(widget_id) {
+                if let Some(widget_ref) = self.get_widget(widget_id) {
                     self.handle_widget_event(widget_ref, type_id, data);
                 }
             }
             Target::SubTree(widget_id) => {
-                if let Some(widget_ref) = self.graph.get_widget(widget_id) {
+                if let Some(widget_ref) = self.get_widget(widget_id) {
                     self.handle_event_subtree(widget_ref, type_id, data);
                 }
             }
             Target::BubbleUp(widget_id) => {
-                let mut maybe_widget_ref = self.graph.get_widget(widget_id);
+                let mut maybe_widget_ref = self.get_widget(widget_id);
                 while let Some(widget_ref) = maybe_widget_ref {
                     if self.handle_widget_event(widget_ref.clone(), type_id, data) {
                         break;
@@ -244,7 +231,7 @@ impl Ui {
     }
     pub fn debug_widget_positions(&mut self) {
         println!("WIDGET POSITIONS");
-        let mut bfs = self.graph.bfs();
+        let mut bfs = self.bfs();
         while let Some(widget_ref) = bfs.next() {
             let bounds = widget_ref.bounds();
             let name = widget_ref.debug_name().clone();
@@ -253,7 +240,7 @@ impl Ui {
     }
     pub fn debug_constraints(&mut self) {
         println!("CONSTRAINTS");
-        let root = self.graph.get_root();
+        let root = self.get_root();
         root.widget().debug_constraints();
     }
     pub fn debug_variables(&mut self) {
@@ -263,3 +250,81 @@ impl Ui {
 pub struct WidgetAttachedEvent;
 pub struct WidgetDetachedEvent;
 pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
+
+
+
+pub struct CursorWidgetWalker {
+    point: Point,
+    dfs: DfsPostReverse,
+}
+impl CursorWidgetWalker {
+    fn new(point: Point, root: WidgetRef) -> Self {
+        CursorWidgetWalker {
+            point: point,
+            dfs: DfsPostReverse::new(root),
+        }
+    }
+    pub fn next(&mut self) -> Option<WidgetId> {
+        while let Some(widget_ref) = self.dfs.next() {
+            let ref widget = widget_ref.widget();
+            if widget.is_mouse_over(self.point) {
+                return Some(widget.id);
+            }
+        }
+        None
+    }
+}
+
+// iterates in reverse of draw order, that is, depth first post order,
+// with siblings in reverse of insertion order
+pub struct DfsPostReverse {
+    stack: Vec<WidgetRef>,
+    discovered: HashSet<WidgetRef>,
+    finished: HashSet<WidgetRef>,
+}
+
+impl DfsPostReverse {
+    fn new(root: WidgetRef) -> Self {
+        DfsPostReverse {
+            stack: vec![root],
+            discovered: HashSet::new(),
+            finished: HashSet::new(),
+        }
+    }
+    pub fn next(&mut self) -> Option<WidgetRef> {
+        while let Some(widget_ref) = self.stack.last().map(|w| w.clone()) {
+            if self.discovered.insert(widget_ref.clone()) {
+                for child in &widget_ref.widget().children {
+                    self.stack.push(child.clone());
+                }
+            } else {
+                self.stack.pop();
+                if self.finished.insert(widget_ref.clone()) {
+                    return Some(widget_ref.clone());
+                }
+            }
+        }
+        None
+    }
+}
+
+pub struct Bfs {
+    queue: VecDeque<WidgetRef>,
+}
+
+impl Bfs {
+    fn new(root: WidgetRef) -> Self {
+        let mut queue = VecDeque::new();
+        queue.push_front(root);
+        Bfs { queue: queue }
+    }
+    pub fn next(&mut self) -> Option<WidgetRef> {
+        while let Some(widget_ref) = self.queue.pop_front() {
+            for child in &widget_ref.widget().children {
+                self.queue.push_back(child.clone());
+            }
+            return Some(widget_ref);
+        }
+        None
+    }
+}

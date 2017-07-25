@@ -87,6 +87,7 @@ impl LayoutManager {
 
 pub struct LayoutAdded(pub WidgetId);
 pub struct UpdateLayout(pub WidgetId);
+pub struct ResizeWindow;
 pub struct LayoutChanged(Vec<(usize, Variable, f64)>);
 pub struct LayoutUpdated;
 
@@ -94,7 +95,7 @@ impl App {
     pub fn add_layout_handlers(&mut self) {
         self.add_handler_fn(|event: &UpdateLayout, ui| {
             let &UpdateLayout(id) = event;
-            if let Some(widget) = ui.graph.get_widget(id) {
+            if let Some(widget) = ui.get_widget(id) {
                 let widget = &mut *widget.widget_mut();
                 ui.layout.solver.update_layout(&mut widget.layout);
                 ui.layout.check_changes();
@@ -102,7 +103,7 @@ impl App {
         });
         self.add_handler_fn(|event: &LayoutAdded, ui| {
             let &LayoutAdded(id) = event;
-            if let Some(widget) = ui.graph.get_widget(id) {
+            if let Some(widget) = ui.get_widget(id) {
                 let widget = &mut *widget.widget_mut();
                 ui.layout.solver.add_widget(widget.id.0, &widget.debug_name, &mut widget.layout, &mut widget.bounds);
             }
@@ -111,7 +112,7 @@ impl App {
             let ref changes = event.0;
             for &(widget_id, var, value) in changes {
                 let widget_id = WidgetId(widget_id);
-                if let Some(widget) = ui.graph.get_widget(widget_id) {
+                if let Some(widget) = ui.get_widget(widget_id) {
                     let vars = &ui.layout.solver.layouts[&widget_id.0];
                     let widget = &mut *widget.widget_mut();
                     let var = vars.get_var(var).expect("Missing variable for widget");
