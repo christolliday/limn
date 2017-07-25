@@ -52,7 +52,8 @@ impl WidgetBuilder {
         self.set_container(handler)
     }
     pub fn grid(&mut self, num_columns: usize) {
-        let container = GridLayout::new(self.layout(), num_columns);
+        use std::ops::DerefMut;
+        let container = GridLayout::new(self.layout().deref_mut(), num_columns);
         self.set_container(container);
     }
 }

@@ -188,7 +188,8 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
 
             if builder.variable_handle_size {
                 // STRONG + 1.0 for higher strength than handle position
-                slider_handle.widget.layout.edit_width().set(50.0).strength(STRONG + 1.0);
+                let mut layout = slider_handle.widget.layout();
+                layout.edit_width().set(50.0).strength(STRONG + 1.0);
             }
         }
         Orientation::Vertical => {
@@ -209,7 +210,8 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
 
             if builder.variable_handle_size {
                 // STRONG + 1.0 for higher strength than handle position
-                slider_handle.widget.layout.edit_height().set(50.0).strength(STRONG + 1.0);
+                let mut layout = slider_handle.widget.layout();
+                layout.edit_height().set(50.0).strength(STRONG + 1.0);
             }
         }
     }

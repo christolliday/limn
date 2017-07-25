@@ -160,8 +160,8 @@ struct ScrollParent {
 impl ScrollParent {
     fn new(scrollable: &mut WidgetBuilder) -> Self {
         ScrollParent {
-            scrollable_left: scrollable.layout().vars.left,
-            scrollable_top: scrollable.layout().vars.top,
+            scrollable_left: scrollable.layout_ref().left,
+            scrollable_top: scrollable.layout_ref().top,
             content_rect: Rect::zero(),
             width_ratio: 0.0,
             height_ratio: 0.0,
