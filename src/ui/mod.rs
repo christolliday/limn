@@ -1,5 +1,7 @@
 use std::collections::{HashSet, HashMap, VecDeque};
 use std::any::{Any, TypeId};
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use cassowary::strength::*;
 
@@ -25,10 +27,11 @@ pub struct Ui {
     pub needs_redraw: bool,
     should_close: bool,
     debug_draw_bounds: bool,
+    pub window: Rc<RefCell<Window>>,
 }
 
 impl Ui {
-    pub fn new(window: &mut Window) -> Self {
+    pub fn new(mut window: Window) -> Self {
         Ui {
             widget_map: HashMap::new(),
             root: None,
@@ -37,6 +40,7 @@ impl Ui {
             needs_redraw: false,
             should_close: false,
             debug_draw_bounds: false,
+            window: Rc::new(RefCell::new(window)),
         }
     }
     pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<WidgetRef> {
@@ -59,9 +63,9 @@ impl Ui {
         self.debug_draw_bounds = debug_draw_bounds;
         self.redraw();
     }
-    pub fn resize_window_to_fit(&mut self, window: &mut Window) {
+    pub fn resize_window_to_fit(&mut self) {
         let window_dims = self.get_root_dims();
-        window.window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
+        self.window.borrow_mut().window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
     }
     pub fn set_root(&mut self, mut root_widget: WidgetBuilder) {
         root_widget.set_debug_name("root");
@@ -74,6 +78,9 @@ impl Ui {
             });
             self.layout.check_changes();
         }
+        root_widget.add_handler_fn(|_: &::layout::LayoutUpdated, _| {
+            event!(Target::Ui, ::layout::ResizeWindow);
+        });
         self.root = Some(self.add_widget(root_widget, None));
     }
     pub fn get_root_dims(&mut self) -> Size {
@@ -85,6 +92,7 @@ impl Ui {
         dims
     }
     pub fn window_resized(&mut self, window_dims: Size) {
+        self.window.borrow_mut().window_resized();
         let root = self.get_root();
         let mut root = root.widget_mut();
         root.update_layout(|layout| {
@@ -98,9 +106,10 @@ impl Ui {
     pub fn redraw(&mut self) {
         self.needs_redraw = true;
     }
-    pub fn draw_if_needed(&mut self, window: &mut Window) {
+    pub fn draw_if_needed(&mut self) {
         if self.needs_redraw {
-            window.draw_2d(|context, graphics| {
+            let window = self.window.clone();
+            window.borrow_mut().draw_2d(|context, graphics| {
                 graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
                 self.draw(context, graphics);
             });

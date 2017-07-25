@@ -54,7 +54,6 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
 pub fn set_root_and_loop(mut app: App, root_widget: WidgetBuilder)
 {
     app.ui.set_root(root_widget);
-    app.resize_window_to_fit();
 
     // Closes app on ESC key
     app.add_handler(EscKeyCloseHandler);

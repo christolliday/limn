@@ -1,3 +1,5 @@
+#![cfg_attr(feature="nightly", feature(core_intrinsics))]
+
 extern crate backend;
 extern crate text_layout;
 #[macro_use]
@@ -36,3 +38,13 @@ pub mod resources;
 pub mod color;
 pub mod input;
 pub mod prelude;
+
+#[cfg(not(feature="nightly"))]
+fn type_name<T>() -> &'static str {
+    "Type unavailable, use nightly"
+}
+
+#[cfg(feature="nightly")]
+fn type_name<T>() -> &'static str {
+    unsafe { std::intrinsics::type_name::<T>() }
+}

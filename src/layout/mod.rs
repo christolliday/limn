@@ -93,6 +93,9 @@ pub struct LayoutUpdated;
 
 impl App {
     pub fn add_layout_handlers(&mut self) {
+        self.add_handler_fn(|_: &ResizeWindow, ui| {
+            ui.resize_window_to_fit();
+        });
         self.add_handler_fn(|event: &UpdateLayout, ui| {
             let &UpdateLayout(id) = event;
             if let Some(widget) = ui.get_widget(id) {

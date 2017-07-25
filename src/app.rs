@@ -25,28 +25,20 @@ pub struct App {
     handlers: HashMap<TypeId, Vec<UiHandlerWrapper>>,
     next_frame_time: Instant,
     events_loop: Rc<RefCell<glutin::EventsLoop>>,
-    pub window: Window,
 }
 
 impl App {
-    pub fn new(mut window: Window, events_loop: glutin::EventsLoop) -> Self {
+    pub fn new(window: Window, events_loop: glutin::EventsLoop) -> Self {
         event::queue_set_events_loop(events_loop.create_proxy());
-        let ui = Ui::new(&mut window);
+        let ui = Ui::new(window);
         let mut app = App {
             ui: ui,
             handlers: HashMap::new(),
             next_frame_time: Instant::now(),
             events_loop: Rc::new(RefCell::new(events_loop)),
-            window: window,
         };
         app.initialize_handlers();
         app
-    }
-    /// Resize the window based on the measured size of the UI
-    pub fn resize_window_to_fit(&mut self) {
-        // handle layout change events, needed to measure widgets before resizing window
-        self.handle_events();
-        self.ui.resize_window_to_fit(&mut self.window);
     }
 
     /// Initialize the handlers that are used in a typical desktop app.
@@ -65,7 +57,6 @@ impl App {
             glutin::Event::WindowEvent { event, .. } => {
                 match event {
                     glutin::WindowEvent::Resized(width, height) => {
-                        self.window.window_resized();
                         self.ui.window_resized(Size::new(width as f64, height as f64));
                     }
                     _ => {
@@ -97,7 +88,7 @@ impl App {
                 } else {
                     self.next_frame_time += frame_length;
                 }
-                self.ui.draw_if_needed(&mut self.window);
+                self.ui.draw_if_needed();
             }
             if !self.ui.needs_redraw {
                 let mut events = Vec::new();
@@ -123,6 +114,8 @@ impl App {
                         for event_handler in handlers.iter_mut() {
                             event_handler.handle(data, &mut self.ui);
                         }
+                    } else {
+                        println!("no handler found for type");
                     }
                 }
                 _ => {

@@ -107,6 +107,7 @@ impl WidgetHandlerWrapper {
     {
         let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, args: WidgetEventArgs| {
             let event: &E = event.downcast_ref().unwrap();
+            debug!("widget handle {}", ::type_name::<E>());
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler(event, args);
         };
@@ -132,6 +133,7 @@ impl UiHandlerWrapper {
     {
         let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, ui: &mut Ui| {
             let event: &E = event.downcast_ref().unwrap();
+            debug!("ui handle {}", ::type_name::<E>());
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler.handle(event, ui);
         };
@@ -193,6 +195,7 @@ pub fn queue_set_events_loop(events_loop: EventsLoopProxy) {
 pub fn event<T: 'static>(address: Target, data: T) {
     LOCAL_QUEUE.with(|queue| {
         if let Some(queue) = queue.as_ref() {
+            debug!("push event {}", ::type_name::<T>());
             queue.borrow_mut().push(address, data);
         } else {
             eprintln!("Tried to send event off the main thread");
