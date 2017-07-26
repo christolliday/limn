@@ -5,7 +5,6 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 extern crate linked_hash_map;
-#[macro_use]
 extern crate maplit;
 
 use std::collections::HashSet;
@@ -91,15 +90,15 @@ pub struct Layout {
     pub name: Option<String>,
     edit_vars: Vec<EditVariable>,
     constraints: HashSet<Constraint>,
-    new_constraints: Vec<Constraint>,
+    new_constraints: HashSet<Constraint>,
     removed_constraints: Vec<Constraint>,
 }
 impl Layout {
     pub fn new(name: Option<String>) -> Self {
         let vars = LayoutVars::new();
-        let mut new_constraints = Vec::new();
-        new_constraints.push(vars.right - vars.left| EQ(REQUIRED) | vars.width);
-        new_constraints.push(vars.bottom - vars.top | EQ(REQUIRED) | vars.height);
+        let mut new_constraints = HashSet::new();
+        new_constraints.insert(vars.right - vars.left| EQ(REQUIRED) | vars.width);
+        new_constraints.insert(vars.bottom - vars.top | EQ(REQUIRED) | vars.height);
         // temporarily disabling this, as it tends to cause width/height to snap to 0
         //constraints.push(vars.width | GE(REQUIRED) | 0.0);
         //constraints.push(vars.height | GE(REQUIRED) | 0.0);
@@ -144,16 +143,18 @@ impl Layout {
         self.new_constraints.extend(new_constraints);
     }
     pub fn add_constraint(&mut self, constraint: Constraint) {
-        self.new_constraints.push(constraint);
+        self.new_constraints.insert(constraint);
     }
     pub fn add_constraints(&mut self, constraints: Vec<Constraint>) {
         self.new_constraints.extend(constraints);
     }
     pub fn remove_constraint(&mut self, constraint: Constraint) {
-        self.removed_constraints.push(constraint);
+        if !self.new_constraints.remove(&constraint) {
+            self.removed_constraints.push(constraint);
+        }
     }
-    pub fn get_constraints(&mut self) -> Vec<Constraint> {
-        let new_constraints = mem::replace(&mut self.new_constraints, Vec::new());
+    pub fn get_constraints(&mut self) -> HashSet<Constraint> {
+        let new_constraints = mem::replace(&mut self.new_constraints, HashSet::new());
         for constraint in new_constraints.clone() {
             self.constraints.insert(constraint);
         }
