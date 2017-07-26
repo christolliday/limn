@@ -1,5 +1,4 @@
 use glutin;
-use cassowary::Variable;
 use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
@@ -124,8 +123,8 @@ struct ScrollSizeHandler {
     scrollbar_h_id: WidgetRef,
     scrollbar_v_id: WidgetRef,
     corner_id: WidgetRef,
-    h_handle_size: Variable,
-    v_handle_size: Variable,
+    h_handle: WidgetRef,
+    v_handle: WidgetRef,
 }
 impl ScrollSizeHandler {
     fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner_id: WidgetRef) -> Self {
@@ -133,8 +132,8 @@ impl ScrollSizeHandler {
             scrollbar_h_id: scrollbar_h.widget.widget.clone(),
             scrollbar_v_id: scrollbar_v.widget.widget.clone(),
             corner_id: corner_id,
-            h_handle_size: scrollbar_h.slider_handle.layout().vars.width,
-            v_handle_size: scrollbar_v.slider_handle.layout().vars.height,
+            h_handle: scrollbar_h.slider_handle.widget.clone(),
+            v_handle: scrollbar_v.slider_handle.widget.clone(),
         }
     }
 }
@@ -147,8 +146,7 @@ enum ScrollParentEvent {
     OffsetY(f64),
 }
 struct ScrollParent {
-    scrollable_left: Variable,
-    scrollable_top: Variable,
+    scrollable: WidgetRef,
     content_rect: Rect,
     width_ratio: f64,
     height_ratio: f64,
@@ -159,8 +157,7 @@ struct ScrollParent {
 impl ScrollParent {
     fn new(scrollable: &mut WidgetBuilder) -> Self {
         ScrollParent {
-            scrollable_left: scrollable.layout_ref().left,
-            scrollable_top: scrollable.layout_ref().top,
+            scrollable: scrollable.widget.clone(),
             content_rect: Rect::zero(),
             width_ratio: 0.0,
             height_ratio: 0.0,
@@ -185,15 +182,15 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                     if width_ratio.is_finite() && width_ratio != self.width_ratio {
                         self.width_ratio = width_ratio;
                         let width = container_size.width * width_ratio;
-                        args.solver.update_solver(|solver| {
-                            solver.edit_variable(size_handler.h_handle_size, width);
+                        size_handler.h_handle.update_layout(|layout| {
+                            layout.edit_width().set(width);
                         });
                     }
                     if height_ratio.is_finite() && height_ratio != self.height_ratio {
                         self.height_ratio = height_ratio;
                         let height = container_size.height * height_ratio;
-                        args.solver.update_solver(|solver| {
-                            solver.edit_variable(size_handler.v_handle_size, height);
+                        size_handler.v_handle.update_layout(|layout| {
+                            layout.edit_height().set(height);
                         });
                     }
                     let scrollable_area = self.content_rect.size - args.widget.bounds().size;
@@ -223,9 +220,11 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                 self.offset.x = f64::min(0.0, f64::max(max_scroll.x, self.offset.x));
                 self.offset.y = f64::min(0.0, f64::max(max_scroll.y, self.offset.y));
 
-                args.solver.update_solver(|solver| {
-                    solver.edit_variable(self.scrollable_left, parent_bounds.left() + self.offset.x);
-                    solver.edit_variable(self.scrollable_top, parent_bounds.top() + self.offset.y);
+                let scrollable_left = parent_bounds.left() + self.offset.x;
+                let scrollable_top = parent_bounds.top() + self.offset.y;
+                self.scrollable.update_layout(|layout| {
+                    layout.edit_left().set(scrollable_left);
+                    layout.edit_top().set(scrollable_top);
                 });
 
                 if let Some(ref mut size_handler) = self.size_handler {
@@ -243,15 +242,17 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
             ScrollParentEvent::OffsetX(ref offset) => {
                 self.offset.x = -offset * (self.content_rect.width() - args.widget.bounds().width());
                 let parent_bounds = args.widget.bounds();
-                args.solver.update_solver(|solver| {
-                    solver.edit_variable(self.scrollable_left, parent_bounds.left() + self.offset.x);
+                let scrollable_left = parent_bounds.left() + self.offset.x;
+                self.scrollable.update_layout(|layout| {
+                    layout.edit_left().set(scrollable_left);
                 });
             }
             ScrollParentEvent::OffsetY(ref offset) => {
                 self.offset.y = -offset * (self.content_rect.height() - args.widget.bounds().height());
                 let parent_bounds = args.widget.bounds();
-                args.solver.update_solver(|solver| {
-                    solver.edit_variable(self.scrollable_top, parent_bounds.top() + self.offset.y);
+                let scrollable_top = parent_bounds.top() + self.offset.y;
+                self.scrollable.update_layout(|layout| {
+                    layout.edit_top().set(scrollable_top);
                 });
             }
         }

@@ -18,6 +18,7 @@ use limn::util::Size;
 /// Ideally the window wouldn't be created until the UI size is known, but
 /// the window is needed right now to have a GL context for creating
 /// and measuring images/text.
+#[allow(dead_code)]
 pub fn init_default(title: &str) -> App {
     init(title, None)
 }

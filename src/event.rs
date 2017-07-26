@@ -6,7 +6,6 @@ use glutin::EventsLoopProxy;
 
 use resources::WidgetId;
 use ui::Ui;
-use layout::LayoutManager;
 use widget::WidgetRef;
 
 /// Defines the different targets that events can be delivered to.
@@ -70,7 +69,6 @@ impl Queue {
 /// to a widget and it's layout, and posting events to the Queue.
 pub struct WidgetEventArgs<'a> {
     pub widget: WidgetRef,
-    pub solver: &'a mut LayoutManager,
     pub handled: &'a mut bool,
 }
 

@@ -17,7 +17,7 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 
 use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
-use layout::{LayoutManager, Layout, LayoutVars, LayoutRef};
+use layout::{Layout, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rect};
@@ -361,8 +361,7 @@ impl WidgetRef {
     }
     pub fn trigger_event(&self,
                          type_id: TypeId,
-                         event: &Box<Any>,
-                         solver: &mut LayoutManager)
+                         event: &Box<Any>)
                          -> bool {
         let handlers = {
             let mut widget = self.0.borrow_mut();
@@ -381,7 +380,6 @@ impl WidgetRef {
             let mut handler = event_handler.borrow_mut();
             let event_args = WidgetEventArgs {
                 widget: self.clone(),
-                solver: solver,
                 handled: &mut handled,
             };
             handler.handle(event, event_args);

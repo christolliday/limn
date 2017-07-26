@@ -196,9 +196,7 @@ impl Ui {
                            type_id: TypeId,
                            data: &Box<Any>) -> bool
     {
-        let handled = widget_ref.trigger_event(type_id,
-                                           data,
-                                           &mut self.layout);
+        let handled = widget_ref.trigger_event(type_id, data);
         if widget_ref.has_updated() {
             self.needs_redraw = true;
             widget_ref.set_updated(false);
