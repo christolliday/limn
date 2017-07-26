@@ -100,7 +100,7 @@ widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuil
     });
     let mut content = builder.content.expect("Scroll bar has no content");
     content.add_handler_fn(move |_: &LayoutUpdated, args| {
-        event!(Target::Widget(widget_id), ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds));
+        event!(Target::Widget(widget_id), ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
     });
     let mut scroll_parent_handler = ScrollParent::new(&mut content);
     if let Some((ref mut corner, ref mut scrollbar_h, ref mut scrollbar_v)) = builder.scrollbars {
@@ -108,7 +108,7 @@ widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuil
     }
     builder.content_holder.add_handler(scroll_parent_handler);
     builder.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
-        event!(Target::Widget(args.widget.id), ScrollParentEvent::WidgetMouseWheel(event.clone()));
+        event!(Target::WidgetRef(args.widget), ScrollParentEvent::WidgetMouseWheel(event.clone()));
     });
     builder.content_holder.add_child(content);
     builder.widget.add_child(builder.content_holder);
@@ -179,10 +179,10 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                     self.content_rect = rect
                 }
                 if let Some(ref mut size_handler) = self.size_handler {
-                    let container_size = args.widget.bounds.size;
+                    let container_size = args.widget.bounds().size;
                     let width_ratio = container_size.width / self.content_rect.size.width;
                     let height_ratio = container_size.height / self.content_rect.size.height;
-                    let content_offset = self.content_rect.origin - args.widget.bounds.origin;
+                    let content_offset = self.content_rect.origin - args.widget.bounds().origin;
                     if width_ratio.is_finite() && width_ratio != self.width_ratio {
                         self.width_ratio = width_ratio;
                         let width = container_size.width * width_ratio;
@@ -197,7 +197,7 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                             solver.edit_variable(size_handler.v_handle_size, height);
                         });
                     }
-                    let scrollable_area = self.content_rect.size - args.widget.bounds.size;
+                    let scrollable_area = self.content_rect.size - args.widget.bounds().size;
                     if content_offset != self.offset || scrollable_area != self.scrollable_area {
                         self.offset = content_offset;
                         self.scrollable_area = scrollable_area;
@@ -215,7 +215,7 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
             }
             ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
                 let scroll = get_scroll(mouse_wheel.0);
-                let parent_bounds = args.widget.bounds;
+                let parent_bounds = args.widget.bounds();
 
                 let max_scroll = Point::new(
                     parent_bounds.width() - self.content_rect.width(),
@@ -230,7 +230,7 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                 });
 
                 if let Some(ref mut size_handler) = self.size_handler {
-                    let scrollable_area = self.content_rect.size - args.widget.bounds.size;
+                    let scrollable_area = self.content_rect.size - args.widget.bounds().size;
                     if scrollable_area.width > 0.0 {
                         let offset_x = -self.offset.x / scrollable_area.width;
                         event!(Target::Widget(size_handler.scrollbar_h_id), SetSliderValue(offset_x));
@@ -242,15 +242,15 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                 }
             }
             ScrollParentEvent::OffsetX(ref offset) => {
-                self.offset.x = -offset * (self.content_rect.width() - args.widget.bounds.width());
-                let parent_bounds = args.widget.bounds;
+                self.offset.x = -offset * (self.content_rect.width() - args.widget.bounds().width());
+                let parent_bounds = args.widget.bounds();
                 args.solver.update_solver(|solver| {
                     solver.edit_variable(self.scrollable_left, parent_bounds.left() + self.offset.x);
                 });
             }
             ScrollParentEvent::OffsetY(ref offset) => {
-                self.offset.y = -offset * (self.content_rect.height() - args.widget.bounds.height());
-                let parent_bounds = args.widget.bounds;
+                self.offset.y = -offset * (self.content_rect.height() - args.widget.bounds().height());
+                let parent_bounds = args.widget.bounds();
                 args.solver.update_solver(|solver| {
                     solver.edit_variable(self.scrollable_top, parent_bounds.top() + self.offset.y);
                 });

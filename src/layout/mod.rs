@@ -8,7 +8,7 @@ use resources::WidgetId;
 use app::App;
 use event::Target;
 
-use widget::{Widget, WidgetBuilder, WidgetBuilderCore};
+use widget::{WidgetBuilder, WidgetBuilderCore, WidgetRef};
 
 use self::container::LayoutContainer;
 
@@ -21,13 +21,13 @@ impl LayoutContainer for LinearLayoutHandler {
     fn set_padding(&mut self, padding: f64) {
         self.padding = padding;
     }
-    fn add_child(&mut self, parent: &mut Widget, child: &mut Widget) {
-        let child_id = child.id;
+    fn add_child(&mut self, mut parent: WidgetRef, mut child: WidgetRef) {
+        let child_id = child.id();
         parent.update_layout(|layout| {
-            self.add_child_layout(&layout.vars, &mut child.layout, child_id.0);
+            self.add_child_layout(&layout.vars, &mut child.layout(), child_id.0);
         });
     }
-    fn remove_child(&mut self, parent: &mut Widget, child_id: WidgetId) {
+    fn remove_child(&mut self, mut parent: WidgetRef, child_id: WidgetId) {
         parent.update_layout(|layout| {
             self.remove_child_layout(layout, child_id.0);
         });
@@ -35,9 +35,9 @@ impl LayoutContainer for LinearLayoutHandler {
 }
 
 impl LayoutContainer for GridLayout {
-    fn add_child(&mut self, parent: &mut Widget, child: &mut Widget) {
+    fn add_child(&mut self, mut parent: WidgetRef, mut child: WidgetRef) {
         parent.update_layout(|layout| {
-            self.add_child_layout(layout, &mut child.layout);
+            self.add_child_layout(layout, &mut child.layout());
         });
     }
 }

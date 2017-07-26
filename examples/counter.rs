@@ -27,7 +27,7 @@ fn main() {
 
     struct CountHandler;
     impl WidgetEventHandler<CountEvent> for CountHandler {
-        fn handle(&mut self, event: &CountEvent, args: WidgetEventArgs) {
+        fn handle(&mut self, event: &CountEvent, mut args: WidgetEventArgs) {
             let &CountEvent(count) = event;
             args.widget.update(|state: &mut TextDrawable| state.text = format!("{}", count));
         }
@@ -46,11 +46,11 @@ fn main() {
         center_vertical(&root_widget));
 
     let mut button_container = WidgetBuilder::new();
-    let root_id = root_widget.id();
+    let root_id = root_widget.widget.clone();
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");
     button_widget.on_click(move |_, _| {
-        event!(Target::Widget(root_id), CounterEvent);
+        event!(Target::WidgetRef(root_id.clone()), CounterEvent);
     });
     layout!(button_widget:
         center(&button_container),
@@ -71,7 +71,7 @@ fn main() {
     impl WidgetEventHandler<CounterEvent> for CounterHandler {
         fn handle(&mut self, _: &CounterEvent, args: WidgetEventArgs) {
             self.count += 1;
-            let address = Target::SubTree(args.widget.id);
+            let address = Target::SubTreeRef(args.widget);
             event!(address, CountEvent(self.count));
         }
     }

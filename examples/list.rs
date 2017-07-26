@@ -38,7 +38,7 @@ fn main() {
             list_item_widget
                 .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
                 .set_debug_name("item")
-                .list_item(list_widget.id())
+                .list_item(list_widget.widget.widget.clone())
                 .enable_hover();
             layout!(list_item_widget: height(text_size.height));
 

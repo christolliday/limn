@@ -93,8 +93,7 @@ impl Ui {
     }
     pub fn window_resized(&mut self, window_dims: Size) {
         self.window.borrow_mut().window_resized();
-        let root = self.get_root();
-        let mut root = root.widget_mut();
+        let mut root = self.get_root();
         root.update_layout(|layout| {
             layout.edit_right().set(window_dims.width);
             layout.edit_bottom().set(window_dims.height);
@@ -127,60 +126,64 @@ impl Ui {
 
     pub fn add_widget(&mut self,
                       builder: WidgetBuilder,
-                      parent_id: Option<WidgetId>) -> WidgetRef {
-        let (children, widget) = builder.build();
-        event!(Target::Ui, LayoutAdded(widget.id()));
+                      parent: Option<WidgetRef>) -> WidgetRef {
+        let (children, mut widget_ref) = builder.build();
+        event!(Target::Ui, LayoutAdded(widget_ref.id()));
         self.layout.check_changes();
 
-        let id = widget.id();
-        self.widget_map.insert(id, widget);
+        let id = widget_ref.id();
+        self.widget_map.insert(id, widget_ref.clone());
 
-        let widget_ref = self.get_widget(id).unwrap();
-        if let Some(parent_id) = parent_id {
-            if let Some(parent) = self.get_widget(parent_id) {
-                let parent_weak = parent.downgrade();
-                let parent = &mut *parent.widget_mut();
-                parent.children.push(widget_ref.clone());
-                let widget = &mut *widget_ref.widget_mut();
-                widget.parent = Some(parent_weak);
-                if let Some(ref mut container) = parent.container.clone() {
-                    let mut container = container.borrow_mut();
-                    container.add_child(parent, widget);
+        if let Some(parent_ref) = parent {
+            {
+                {
+                    let parent_weak = parent_ref.downgrade();
+                    let mut widget = widget_ref.widget_mut();
+                    widget.parent = Some(parent_weak);
                 }
-                event!(Target::Widget(parent_id), ChildAttachedEvent(id, widget.layout().vars.clone()));
+                let mut container = {
+                    let mut parent = parent_ref.widget_mut();
+                    parent.children.push(widget_ref.clone());
+                    parent.container.clone()
+                };
+                if let Some(ref mut container) = container {
+                    let mut container = container.borrow_mut();
+                    container.add_child(parent_ref.clone(), widget_ref.clone());
+                }
             }
+            event!(Target::WidgetRef(parent_ref), ChildAttachedEvent(id, widget_ref.layout().vars.clone()));
         }
-        event!(Target::Widget(id), WidgetAttachedEvent);
+        event!(Target::WidgetRef(widget_ref.clone()), WidgetAttachedEvent);
         for child in children {
-            self.add_widget(child, Some(id));
+            self.add_widget(child, Some(widget_ref.clone()));
         }
         self.redraw();
         widget_ref
     }
 
-    pub fn remove_widget(&mut self, widget_id: WidgetId) {
-        if let Some(widget_ref) = self.get_widget(widget_id) {
+    pub fn remove_widget(&mut self, widget_ref: WidgetRef) {
+        {
             let widget = widget_ref.widget();
             if let Some(ref parent_ref) = widget.parent {
                 if let Some(parent_ref) = parent_ref.upgrade() {
-                    let parent = &mut *parent_ref.widget_mut();
+                    let mut parent = parent_ref.widget_mut();
                     if let Some(ref mut container) = parent.container.clone() {
                         let mut container = container.borrow_mut();
-                        container.remove_child(parent, widget.id);
+                        container.remove_child(parent_ref.clone(), widget.id);
                     }
                     parent.remove_child(widget.id);
                 }
             }
-            event!(Target::Widget(widget_id), WidgetDetachedEvent);
-
-            self.widget_map.remove(&widget_id);
-            self.layout.solver.remove_widget(widget_id.0);
-            self.layout.check_changes();
-            self.redraw();
         }
+        event!(Target::WidgetRef(widget_ref.clone()), WidgetDetachedEvent);
+
+        self.widget_map.remove(&widget_ref.id());
+        self.layout.solver.remove_widget(widget_ref.id().0);
+        self.layout.check_changes();
+        self.redraw();
     }
 
-    pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetId> {
+    pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetRef> {
         // first widget found is the deepest, later will need to have z order as ordering
         self.widgets_under_cursor(point).next()
     }
@@ -193,13 +196,12 @@ impl Ui {
                            type_id: TypeId,
                            data: &Box<Any>) -> bool
     {
-        let mut widget = widget_ref.widget_mut();
-        let handled = widget.trigger_event(type_id,
+        let handled = widget_ref.trigger_event(type_id,
                                            data,
                                            &mut self.layout);
-        if widget.has_updated {
+        if widget_ref.has_updated() {
             self.needs_redraw = true;
-            widget.has_updated = false;
+            widget_ref.set_updated(false);
         }
         handled
     }
@@ -221,6 +223,21 @@ impl Ui {
             }
             Target::BubbleUp(widget_id) => {
                 let mut maybe_widget_ref = self.get_widget(widget_id);
+                while let Some(widget_ref) = maybe_widget_ref {
+                    if self.handle_widget_event(widget_ref.clone(), type_id, data) {
+                        break;
+                    }
+                    maybe_widget_ref = widget_ref.widget().parent.as_ref().and_then(|parent| parent.upgrade());
+                }
+            }
+            Target::WidgetRef(widget_ref) => {
+                self.handle_widget_event(widget_ref, type_id, data);
+            }
+            Target::SubTreeRef(widget_ref) => {
+                self.handle_event_subtree(widget_ref, type_id, data);
+            }
+            Target::BubbleUpRef(widget_ref) => {
+                let mut maybe_widget_ref = Some(widget_ref);
                 while let Some(widget_ref) = maybe_widget_ref {
                     if self.handle_widget_event(widget_ref.clone(), type_id, data) {
                         break;
@@ -273,11 +290,11 @@ impl CursorWidgetWalker {
             dfs: DfsPostReverse::new(root),
         }
     }
-    pub fn next(&mut self) -> Option<WidgetId> {
+    pub fn next(&mut self) -> Option<WidgetRef> {
         while let Some(widget_ref) = self.dfs.next() {
             let ref widget = widget_ref.widget();
             if widget.is_mouse_over(self.point) {
-                return Some(widget.id);
+                return Some(widget_ref.clone());
             }
         }
         None

@@ -13,25 +13,30 @@ use color::*;
 
 const BACKSPACE: char = '\u{8}';
 
-fn edit_text_handle_char(event: &WidgetReceivedCharacter, args: WidgetEventArgs) {
+fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: WidgetEventArgs) {
     let &WidgetReceivedCharacter(char) = event;
-    let mut text = args.widget.drawable::<TextDrawable>().unwrap().text.clone();
-    match char {
-        BACKSPACE => {
-            text.pop();
-        }
-        _ => {
-            text.push(char);
-            let drawable = args.widget.drawable::<TextDrawable>().unwrap();
-            if !drawable.text_fits(&text, args.widget.bounds) {
+    let text = {
+        let bounds = args.widget.bounds();
+        let drawable = args.widget.drawable();
+        let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();
+        let mut text = text_drawable.text.clone();
+        match char {
+            BACKSPACE => {
                 text.pop();
             }
+            _ => {
+                text.push(char);
+                if !text_drawable.text_fits(&text, bounds) {
+                    text.pop();
+                }
+            }
         }
-    }
+        text
+    };
     args.widget.update(|state: &mut TextDrawable| {
         state.text = text.clone()
     });
-    event!(Target::Widget(args.widget.id), TextUpdated(text.clone()));
+    event!(Target::WidgetRef(args.widget), TextUpdated(text.clone()));
 }
 
 pub struct TextUpdated(pub String);
@@ -60,10 +65,10 @@ impl EditTextBuilder {
         widget
             .set_drawable_with_style(RectDrawable::new(), rect_style)
             .add_handler_fn(|_: &WidgetAttachedEvent, args| {
-                event!(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget.id));
+                event!(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget));
             })
             .add_handler_fn(|_: &WidgetDetachedEvent, args| {
-                event!(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget.id));
+                event!(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget));
             })
             .make_focusable();
 

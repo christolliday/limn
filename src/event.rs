@@ -7,7 +7,7 @@ use glutin::EventsLoopProxy;
 use resources::WidgetId;
 use ui::Ui;
 use layout::LayoutManager;
-use widget::Widget;
+use widget::WidgetRef;
 
 /// Defines the different targets that events can be delivered to.
 /// An event will be sent to all handlers that match both the Target,
@@ -23,6 +23,13 @@ pub enum Target {
     /// Sends an event to a widget and continues sending to it's
     /// ancestors until an event handler marks the event as handled
     BubbleUp(WidgetId),
+    /// Sends an event to a specific widget
+    WidgetRef(WidgetRef),
+    /// Sends an event to every descendant of a specific widget
+    SubTreeRef(WidgetRef),
+    /// Sends an event to a widget and continues sending to it's
+    /// ancestors until an event handler marks the event as handled
+    BubbleUpRef(WidgetRef),
     /// Sends an event to a UiEventHandler registered for the entire application
     Ui,
 }
@@ -62,7 +69,7 @@ impl Queue {
 /// Context passed to a WidgetEventHandler, allows modification
 /// to a widget and it's layout, and posting events to the Queue.
 pub struct WidgetEventArgs<'a> {
-    pub widget: &'a mut Widget,
+    pub widget: WidgetRef,
     pub solver: &'a mut LayoutManager,
     pub handled: &'a mut bool,
 }

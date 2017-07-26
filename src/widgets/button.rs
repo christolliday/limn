@@ -44,14 +44,14 @@ lazy_static! {
 }
 
 // show whether button is held down or not
-fn button_handle_mouse_down(event: &WidgetMouseButton, args: WidgetEventArgs) {
-    if !args.widget.props.contains(&Property::Inactive) {
+fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: WidgetEventArgs) {
+    if !args.widget.props().contains(&Property::Inactive) {
         let &WidgetMouseButton(state, _) = event;
         let event = match state {
             glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
             glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
         };
-        event!(Target::SubTree(args.widget.id), event);
+        event!(Target::SubTreeRef(args.widget), event);
     }
 }
 
@@ -60,14 +60,14 @@ pub enum ToggleEvent {
     Off,
 }
 // show whether toggle button is activated
-fn toggle_button_handle_mouse(event: &WidgetMouseButton, args: WidgetEventArgs) {
+fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: WidgetEventArgs) {
     if let &WidgetMouseButton(glutin::ElementState::Released, _) = event {
-        let (toggle_event, prop_event) = match args.widget.props.contains(&Property::Activated) {
+        let (toggle_event, prop_event) = match args.widget.props().contains(&Property::Activated) {
             true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
             false => (ToggleEvent::On, PropChange::Add(Property::Activated)),
         };
-        event!(Target::Widget(args.widget.id), toggle_event);
-        event!(Target::SubTree(args.widget.id), prop_event);
+        event!(Target::WidgetRef(args.widget.clone()), toggle_event);
+        event!(Target::SubTreeRef(args.widget.clone()), prop_event);
     }
 }
 

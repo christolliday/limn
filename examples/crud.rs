@@ -44,24 +44,24 @@ enum PeopleEvent {
     Add,
     Update,
     Delete,
-    PersonSelected(Option<WidgetId>),
+    PersonSelected(Option<WidgetRef>),
     ChangeFirstName(String),
     ChangeLastName(String),
 }
 
 struct Ids {
-    list_widget: WidgetId,
-    first_name_box: WidgetId,
-    last_name_box: WidgetId,
-    create_button: WidgetId,
-    update_button: WidgetId,
-    delete_button: WidgetId,
+    list_widget: WidgetRef,
+    first_name_box: WidgetRef,
+    last_name_box: WidgetRef,
+    create_button: WidgetRef,
+    update_button: WidgetRef,
+    delete_button: WidgetRef,
 }
 struct PeopleHandler {
     ids: Ids,
-    selected_item: Option<WidgetId>,
+    selected_item: Option<WidgetRef>,
     person: Person,
-    people: HashMap<WidgetId, Person>,
+    people: HashMap<WidgetRef, Person>,
 }
 impl PeopleHandler {
     fn new(ids: Ids) -> Self {
@@ -77,14 +77,14 @@ impl PeopleHandler {
 impl PeopleHandler {
     fn update_selected(&mut self) {
         let ref ids = self.ids;
-        event!(Target::SubTree(ids.first_name_box), TextUpdated(self.person.first_name.clone()));
-        event!(Target::SubTree(ids.last_name_box), TextUpdated(self.person.last_name.clone()));
+        event!(Target::SubTreeRef(ids.first_name_box.clone()), TextUpdated(self.person.first_name.clone()));
+        event!(Target::SubTreeRef(ids.last_name_box.clone()), TextUpdated(self.person.last_name.clone()));
         if self.selected_item.is_some() {
-            event!(Target::SubTree(ids.update_button), PropChange::Remove(Property::Inactive));
-            event!(Target::SubTree(ids.delete_button), PropChange::Remove(Property::Inactive));
+            event!(Target::SubTreeRef(ids.update_button.clone()), PropChange::Remove(Property::Inactive));
+            event!(Target::SubTreeRef(ids.delete_button.clone()), PropChange::Remove(Property::Inactive));
         } else {
-            event!(Target::SubTree(ids.update_button), PropChange::Add(Property::Inactive));
-            event!(Target::SubTree(ids.delete_button), PropChange::Add(Property::Inactive));
+            event!(Target::SubTreeRef(ids.update_button.clone()), PropChange::Add(Property::Inactive));
+            event!(Target::SubTreeRef(ids.delete_button.clone()), PropChange::Add(Property::Inactive));
         }
     }
 }
@@ -96,7 +96,7 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
             PeopleEvent::Add => {
                 if was_valid {
                     let person = mem::replace(&mut self.person, Person::new());
-                    let id = add_person(&person, ui, self.ids.list_widget);
+                    let id = add_person(&person, ui, self.ids.list_widget.clone());
                     self.people.insert(id, person);
 
                     self.selected_item = None;
@@ -104,20 +104,20 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
                 }
             },
             PeopleEvent::Update => {
-                if let Some(selected_widget_id) = self.selected_item {
-                    self.people.insert(selected_widget_id, self.person.clone());
-                    event!(Target::SubTree(selected_widget_id), TextUpdated(self.person.name()));
+                if let Some(ref selected_widget_id) = self.selected_item {
+                    self.people.insert(selected_widget_id.clone(), self.person.clone());
+                    event!(Target::SubTreeRef(selected_widget_id.clone()), TextUpdated(self.person.name()));
                 }
             },
             PeopleEvent::Delete => {
-                if let Some(selected_widget_id) = self.selected_item {
+                if let Some(selected_widget_id) = self.selected_item.clone() {
                     self.people.remove(&selected_widget_id);
                     ui.remove_widget(selected_widget_id);
                 }
                 self.selected_item = None;
             }
             PeopleEvent::PersonSelected(widget_id) => {
-                self.selected_item = widget_id;
+                self.selected_item = widget_id.clone();
                 if let Some(widget_id) = widget_id {
                     self.person = self.people[&widget_id].clone();
                 } else {
@@ -135,16 +135,16 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
         let is_valid = self.person.is_valid();
         if was_valid != is_valid {
             if is_valid {
-                event!(Target::SubTree(self.ids.create_button), PropChange::Remove(Property::Inactive));
+                event!(Target::SubTreeRef(self.ids.create_button.clone()), PropChange::Remove(Property::Inactive));
             } else {
-                event!(Target::SubTree(self.ids.create_button), PropChange::Add(Property::Inactive));
+                event!(Target::SubTreeRef(self.ids.create_button.clone()), PropChange::Add(Property::Inactive));
             }
         }
     }
 }
 
 use limn::widgets::edit_text;
-pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetId) -> WidgetId {
+pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetRef) -> WidgetRef {
     let mut list_item_widget = {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
@@ -152,7 +152,7 @@ pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetId) -> Wid
         let mut list_item_widget = WidgetBuilder::new();
         list_item_widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
-            .list_item(list_widget_id)
+            .list_item(list_widget_id.clone())
             .enable_hover();
         layout!(list_item_widget: height(text_size.height));
         let mut list_text_widget = WidgetBuilder::new();
@@ -163,9 +163,7 @@ pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetId) -> Wid
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
-    let list_item_widget_id = list_item_widget.id();
-    ui.add_widget(list_item_widget, Some(list_widget_id));
-    list_item_widget_id
+    ui.add_widget(list_item_widget, Some(list_widget_id))
 }
 
 fn main() {
@@ -249,12 +247,12 @@ fn main() {
         event!(Target::Ui, PeopleEvent::Add);
     });
     let ids = Ids {
-        list_widget: list_widget.id(),
-        first_name_box: first_name_box.id(),
-        last_name_box: last_name_box.id(),
-        create_button: create_button.id(),
-        update_button: update_button.id(),
-        delete_button: delete_button.id(),
+        list_widget: list_widget.widget.widget.clone(),
+        first_name_box: first_name_box.widget.widget.clone(),
+        last_name_box: last_name_box.widget.widget.clone(),
+        create_button: create_button.widget.widget.clone(),
+        update_button: update_button.widget.widget.clone(),
+        delete_button: delete_button.widget.widget.clone(),
     };
     first_name_container.add_child(first_name_box);
     last_name_container.add_child(last_name_box);

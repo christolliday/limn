@@ -2,8 +2,7 @@ use glutin;
 
 use event::{Target, UiEventHandler, WidgetEventArgs};
 use util::Point;
-use resources::WidgetId;
-use widget::{WidgetBuilder, WidgetBuilderCore};
+use widget::{WidgetBuilder, WidgetBuilderCore, WidgetRef};
 use widget::property::{Property, PropChange};
 use layout::LayoutChanged;
 use ui::Ui;
@@ -31,7 +30,7 @@ pub struct ClickEvent {
 
 struct MouseController {
     pub mouse: Point,
-    pub widget_under_mouse: Option<WidgetId>,
+    pub widget_under_mouse: Option<WidgetRef>,
 }
 impl MouseController {
     pub fn new() -> Self {
@@ -52,27 +51,27 @@ impl UiEventHandler<MouseInputEvent> for MouseController {
 
             let widget_under_cursor = ui.widget_under_cursor(mouse);
             if widget_under_cursor != self.widget_under_mouse {
-                if let Some(old_widget) = self.widget_under_mouse {
-                    event!(Target::BubbleUp(old_widget), MouseOverEvent::Out);
+                if let Some(old_widget) = self.widget_under_mouse.clone() {
+                    event!(Target::BubbleUpRef(old_widget), MouseOverEvent::Out);
                 }
-                if let Some(widget_under_cursor) = widget_under_cursor {
-                    event!(Target::BubbleUp(widget_under_cursor), MouseOverEvent::Over);
+                if let Some(widget_under_cursor) = widget_under_cursor.clone() {
+                    event!(Target::BubbleUpRef(widget_under_cursor), MouseOverEvent::Over);
                 }
             }
             self.widget_under_mouse = widget_under_cursor;
         }
         if let &MouseInputEvent::MouseButton(state, button) = event {
-            if let Some(widget_under) = self.widget_under_mouse {
-                event!(Target::BubbleUp(widget_under), WidgetMouseButton(state, button));
+            if let Some(widget_under) = self.widget_under_mouse.clone() {
+                event!(Target::BubbleUpRef(widget_under.clone()), WidgetMouseButton(state, button));
                 if (state == glutin::ElementState::Released) && (button == glutin::MouseButton::Left) {
                     let event = ClickEvent { position: self.mouse };
-                    event!(Target::BubbleUp(widget_under), event);
+                    event!(Target::BubbleUpRef(widget_under), event);
                 }
             }
         }
         if let &MouseInputEvent::MouseWheel(mouse_scroll_delta) = event {
-            if let Some(widget_under) = self.widget_under_mouse {
-                event!(Target::BubbleUp(widget_under), WidgetMouseWheel(mouse_scroll_delta));
+            if let Some(widget_under) = self.widget_under_mouse.clone() {
+                event!(Target::BubbleUpRef(widget_under), WidgetMouseWheel(mouse_scroll_delta));
             }
         }
     }
@@ -112,7 +111,7 @@ fn handle_hover(event: &MouseOverEvent, args: WidgetEventArgs) {
         MouseOverEvent::Over => PropChange::Add(Property::MouseOver),
         MouseOverEvent::Out => PropChange::Remove(Property::MouseOver),
     };
-    event!(Target::SubTree(args.widget.id), event);
+    event!(Target::SubTreeRef(args.widget), event);
 }
 
 impl WidgetBuilder {

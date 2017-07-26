@@ -78,7 +78,7 @@ impl<T: 'static, E> DrawableEventHandler<T, E> {
 }
 
 impl<T: Drawable + 'static, E> WidgetEventHandler<E> for DrawableEventHandler<T, E> {
-    fn handle(&mut self, _: &E, args: WidgetEventArgs) {
+    fn handle(&mut self, _: &E, mut args: WidgetEventArgs) {
         args.widget.update(|state: &mut T| {
             (self.drawable_callback)(state);
         });

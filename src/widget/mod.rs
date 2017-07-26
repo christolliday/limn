@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::rc::{Rc, Weak};
 use std::cell::{RefCell, Ref, RefMut};
 use std::hash::{Hash, Hasher};
+use std::ops::{Deref, DerefMut};
 
 use graphics::Context;
 use graphics::types::Color;
@@ -55,9 +56,9 @@ impl LayoutRef for WidgetBuilder {
         self.as_ref().widget.widget_mut().layout.vars.clone()
     }
 }
-impl LayoutRef for Widget {
+impl LayoutRef for WidgetRef {
     fn layout_ref(&self) -> LayoutVars {
-        self.layout.vars.clone()
+        self.widget_mut().layout.vars.clone()
     }
 }
 
@@ -163,7 +164,9 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self
     }
     fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
-        self.as_mut().children.push(widget.build());
+        let child = widget.build();
+        child.widget.widget_mut().parent = Some(self.as_mut().widget.downgrade());
+        self.as_mut().children.push(child);
         self
     }
     fn no_container(&mut self) -> &mut Self {
@@ -192,8 +195,6 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
 pub struct LayoutGuard<'a> {
     guard: RefMut<'a, Widget>
 }
-use std::ops::{Deref, DerefMut};
-
 impl<'b> Deref for LayoutGuard<'b> {
     type Target = Layout;
     fn deref(&self) -> &Layout {
@@ -203,6 +204,34 @@ impl<'b> Deref for LayoutGuard<'b> {
 impl<'b> DerefMut for LayoutGuard<'b> {
     fn deref_mut(&mut self) -> &mut Layout {
         &mut self.guard.layout
+    }
+}
+
+pub struct PropsGuard<'a> {
+    guard: RefMut<'a, Widget>
+}
+impl<'b> Deref for PropsGuard<'b> {
+    type Target = PropSet;
+    fn deref(&self) -> &PropSet {
+        &self.guard.props
+    }
+}
+impl<'b> DerefMut for PropsGuard<'b> {
+    fn deref_mut(&mut self) -> &mut PropSet {
+        &mut self.guard.props
+    }
+}
+
+pub struct DrawableGuard<'a> {
+    guard: RefMut<'a, Widget>
+}
+impl<'a> DrawableGuard<'a> {
+    pub fn downcast_ref<T: Drawable>(&self) -> Option<&T> {
+        if let Some(ref drawable) = self.guard.drawable {
+            drawable.drawable.as_ref().downcast_ref::<T>()
+        } else {
+            None
+        }
     }
 }
 
@@ -236,8 +265,8 @@ impl WidgetBuilder {
         builder
     }
 
-    pub fn build(self) -> (Vec<WidgetBuilder>, WidgetRef) {
-        self.widget.widget_mut().apply_style();
+    pub fn build(mut self) -> (Vec<WidgetBuilder>, WidgetRef) {
+        self.widget.apply_style();
         (self.children, self.widget)
     }
 }
@@ -275,6 +304,12 @@ impl WidgetRef {
     pub fn layout(&mut self) -> LayoutGuard {
         LayoutGuard { guard: self.0.borrow_mut() }
     }
+    pub fn props(&mut self) -> PropsGuard {
+        PropsGuard { guard: self.0.borrow_mut() }
+    }
+    pub fn drawable(&mut self) -> DrawableGuard {
+        DrawableGuard { guard: self.0.borrow_mut() }
+    }
     pub fn downgrade(&self) -> WidgetRefWeak {
         WidgetRefWeak(Rc::downgrade(&self.0))
     }
@@ -295,6 +330,54 @@ impl WidgetRef {
     }
     pub fn bounds(&self) -> Rect {
         self.0.borrow().bounds
+    }
+
+    pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
+        where F: FnOnce(&mut T)
+    {
+        let mut widget = self.0.borrow_mut();
+        widget.update(f);
+    }
+    pub fn update_layout<F>(&mut self, f: F)
+        where F: FnOnce(&mut Layout)
+    {
+        let mut widget = self.0.borrow_mut();
+        f(&mut widget.layout);
+        event!(Target::Ui, UpdateLayout(widget.id));
+    }
+
+    pub fn apply_style(&mut self) {
+        self.0.borrow_mut().apply_style();
+    }
+
+    pub fn trigger_event(&self,
+                         type_id: TypeId,
+                         event: &Box<Any>,
+                         solver: &mut LayoutManager)
+                         -> bool {
+        let handlers = {
+            let mut widget = self.0.borrow_mut();
+            let mut handlers: Vec<Rc<RefCell<WidgetHandlerWrapper>>> = Vec::new();
+            if let Some(event_handlers) = widget.handlers.get_mut(&type_id) {
+                for handler in event_handlers {
+                    handlers.push(handler.clone());
+                }
+            }
+            handlers
+        };
+
+        let mut handled = false;
+        for event_handler in handlers {
+            // will panic in the case of circular handler calls
+            let mut handler = event_handler.borrow_mut();
+            let event_args = WidgetEventArgs {
+                widget: self.clone(),
+                solver: solver,
+                handled: &mut handled,
+            };
+            handler.handle(event, event_args);
+        }
+        handled
     }
 }
 impl WidgetRefWeak {
@@ -386,14 +469,6 @@ impl Widget {
     pub fn is_mouse_over(&self, mouse: Point) -> bool {
         self.bounds.contains(&mouse)
     }
-    pub fn drawable<T: Drawable>(&self) -> Option<&T> {
-        if let Some(ref drawable) = self.drawable {
-            drawable.drawable.as_ref().downcast_ref::<T>()
-        } else {
-            None
-        }
-    }
-
     pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
@@ -403,14 +478,6 @@ impl Widget {
             f(state);
         }
     }
-
-    pub fn update_layout<F>(&mut self, f: F)
-        where F: FnOnce(&mut Layout)
-    {
-        f(&mut self.layout);
-        event!(Target::Ui, UpdateLayout(self.id));
-    }
-
     pub fn apply_style(&mut self) {
         if let Some(ref mut drawable) = self.drawable {
             if drawable.apply_style(&self.props) {
@@ -418,36 +485,13 @@ impl Widget {
             }
         }
     }
-
-    pub fn trigger_event(&mut self,
-                         type_id: TypeId,
-                         event: &Box<Any>,
-                         solver: &mut LayoutManager)
-                         -> bool {
-        let mut handled = false;
-
-        let handlers = {
-            let mut handlers: Vec<Rc<RefCell<WidgetHandlerWrapper>>> = Vec::new();
-            if let Some(event_handlers) = self.handlers.get_mut(&type_id) {
-                for handler in event_handlers {
-                    handlers.push(handler.clone());
-                }
-            }
-            handlers
-        };
-        for event_handler in handlers {
-            // will panic in the case of circular handler calls
-            let mut handler = event_handler.borrow_mut();
-            let event_args = WidgetEventArgs {
-                widget: self,
-                solver: solver,
-                handled: &mut handled,
-            };
-            handler.handle(event, event_args);
+    pub fn drawable<T: Drawable>(&self) -> Option<&T> {
+        if let Some(ref drawable) = self.drawable {
+            drawable.drawable.as_ref().downcast_ref::<T>()
+        } else {
+            None
         }
-        handled
     }
-
     pub fn debug_constraints(&self) {
         self.layout.debug_constraints();
         for child in &self.children {

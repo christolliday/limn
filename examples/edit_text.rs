@@ -22,7 +22,7 @@ enum EditTextSettingsEvent {
 }
 struct EditTextSettingsHandler;
 impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
-    fn handle(&mut self, event: &EditTextSettingsEvent, args: WidgetEventArgs) {
+    fn handle(&mut self, event: &EditTextSettingsEvent, mut args: WidgetEventArgs) {
         args.widget.update(|drawable: &mut TextDrawable| {
             match *event {
                 EditTextSettingsEvent::LeftAlign => drawable.align = Align::Start,

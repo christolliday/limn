@@ -1,9 +1,8 @@
 use glutin;
 
 use event::{Target, UiEventHandler};
-use widget::{WidgetBuilder, WidgetBuilderCore};
+use widget::{WidgetBuilder, WidgetBuilderCore, WidgetRef};
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
-use resources::WidgetId;
 use util::Point;
 use ui::Ui;
 use app::App;
@@ -22,7 +21,7 @@ pub enum DragEvent {
 }
 
 struct DragInputHandler {
-    widget: Option<WidgetId>,
+    widget: Option<WidgetRef>,
     position: Point,
 }
 impl DragInputHandler {
@@ -36,32 +35,32 @@ impl DragInputHandler {
 impl UiEventHandler<DragInputEvent> for DragInputHandler {
     fn handle(&mut self, event: &DragInputEvent, _: &mut Ui) {
         match *event {
-            DragInputEvent::WidgetPressed(id) => {
-                self.widget = Some(id);
+            DragInputEvent::WidgetPressed(ref id) => {
+                self.widget = Some(id.clone());
                 let event = WidgetDrag {
                     drag_type: DragEvent::DragStart,
                     position: self.position,
                 };
-                event!(Target::Widget(id), event);
+                event!(Target::WidgetRef(id.clone()), event);
             }
             DragInputEvent::MouseReleased => {
-                if let Some(id) = self.widget {
+                if let Some(id) = self.widget.clone() {
                     self.widget = None;
                     let event = WidgetDrag {
                         drag_type: DragEvent::DragEnd,
                         position: self.position,
                     };
-                    event!(Target::Widget(id), event);
+                    event!(Target::WidgetRef(id), event);
                 }
             }
             DragInputEvent::MouseMoved(point) => {
                 self.position = point;
-                if let Some(id) = self.widget {
+                if let Some(id) = self.widget.clone() {
                     let event = WidgetDrag {
                         drag_type: DragEvent::Drag,
                         position: self.position,
                     };
-                    event!(Target::Widget(id), event);
+                    event!(Target::WidgetRef(id), event);
                 }
             }
         }
@@ -69,7 +68,7 @@ impl UiEventHandler<DragInputEvent> for DragInputHandler {
 }
 
 enum DragInputEvent {
-    WidgetPressed(WidgetId),
+    WidgetPressed(WidgetRef),
     MouseMoved(Point),
     MouseReleased,
 }
@@ -78,7 +77,7 @@ impl WidgetBuilder {
     pub fn make_draggable(&mut self) -> &mut Self {
         self.as_mut().add_handler_fn(|event: &WidgetMouseButton, args| {
             if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
-                let event = DragInputEvent::WidgetPressed(args.widget.id);
+                let event = DragInputEvent::WidgetPressed(args.widget);
                 event!(Target::Ui, event);
             }
         });
