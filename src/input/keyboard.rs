@@ -47,12 +47,12 @@ impl FocusHandler {
     }
     fn set_focus(&mut self, new_focus: Option<WidgetRef>) {
         if new_focus != self.focused {
-            if let Some(focused) = self.focused.clone() {
-                event!(Target::SubTreeRef(focused), PropChange::Remove(Property::Focused));
+            if let Some(ref focused) = self.focused {
+                focused.event_subtree(PropChange::Remove(Property::Focused));
             }
             self.focused = new_focus;
-            if let Some(focused) = self.focused.clone() {
-                event!(Target::SubTreeRef(focused), PropChange::Add(Property::Focused));
+            if let Some(ref focused) = self.focused {
+                focused.event_subtree(PropChange::Add(Property::Focused));
             }
         }
     }
@@ -81,10 +81,10 @@ impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
                 self.set_focus(new_focus.clone());
             }
             &KeyboardInputEvent::KeyboardInput(ref key_input) => {
-                if let Some(focused) = self.focused.clone() {
+                if let Some(ref focused) = self.focused {
                     let &KeyboardInput(state, scan_code, maybe_keycode) = key_input;
                     let event = WidgetKeyboardInput(state, scan_code, maybe_keycode);
-                    event!(Target::SubTreeRef(focused), event);
+                    focused.event_subtree(event);
                 }
             }
             &KeyboardInputEvent::ReceivedCharacter(ref received_char) => {
@@ -99,9 +99,9 @@ impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
                         new_focus = self.focusable.iter().next().map(|(_, v)| v.clone());
                     }
                     self.set_focus(new_focus);
-                } else if let Some(focused) = self.focused.clone() {
+                } else if let Some(ref focused) = self.focused {
                     let event = WidgetReceivedCharacter(char);
-                    event!(Target::SubTreeRef(focused), event);
+                    focused.event_subtree(event);
                 }
             }
         }

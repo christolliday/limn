@@ -35,32 +35,31 @@ impl DragInputHandler {
 impl UiEventHandler<DragInputEvent> for DragInputHandler {
     fn handle(&mut self, event: &DragInputEvent, _: &mut Ui) {
         match *event {
-            DragInputEvent::WidgetPressed(ref id) => {
-                self.widget = Some(id.clone());
+            DragInputEvent::WidgetPressed(ref widget) => {
+                self.widget = Some(widget.clone());
                 let event = WidgetDrag {
                     drag_type: DragEvent::DragStart,
                     position: self.position,
                 };
-                event!(Target::WidgetRef(id.clone()), event);
+                widget.event(event);
             }
             DragInputEvent::MouseReleased => {
-                if let Some(id) = self.widget.clone() {
-                    self.widget = None;
+                if let Some(widget) = self.widget.take() {
                     let event = WidgetDrag {
                         drag_type: DragEvent::DragEnd,
                         position: self.position,
                     };
-                    event!(Target::WidgetRef(id), event);
+                    widget.event(event);
                 }
             }
             DragInputEvent::MouseMoved(point) => {
                 self.position = point;
-                if let Some(id) = self.widget.clone() {
+                if let Some(ref mut widget) = self.widget {
                     let event = WidgetDrag {
                         drag_type: DragEvent::Drag,
                         position: self.position,
                     };
-                    event!(Target::WidgetRef(id), event);
+                    widget.event(event);
                 }
             }
         }

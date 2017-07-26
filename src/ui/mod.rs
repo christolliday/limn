@@ -151,9 +151,9 @@ impl Ui {
                     container.add_child(parent_ref.clone(), widget_ref.clone());
                 }
             }
-            event!(Target::WidgetRef(parent_ref), ChildAttachedEvent(id, widget_ref.layout().vars.clone()));
+            parent_ref.event(ChildAttachedEvent(id, widget_ref.layout().vars.clone()));
         }
-        event!(Target::WidgetRef(widget_ref.clone()), WidgetAttachedEvent);
+        widget_ref.event(WidgetAttachedEvent);
         for child in children {
             self.add_widget(child, Some(widget_ref.clone()));
         }
@@ -175,7 +175,7 @@ impl Ui {
                 }
             }
         }
-        event!(Target::WidgetRef(widget_ref.clone()), WidgetDetachedEvent);
+        widget_ref.event(WidgetDetachedEvent);
 
         self.widget_map.remove(&widget_ref.id());
         self.layout.solver.remove_widget(widget_ref.id().0);

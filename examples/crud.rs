@@ -77,14 +77,14 @@ impl PeopleHandler {
 impl PeopleHandler {
     fn update_selected(&mut self) {
         let ref ids = self.ids;
-        event!(Target::SubTreeRef(ids.first_name_box.clone()), TextUpdated(self.person.first_name.clone()));
-        event!(Target::SubTreeRef(ids.last_name_box.clone()), TextUpdated(self.person.last_name.clone()));
+        ids.first_name_box.event_subtree(TextUpdated(self.person.first_name.clone()));
+        ids.last_name_box.event_subtree(TextUpdated(self.person.last_name.clone()));
         if self.selected_item.is_some() {
-            event!(Target::SubTreeRef(ids.update_button.clone()), PropChange::Remove(Property::Inactive));
-            event!(Target::SubTreeRef(ids.delete_button.clone()), PropChange::Remove(Property::Inactive));
+            ids.update_button.event_subtree(PropChange::Remove(Property::Inactive));
+            ids.delete_button.event_subtree(PropChange::Remove(Property::Inactive));
         } else {
-            event!(Target::SubTreeRef(ids.update_button.clone()), PropChange::Add(Property::Inactive));
-            event!(Target::SubTreeRef(ids.delete_button.clone()), PropChange::Add(Property::Inactive));
+            ids.update_button.event_subtree(PropChange::Add(Property::Inactive));
+            ids.delete_button.event_subtree(PropChange::Add(Property::Inactive));
         }
     }
 }
@@ -106,7 +106,7 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
             PeopleEvent::Update => {
                 if let Some(ref selected_widget_id) = self.selected_item {
                     self.people.insert(selected_widget_id.clone(), self.person.clone());
-                    event!(Target::SubTreeRef(selected_widget_id.clone()), TextUpdated(self.person.name()));
+                    selected_widget_id.event_subtree(TextUpdated(self.person.name()));
                 }
             },
             PeopleEvent::Delete => {
@@ -135,9 +135,9 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
         let is_valid = self.person.is_valid();
         if was_valid != is_valid {
             if is_valid {
-                event!(Target::SubTreeRef(self.ids.create_button.clone()), PropChange::Remove(Property::Inactive));
+                self.ids.create_button.event_subtree(PropChange::Remove(Property::Inactive));
             } else {
-                event!(Target::SubTreeRef(self.ids.create_button.clone()), PropChange::Add(Property::Inactive));
+                self.ids.create_button.event_subtree(PropChange::Add(Property::Inactive));
             }
         }
     }
@@ -145,7 +145,7 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
 
 use limn::widgets::edit_text;
 pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetRef) -> WidgetRef {
-    let mut list_item_widget = {
+    let list_item_widget = {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
         let text_size = text_drawable.measure();

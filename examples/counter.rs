@@ -50,7 +50,7 @@ fn main() {
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");
     button_widget.on_click(move |_, _| {
-        event!(Target::WidgetRef(root_id.clone()), CounterEvent);
+        root_id.event(CounterEvent);
     });
     layout!(button_widget:
         center(&button_container),
@@ -71,8 +71,7 @@ fn main() {
     impl WidgetEventHandler<CounterEvent> for CounterHandler {
         fn handle(&mut self, _: &CounterEvent, args: WidgetEventArgs) {
             self.count += 1;
-            let address = Target::SubTreeRef(args.widget);
-            event!(address, CountEvent(self.count));
+            args.widget.event_subtree(CountEvent(self.count));
         }
     }
     root_widget.add_handler(CounterHandler::new());

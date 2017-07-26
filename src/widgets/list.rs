@@ -1,4 +1,4 @@
-use event::{Target, WidgetEventArgs, WidgetEventHandler};
+use event::{WidgetEventArgs, WidgetEventHandler};
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, WidgetRef};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
@@ -35,8 +35,8 @@ impl WidgetEventHandler<ListItemSelected> for ListHandler {
     fn handle(&mut self, event: &ListItemSelected, _: WidgetEventArgs) {
         let selected = event.widget.clone();
         if selected != self.selected {
-            if let Some(old_selected) = self.selected.clone() {
-                event!(Target::SubTreeRef(old_selected), PropChange::Remove(Property::Selected));
+            if let Some(ref old_selected) = self.selected {
+                old_selected.event_subtree(PropChange::Remove(Property::Selected));
             }
         }
         self.selected = selected;
@@ -44,7 +44,7 @@ impl WidgetEventHandler<ListItemSelected> for ListHandler {
 }
 
 fn list_handle_deselect(_: &ClickEvent, args: WidgetEventArgs) {
-    event!(Target::WidgetRef(args.widget), ListItemSelected { widget: None });
+    args.widget.event(ListItemSelected { widget: None });
 }
 
 pub struct ListItemHandler {
@@ -57,10 +57,10 @@ impl ListItemHandler {
 }
 impl WidgetEventHandler<ClickEvent> for ListItemHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: WidgetEventArgs) {
-       if !args.widget.props().contains(&Property::Selected) {
-            event!(Target::SubTreeRef(args.widget.clone()), PropChange::Add(Property::Selected));
+        if !args.widget.props().contains(&Property::Selected) {
+            args.widget.event_subtree(PropChange::Add(Property::Selected));
             let event = ListItemSelected { widget: Some(args.widget) };
-            event!(Target::WidgetRef(self.list_id.clone()), event);
+            self.list_id.event(event);
             *args.handled = true;
         }
     }

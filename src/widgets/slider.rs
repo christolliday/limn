@@ -1,8 +1,8 @@
 use cassowary::strength::*;
 
 use input::mouse::ClickEvent;
-use event::{Target, WidgetEventHandler, WidgetEventArgs};
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
+use event::{WidgetEventHandler, WidgetEventArgs};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, WidgetRef};
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
@@ -10,7 +10,6 @@ use layout::constraint::*;
 use layout::{LayoutRef, LayoutVars};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
-use resources::WidgetId;
 use ui::ChildAttachedEvent;
 use util::{Rect, RectExt, Scalar, Color};
 use color::*;
@@ -55,8 +54,7 @@ impl SliderBuilder {
         slider_handle
             .set_debug_name("slider_handle")
             .add_handler_fn(|event: &WidgetDrag, args| {
-                let event = SliderHandleInput::WidgetDrag(event.clone());
-                event!(Target::WidgetRef(args.widget), event);
+                args.widget.event(SliderHandleInput::WidgetDrag(event.clone()));
             })
             .make_draggable();
         SliderBuilder {
@@ -120,7 +118,7 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
 
     let (mut slider, mut slider_handle, orientation) = (builder.widget, builder.slider_handle, builder.orientation);
 
-    slider_handle.add_handler(DragHandler::new(orientation, slider.id()));
+    slider_handle.add_handler(DragHandler::new(orientation, slider.widget.clone()));
 
     match builder.handle_style {
         HandleStyle::Round => {
@@ -215,12 +213,13 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
             }
         }
     }
-    let handle_id = slider_handle.id();
+    let handle_ref = slider_handle.widget.clone();
     slider.add_handler_fn(move |event: &SetSliderValue, args| {
         let bounds = args.widget.bounds();
         let event = SliderHandleInput::SetValue((event.0, bounds));
-        event!(Target::Widget(handle_id), event);
+        handle_ref.event(event);
     });
+    let handle_ref = slider_handle.widget.clone();
     slider.add_handler_fn(move |event: &ClickEvent, args| {
         let bounds = args.widget.bounds();
         let position = if let Orientation::Horizontal = orientation {
@@ -229,7 +228,7 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
             event.position.y
         };
         let event = SliderHandleInput::SliderClicked((position, bounds));
-        event!(Target::Widget(handle_id), event);
+        handle_ref.event(event);
     });
     slider.add_child(slider_bar_pre);
     slider.add_child(slider_bar_post);
@@ -239,7 +238,7 @@ widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder 
     // depends on the measured width of the slider and slider handle
     let init_value = builder.init_value;
     slider.add_handler_fn(move |_: &ChildAttachedEvent, args| {
-        event!(Target::WidgetRef(args.widget), SetSliderValue(init_value));
+        args.widget.event(SetSliderValue(init_value));
     });
     slider
 });
@@ -258,11 +257,11 @@ pub enum SliderHandleInput {
 }
 struct DragHandler {
     orientation: Orientation,
-    container: WidgetId,
+    container: WidgetRef,
     start_pos: f64,
 }
 impl DragHandler {
-    pub fn new(orientation: Orientation, container: WidgetId) -> Self {
+    pub fn new(orientation: Orientation, container: WidgetRef) -> Self {
         DragHandler {
             orientation: orientation,
             container: container,
@@ -307,7 +306,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                             slider_pos: (bounds_start + bounds_end) / 2.0,
                             handle_size: handle_radius
                         };
-                        event!(Target::Widget(self.container), event);
+                        self.container.event(event);
                     }
                 }
             }
@@ -352,7 +351,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                     slider_pos: position,
                     handle_size: handle_radius
                 };
-                event!(Target::Widget(self.container), event);
+                self.container.event(event);
             }
         }
     }

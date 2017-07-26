@@ -2,7 +2,7 @@ use glutin;
 
 use text_layout::Align;
 
-use event::{Target, WidgetEventArgs};
+use event::WidgetEventArgs;
 use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
@@ -51,7 +51,7 @@ fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: WidgetEventArgs
             glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
             glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
         };
-        event!(Target::SubTreeRef(args.widget), event);
+        args.widget.event_subtree(event);
     }
 }
 
@@ -66,8 +66,8 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: WidgetEventAr
             true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
             false => (ToggleEvent::On, PropChange::Add(Property::Activated)),
         };
-        event!(Target::WidgetRef(args.widget.clone()), toggle_event);
-        event!(Target::SubTreeRef(args.widget.clone()), prop_event);
+        args.widget.event(toggle_event);
+        args.widget.event_subtree(prop_event);
     }
 }
 

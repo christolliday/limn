@@ -350,6 +350,15 @@ impl WidgetRef {
         self.0.borrow_mut().apply_style();
     }
 
+    pub fn event<T: 'static>(&self, data: T) {
+        event!(Target::WidgetRef(self.clone()), data);
+    }
+    pub fn event_subtree<T: 'static>(&self, data: T) {
+        event!(Target::SubTreeRef(self.clone()), data);
+    }
+    pub fn event_bubble_up<T: 'static>(&self, data: T) {
+        event!(Target::BubbleUpRef(self.clone()), data);
+    }
     pub fn trigger_event(&self,
                          type_id: TypeId,
                          event: &Box<Any>,

@@ -53,16 +53,17 @@ fn create_slider_control() -> WidgetBuilder {
         below(&slider_value).padding(10.0),
         match_width(&slider_container));
 
-    let (slider_id, slider_value_id) = (slider_widget.id(), slider_value.id());
+    let (slider_ref, slider_value_ref) = (slider_widget.widget.widget.clone(), slider_value.widget.clone());
     slider_widget.on_value_changed(move |size, _| {
         let size = size * 100.0;
-        event!(Target::Widget(slider_value_id), TextUpdated((size as i32).to_string()));
+        slider_value_ref.event(TextUpdated((size as i32).to_string()));
         event!(Target::Ui, CircleEvent::Resize(size));
     }).set_value(0.30);
+    let slider_value_ref = slider_value.widget.clone();
     slider_container.add_handler_fn(move |event: &SetSliderValue, _| {
         let size = event.0;
-        event!(Target::Widget(slider_id), SetSliderValue(size / 100.0));
-        event!(Target::Widget(slider_value_id), TextUpdated((size as i32).to_string()));
+        slider_ref.event(SetSliderValue(size / 100.0));
+        slider_value_ref.event(TextUpdated((size as i32).to_string()));
     });
     slider_container
         .add_child(slider_title)
@@ -110,15 +111,12 @@ fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetRef, size: f64) -
     widget.set_debug_name("circle");
     widget.set_drawable_with_style(EllipseDrawable::new(), style);
     widget.add_handler(CircleHandler { center: center.clone() });
-    let id = widget.id();
-    event!(Target::Widget(id), ResizeEvent(size));
     let widget_ref = widget.widget.clone();
+    widget_ref.event(ResizeEvent(size));
     widget.on_click(move |_, _| {
         event!(Target::Ui, CircleEvent::Select(Some(widget_ref.clone())));
     });
-    let widget_ref = widget.widget.clone();
-    ui.add_widget(widget, Some(parent_id));
-    widget_ref
+    ui.add_widget(widget, Some(parent_id))
 }
 
 struct ResizeEvent(f64);
@@ -185,8 +183,8 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
                 self.undo_queue.push(circle_id.clone());
                 self.redo_queue.clear();
 
-                event!(Target::SubTreeRef(self.undo_id.clone()), PropChange::Remove(Property::Inactive));
-                event!(Target::SubTreeRef(self.redo_id.clone()), PropChange::Add(Property::Inactive));
+                self.undo_id.event_subtree(PropChange::Remove(Property::Inactive));
+                self.redo_id.event_subtree(PropChange::Add(Property::Inactive));
                 event!(Target::Ui, CircleEvent::Select(Some(circle_id)));
             }
             CircleEvent::Undo => {
@@ -195,9 +193,10 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
                     let (point, size) = self.circles.remove(&widget_id).unwrap();
                     ui.remove_widget(widget_id);
                     self.redo_queue.push((point, size));
-                    event!(Target::SubTreeRef(self.redo_id.clone()), PropChange::Remove(Property::Inactive));
+
+                    self.redo_id.event_subtree(PropChange::Remove(Property::Inactive));
                     if self.circles.len() == 0 {
-                        event!(Target::SubTreeRef(self.undo_id.clone()), PropChange::Add(Property::Inactive));
+                        self.undo_id.event_subtree(PropChange::Add(Property::Inactive));
                     }
                 }
             }
@@ -208,33 +207,33 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
                     self.circles.insert(circle_id.clone(), (point, size));
                     self.undo_queue.push(circle_id);
                     if self.redo_queue.len() == 0 {
-                        event!(Target::SubTreeRef(self.redo_id.clone()), PropChange::Add(Property::Inactive));
+                        self.redo_id.event_subtree(PropChange::Add(Property::Inactive));
                     }
                 }
             }
             CircleEvent::Select(ref new_selected) => {
                 if let Some(ref selected) = self.selected {
-                    event!(Target::SubTreeRef(selected.clone()), PropChange::Remove(Property::Selected));
+                    selected.event_subtree(PropChange::Remove(Property::Selected));
                 }
                 self.selected = new_selected.clone();
                 if let Some(ref selected) = self.selected {
                     let size = self.circles.get_mut(&selected).unwrap().1;
-                    event!(Target::WidgetRef(self.slider_id.clone()), SetSliderValue(size));
-                    event!(Target::SubTreeRef(selected.clone()), PropChange::Add(Property::Selected));
-                    event!(Target::SubTreeRef(self.slider_id.clone()), PropChange::Remove(Property::Inactive));
+                    self.slider_id.event(SetSliderValue(size));
+                    selected.event_subtree(PropChange::Add(Property::Selected));
+                    self.slider_id.event_subtree(PropChange::Remove(Property::Inactive));
                 } else {
-                    event!(Target::SubTreeRef(self.slider_id.clone()), PropChange::Add(Property::Inactive));
+                    self.slider_id.event_subtree(PropChange::Add(Property::Inactive));
                 }
             }
             CircleEvent::Delete => {
                 if let Some(selected) = self.selected.take() {
                     ui.remove_widget(selected);
-                    event!(Target::SubTreeRef(self.slider_id.clone()), PropChange::Add(Property::Inactive));
+                    self.slider_id.event_subtree(PropChange::Add(Property::Inactive));
                 }
             }
             CircleEvent::Resize(size) => {
                 if let Some(ref selected) = self.selected {
-                    event!(Target::WidgetRef(selected.clone()), ResizeEvent(size));
+                    selected.event(ResizeEvent(size));
                     self.circles.get_mut(&selected).unwrap().1 = size;
                 }
             }

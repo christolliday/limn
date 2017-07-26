@@ -36,7 +36,7 @@ fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: WidgetEventA
     args.widget.update(|state: &mut TextDrawable| {
         state.text = text.clone()
     });
-    event!(Target::WidgetRef(args.widget), TextUpdated(text.clone()));
+    args.widget.event(TextUpdated(text.clone()));
 }
 
 pub struct TextUpdated(pub String);

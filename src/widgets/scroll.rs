@@ -3,13 +3,12 @@ use cassowary::Variable;
 use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
-use event::{Target, WidgetEventArgs, WidgetEventHandler};
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
+use event::{WidgetEventArgs, WidgetEventHandler};
+use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, WidgetRef};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Point, Size, Rect, RectExt};
 use layout::{LayoutUpdated, LayoutVars, LayoutRef, LAYOUT};
 use layout::constraint::*;
-use resources::WidgetId;
 use input::mouse::WidgetMouseWheel;
 use drawable::rect::{RectDrawable, RectStyleable};
 use color::*;
@@ -68,14 +67,13 @@ impl ScrollBuilder {
             to_right_of(&self.content_holder),
         );
 
-        let widget_id = self.content_holder.id();
+        let widget_ref = self.content_holder.widget.clone();
         scrollbar_h.on_value_changed(move |value, _| {
-            let event = ScrollParentEvent::OffsetX(value);
-            event!(Target::Widget(widget_id), event);
+            widget_ref.event(ScrollParentEvent::OffsetX(value));
         });
+        let widget_ref = self.content_holder.widget.clone();
         scrollbar_v.on_value_changed(move |value, _| {
-            let event = ScrollParentEvent::OffsetY(value);
-            event!(Target::Widget(widget_id), event);
+            widget_ref.event(ScrollParentEvent::OffsetY(value));
         });
         let corner_style = style!(RectStyleable::BackgroundColor: MID_GRAY);
         let mut corner = WidgetBuilder::new_named("corner");
@@ -94,21 +92,22 @@ impl ScrollBuilder {
      }
 }
 widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuilder {
-    let widget_id = builder.content_holder.id();
+    let widget_ref = builder.content_holder.widget.clone();
     builder.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
-        event!(Target::Widget(widget_id), ScrollParentEvent::ContainerLayoutUpdated);
+        widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
     });
     let mut content = builder.content.expect("Scroll bar has no content");
+    let widget_ref = builder.content_holder.widget.clone();
     content.add_handler_fn(move |_: &LayoutUpdated, args| {
-        event!(Target::Widget(widget_id), ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
+        widget_ref.event(ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
     });
     let mut scroll_parent_handler = ScrollParent::new(&mut content);
     if let Some((ref mut corner, ref mut scrollbar_h, ref mut scrollbar_v)) = builder.scrollbars {
-        scroll_parent_handler.size_handler = Some(ScrollSizeHandler::new(scrollbar_h, scrollbar_v, corner.id()));
+        scroll_parent_handler.size_handler = Some(ScrollSizeHandler::new(scrollbar_h, scrollbar_v, corner.widget.clone()));
     }
     builder.content_holder.add_handler(scroll_parent_handler);
     builder.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
-        event!(Target::WidgetRef(args.widget), ScrollParentEvent::WidgetMouseWheel(event.clone()));
+        args.widget.event(ScrollParentEvent::WidgetMouseWheel(event.clone()));
     });
     builder.content_holder.add_child(content);
     builder.widget.add_child(builder.content_holder);
@@ -122,17 +121,17 @@ widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuil
 
 #[allow(dead_code)]
 struct ScrollSizeHandler {
-    scrollbar_h_id: WidgetId,
-    scrollbar_v_id: WidgetId,
-    corner_id: WidgetId,
+    scrollbar_h_id: WidgetRef,
+    scrollbar_v_id: WidgetRef,
+    corner_id: WidgetRef,
     h_handle_size: Variable,
     v_handle_size: Variable,
 }
 impl ScrollSizeHandler {
-    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner_id: WidgetId) -> Self {
+    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner_id: WidgetRef) -> Self {
         ScrollSizeHandler {
-            scrollbar_h_id: scrollbar_h.id(),
-            scrollbar_v_id: scrollbar_v.id(),
+            scrollbar_h_id: scrollbar_h.widget.widget.clone(),
+            scrollbar_v_id: scrollbar_v.widget.widget.clone(),
             corner_id: corner_id,
             h_handle_size: scrollbar_h.slider_handle.layout().vars.width,
             v_handle_size: scrollbar_v.slider_handle.layout().vars.height,
@@ -204,11 +203,11 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
 
                         if scrollable_area.width > 0.0 {
                             let offset_x = -content_offset.x / scrollable_area.width;
-                            event!(Target::Widget(size_handler.scrollbar_h_id), SetSliderValue(offset_x));
+                            size_handler.scrollbar_h_id.event(SetSliderValue(offset_x));
                         }
                         if scrollable_area.height > 0.0 {
                             let offset_y = -content_offset.y / scrollable_area.height;
-                            event!(Target::Widget(size_handler.scrollbar_v_id), SetSliderValue(offset_y));
+                            size_handler.scrollbar_v_id.event(SetSliderValue(offset_y));
                         }
                     }
                 }
@@ -233,11 +232,11 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                     let scrollable_area = self.content_rect.size - args.widget.bounds().size;
                     if scrollable_area.width > 0.0 {
                         let offset_x = -self.offset.x / scrollable_area.width;
-                        event!(Target::Widget(size_handler.scrollbar_h_id), SetSliderValue(offset_x));
+                        size_handler.scrollbar_h_id.event(SetSliderValue(offset_x));
                     }
                     if scrollable_area.height > 0.0 {
                         let offset_y = -self.offset.y / scrollable_area.height;
-                        event!(Target::Widget(size_handler.scrollbar_v_id), SetSliderValue(offset_y));
+                        size_handler.scrollbar_v_id.event(SetSliderValue(offset_y));
                     }
                 }
             }

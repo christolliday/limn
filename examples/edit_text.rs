@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
@@ -43,32 +42,33 @@ fn main() {
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
-    let edit_text_id = edit_text_box.text_widget.id();
 
+    let edit_text_ref = edit_text_box.text_widget.widget.clone();
     let mut h_align_button = ToggleButtonBuilder::new();
     h_align_button
         .set_text("Right Align", "Left Align")
         .on_toggle(move |event, _| {
             match *event {
                 ToggleEvent::On => {
-                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::RightAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::RightAlign);
                 },
                 ToggleEvent::Off => {
-                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::LeftAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::LeftAlign);
                 },
             }
         });
 
+    let edit_text_ref = edit_text_box.text_widget.widget.clone();
     let mut v_align_button = ToggleButtonBuilder::new();
     v_align_button
         .set_text("Bottom Align", "Top Align")
         .on_toggle(move |event, _| {
             match *event {
                 ToggleEvent::On => {
-                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::BottomAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::BottomAlign);
                 },
                 ToggleEvent::Off => {
-                    event!(Target::Widget(edit_text_id), EditTextSettingsEvent::TopAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::TopAlign);
                 },
             }
         });
