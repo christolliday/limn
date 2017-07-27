@@ -86,8 +86,10 @@ impl LayoutManager {
     }
 }
 
-pub struct LayoutAdded(pub WidgetId);
-pub struct UpdateLayout(pub WidgetId);
+#[derive(Clone)]
+pub struct RegisterLayout(pub WidgetRef);
+#[derive(Clone)]
+pub struct UpdateLayout(pub WidgetRef);
 pub struct ResizeWindow;
 pub struct LayoutChanged(Vec<(usize, Variable, f64)>);
 pub struct LayoutUpdated;
@@ -98,19 +100,15 @@ impl App {
             ui.resize_window_to_fit();
         });
         self.add_handler_fn(|event: &UpdateLayout, ui| {
-            let &UpdateLayout(id) = event;
-            if let Some(widget) = ui.get_widget(id) {
-                let widget = &mut *widget.widget_mut();
-                ui.layout.solver.update_layout(&mut widget.layout);
-                ui.layout.check_changes();
-            }
+            let event = event.clone();
+            let UpdateLayout(mut widget_ref) = event;
+            ui.layout.solver.update_layout(&mut widget_ref.layout());
+            ui.layout.check_changes();
         });
-        self.add_handler_fn(|event: &LayoutAdded, ui| {
-            let &LayoutAdded(id) = event;
-            if let Some(widget) = ui.get_widget(id) {
-                let widget = &mut *widget.widget_mut();
-                ui.layout.solver.add_widget(widget.id.0, &widget.debug_name, &mut widget.layout, &mut widget.bounds);
-            }
+        self.add_handler_fn(|event: &RegisterLayout, ui| {
+            let event = event.clone();
+            let RegisterLayout(mut widget_ref) = event;
+            ui.layout.solver.register_widget(widget_ref.id().0, &widget_ref.debug_name(), &mut widget_ref.layout());
         });
         self.add_handler_fn(|event: &LayoutChanged, ui| {
             let ref changes = event.0;
@@ -118,16 +116,18 @@ impl App {
                 let widget_id = WidgetId(widget_id);
                 if let Some(widget) = ui.get_widget(widget_id) {
                     let vars = &ui.layout.solver.layouts[&widget_id.0];
-                    let widget = &mut *widget.widget_mut();
-                    let var = vars.get_var(var).expect("Missing variable for widget");
-                    debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
-                    match var {
-                        VarUpdate::Left => widget.bounds.origin.x = value,
-                        VarUpdate::Top => widget.bounds.origin.y = value,
-                        VarUpdate::Width => widget.bounds.size.width = value,
-                        VarUpdate::Height => widget.bounds.size.height = value,
+                    {
+                        let widget = &mut *widget.widget_mut();
+                        let var = vars.get_var(var).expect("Missing variable for widget");
+                        debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
+                        match var {
+                            VarUpdate::Left => widget.bounds.origin.x = value,
+                            VarUpdate::Top => widget.bounds.origin.y = value,
+                            VarUpdate::Width => widget.bounds.size.width = value,
+                            VarUpdate::Height => widget.bounds.size.height = value,
+                        }
                     }
-                    event!(Target::Widget(widget_id), LayoutUpdated);
+                    widget.event(LayoutUpdated);
                 }
             }
             // redraw everything when layout changes, for now

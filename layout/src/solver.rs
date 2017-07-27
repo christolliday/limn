@@ -6,7 +6,7 @@ use cassowary;
 use cassowary::strength;
 use cassowary::{Variable, Constraint, Expression};
 
-use super::{LayoutId, Layout, LayoutVars, Rect};
+use super::{LayoutId, Layout, LayoutVars};
 
 pub struct LimnSolver {
     pub solver: cassowary::Solver,
@@ -18,7 +18,6 @@ pub struct LimnSolver {
     last_layout: LayoutId,
     hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
     edit_strengths: HashMap<Variable, f64>,
-    missing_widget_layout: HashMap<Variable, f64>,
 }
 
 impl LimnSolver {
@@ -33,10 +32,9 @@ impl LimnSolver {
             last_layout: 0,
             hidden_layouts: HashMap::new(),
             edit_strengths: HashMap::new(),
-            missing_widget_layout: HashMap::new(),
         }
     }
-    pub fn add_widget(&mut self, id: LayoutId, name: &Option<String>, layout: &mut Layout, bounds: &mut Rect) {
+    pub fn register_widget(&mut self, id: LayoutId, name: &Option<String>, layout: &mut Layout) {
         if id > self.last_layout {
             self.last_layout = id;
         }
@@ -44,16 +42,6 @@ impl LimnSolver {
         self.var_ids.insert(layout.vars.top, id);
         self.var_ids.insert(layout.vars.width, id);
         self.var_ids.insert(layout.vars.height, id);
-
-        {
-            let mut check_existing = |var| { self.missing_widget_layout.remove(var).unwrap_or(0.0) };
-            bounds.origin.x = check_existing(&layout.vars.left);
-            bounds.origin.y = check_existing(&layout.vars.top);
-            bounds.size.width = check_existing(&layout.vars.width);
-            bounds.size.height = check_existing(&layout.vars.height);
-        }
-        self.missing_widget_layout.remove(&layout.vars.right);
-        self.missing_widget_layout.remove(&layout.vars.bottom);
 
         if let &Some(ref name) = name {
             add_debug_var_name(layout.vars.left, &format!("{}.left", name));
@@ -65,7 +53,6 @@ impl LimnSolver {
         }
         self.layouts.insert(id, layout.vars.clone());
         self.layout_names.insert(id, layout.name.clone());
-        self.update_layout(layout);
     }
 
     pub fn remove_widget(&mut self, id: LayoutId) {
@@ -154,7 +141,7 @@ impl LimnSolver {
     }
 
     pub fn update_layout(&mut self, layout: &mut Layout) {
-        let LimnSolver { ref mut layouts, ref mut solver, ref mut edit_strengths, ref mut constraint_vars, ref mut var_constraints, .. } = *self;
+        let LimnSolver { ref mut solver, ref mut edit_strengths, ref mut constraint_vars, ref mut var_constraints, .. } = *self;
         for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
                 if !solver.has_edit_variable(&edit_var.var) {
@@ -194,10 +181,6 @@ impl LimnSolver {
             debug!("solver {} = {}", fmt_variable(var), val);
             if let Some(widget_id) = self.var_ids.get(&var) {
                 changes.push((*widget_id, var, val));
-            } else {
-                // widget doesn't exist in the widget map yet, because it hasn't been added yet
-                // store it and use this to initialize the widget bounds when it is added
-                self.missing_widget_layout.insert(var, val);
             }
         }
         changes

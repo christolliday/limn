@@ -13,7 +13,7 @@ use backend::glyph::GlyphCache;
 use backend::window::Window;
 
 use widget::{WidgetRef, WidgetBuilder, WidgetBuilderCore};
-use layout::{LayoutManager, LayoutVars, LayoutAdded};
+use layout::{LayoutManager, LayoutVars};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
 use resources::WidgetId;
@@ -128,7 +128,7 @@ impl Ui {
                       builder: WidgetBuilder,
                       parent: Option<WidgetRef>) -> WidgetRef {
         let (children, mut widget_ref) = builder.build();
-        event!(Target::Ui, LayoutAdded(widget_ref.id()));
+        event!(Target::Ui, ::layout::UpdateLayout(widget_ref.clone()));
         self.layout.check_changes();
 
         let id = widget_ref.id();

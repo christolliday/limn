@@ -259,7 +259,7 @@ impl WidgetBuilder {
         };
         let mut builder = WidgetBuilder {
             children: Vec::new(),
-            widget: WidgetRef(Rc::new(RefCell::new(widget))),
+            widget: WidgetRef::new(widget),
         };
         builder.add_handler_fn(property::prop_change_handle);
         builder
@@ -295,6 +295,11 @@ impl fmt::Debug for WidgetRef {
 }
 
 impl WidgetRef {
+    fn new(widget: Widget) -> Self {
+        let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
+        event!(Target::Ui, ::layout::RegisterLayout(widget_ref.clone()));
+        widget_ref
+    }
     pub fn widget_mut(&self) -> RefMut<Widget> {
         self.0.borrow_mut()
     }
@@ -341,9 +346,8 @@ impl WidgetRef {
     pub fn update_layout<F>(&mut self, f: F)
         where F: FnOnce(&mut Layout)
     {
-        let mut widget = self.0.borrow_mut();
-        f(&mut widget.layout);
-        event!(Target::Ui, UpdateLayout(widget.id));
+        f(&mut self.layout());
+        event!(Target::Ui, UpdateLayout(self.clone()));
     }
 
     pub fn apply_style(&mut self) {

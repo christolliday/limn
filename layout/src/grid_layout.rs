@@ -60,8 +60,8 @@ impl GridLayout {
             } else {
                 constraints.push(row.top | EQ(REQUIRED) | parent.vars.top);
             }
-            if let Some(ref row_end) = self.row_end {
-                parent.remove_constraint(row_end.clone());
+            if let Some(row_end) = self.row_end.take() {
+                parent.remove_constraint(row_end);
             }
             let row_end = row.bottom | EQ(REQUIRED) | parent.vars.bottom;
             self.row_end = Some(row_end.clone());
