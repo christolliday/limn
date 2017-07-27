@@ -209,32 +209,13 @@ impl Ui {
                         type_id: TypeId,
                         data: &Box<Any>) {
         match address {
-            Target::Widget(widget_id) => {
-                if let Some(widget_ref) = self.get_widget(widget_id) {
-                    self.handle_widget_event(widget_ref, type_id, data);
-                }
-            }
-            Target::SubTree(widget_id) => {
-                if let Some(widget_ref) = self.get_widget(widget_id) {
-                    self.handle_event_subtree(widget_ref, type_id, data);
-                }
-            }
-            Target::BubbleUp(widget_id) => {
-                let mut maybe_widget_ref = self.get_widget(widget_id);
-                while let Some(widget_ref) = maybe_widget_ref {
-                    if self.handle_widget_event(widget_ref.clone(), type_id, data) {
-                        break;
-                    }
-                    maybe_widget_ref = widget_ref.widget().parent.as_ref().and_then(|parent| parent.upgrade());
-                }
-            }
-            Target::WidgetRef(widget_ref) => {
+            Target::Widget(widget_ref) => {
                 self.handle_widget_event(widget_ref, type_id, data);
             }
-            Target::SubTreeRef(widget_ref) => {
+            Target::SubTree(widget_ref) => {
                 self.handle_event_subtree(widget_ref, type_id, data);
             }
-            Target::BubbleUpRef(widget_ref) => {
+            Target::BubbleUp(widget_ref) => {
                 let mut maybe_widget_ref = Some(widget_ref);
                 while let Some(widget_ref) = maybe_widget_ref {
                     if self.handle_widget_event(widget_ref.clone(), type_id, data) {

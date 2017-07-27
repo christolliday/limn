@@ -4,7 +4,6 @@ use std::collections::VecDeque;
 
 use glutin::EventsLoopProxy;
 
-use resources::WidgetId;
 use ui::Ui;
 use widget::WidgetRef;
 
@@ -14,21 +13,12 @@ use widget::WidgetRef;
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum Target {
     /// Sends an event to a specific widget
-    Widget(WidgetId),
-    /// Sends an event to a widgets first child
-    Child(WidgetId),
+    Widget(WidgetRef),
     /// Sends an event to every descendant of a specific widget
-    SubTree(WidgetId),
+    SubTree(WidgetRef),
     /// Sends an event to a widget and continues sending to it's
     /// ancestors until an event handler marks the event as handled
-    BubbleUp(WidgetId),
-    /// Sends an event to a specific widget
-    WidgetRef(WidgetRef),
-    /// Sends an event to every descendant of a specific widget
-    SubTreeRef(WidgetRef),
-    /// Sends an event to a widget and continues sending to it's
-    /// ancestors until an event handler marks the event as handled
-    BubbleUpRef(WidgetRef),
+    BubbleUp(WidgetRef),
     /// Sends an event to a UiEventHandler registered for the entire application
     Ui,
 }
