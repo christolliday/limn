@@ -90,6 +90,8 @@ impl LayoutManager {
 pub struct RegisterLayout(pub WidgetRef);
 #[derive(Clone)]
 pub struct UpdateLayout(pub WidgetRef);
+#[derive(Clone)]
+pub struct RemoveLayout(pub WidgetRef);
 pub struct ResizeWindow;
 pub struct LayoutChanged(Vec<(usize, Variable, f64)>);
 pub struct LayoutUpdated;
@@ -109,6 +111,12 @@ impl App {
             let event = event.clone();
             let RegisterLayout(mut widget_ref) = event;
             ui.layout.solver.register_widget(widget_ref.id().0, &widget_ref.debug_name(), &mut widget_ref.layout());
+        });
+        self.add_handler_fn(|event: &RemoveLayout, ui| {
+            let event = event.clone();
+            let RemoveLayout(widget_ref) = event;
+            ui.layout.solver.remove_widget(widget_ref.id().0);
+            ui.layout.check_changes();
         });
         self.add_handler_fn(|event: &LayoutChanged, ui| {
             let ref changes = event.0;

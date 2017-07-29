@@ -127,37 +127,14 @@ impl Ui {
     pub fn add_widget(&mut self,
                       builder: WidgetBuilder,
                       parent: Option<WidgetRef>) -> WidgetRef {
-        let (children, mut widget_ref) = builder.build();
-        event!(Target::Ui, ::layout::UpdateLayout(widget_ref.clone()));
-        self.layout.check_changes();
-
-        let id = widget_ref.id();
-        self.widget_map.insert(id, widget_ref.clone());
-
-        if let Some(parent_ref) = parent {
-            {
-                {
-                    let parent_weak = parent_ref.downgrade();
-                    let mut widget = widget_ref.widget_mut();
-                    widget.parent = Some(parent_weak);
-                }
-                let mut container = {
-                    let mut parent = parent_ref.widget_mut();
-                    parent.children.push(widget_ref.clone());
-                    parent.container.clone()
-                };
-                if let Some(ref mut container) = container {
-                    let mut container = container.borrow_mut();
-                    container.add_child(parent_ref.clone(), widget_ref.clone());
-                }
-            }
-            parent_ref.event(ChildAttachedEvent(id, widget_ref.layout().vars.clone()));
+        let (children, widget_ref) = builder.build();
+        self.widget_map.insert(widget_ref.id(), widget_ref.clone());
+        if let Some(mut parent_ref) = parent {
+            parent_ref.add_child(widget_ref.clone());
         }
-        widget_ref.event(WidgetAttachedEvent);
         for child in children {
             self.add_widget(child, Some(widget_ref.clone()));
         }
-        self.redraw();
         widget_ref
     }
 
@@ -165,22 +142,12 @@ impl Ui {
         {
             let widget = widget_ref.widget();
             if let Some(ref parent_ref) = widget.parent {
-                if let Some(parent_ref) = parent_ref.upgrade() {
-                    let mut parent = parent_ref.widget_mut();
-                    if let Some(ref mut container) = parent.container.clone() {
-                        let mut container = container.borrow_mut();
-                        container.remove_child(parent_ref.clone(), widget.id);
-                    }
-                    parent.remove_child(widget.id);
+                if let Some(mut parent_ref) = parent_ref.upgrade() {
+                    parent_ref.remove_child(widget_ref.clone());
                 }
             }
         }
-        widget_ref.event(WidgetDetachedEvent);
-
         self.widget_map.remove(&widget_ref.id());
-        self.layout.solver.remove_widget(widget_ref.id().0);
-        self.layout.check_changes();
-        self.redraw();
     }
 
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetRef> {

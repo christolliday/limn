@@ -164,9 +164,7 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
         self
     }
     fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
-        let child = widget.build();
-        child.widget.widget_mut().parent = Some(self.as_mut().widget.downgrade());
-        self.as_mut().children.push(child);
+        self.as_mut().children.push(widget.build());
         self
     }
     fn no_container(&mut self) -> &mut Self {
@@ -354,6 +352,34 @@ impl WidgetRef {
         self.0.borrow_mut().apply_style();
     }
 
+    pub fn add_child(&mut self, mut child: WidgetRef) {
+        event!(Target::Ui, ::layout::UpdateLayout(child.clone()));
+        child.widget_mut().parent = Some(self.downgrade());
+        self.widget_mut().children.push(child.clone());
+        let mut container = self.widget_mut().container.clone();
+        if let Some(ref mut container) = container {
+            let mut container = container.borrow_mut();
+            container.add_child(self.clone(), child.clone());
+        }
+        self.event(::ui::WidgetAttachedEvent);
+        self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars.clone()));
+    }
+
+    pub fn remove_child(&mut self, child_ref: WidgetRef) {
+        let child_id = child_ref.id();
+        let mut container = self.widget_mut().container.clone();
+        if let Some(ref mut container) = container {
+            let mut container = container.borrow_mut();
+            container.remove_child(self.clone(), child_id);
+        }
+        let mut widget = self.widget_mut();
+        if let Some(index) = widget.children.iter().position(|widget| widget.id() == child_id) {
+            widget.children.remove(index);
+        }
+        child_ref.event(::ui::WidgetDetachedEvent);
+        event!(Target::Ui, ::layout::RemoveLayout(child_ref.clone()));
+    }
+
     pub fn event<T: 'static>(&self, data: T) {
         event!(Target::Widget(self.clone()), data);
     }
@@ -469,11 +495,6 @@ impl Widget {
         for child in &self.children {
             let mut child = child.widget_mut();
             child.draw_debug(context, graphics);
-        }
-    }
-    pub fn remove_child(&mut self, child_id: WidgetId) {
-        if let Some(index) = self.children.iter().position(|widget| widget.id() == child_id) {
-            self.children.remove(index);
         }
     }
 
