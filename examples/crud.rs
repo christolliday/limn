@@ -110,9 +110,9 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
                 }
             },
             PeopleEvent::Delete => {
-                if let Some(selected_widget_id) = self.selected_item.clone() {
+                if let Some(mut selected_widget_id) = self.selected_item.clone() {
                     self.people.remove(&selected_widget_id);
-                    ui.remove_widget(selected_widget_id);
+                    selected_widget_id.remove_widget();
                 }
                 self.selected_item = None;
             }

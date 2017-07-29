@@ -189,9 +189,9 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
             }
             CircleEvent::Undo => {
                 if self.circles.len() > 0 {
-                    let widget_id = self.undo_queue.pop().unwrap();
+                    let mut widget_id = self.undo_queue.pop().unwrap();
                     let (point, size) = self.circles.remove(&widget_id).unwrap();
-                    ui.remove_widget(widget_id);
+                    widget_id.remove_widget();
                     self.redo_queue.push((point, size));
 
                     self.redo_id.event_subtree(PropChange::Remove(Property::Inactive));
@@ -226,8 +226,8 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
                 }
             }
             CircleEvent::Delete => {
-                if let Some(selected) = self.selected.take() {
-                    ui.remove_widget(selected);
+                if let Some(mut selected) = self.selected.take() {
+                    selected.remove_widget();
                     self.slider_id.event_subtree(PropChange::Add(Property::Inactive));
                 }
             }

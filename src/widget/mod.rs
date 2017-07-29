@@ -295,7 +295,7 @@ impl fmt::Debug for WidgetRef {
 impl WidgetRef {
     fn new(widget: Widget) -> Self {
         let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
-        event!(Target::Ui, ::layout::RegisterLayout(widget_ref.clone()));
+        event!(Target::Ui, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
     pub fn widget_mut(&self) -> RefMut<Widget> {
@@ -377,7 +377,18 @@ impl WidgetRef {
             widget.children.remove(index);
         }
         child_ref.event(::ui::WidgetDetachedEvent);
-        event!(Target::Ui, ::layout::RemoveLayout(child_ref.clone()));
+        event!(Target::Ui, ::ui::RemoveWidget(child_ref.clone()));
+    }
+
+    pub fn remove_widget(&mut self) {
+        if let Some(mut parent) = self.parent() {
+            parent.remove_child(self.clone());
+        }
+    }
+
+    pub fn parent(&mut self) -> Option<WidgetRef> {
+        let parent = self.widget().parent.clone();
+        parent.unwrap().upgrade()
     }
 
     pub fn event<T: 'static>(&self, data: T) {

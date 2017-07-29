@@ -44,6 +44,7 @@ impl App {
     /// Initialize the handlers that are used in a typical desktop app.
     /// The handlers that make up the event flow in an application are configurable
     fn initialize_handlers(&mut self) {
+        self.add_ui_handlers();
         self.add_layout_handlers();
         self.add_input_handlers();
 

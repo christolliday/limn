@@ -12,6 +12,7 @@ use backend::gfx::G2d;
 use backend::glyph::GlyphCache;
 use backend::window::Window;
 
+use app::App;
 use widget::{WidgetRef, WidgetBuilder, WidgetBuilderCore};
 use layout::{LayoutManager, LayoutVars};
 use layout::constraint::*;
@@ -128,7 +129,6 @@ impl Ui {
                       builder: WidgetBuilder,
                       parent: Option<WidgetRef>) -> WidgetRef {
         let (children, widget_ref) = builder.build();
-        self.widget_map.insert(widget_ref.id(), widget_ref.clone());
         if let Some(mut parent_ref) = parent {
             parent_ref.add_child(widget_ref.clone());
         }
@@ -136,18 +136,6 @@ impl Ui {
             self.add_widget(child, Some(widget_ref.clone()));
         }
         widget_ref
-    }
-
-    pub fn remove_widget(&mut self, widget_ref: WidgetRef) {
-        {
-            let widget = widget_ref.widget();
-            if let Some(ref parent_ref) = widget.parent {
-                if let Some(mut parent_ref) = parent_ref.upgrade() {
-                    parent_ref.remove_child(widget_ref.clone());
-                }
-            }
-        }
-        self.widget_map.remove(&widget_ref.id());
     }
 
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetRef> {
@@ -217,6 +205,29 @@ impl Ui {
     }
     pub fn debug_variables(&mut self) {
         self.layout.solver.debug_variables();
+    }
+}
+
+#[derive(Clone)]
+pub struct RegisterWidget(pub WidgetRef);
+#[derive(Clone)]
+pub struct RemoveWidget(pub WidgetRef);
+
+impl App {
+    pub fn add_ui_handlers(&mut self) {
+        self.add_handler_fn(|event: &RegisterWidget, ui| {
+            let event = event.clone();
+            let RegisterWidget(mut widget_ref) = event;
+            ui.layout.solver.register_widget(widget_ref.id().0, &widget_ref.debug_name(), &mut widget_ref.layout());
+            ui.widget_map.insert(widget_ref.id(), widget_ref.clone());
+        });
+        self.add_handler_fn(|event: &RemoveWidget, ui| {
+            let event = event.clone();
+            let RemoveWidget(widget_ref) = event;
+            ui.layout.solver.remove_widget(widget_ref.id().0);
+            ui.layout.check_changes();
+            ui.widget_map.remove(&widget_ref.id());
+        });
     }
 }
 pub struct WidgetAttachedEvent;
