@@ -29,7 +29,6 @@ use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 
 pub struct WidgetBuilder {
-    children: Vec<WidgetBuilder>,
     pub widget: WidgetRef,
 }
 
@@ -158,13 +157,13 @@ impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
     }
     fn set_inactive(&mut self) -> &mut Self {
         self.as_mut().widget.widget_mut().props.insert(Property::Inactive);
-        for child in &mut self.as_mut().children {
-            child.widget.widget_mut().props.insert(Property::Inactive);
+        for child in &mut self.as_mut().widget.widget_mut().children {
+            child.widget_mut().props.insert(Property::Inactive);
         }
         self
     }
     fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
-        self.as_mut().children.push(widget.build());
+        self.as_mut().widget.add_child(widget.build().widget);
         self
     }
     fn no_container(&mut self) -> &mut Self {
@@ -256,16 +255,10 @@ impl WidgetBuilder {
             handlers: HashMap::new(),
         };
         let mut builder = WidgetBuilder {
-            children: Vec::new(),
             widget: WidgetRef::new(widget),
         };
         builder.add_handler_fn(property::prop_change_handle);
         builder
-    }
-
-    pub fn build(mut self) -> (Vec<WidgetBuilder>, WidgetRef) {
-        self.widget.apply_style();
-        (self.children, self.widget)
     }
 }
 
@@ -355,6 +348,7 @@ impl WidgetRef {
     pub fn add_child(&mut self, mut child: WidgetRef) {
         event!(Target::Ui, ::layout::UpdateLayout(child.clone()));
         child.widget_mut().parent = Some(self.downgrade());
+        child.apply_style();
         self.widget_mut().children.push(child.clone());
         let mut container = self.widget_mut().container.clone();
         if let Some(ref mut container) = container {

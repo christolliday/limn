@@ -104,7 +104,7 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetRef, WidgetRef,
     (undo_id, redo_id, slider_id)
 }
 
-fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetRef, size: f64) -> WidgetRef {
+fn create_circle(center: &Point, mut parent_id: WidgetRef, size: f64) -> WidgetRef {
     let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyleable::Border: Some((1.0, BLACK)));
     let mut widget = WidgetBuilder::new();
@@ -116,7 +116,8 @@ fn create_circle(ui: &mut Ui, center: &Point, parent_id: WidgetRef, size: f64) -
     widget.on_click(move |_, _| {
         event!(Target::Ui, CircleEvent::Select(Some(widget_ref.clone())));
     });
-    ui.add_widget(widget, Some(parent_id))
+    parent_id.add_child(widget.widget.clone());
+    widget.widget
 }
 
 struct ResizeEvent(f64);
@@ -174,11 +175,11 @@ impl CircleEventHandler {
     }
 }
 impl UiEventHandler<CircleEvent> for CircleEventHandler {
-    fn handle(&mut self, event: &CircleEvent, ui: &mut Ui) {
+    fn handle(&mut self, event: &CircleEvent, _: &mut Ui) {
         match *event {
             CircleEvent::Add(point) => {
                 let size = 30.0;
-                let circle_id = create_circle(ui, &point, self.circle_canvas_id.clone(), size);
+                let circle_id = create_circle(&point, self.circle_canvas_id.clone(), size);
                 self.circles.insert(circle_id.clone(), (point, size));
                 self.undo_queue.push(circle_id.clone());
                 self.redo_queue.clear();
@@ -203,7 +204,7 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
             CircleEvent::Redo => {
                 if self.redo_queue.len() > 0 {
                     let (point, size) = self.redo_queue.pop().unwrap();
-                    let circle_id = create_circle(ui, &point, self.circle_canvas_id.clone(), size);
+                    let circle_id = create_circle(&point, self.circle_canvas_id.clone(), size);
                     self.circles.insert(circle_id.clone(), (point, size));
                     self.undo_queue.push(circle_id);
                     if self.redo_queue.len() == 0 {

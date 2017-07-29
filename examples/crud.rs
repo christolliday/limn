@@ -89,14 +89,14 @@ impl PeopleHandler {
     }
 }
 impl UiEventHandler<PeopleEvent> for PeopleHandler {
-    fn handle(&mut self, event: &PeopleEvent, ui: &mut Ui) {
+    fn handle(&mut self, event: &PeopleEvent, _: &mut Ui) {
 
         let was_valid = self.person.is_valid();
         match event.clone() {
             PeopleEvent::Add => {
                 if was_valid {
                     let person = mem::replace(&mut self.person, Person::new());
-                    let id = add_person(&person, ui, self.ids.list_widget.clone());
+                    let id = add_person(&person, self.ids.list_widget.clone());
                     self.people.insert(id, person);
 
                     self.selected_item = None;
@@ -144,7 +144,7 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
 }
 
 use limn::widgets::edit_text;
-pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetRef) -> WidgetRef {
+pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
     let list_item_widget = {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
@@ -163,7 +163,9 @@ pub fn add_person(person: &Person, ui: &mut Ui, list_widget_id: WidgetRef) -> Wi
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
-    ui.add_widget(list_item_widget, Some(list_widget_id))
+    let item_ref = list_item_widget.widget;
+    list_widget_id.add_child(item_ref.clone());
+    item_ref
 }
 
 fn main() {

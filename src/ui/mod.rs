@@ -21,7 +21,7 @@ use resources::WidgetId;
 use event::Target;
 
 pub struct Ui {
-    pub root: Option<WidgetRef>,
+    pub root: WidgetRef,
     widget_map: HashMap<WidgetId, WidgetRef>,
     pub layout: LayoutManager,
     glyph_cache: GlyphCache,
@@ -33,10 +33,24 @@ pub struct Ui {
 
 impl Ui {
     pub fn new(mut window: Window) -> Self {
+        let mut layout = LayoutManager::new();
+        let mut root = WidgetBuilder::new_named("root");
+        layout!(root: top_left(Point::zero()));
+        {
+            let ref root_vars = root.layout().vars;
+            layout.solver.update_solver(|solver| {
+                solver.add_edit_variable(root_vars.right, REQUIRED - 1.0).unwrap();
+                solver.add_edit_variable(root_vars.bottom, REQUIRED - 1.0).unwrap();
+            });
+            layout.check_changes();
+        }
+        root.add_handler_fn(|_: &::layout::LayoutUpdated, _| {
+            event!(Target::Ui, ::layout::ResizeWindow);
+        });
         Ui {
             widget_map: HashMap::new(),
-            root: None,
-            layout: LayoutManager::new(),
+            root: root.widget,
+            layout: layout,
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
             needs_redraw: false,
             should_close: false,
@@ -48,7 +62,7 @@ impl Ui {
         self.widget_map.get(&widget_id).map(|widget| widget.clone())
     }
     pub fn get_root(&mut self) -> WidgetRef {
-        self.root.as_ref().unwrap().clone()
+        self.root.clone()
     }
 
     pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetWalker {
@@ -67,22 +81,6 @@ impl Ui {
     pub fn resize_window_to_fit(&mut self) {
         let window_dims = self.get_root_dims();
         self.window.borrow_mut().window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
-    }
-    pub fn set_root(&mut self, mut root_widget: WidgetBuilder) {
-        root_widget.set_debug_name("root");
-        layout!(root_widget: top_left(Point::zero()));
-        {
-            let ref root_vars = root_widget.layout().vars;
-            self.layout.solver.update_solver(|solver| {
-                solver.add_edit_variable(root_vars.right, REQUIRED - 1.0).unwrap();
-                solver.add_edit_variable(root_vars.bottom, REQUIRED - 1.0).unwrap();
-            });
-            self.layout.check_changes();
-        }
-        root_widget.add_handler_fn(|_: &::layout::LayoutUpdated, _| {
-            event!(Target::Ui, ::layout::ResizeWindow);
-        });
-        self.root = Some(self.add_widget(root_widget, None));
     }
     pub fn get_root_dims(&mut self) -> Size {
         let root = self.get_root();
@@ -123,19 +121,6 @@ impl Ui {
         if self.debug_draw_bounds {
             root.widget_mut().draw_debug(context, graphics);
         }
-    }
-
-    pub fn add_widget(&mut self,
-                      builder: WidgetBuilder,
-                      parent: Option<WidgetRef>) -> WidgetRef {
-        let (children, widget_ref) = builder.build();
-        if let Some(mut parent_ref) = parent {
-            parent_ref.add_child(widget_ref.clone());
-        }
-        for child in children {
-            self.add_widget(child, Some(widget_ref.clone()));
-        }
-        widget_ref
     }
 
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetRef> {
