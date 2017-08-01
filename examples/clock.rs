@@ -61,7 +61,7 @@ impl Drawable for HandDrawable {
 }
 
 struct ClockBuilder {
-    widget: WidgetBuilder,
+    widget: WidgetRef,
 }
 impl ClockBuilder {
     fn new() -> Self {
@@ -69,26 +69,26 @@ impl ClockBuilder {
         let style = style!(
             EllipseStyleable::BackgroundColor: WHITE,
             EllipseStyleable::Border: Some((2.0, BLACK)));
-        let mut widget = WidgetBuilder::new();
+        let mut widget = WidgetRef::new();
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
         layout!(widget: size(Size::new(200.0, 200.0)));
 
         let hour_angle = || 2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0;
         let minute_angle = || 2.0 * f64::consts::PI * Local::now().minute() as f64 / 60.0;
         let second_angle = || 2.0 * f64::consts::PI * Local::now().second() as f64 / 60.0;
-        let mut hour_widget = WidgetBuilder::new();
+        let mut hour_widget = WidgetRef::new();
         hour_widget
             .set_drawable(HandDrawable::new(BLACK, 4.0, 60.0, hour_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
                 state.angle = hour_angle()
             }));
-        let mut minute_widget = WidgetBuilder::new();
+        let mut minute_widget = WidgetRef::new();
         minute_widget
             .set_drawable(HandDrawable::new(BLACK, 3.0, 90.0, minute_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
                 state.angle = minute_angle()
             }));
-        let mut second_widget = WidgetBuilder::new();
+        let mut second_widget = WidgetRef::new();
         second_widget
             .set_drawable(HandDrawable::new(RED, 2.0, 80.0, second_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
@@ -114,7 +114,7 @@ impl ClockBuilder {
 fn main() {
     let app = util::init_default("Limn clock demo");
 
-    let mut root_widget = WidgetBuilder::new();
+    let mut root_widget = WidgetRef::new();
     let mut clock = ClockBuilder::new().widget;
     layout!(clock:
         center(&root_widget),

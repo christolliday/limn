@@ -2,7 +2,7 @@ use glutin;
 
 use event::{Target, UiEventHandler, WidgetEventArgs};
 use util::Point;
-use widget::{WidgetBuilder, WidgetBuilderCore, WidgetRef};
+use widget::WidgetRef;
 use widget::property::{Property, PropChange};
 use layout::LayoutChanged;
 use ui::Ui;
@@ -114,7 +114,7 @@ fn handle_hover(event: &MouseOverEvent, args: WidgetEventArgs) {
     args.widget.event_subtree(event);
 }
 
-impl WidgetBuilder {
+impl WidgetRef {
     pub fn enable_hover(&mut self) -> &mut Self {
         self.add_handler_fn(handle_hover)
     }

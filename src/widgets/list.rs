@@ -1,8 +1,7 @@
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, WidgetRef};
+use widget::WidgetRef;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
-use layout::{LayoutRef, LayoutVars};
 use drawable::rect::RectStyleable;
 use input::mouse::ClickEvent;
 use util::Color;
@@ -67,13 +66,13 @@ impl WidgetEventHandler<ClickEvent> for ListItemHandler {
 }
 
 pub struct ListBuilder {
-    pub widget: WidgetBuilder,
+    pub widget: WidgetRef,
 }
 widget_builder!(ListBuilder);
 
 impl ListBuilder {
     pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new();
+        let mut widget = WidgetRef::new();
         widget.add_handler(ListHandler::new())
               .add_handler_fn(list_handle_deselect)
               .vbox();
@@ -91,7 +90,7 @@ impl ListBuilder {
     }
 }
 
-impl WidgetBuilder {
+impl WidgetRef {
     pub fn list_item(&mut self, list_id: WidgetRef) -> &mut Self {
         self.add_handler(ListItemHandler::new(list_id))
     }

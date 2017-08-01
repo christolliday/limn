@@ -8,7 +8,7 @@ use resources::WidgetId;
 use app::App;
 use event::Target;
 
-use widget::{WidgetBuilder, WidgetBuilderCore, WidgetRef};
+use widget::WidgetRef;
 
 use self::container::LayoutContainer;
 
@@ -42,7 +42,7 @@ impl LayoutContainer for GridLayout {
     }
 }
 
-impl WidgetBuilder {
+impl WidgetRef {
     pub fn vbox(&mut self) -> &mut Self {
         let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout().vars);
         self.set_container(handler)

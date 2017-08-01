@@ -13,7 +13,7 @@ use backend::glyph::GlyphCache;
 use backend::window::Window;
 
 use app::App;
-use widget::{WidgetRef, WidgetBuilder, WidgetBuilderCore};
+use widget::WidgetRef;
 use layout::{LayoutManager, LayoutVars};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
@@ -34,7 +34,7 @@ pub struct Ui {
 impl Ui {
     pub fn new(mut window: Window) -> Self {
         let mut layout = LayoutManager::new();
-        let mut root = WidgetBuilder::new_named("root");
+        let mut root = WidgetRef::new_named("root");
         layout!(root: top_left(Point::zero()));
         {
             let ref root_vars = root.layout().vars;
@@ -49,7 +49,7 @@ impl Ui {
         });
         Ui {
             widget_map: HashMap::new(),
-            root: root.widget,
+            root: root,
             layout: layout,
             glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
             needs_redraw: false,

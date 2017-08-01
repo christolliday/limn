@@ -3,11 +3,10 @@ use glutin;
 use text_layout::Align;
 
 use event::WidgetEventArgs;
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget};
+use widget::WidgetRef;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use layout::constraint::*;
-use layout::{LayoutRef, LayoutVars};
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::text::{TextDrawable, TextStyleable};
@@ -72,13 +71,13 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: WidgetEventAr
 }
 
 pub struct ToggleButtonBuilder {
-    pub widget: WidgetBuilder,
+    pub widget: WidgetRef,
 }
 widget_builder!(ToggleButtonBuilder);
 
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new();
+        let mut widget = WidgetRef::new();
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
@@ -94,7 +93,7 @@ impl ToggleButtonBuilder {
                 ACTIVATED: on_text.to_owned()),
             TextStyleable::Align: Align::Middle);
         let button_text_drawable = TextDrawable::default();
-        let mut button_text_widget = WidgetBuilder::new();
+        let mut button_text_widget = WidgetRef::new();
         button_text_widget
             .set_debug_name("button_text")
             .set_drawable_with_style(button_text_drawable, style);
@@ -112,13 +111,13 @@ impl ToggleButtonBuilder {
 }
 
 pub struct PushButtonBuilder {
-    pub widget: WidgetBuilder,
+    pub widget: WidgetRef,
 }
 widget_builder!(PushButtonBuilder);
 
 impl PushButtonBuilder {
     pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new();
+        let mut widget = WidgetRef::new();
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
@@ -133,7 +132,7 @@ impl PushButtonBuilder {
             TextStyleable::Text: text.to_owned(),
             TextStyleable::Align: Align::Middle);
 
-        let mut button_text_widget = WidgetBuilder::new();
+        let mut button_text_widget = WidgetRef::new();
         button_text_widget
             .set_drawable_with_style(TextDrawable::default(), style);
         layout!(button_text_widget: center(self.as_mut()));
@@ -147,7 +146,7 @@ pub trait WidgetClickable {
     fn on_click<F>(&mut self, on_click: F) -> &mut Self
         where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static;
 }
-impl<B> WidgetClickable for B where B: AsMut<WidgetBuilder> {
+impl WidgetClickable for WidgetRef {
     fn on_click<F>(&mut self, on_click: F) -> &mut Self
         where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static
     {

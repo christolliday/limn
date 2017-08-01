@@ -2,12 +2,11 @@ use cassowary::strength::*;
 
 use input::mouse::ClickEvent;
 use event::{WidgetEventHandler, WidgetEventArgs};
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, WidgetRef};
+use widget::WidgetRef;
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
 use layout::constraint::*;
-use layout::{LayoutRef, LayoutVars};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use ui::ChildAttachedEvent;
@@ -31,8 +30,8 @@ pub enum BarStyle {
 }
 
 pub struct SliderBuilder {
-    pub widget: WidgetBuilder,
-    pub slider_handle: WidgetBuilder,
+    pub widget: WidgetRef,
+    pub slider_handle: WidgetRef,
     pub orientation: Orientation,
     pub init_value: f64,
     pub variable_handle_size: bool,
@@ -47,10 +46,10 @@ pub struct SliderBuilder {
 
 impl SliderBuilder {
     pub fn new() -> Self {
-        let mut slider = WidgetBuilder::new();
+        let mut slider = WidgetRef::new();
         slider.set_debug_name("slider");
 
-        let mut slider_handle = WidgetBuilder::new();
+        let mut slider_handle = WidgetRef::new();
         slider_handle
             .set_debug_name("slider_handle")
             .add_handler_fn(|event: &WidgetDrag, args| {
@@ -112,136 +111,136 @@ impl SliderBuilder {
         });
         self
     }
+    pub fn build(self) -> WidgetRef {
+        let (mut slider, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
+
+        slider_handle.add_handler(DragHandler::new(orientation, slider.clone()));
+
+        match self.handle_style {
+            HandleStyle::Round => {
+                slider_handle.set_drawable_with_style(EllipseDrawable::new(), style!(
+                    EllipseStyleable::BackgroundColor: self.handle_color,
+                    EllipseStyleable::Border: self.border))
+            }
+            HandleStyle::Square => {
+                slider_handle.set_drawable_with_style(RectDrawable::new(), style!(
+                    RectStyleable::BackgroundColor: self.handle_color,
+                    RectStyleable::Border: self.border))
+            }
+        };
+
+        let corner_radius = match self.bar_style {
+            BarStyle::NarrowRound => Some(3.0),
+            BarStyle::Wide => None,
+        };
+        let bar_style = style!(
+            RectStyleable::BackgroundColor: self.bar_color,
+            RectStyleable::CornerRadius: Some(3.0),
+            RectStyleable::Border: self.border,
+            RectStyleable::CornerRadius: corner_radius);
+
+        let pre_style = if let Some(highlight) = self.highlight {
+            style!(parent: bar_style, RectStyleable::BackgroundColor:
+                selector!(highlight, INACTIVE: self.bar_color))
+        } else {
+            bar_style.clone()
+        };
+        let mut slider_bar_pre = WidgetRef::new();
+        slider_bar_pre
+            .set_debug_name("slider_bar_pre")
+            .set_drawable_with_style(RectDrawable::new(), pre_style);
+
+        let mut slider_bar_post = WidgetRef::new();
+        slider_bar_post
+            .set_debug_name("slider_bar_post")
+            .set_drawable_with_style(RectDrawable::new(), bar_style);
+
+        let (bar_width, bar_padding) = match self.bar_style {
+            BarStyle::Wide => (self.width, 0.0),
+            BarStyle::NarrowRound => (self.width / 3.0, self.width / 2.0),
+        };
+
+        if !self.variable_handle_size {
+            layout!(slider_handle: aspect_ratio(1.0));
+        }
+        match orientation {
+            Orientation::Horizontal => {
+                layout!(slider:
+                    height(self.width));
+                layout!(slider_bar_pre:
+                    height(bar_width),
+                    center_vertical(&slider),
+                    align_left(&slider).padding(bar_padding),
+                    to_left_of(&slider_handle).padding(-bar_padding));
+                layout!(slider_bar_post:
+                    height(bar_width),
+                    center_vertical(&slider),
+                    align_right(&slider).padding(bar_padding),
+                    to_right_of(&slider_handle).padding(-bar_padding));
+                layout!(slider_handle:
+                    match_height(&slider));
+
+                if self.variable_handle_size {
+                    // STRONG + 1.0 for higher strength than handle position
+                    let mut layout = slider_handle.layout();
+                    layout.edit_width().set(50.0).strength(STRONG + 1.0);
+                }
+            }
+            Orientation::Vertical => {
+                layout!(slider:
+                    width(self.width));
+                layout!(slider_bar_pre:
+                    width(bar_width),
+                    center_horizontal(&slider),
+                    align_top(&slider).padding(bar_padding),
+                    above(&slider_handle).padding(-bar_padding));
+                layout!(slider_bar_post:
+                    width(bar_width),
+                    center_horizontal(&slider),
+                    align_bottom(&slider).padding(bar_padding),
+                    below(&slider_handle).padding(-bar_padding));
+                layout!(slider_handle:
+                    match_width(&slider));
+
+                if self.variable_handle_size {
+                    // STRONG + 1.0 for higher strength than handle position
+                    let mut layout = slider_handle.layout();
+                    layout.edit_height().set(50.0).strength(STRONG + 1.0);
+                }
+            }
+        }
+        let handle_ref = slider_handle.clone();
+        slider.add_handler_fn(move |event: &SetSliderValue, args| {
+            let bounds = args.widget.bounds();
+            let event = SliderHandleInput::SetValue((event.0, bounds));
+            handle_ref.event(event);
+        });
+        let handle_ref = slider_handle.clone();
+        slider.add_handler_fn(move |event: &ClickEvent, args| {
+            let bounds = args.widget.bounds();
+            let position = if let Orientation::Horizontal = orientation {
+                event.position.x
+            } else {
+                event.position.y
+            };
+            let event = SliderHandleInput::SliderClicked((position, bounds));
+            handle_ref.event(event);
+        });
+        slider.add_child(slider_bar_pre);
+        slider.add_child(slider_bar_post);
+        slider.add_child(slider_handle);
+
+        // need to update position after widget is created because the slider position
+        // depends on the measured width of the slider and slider handle
+        let init_value = self.init_value;
+        slider.add_handler_fn(move |_: &ChildAttachedEvent, args| {
+            args.widget.event(SetSliderValue(init_value));
+        });
+        slider
+    }
 }
 
-widget_builder!(SliderBuilder, build: |builder: SliderBuilder| -> WidgetBuilder {
-
-    let (mut slider, mut slider_handle, orientation) = (builder.widget, builder.slider_handle, builder.orientation);
-
-    slider_handle.add_handler(DragHandler::new(orientation, slider.widget.clone()));
-
-    match builder.handle_style {
-        HandleStyle::Round => {
-            slider_handle.set_drawable_with_style(EllipseDrawable::new(), style!(
-                EllipseStyleable::BackgroundColor: builder.handle_color,
-                EllipseStyleable::Border: builder.border))
-        }
-        HandleStyle::Square => {
-            slider_handle.set_drawable_with_style(RectDrawable::new(), style!(
-                RectStyleable::BackgroundColor: builder.handle_color,
-                RectStyleable::Border: builder.border))
-        }
-    };
-
-    let corner_radius = match builder.bar_style {
-        BarStyle::NarrowRound => Some(3.0),
-        BarStyle::Wide => None,
-    };
-    let bar_style = style!(
-        RectStyleable::BackgroundColor: builder.bar_color,
-        RectStyleable::CornerRadius: Some(3.0),
-        RectStyleable::Border: builder.border,
-        RectStyleable::CornerRadius: corner_radius);
-
-    let pre_style = if let Some(highlight) = builder.highlight {
-        style!(parent: bar_style, RectStyleable::BackgroundColor:
-            selector!(highlight, INACTIVE: builder.bar_color))
-    } else {
-        bar_style.clone()
-    };
-    let mut slider_bar_pre = WidgetBuilder::new();
-    slider_bar_pre
-        .set_debug_name("slider_bar_pre")
-        .set_drawable_with_style(RectDrawable::new(), pre_style);
-
-    let mut slider_bar_post = WidgetBuilder::new();
-    slider_bar_post
-        .set_debug_name("slider_bar_post")
-        .set_drawable_with_style(RectDrawable::new(), bar_style);
-
-    let (bar_width, bar_padding) = match builder.bar_style {
-        BarStyle::Wide => (builder.width, 0.0),
-        BarStyle::NarrowRound => (builder.width / 3.0, builder.width / 2.0),
-    };
-
-    if !builder.variable_handle_size {
-        layout!(slider_handle: aspect_ratio(1.0));
-    }
-    match orientation {
-        Orientation::Horizontal => {
-            layout!(slider:
-                height(builder.width));
-            layout!(slider_bar_pre:
-                height(bar_width),
-                center_vertical(&slider),
-                align_left(&slider).padding(bar_padding),
-                to_left_of(&slider_handle).padding(-bar_padding));
-            layout!(slider_bar_post:
-                height(bar_width),
-                center_vertical(&slider),
-                align_right(&slider).padding(bar_padding),
-                to_right_of(&slider_handle).padding(-bar_padding));
-            layout!(slider_handle:
-                match_height(&slider));
-
-            if builder.variable_handle_size {
-                // STRONG + 1.0 for higher strength than handle position
-                let mut layout = slider_handle.widget.layout();
-                layout.edit_width().set(50.0).strength(STRONG + 1.0);
-            }
-        }
-        Orientation::Vertical => {
-            layout!(slider:
-                width(builder.width));
-            layout!(slider_bar_pre:
-                width(bar_width),
-                center_horizontal(&slider),
-                align_top(&slider).padding(bar_padding),
-                above(&slider_handle).padding(-bar_padding));
-            layout!(slider_bar_post:
-                width(bar_width),
-                center_horizontal(&slider),
-                align_bottom(&slider).padding(bar_padding),
-                below(&slider_handle).padding(-bar_padding));
-            layout!(slider_handle:
-                match_width(&slider));
-
-            if builder.variable_handle_size {
-                // STRONG + 1.0 for higher strength than handle position
-                let mut layout = slider_handle.widget.layout();
-                layout.edit_height().set(50.0).strength(STRONG + 1.0);
-            }
-        }
-    }
-    let handle_ref = slider_handle.widget.clone();
-    slider.add_handler_fn(move |event: &SetSliderValue, args| {
-        let bounds = args.widget.bounds();
-        let event = SliderHandleInput::SetValue((event.0, bounds));
-        handle_ref.event(event);
-    });
-    let handle_ref = slider_handle.widget.clone();
-    slider.add_handler_fn(move |event: &ClickEvent, args| {
-        let bounds = args.widget.bounds();
-        let position = if let Orientation::Horizontal = orientation {
-            event.position.x
-        } else {
-            event.position.y
-        };
-        let event = SliderHandleInput::SliderClicked((position, bounds));
-        handle_ref.event(event);
-    });
-    slider.add_child(slider_bar_pre);
-    slider.add_child(slider_bar_post);
-    slider.add_child(slider_handle);
-
-    // need to update position after widget is created because the slider position
-    // depends on the measured width of the slider and slider handle
-    let init_value = builder.init_value;
-    slider.add_handler_fn(move |_: &ChildAttachedEvent, args| {
-        args.widget.event(SetSliderValue(init_value));
-    });
-    slider
-});
+widget_builder!(SliderBuilder);
 
 struct MovedSliderWidgetEvent {
     orientation: Orientation,

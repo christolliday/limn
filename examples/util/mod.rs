@@ -9,7 +9,7 @@ use self::backend::Window;
 use limn::app::App;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::resources::{FontId, ImageId, resources};
-use limn::widget::WidgetBuilder;
+use limn::widget::WidgetRef;
 use limn::util::Size;
 
 /// Create the window and initialize the app.
@@ -52,9 +52,9 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
     resources().images.insert_from_file(&mut window.context.factory, image_path)
 }
 
-pub fn set_root_and_loop(mut app: App, root_widget: WidgetBuilder)
+pub fn set_root_and_loop(mut app: App, root_widget: WidgetRef)
 {
-    app.ui.root.add_child(root_widget.widget);
+    app.ui.root.add_child(root_widget);
 
     // Closes app on ESC key
     app.add_handler(EscKeyCloseHandler);

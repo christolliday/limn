@@ -28,31 +28,27 @@ use self::property::{PropSet, Property};
 use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 
-pub struct WidgetBuilder {
-    pub widget: WidgetRef,
-}
-
-impl AsMut<WidgetBuilder> for WidgetBuilder {
-    fn as_mut(&mut self) -> &mut WidgetBuilder {
+impl AsMut<WidgetRef> for WidgetRef {
+    fn as_mut(&mut self) -> &mut WidgetRef {
         self
     }
 }
-impl AsRef<WidgetBuilder> for WidgetBuilder {
-    fn as_ref(&self) -> &WidgetBuilder {
+impl AsRef<WidgetRef> for WidgetRef {
+    fn as_ref(&self) -> &WidgetRef {
         self
     }
 }
-pub trait BuildWidget: AsMut<WidgetBuilder> {
-    fn build(self) -> WidgetBuilder;
+pub trait BuildWidget: AsMut<WidgetRef> {
+    fn build(self) -> WidgetRef;
 }
-impl BuildWidget for WidgetBuilder {
-    fn build(self) -> WidgetBuilder {
+impl BuildWidget for WidgetRef {
+    fn build(self) -> WidgetRef {
         self
     }
 }
-impl LayoutRef for WidgetBuilder {
-    fn layout_ref(&self) -> LayoutVars {
-        self.as_ref().widget.widget_mut().layout.vars.clone()
+impl <'a> BuildWidget for &'a mut WidgetRef {
+    fn build(self) -> WidgetRef {
+        self.clone()
     }
 }
 impl LayoutRef for WidgetRef {
@@ -64,128 +60,81 @@ impl LayoutRef for WidgetRef {
 #[macro_export]
 macro_rules! widget_builder {
     ($builder_type:ty) => {
-        impl AsMut<WidgetBuilder> for $builder_type {
-            fn as_mut(&mut self) -> &mut WidgetBuilder {
+        impl AsMut<WidgetRef> for $builder_type {
+            fn as_mut(&mut self) -> &mut WidgetRef {
                 &mut self.widget
             }
         }
-        impl AsRef<WidgetBuilder> for $builder_type {
-            fn as_ref(&self) -> &WidgetBuilder {
+        impl AsRef<WidgetRef> for $builder_type {
+            fn as_ref(&self) -> &WidgetRef {
                 &self.widget
             }
         }
-        impl LayoutRef for $builder_type {
-            fn layout_ref(&self) -> LayoutVars {
-                self.as_ref().widget.widget_mut().layout.vars.clone()
+        impl ::std::ops::Deref for $builder_type {
+            type Target = WidgetRef;
+            fn deref(&self) -> &WidgetRef {
+                &self.widget
             }
         }
-        impl BuildWidget for $builder_type {
-            fn build(self) -> WidgetBuilder {
+        impl ::std::ops::DerefMut for $builder_type {
+            fn deref_mut(&mut self) -> &mut WidgetRef {
+                &mut self.widget
+            }
+        }
+        impl $crate::layout::LayoutRef for $builder_type {
+            fn layout_ref(&self) -> $crate::layout::LayoutVars {
+                self.as_ref().widget_mut().layout.vars.clone()
+            }
+        }
+        impl $crate::widget::BuildWidget for $builder_type {
+            fn build(self) -> WidgetRef {
                 self.widget
             }
         }
     };
-    ($builder_type:ty, build: $build_expr:expr) => {
-        impl AsMut<WidgetBuilder> for $builder_type {
-            fn as_mut(&mut self) -> &mut WidgetBuilder {
-                &mut self.widget
-            }
-        }
-        impl AsRef<WidgetBuilder> for $builder_type {
-            fn as_ref(&self) -> &WidgetBuilder {
-                &self.widget
-            }
-        }
-        impl LayoutRef for $builder_type {
-            fn layout_ref(&self) -> LayoutVars {
-                self.as_ref().widget.widget_mut().layout.vars.clone()
-            }
-        }
-        impl BuildWidget for $builder_type {
-            fn build(self) -> WidgetBuilder {
-                $build_expr(self)
-            }
-        }
-    };
 }
 
-pub trait WidgetBuilderCore {
-    fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self;
-    fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self;
-    fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self;
-    fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self;
-    fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self;
-    fn set_debug_name(&mut self, name: &str) -> &mut Self;
-    fn set_debug_color(&mut self, color: Color) -> &mut Self;
-    fn set_inactive(&mut self) -> &mut Self;
-    fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self;
-    fn no_container(&mut self) -> &mut Self;
-    fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self;
-    fn set_padding(&mut self, padding: f64) -> &mut Self;
-    fn layout(&mut self) -> LayoutGuard;
-    fn id(&mut self) -> WidgetId;
-}
-
-impl<B> WidgetBuilderCore for B where B: AsMut<WidgetBuilder> {
-    fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
-        self.as_mut().widget.widget_mut().drawable = Some(DrawableWrapper::new(drawable));
+impl WidgetRef {
+    pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
+        self.widget_mut().drawable = Some(DrawableWrapper::new(drawable));
         self
     }
-    fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
-        self.as_mut().widget.widget_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
+    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
+        self.widget_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
         self
     }
-    fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+    pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new(handler))
     }
-    fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
         self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new_from_fn(handler))
     }
-    fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self {
-        self.as_mut().widget.widget_mut().handlers.entry(type_id).or_insert(Vec::new())
+    pub fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self {
+        self.widget_mut().handlers.entry(type_id).or_insert(Vec::new())
             .push(Rc::new(RefCell::new(handler)));
         self
     }
-    fn set_debug_name(&mut self, name: &str) -> &mut Self {
-        self.as_mut().widget.widget_mut().debug_name = Some(name.to_owned());
-        self.as_mut().widget.widget_mut().layout.name = Some(name.to_owned());
-        self
-    }
-    fn set_debug_color(&mut self, color: Color) -> &mut Self {
-        self.as_mut().widget.widget_mut().debug_color = Some(color);
-        self
-    }
-    fn set_inactive(&mut self) -> &mut Self {
-        self.as_mut().widget.widget_mut().props.insert(Property::Inactive);
-        for child in &mut self.as_mut().widget.widget_mut().children {
+    pub fn set_inactive(&mut self) -> &mut Self {
+        self.widget_mut().props.insert(Property::Inactive);
+        for child in &mut self.widget_mut().children {
             child.widget_mut().props.insert(Property::Inactive);
         }
         self
     }
-    fn add_child<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
-        self.as_mut().widget.add_child(widget.build().widget);
+    pub fn no_container(&mut self) -> &mut Self {
+        self.widget_mut().container = None;
         self
     }
-    fn no_container(&mut self) -> &mut Self {
-        self.as_mut().widget.widget_mut().container = None;
+    pub fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self {
+        self.widget_mut().container = Some(Rc::new(RefCell::new(Box::new(container))));
         self
     }
-    fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self {
-        self.as_mut().widget.widget_mut().container = Some(Rc::new(RefCell::new(Box::new(container))));
-        self
-    }
-    fn set_padding(&mut self, padding: f64) -> &mut Self {
+    pub fn set_padding(&mut self, padding: f64) -> &mut Self {
         {
-            let mut widget = self.as_mut().widget.widget_mut();
+            let mut widget = self.widget_mut();
             widget.container.as_mut().unwrap().borrow_mut().set_padding(padding);
         }
         self
-    }
-    fn layout(&mut self) -> LayoutGuard {
-        self.as_mut().widget.layout()
-    }
-    fn id(&mut self) -> WidgetId {
-        self.as_mut().widget.widget_mut().id
     }
 }
 
@@ -232,36 +181,6 @@ impl<'a> DrawableGuard<'a> {
     }
 }
 
-impl WidgetBuilder {
-    pub fn new() -> Self {
-        WidgetBuilder::new_widget(None)
-    }
-    pub fn new_named(name: &str) -> Self {
-        WidgetBuilder::new_widget(Some(name.to_owned()))
-    }
-    fn new_widget(name: Option<String>) -> Self {
-        let widget = Widget {
-            id: resources().widget_id(),
-            drawable: None,
-            props: PropSet::new(),
-            layout: Layout::new(None),
-            has_updated: false,
-            bounds: Rect::zero(),
-            debug_name: name,
-            debug_color: None,
-            children: Vec::new(),
-            parent: None,
-            container: Some(Rc::new(RefCell::new(Box::new(Frame::new())))),
-            handlers: HashMap::new(),
-        };
-        let mut builder = WidgetBuilder {
-            widget: WidgetRef::new(widget),
-        };
-        builder.add_handler_fn(property::prop_change_handle);
-        builder
-    }
-}
-
 #[derive(Clone)]
 pub struct WidgetRef(pub Rc<RefCell<Widget>>);
 #[derive(Clone)]
@@ -286,9 +205,16 @@ impl fmt::Debug for WidgetRef {
 }
 
 impl WidgetRef {
-    fn new(widget: Widget) -> Self {
-        let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
+    pub fn new() -> Self {
+        WidgetRef::new_widget(Widget::new(None))
+    }
+    pub fn new_named(name: &str) -> Self {
+        WidgetRef::new_widget(Widget::new(Some(name.to_owned())))
+    }
+    fn new_widget(widget: Widget) -> Self {
+        let mut widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
         event!(Target::Ui, ::ui::RegisterWidget(widget_ref.clone()));
+        widget_ref.add_handler_fn(property::prop_change_handle);
         widget_ref
     }
     pub fn widget_mut(&self) -> RefMut<Widget> {
@@ -311,6 +237,15 @@ impl WidgetRef {
     }
     pub fn id(&self) -> WidgetId {
         self.0.borrow().id
+    }
+    pub fn set_debug_name(&mut self, name: &str) -> &mut Self {
+        self.widget_mut().debug_name = Some(name.to_owned());
+        self.widget_mut().layout.name = Some(name.to_owned());
+        self
+    }
+    pub fn set_debug_color(&mut self, color: Color) -> &mut Self {
+        self.widget_mut().debug_color = Some(color);
+        self
     }
     pub fn debug_name(&self) -> Option<String> {
         self.0.borrow().debug_name.clone()
@@ -345,7 +280,8 @@ impl WidgetRef {
         self.0.borrow_mut().apply_style();
     }
 
-    pub fn add_child(&mut self, mut child: WidgetRef) {
+    pub fn add_child<U: BuildWidget>(&mut self, child: U) -> &mut Self{
+        let mut child = child.build();
         event!(Target::Ui, ::layout::UpdateLayout(child.clone()));
         child.widget_mut().parent = Some(self.downgrade());
         child.apply_style();
@@ -357,6 +293,7 @@ impl WidgetRef {
         }
         self.event(::ui::WidgetAttachedEvent);
         self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars.clone()));
+        self
     }
 
     pub fn remove_child(&mut self, child_ref: WidgetRef) {
@@ -448,31 +385,23 @@ pub struct Widget {
 }
 
 impl Widget {
-    pub fn new(id: WidgetId,
-               drawable: Option<DrawableWrapper>,
-               props: PropSet,
-               layout: Layout,
-               debug_name: Option<String>,
-               debug_color: Option<Color>,
-               container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
-               handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>)
-               -> Self {
-        let widget = Widget {
-            id: id,
-            drawable: drawable,
-            props: props,
-            layout: layout,
+    fn new(name: Option<String>) -> Self {
+        Widget {
+            id: resources().widget_id(),
+            drawable: None,
+            props: PropSet::new(),
+            layout: Layout::new(None),
             has_updated: false,
             bounds: Rect::zero(),
-            debug_name: debug_name,
-            debug_color: debug_color,
+            debug_name: name,
+            debug_color: None,
             children: Vec::new(),
             parent: None,
-            container: container,
-            handlers: handlers,
-        };
-        widget
+            container: Some(Rc::new(RefCell::new(Box::new(Frame::new())))),
+            handlers: HashMap::new(),
+        }
     }
+
     pub fn layout(&mut self) -> &mut Layout {
         &mut self.layout
     }

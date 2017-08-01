@@ -149,13 +149,13 @@ pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
         let text_size = text_drawable.measure();
-        let mut list_item_widget = WidgetBuilder::new();
+        let mut list_item_widget = WidgetRef::new();
         list_item_widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
             .list_item(list_widget_id.clone())
             .enable_hover();
         layout!(list_item_widget: height(text_size.height));
-        let mut list_text_widget = WidgetBuilder::new();
+        let mut list_text_widget = WidgetRef::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
             .add_handler_fn(edit_text::text_change_handle);
@@ -163,25 +163,24 @@ pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
-    let item_ref = list_item_widget.widget;
-    list_widget_id.add_child(item_ref.clone());
-    item_ref
+    list_widget_id.add_child(list_item_widget.clone());
+    list_item_widget
 }
 
 fn main() {
     let mut app = util::init_default("Limn edit text demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetBuilder::new();
+    let mut root_widget = WidgetRef::new();
     layout!(root_widget: min_size(Size::new(300.0, 300.0)));
-    let mut container = WidgetBuilder::new();
+    let mut container = WidgetRef::new();
     layout!(container: bound_by(&root_widget).padding(20.0));
 
-    let create_name_group = |title, container: &mut WidgetBuilder| {
-        let mut name_container = WidgetBuilder::new();
+    let create_name_group = |title, container: &mut WidgetRef| {
+        let mut name_container = WidgetRef::new();
         layout!(name_container: match_width(container));
 
-        let mut static_text = WidgetBuilder::new();
+        let mut static_text = WidgetRef::new();
         let text = TextDrawable::new(title);
         let text_size = text.measure();
         static_text.set_drawable(text);
@@ -211,7 +210,7 @@ fn main() {
         event!(Target::Ui, PeopleEvent::ChangeLastName(text.0.clone()));
     });
 
-    let mut button_container = WidgetBuilder::new();
+    let mut button_container = WidgetRef::new();
     layout!(button_container: below(&last_name_container).padding(20.0));
 
     let mut create_button = PushButtonBuilder::new();
@@ -249,12 +248,12 @@ fn main() {
         event!(Target::Ui, PeopleEvent::Add);
     });
     let ids = Ids {
-        list_widget: list_widget.widget.widget.clone(),
-        first_name_box: first_name_box.widget.widget.clone(),
-        last_name_box: last_name_box.widget.widget.clone(),
-        create_button: create_button.widget.widget.clone(),
-        update_button: update_button.widget.widget.clone(),
-        delete_button: delete_button.widget.widget.clone(),
+        list_widget: list_widget.widget.clone(),
+        first_name_box: first_name_box.widget.clone(),
+        last_name_box: last_name_box.widget.clone(),
+        create_button: create_button.widget.clone(),
+        update_button: update_button.widget.clone(),
+        delete_button: delete_button.widget.clone(),
     };
     first_name_container.add_child(first_name_box);
     last_name_container.add_child(last_name_box);

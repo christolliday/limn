@@ -12,7 +12,7 @@ fn main() {
     let app = util::init_default("Limn button demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetBuilder::new();
+    let mut root_widget = WidgetRef::new();
     let mut button = ToggleButtonBuilder::new();
     button.set_text("ON", "OFF");
     button.set_debug_name("button");

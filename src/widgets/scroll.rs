@@ -3,26 +3,26 @@ use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::{WidgetBuilder, WidgetBuilderCore, BuildWidget, WidgetRef};
+use widget::{BuildWidget, WidgetRef};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Point, Size, Rect, RectExt};
-use layout::{LayoutUpdated, LayoutVars, LayoutRef, LAYOUT};
+use layout::{LayoutUpdated, LAYOUT};
 use layout::constraint::*;
 use input::mouse::WidgetMouseWheel;
 use drawable::rect::{RectDrawable, RectStyleable};
 use color::*;
 
 pub struct ScrollBuilder {
-    widget: WidgetBuilder,
-    content_holder: WidgetBuilder,
-    content: Option<WidgetBuilder>,
-    scrollbars: Option<(WidgetBuilder, SliderBuilder, SliderBuilder)>,
+    widget: WidgetRef,
+    content_holder: WidgetRef,
+    content: Option<WidgetRef>,
+    scrollbars: Option<(WidgetRef, SliderBuilder, SliderBuilder)>,
 }
 impl ScrollBuilder {
     pub fn new() -> Self {
-        let widget = WidgetBuilder::new_named("scroll");
+        let widget = WidgetRef::new_named("scroll");
 
-        let mut content_holder = WidgetBuilder::new_named("content_holder");
+        let mut content_holder = WidgetRef::new_named("content_holder");
         content_holder.no_container();
         layout!(content_holder:
             align_left(&widget),
@@ -35,7 +35,8 @@ impl ScrollBuilder {
             scrollbars: None,
         }
     }
-    pub fn add_content<C: BuildWidget>(&mut self, mut widget: C) -> &mut Self {
+    pub fn add_content<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
+        let mut widget = widget.build();
         {
             let ref parent = self.content_holder.layout().vars;
             layout!(widget:
@@ -45,7 +46,7 @@ impl ScrollBuilder {
                 LAYOUT.bottom | GE(REQUIRED) | parent.bottom,
             );
         }
-        self.content = Some(widget.build());
+        self.content = Some(widget);
         self
     }
     pub fn add_scrollbar(&mut self) -> &mut Self {
@@ -66,16 +67,16 @@ impl ScrollBuilder {
             to_right_of(&self.content_holder),
         );
 
-        let widget_ref = self.content_holder.widget.clone();
+        let widget_ref = self.content_holder.clone();
         scrollbar_h.on_value_changed(move |value, _| {
             widget_ref.event(ScrollParentEvent::OffsetX(value));
         });
-        let widget_ref = self.content_holder.widget.clone();
+        let widget_ref = self.content_holder.clone();
         scrollbar_v.on_value_changed(move |value, _| {
             widget_ref.event(ScrollParentEvent::OffsetY(value));
         });
         let corner_style = style!(RectStyleable::BackgroundColor: MID_GRAY);
-        let mut corner = WidgetBuilder::new_named("corner");
+        let mut corner = WidgetRef::new_named("corner");
         corner.set_drawable_with_style(RectDrawable::new(), corner_style);
         layout!(corner:
             align_bottom(&self.widget),
@@ -88,35 +89,38 @@ impl ScrollBuilder {
 
         self.scrollbars = Some((corner, scrollbar_h, scrollbar_v));
         self
-     }
+    }
+
+    pub fn build(mut self) -> WidgetRef {
+        let widget_ref = self.content_holder.clone();
+        self.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
+            widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
+        });
+        let mut content = self.content.expect("Scroll bar has no content");
+        let widget_ref = self.content_holder.clone();
+        content.add_handler_fn(move |_: &LayoutUpdated, args| {
+            widget_ref.event(ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
+        });
+        let mut scroll_parent_handler = ScrollParent::new(&mut content);
+        if let Some((ref mut corner, ref mut scrollbar_h, ref mut scrollbar_v)) = self.scrollbars {
+            scroll_parent_handler.size_handler = Some(ScrollSizeHandler::new(scrollbar_h, scrollbar_v, corner.clone()));
+        }
+        self.content_holder.add_handler(scroll_parent_handler);
+        self.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
+            args.widget.event(ScrollParentEvent::WidgetMouseWheel(event.clone()));
+        });
+        self.content_holder.add_child(content);
+        self.widget.add_child(self.content_holder);
+        if let Some((corner, scrollbar_h, scrollbar_v)) = self.scrollbars {
+            self.widget.add_child(corner);
+            self.widget.add_child(scrollbar_h.build());
+            self.widget.add_child(scrollbar_v.build());
+        }
+        self.widget
+    }
 }
-widget_builder!(ScrollBuilder, build: |mut builder: ScrollBuilder| -> WidgetBuilder {
-    let widget_ref = builder.content_holder.widget.clone();
-    builder.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
-        widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
-    });
-    let mut content = builder.content.expect("Scroll bar has no content");
-    let widget_ref = builder.content_holder.widget.clone();
-    content.add_handler_fn(move |_: &LayoutUpdated, args| {
-        widget_ref.event(ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
-    });
-    let mut scroll_parent_handler = ScrollParent::new(&mut content);
-    if let Some((ref mut corner, ref mut scrollbar_h, ref mut scrollbar_v)) = builder.scrollbars {
-        scroll_parent_handler.size_handler = Some(ScrollSizeHandler::new(scrollbar_h, scrollbar_v, corner.widget.clone()));
-    }
-    builder.content_holder.add_handler(scroll_parent_handler);
-    builder.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
-        args.widget.event(ScrollParentEvent::WidgetMouseWheel(event.clone()));
-    });
-    builder.content_holder.add_child(content);
-    builder.widget.add_child(builder.content_holder);
-    if let Some((corner, scrollbar_h, scrollbar_v)) = builder.scrollbars {
-        builder.widget.add_child(corner);
-        builder.widget.add_child(scrollbar_h);
-        builder.widget.add_child(scrollbar_v);
-    }
-    builder.widget
-});
+
+widget_builder!(ScrollBuilder);
 
 #[allow(dead_code)]
 struct ScrollSizeHandler {
@@ -129,11 +133,11 @@ struct ScrollSizeHandler {
 impl ScrollSizeHandler {
     fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner_id: WidgetRef) -> Self {
         ScrollSizeHandler {
-            scrollbar_h_id: scrollbar_h.widget.widget.clone(),
-            scrollbar_v_id: scrollbar_v.widget.widget.clone(),
+            scrollbar_h_id: scrollbar_h.widget.clone(),
+            scrollbar_v_id: scrollbar_v.widget.clone(),
             corner_id: corner_id,
-            h_handle: scrollbar_h.slider_handle.widget.clone(),
-            v_handle: scrollbar_v.slider_handle.widget.clone(),
+            h_handle: scrollbar_h.slider_handle.clone(),
+            v_handle: scrollbar_v.slider_handle.clone(),
         }
     }
 }
@@ -155,9 +159,9 @@ struct ScrollParent {
     pub size_handler: Option<ScrollSizeHandler>,
 }
 impl ScrollParent {
-    fn new(scrollable: &mut WidgetBuilder) -> Self {
+    fn new(scrollable: &mut WidgetRef) -> Self {
         ScrollParent {
-            scrollable: scrollable.widget.clone(),
+            scrollable: scrollable.clone(),
             content_rect: Rect::zero(),
             width_ratio: 0.0,
             height_ratio: 0.0,

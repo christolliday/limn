@@ -37,13 +37,13 @@ fn main() {
     let app = util::init_default("Limn edit text demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetBuilder::new();
+    let mut root_widget = WidgetRef::new();
     layout!(root_widget: min_size(Size::new(300.0, 300.0)));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
 
-    let edit_text_ref = edit_text_box.text_widget.widget.clone();
+    let edit_text_ref = edit_text_box.text_widget.clone();
     let mut h_align_button = ToggleButtonBuilder::new();
     h_align_button
         .set_text("Right Align", "Left Align")
@@ -58,7 +58,7 @@ fn main() {
             }
         });
 
-    let edit_text_ref = edit_text_box.text_widget.widget.clone();
+    let edit_text_ref = edit_text_box.text_widget.clone();
     let mut v_align_button = ToggleButtonBuilder::new();
     v_align_button
         .set_text("Bottom Align", "Top Align")
