@@ -12,10 +12,10 @@ fn main() {
     let app = util::init_default("Limn button demo");
     let image_id = util::load_default_image(&mut app.ui.window.borrow_mut());
 
-    let mut root_widget = WidgetRef::new();
+    let mut root_widget = Widget::new();
     let image_drawable = ImageDrawable::new(image_id);
     let image_size = image_drawable.measure();
-    let mut image_widget = WidgetRef::new();
+    let mut image_widget = Widget::new();
     image_widget.set_drawable(image_drawable);
     layout!(image_widget:
         size(image_size),

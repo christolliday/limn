@@ -28,30 +28,30 @@ use self::property::{PropSet, Property};
 use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 
-impl AsMut<WidgetRef> for WidgetRef {
-    fn as_mut(&mut self) -> &mut WidgetRef {
+impl AsMut<Widget> for Widget {
+    fn as_mut(&mut self) -> &mut Widget {
         self
     }
 }
-impl AsRef<WidgetRef> for WidgetRef {
-    fn as_ref(&self) -> &WidgetRef {
+impl AsRef<Widget> for Widget {
+    fn as_ref(&self) -> &Widget {
         self
     }
 }
-pub trait BuildWidget: AsMut<WidgetRef> {
-    fn build(self) -> WidgetRef;
+pub trait BuildWidget: AsMut<Widget> {
+    fn build(self) -> Widget;
 }
-impl BuildWidget for WidgetRef {
-    fn build(self) -> WidgetRef {
+impl BuildWidget for Widget {
+    fn build(self) -> Widget {
         self
     }
 }
-impl <'a> BuildWidget for &'a mut WidgetRef {
-    fn build(self) -> WidgetRef {
+impl <'a> BuildWidget for &'a mut Widget {
+    fn build(self) -> Widget {
         self.clone()
     }
 }
-impl LayoutRef for WidgetRef {
+impl LayoutRef for Widget {
     fn layout_ref(&self) -> LayoutVars {
         self.widget_mut().layout.vars.clone()
     }
@@ -60,24 +60,24 @@ impl LayoutRef for WidgetRef {
 #[macro_export]
 macro_rules! widget_builder {
     ($builder_type:ty) => {
-        impl AsMut<WidgetRef> for $builder_type {
-            fn as_mut(&mut self) -> &mut WidgetRef {
+        impl AsMut<Widget> for $builder_type {
+            fn as_mut(&mut self) -> &mut Widget {
                 &mut self.widget
             }
         }
-        impl AsRef<WidgetRef> for $builder_type {
-            fn as_ref(&self) -> &WidgetRef {
+        impl AsRef<Widget> for $builder_type {
+            fn as_ref(&self) -> &Widget {
                 &self.widget
             }
         }
         impl ::std::ops::Deref for $builder_type {
-            type Target = WidgetRef;
-            fn deref(&self) -> &WidgetRef {
+            type Target = Widget;
+            fn deref(&self) -> &Widget {
                 &self.widget
             }
         }
         impl ::std::ops::DerefMut for $builder_type {
-            fn deref_mut(&mut self) -> &mut WidgetRef {
+            fn deref_mut(&mut self) -> &mut Widget {
                 &mut self.widget
             }
         }
@@ -87,14 +87,14 @@ macro_rules! widget_builder {
             }
         }
         impl $crate::widget::BuildWidget for $builder_type {
-            fn build(self) -> WidgetRef {
+            fn build(self) -> Widget {
                 self.widget
             }
         }
     };
 }
 
-impl WidgetRef {
+impl Widget {
     pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
         self.widget_mut().drawable = Some(DrawableWrapper::new(drawable));
         self
@@ -139,7 +139,7 @@ impl WidgetRef {
 }
 
 pub struct LayoutGuard<'a> {
-    guard: RefMut<'a, Widget>
+    guard: RefMut<'a, WidgetInner>
 }
 impl<'b> Deref for LayoutGuard<'b> {
     type Target = Layout;
@@ -154,7 +154,7 @@ impl<'b> DerefMut for LayoutGuard<'b> {
 }
 
 pub struct PropsGuard<'a> {
-    guard: RefMut<'a, Widget>
+    guard: RefMut<'a, WidgetInner>
 }
 impl<'b> Deref for PropsGuard<'b> {
     type Target = PropSet;
@@ -169,7 +169,7 @@ impl<'b> DerefMut for PropsGuard<'b> {
 }
 
 pub struct DrawableGuard<'a> {
-    guard: RefMut<'a, Widget>
+    guard: RefMut<'a, WidgetInner>
 }
 impl<'a> DrawableGuard<'a> {
     pub fn downcast_ref<T: Drawable>(&self) -> Option<&T> {
@@ -182,45 +182,45 @@ impl<'a> DrawableGuard<'a> {
 }
 
 #[derive(Clone)]
-pub struct WidgetRef(pub Rc<RefCell<Widget>>);
+pub struct Widget(pub Rc<RefCell<WidgetInner>>);
 #[derive(Clone)]
-pub struct WidgetRefWeak(pub Weak<RefCell<Widget>>);
+pub struct WidgetWeak(pub Weak<RefCell<WidgetInner>>);
 
-impl PartialEq for WidgetRef {
-    fn eq(&self, other: &WidgetRef) -> bool {
+impl PartialEq for Widget {
+    fn eq(&self, other: &Widget) -> bool {
         self.id() == other.id()
     }
 }
-impl Eq for WidgetRef {}
-impl Hash for WidgetRef {
+impl Eq for Widget {}
+impl Hash for Widget {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
 }
 use std::fmt;
-impl fmt::Debug for WidgetRef {
+impl fmt::Debug for Widget {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.widget().debug_name.clone().unwrap_or("None".to_owned()))
     }
 }
 
-impl WidgetRef {
+impl Widget {
     pub fn new() -> Self {
-        WidgetRef::new_widget(Widget::new(None))
+        Widget::new_widget(WidgetInner::new(None))
     }
     pub fn new_named(name: &str) -> Self {
-        WidgetRef::new_widget(Widget::new(Some(name.to_owned())))
+        Widget::new_widget(WidgetInner::new(Some(name.to_owned())))
     }
-    fn new_widget(widget: Widget) -> Self {
-        let mut widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
+    fn new_widget(widget: WidgetInner) -> Self {
+        let mut widget_ref = Widget(Rc::new(RefCell::new(widget)));
         event!(Target::Ui, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref.add_handler_fn(property::prop_change_handle);
         widget_ref
     }
-    pub fn widget_mut(&self) -> RefMut<Widget> {
+    pub fn widget_mut(&self) -> RefMut<WidgetInner> {
         self.0.borrow_mut()
     }
-    pub fn widget(&self) -> Ref<Widget> {
+    pub fn widget(&self) -> Ref<WidgetInner> {
         self.0.borrow()
     }
     pub fn layout(&mut self) -> LayoutGuard {
@@ -232,8 +232,8 @@ impl WidgetRef {
     pub fn drawable(&mut self) -> DrawableGuard {
         DrawableGuard { guard: self.0.borrow_mut() }
     }
-    pub fn downgrade(&self) -> WidgetRefWeak {
-        WidgetRefWeak(Rc::downgrade(&self.0))
+    pub fn downgrade(&self) -> WidgetWeak {
+        WidgetWeak(Rc::downgrade(&self.0))
     }
     pub fn id(&self) -> WidgetId {
         self.0.borrow().id
@@ -296,7 +296,7 @@ impl WidgetRef {
         self
     }
 
-    pub fn remove_child(&mut self, child_ref: WidgetRef) {
+    pub fn remove_child(&mut self, child_ref: Widget) {
         let child_id = child_ref.id();
         let mut container = self.widget_mut().container.clone();
         if let Some(ref mut container) = container {
@@ -317,7 +317,7 @@ impl WidgetRef {
         }
     }
 
-    pub fn parent(&mut self) -> Option<WidgetRef> {
+    pub fn parent(&mut self) -> Option<Widget> {
         let parent = self.widget().parent.clone();
         parent.unwrap().upgrade()
     }
@@ -359,17 +359,17 @@ impl WidgetRef {
         handled
     }
 }
-impl WidgetRefWeak {
-    pub fn upgrade(&self) -> Option<WidgetRef> {
+impl WidgetWeak {
+    pub fn upgrade(&self) -> Option<Widget> {
         if let Some(widget_ref) = self.0.upgrade() {
-            Some(WidgetRef(widget_ref))
+            Some(Widget(widget_ref))
         } else {
             None
         }
     }
 }
 
-pub struct Widget {
+pub struct WidgetInner {
     pub id: WidgetId,
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
@@ -378,15 +378,15 @@ pub struct Widget {
     pub bounds: Rect,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
-    pub children: Vec<WidgetRef>,
-    pub parent: Option<WidgetRefWeak>,
+    pub children: Vec<Widget>,
+    pub parent: Option<WidgetWeak>,
     pub container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
     pub handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
 }
 
-impl Widget {
+impl WidgetInner {
     fn new(name: Option<String>) -> Self {
-        Widget {
+        WidgetInner {
             id: resources().widget_id(),
             drawable: None,
             props: PropSet::new(),

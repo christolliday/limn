@@ -3,7 +3,7 @@ use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::{BuildWidget, WidgetRef};
+use widget::{BuildWidget, Widget};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Point, Size, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
@@ -13,16 +13,16 @@ use drawable::rect::{RectDrawable, RectStyleable};
 use color::*;
 
 pub struct ScrollBuilder {
-    widget: WidgetRef,
-    content_holder: WidgetRef,
-    content: Option<WidgetRef>,
-    scrollbars: Option<(WidgetRef, SliderBuilder, SliderBuilder)>,
+    widget: Widget,
+    content_holder: Widget,
+    content: Option<Widget>,
+    scrollbars: Option<(Widget, SliderBuilder, SliderBuilder)>,
 }
 impl ScrollBuilder {
     pub fn new() -> Self {
-        let widget = WidgetRef::new_named("scroll");
+        let widget = Widget::new_named("scroll");
 
-        let mut content_holder = WidgetRef::new_named("content_holder");
+        let mut content_holder = Widget::new_named("content_holder");
         content_holder.no_container();
         layout!(content_holder:
             align_left(&widget),
@@ -76,7 +76,7 @@ impl ScrollBuilder {
             widget_ref.event(ScrollParentEvent::OffsetY(value));
         });
         let corner_style = style!(RectStyleable::BackgroundColor: MID_GRAY);
-        let mut corner = WidgetRef::new_named("corner");
+        let mut corner = Widget::new_named("corner");
         corner.set_drawable_with_style(RectDrawable::new(), corner_style);
         layout!(corner:
             align_bottom(&self.widget),
@@ -91,7 +91,7 @@ impl ScrollBuilder {
         self
     }
 
-    pub fn build(mut self) -> WidgetRef {
+    pub fn build(mut self) -> Widget {
         let widget_ref = self.content_holder.clone();
         self.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
             widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
@@ -124,14 +124,14 @@ widget_builder!(ScrollBuilder);
 
 #[allow(dead_code)]
 struct ScrollSizeHandler {
-    scrollbar_h_id: WidgetRef,
-    scrollbar_v_id: WidgetRef,
-    corner_id: WidgetRef,
-    h_handle: WidgetRef,
-    v_handle: WidgetRef,
+    scrollbar_h_id: Widget,
+    scrollbar_v_id: Widget,
+    corner_id: Widget,
+    h_handle: Widget,
+    v_handle: Widget,
 }
 impl ScrollSizeHandler {
-    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner_id: WidgetRef) -> Self {
+    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner_id: Widget) -> Self {
         ScrollSizeHandler {
             scrollbar_h_id: scrollbar_h.widget.clone(),
             scrollbar_v_id: scrollbar_v.widget.clone(),
@@ -150,7 +150,7 @@ enum ScrollParentEvent {
     OffsetY(f64),
 }
 struct ScrollParent {
-    scrollable: WidgetRef,
+    scrollable: Widget,
     content_rect: Rect,
     width_ratio: f64,
     height_ratio: f64,
@@ -159,7 +159,7 @@ struct ScrollParent {
     pub size_handler: Option<ScrollSizeHandler>,
 }
 impl ScrollParent {
-    fn new(scrollable: &mut WidgetRef) -> Self {
+    fn new(scrollable: &mut Widget) -> Self {
         ScrollParent {
             scrollable: scrollable.clone(),
             content_rect: Rect::zero(),

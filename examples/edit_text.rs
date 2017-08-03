@@ -37,7 +37,7 @@ fn main() {
     let app = util::init_default("Limn edit text demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetRef::new();
+    let mut root_widget = Widget::new();
     layout!(root_widget: min_size(Size::new(300.0, 300.0)));
 
     let mut edit_text_box = EditTextBuilder::new();

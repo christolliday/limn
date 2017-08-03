@@ -23,21 +23,21 @@ use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::input::keyboard::KeyboardInput;
 
-fn create_slider_control() -> WidgetRef {
+fn create_slider_control() -> Widget {
 
     let text_style = style!(TextStyleable::TextColor: selector!(BLACK, INACTIVE: [0.5, 0.5, 0.5, 1.0]));
-    let mut slider_container = WidgetRef::new();
+    let mut slider_container = Widget::new();
     slider_container
         .set_debug_name("slider_container")
         .set_inactive();
-    let mut slider_title = WidgetRef::new();
+    let mut slider_title = Widget::new();
     slider_title.set_debug_name("slider_title");
     slider_title.set_drawable_with_style(TextDrawable::new("Circle Size"), text_style.clone());
     layout!(slider_title:
         align_left(&slider_container),
         width(150.0));
     let style = style!(parent: text_style, TextStyleable::Align: Align::End);
-    let mut slider_value = WidgetRef::new();
+    let mut slider_value = Widget::new();
     slider_value
         .set_debug_name("slider_value")
         .set_drawable_with_style(TextDrawable::new("30"), style)
@@ -73,9 +73,9 @@ fn create_slider_control() -> WidgetRef {
         .add_child(slider_widget);
     slider_container
 }
-fn create_control_bar(root_widget: &mut WidgetRef) -> (WidgetRef, WidgetRef, WidgetRef) {
+fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
     let control_color = [0.7, 0.7, 0.7, 1.0];
-    let mut button_container = WidgetRef::new();
+    let mut button_container = Widget::new();
     let style = style!(RectStyleable::BackgroundColor: control_color);
     button_container
         .set_debug_name("button_container")
@@ -106,10 +106,10 @@ fn create_control_bar(root_widget: &mut WidgetRef) -> (WidgetRef, WidgetRef, Wid
     (undo_widget, redo_widget, slider_container)
 }
 
-fn create_circle(center: &Point, mut parent_id: WidgetRef, size: f64) -> WidgetRef {
+fn create_circle(center: &Point, mut parent_id: Widget, size: f64) -> Widget {
     let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyleable::Border: Some((1.0, BLACK)));
-    let mut widget = WidgetRef::new();
+    let mut widget = Widget::new();
     widget.set_debug_name("circle");
     widget.set_drawable_with_style(EllipseDrawable::new(), style);
     widget.add_handler(CircleHandler { center: center.clone() });
@@ -142,27 +142,27 @@ enum CircleEvent {
     Add(Point),
     Undo,
     Redo,
-    Select(Option<WidgetRef>),
+    Select(Option<Widget>),
     Delete,
     Resize(f64),
 }
 
 struct CircleEventHandler {
-    circle_canvas_id: WidgetRef,
-    undo_id: WidgetRef,
-    redo_id: WidgetRef,
-    slider_id: WidgetRef,
+    circle_canvas_id: Widget,
+    undo_id: Widget,
+    redo_id: Widget,
+    slider_id: Widget,
 
-    circles: HashMap<WidgetRef, (Point, f64)>,
-    undo_queue: Vec<WidgetRef>,
+    circles: HashMap<Widget, (Point, f64)>,
+    undo_queue: Vec<Widget>,
     redo_queue: Vec<(Point, f64)>,
-    selected: Option<WidgetRef>,
+    selected: Option<Widget>,
 }
 impl CircleEventHandler {
-    fn new(circle_canvas_id: WidgetRef,
-           undo_id: WidgetRef,
-           redo_id: WidgetRef,
-           slider_id: WidgetRef)
+    fn new(circle_canvas_id: Widget,
+           undo_id: Widget,
+           redo_id: Widget,
+           slider_id: Widget)
            -> Self {
         CircleEventHandler {
             circles: HashMap::new(),
@@ -248,9 +248,9 @@ fn main() {
     let mut app = util::init_default("Limn circles demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetRef::new();
+    let mut root_widget = Widget::new();
 
-    let mut circle_canvas = WidgetRef::new();
+    let mut circle_canvas = Widget::new();
     circle_canvas.no_container();
     layout!(circle_canvas: min_height(600.0));
     circle_canvas

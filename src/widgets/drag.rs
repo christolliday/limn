@@ -1,7 +1,7 @@
 use glutin;
 
 use event::{Target, UiEventHandler};
-use widget::WidgetRef;
+use widget::Widget;
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use util::Point;
 use ui::Ui;
@@ -21,7 +21,7 @@ pub enum DragEvent {
 }
 
 struct DragInputHandler {
-    widget: Option<WidgetRef>,
+    widget: Option<Widget>,
     position: Point,
 }
 impl DragInputHandler {
@@ -67,12 +67,12 @@ impl UiEventHandler<DragInputEvent> for DragInputHandler {
 }
 
 enum DragInputEvent {
-    WidgetPressed(WidgetRef),
+    WidgetPressed(Widget),
     MouseMoved(Point),
     MouseReleased,
 }
 
-impl WidgetRef {
+impl Widget {
     pub fn make_draggable(&mut self) -> &mut Self {
         self.add_handler_fn(|event: &WidgetMouseButton, args| {
             if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {

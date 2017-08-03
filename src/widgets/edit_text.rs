@@ -1,6 +1,6 @@
 use text_layout::Align;
 
-use widget::WidgetRef;
+use widget::Widget;
 use widget::property::states::*;
 use layout::constraint::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
@@ -45,8 +45,8 @@ pub fn text_change_handle(event: &TextUpdated, mut args: WidgetEventArgs) {
 }
 
 pub struct EditTextBuilder {
-    pub widget: WidgetRef,
-    pub text_widget: WidgetRef,
+    pub widget: Widget,
+    pub text_widget: Widget,
 }
 widget_builder!(EditTextBuilder);
 
@@ -57,7 +57,7 @@ impl EditTextBuilder {
         let rect_style = style!(
             RectStyleable::Border: selector!(default_border, FOCUSED: focused_border),
             RectStyleable::CornerRadius: Some(3.0));
-        let mut widget = WidgetRef::new();
+        let mut widget = Widget::new();
         widget
             .set_drawable_with_style(RectDrawable::new(), rect_style)
             .add_handler_fn(|_: &WidgetAttachedEvent, args| {
@@ -70,7 +70,7 @@ impl EditTextBuilder {
 
 
         let text_style = style!(TextStyleable::VertAlign: Align::Start);
-        let mut text_widget = WidgetRef::new();
+        let mut text_widget = Widget::new();
         text_widget
             .set_drawable_with_style(TextDrawable::default(), text_style)
             .add_handler_fn(edit_text_handle_char)
@@ -91,7 +91,7 @@ impl EditTextBuilder {
         self.text_widget.add_handler_fn(callback);
         self
     }
-    pub fn build(mut self) -> WidgetRef {
+    pub fn build(mut self) -> Widget {
         self.widget.add_child(self.text_widget);
         self.widget
     }

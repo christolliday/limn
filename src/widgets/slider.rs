@@ -2,7 +2,7 @@ use cassowary::strength::*;
 
 use input::mouse::ClickEvent;
 use event::{WidgetEventHandler, WidgetEventArgs};
-use widget::WidgetRef;
+use widget::Widget;
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
@@ -30,8 +30,8 @@ pub enum BarStyle {
 }
 
 pub struct SliderBuilder {
-    pub widget: WidgetRef,
-    pub slider_handle: WidgetRef,
+    pub widget: Widget,
+    pub slider_handle: Widget,
     pub orientation: Orientation,
     pub init_value: f64,
     pub variable_handle_size: bool,
@@ -46,10 +46,10 @@ pub struct SliderBuilder {
 
 impl SliderBuilder {
     pub fn new() -> Self {
-        let mut slider = WidgetRef::new();
+        let mut slider = Widget::new();
         slider.set_debug_name("slider");
 
-        let mut slider_handle = WidgetRef::new();
+        let mut slider_handle = Widget::new();
         slider_handle
             .set_debug_name("slider_handle")
             .add_handler_fn(|event: &WidgetDrag, args| {
@@ -111,7 +111,7 @@ impl SliderBuilder {
         });
         self
     }
-    pub fn build(self) -> WidgetRef {
+    pub fn build(self) -> Widget {
         let (mut slider, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
 
         slider_handle.add_handler(DragHandler::new(orientation, slider.clone()));
@@ -145,12 +145,12 @@ impl SliderBuilder {
         } else {
             bar_style.clone()
         };
-        let mut slider_bar_pre = WidgetRef::new();
+        let mut slider_bar_pre = Widget::new();
         slider_bar_pre
             .set_debug_name("slider_bar_pre")
             .set_drawable_with_style(RectDrawable::new(), pre_style);
 
-        let mut slider_bar_post = WidgetRef::new();
+        let mut slider_bar_post = Widget::new();
         slider_bar_post
             .set_debug_name("slider_bar_post")
             .set_drawable_with_style(RectDrawable::new(), bar_style);
@@ -256,11 +256,11 @@ pub enum SliderHandleInput {
 }
 struct DragHandler {
     orientation: Orientation,
-    container: WidgetRef,
+    container: Widget,
     start_pos: f64,
 }
 impl DragHandler {
-    pub fn new(orientation: Orientation, container: WidgetRef) -> Self {
+    pub fn new(orientation: Orientation, container: Widget) -> Self {
         DragHandler {
             orientation: orientation,
             container: container,

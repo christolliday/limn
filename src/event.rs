@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 use glutin::EventsLoopProxy;
 
 use ui::Ui;
-use widget::WidgetRef;
+use widget::Widget;
 
 /// Defines the different targets that events can be delivered to.
 /// An event will be sent to all handlers that match both the Target,
@@ -13,12 +13,12 @@ use widget::WidgetRef;
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum Target {
     /// Sends an event to a specific widget
-    Widget(WidgetRef),
+    Widget(Widget),
     /// Sends an event to every descendant of a specific widget
-    SubTree(WidgetRef),
+    SubTree(Widget),
     /// Sends an event to a widget and continues sending to it's
     /// ancestors until an event handler marks the event as handled
-    BubbleUp(WidgetRef),
+    BubbleUp(Widget),
     /// Sends an event to a UiEventHandler registered for the entire application
     Ui,
 }
@@ -58,7 +58,7 @@ impl Queue {
 /// Context passed to a WidgetEventHandler, allows modification
 /// to a widget and it's layout, and posting events to the Queue.
 pub struct WidgetEventArgs<'a> {
-    pub widget: WidgetRef,
+    pub widget: Widget,
     pub handled: &'a mut bool,
 }
 

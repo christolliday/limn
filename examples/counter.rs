@@ -18,10 +18,10 @@ fn main() {
     let app = util::init_default("Limn counter demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetRef::new();
+    let mut root_widget = Widget::new();
     root_widget.hbox();
 
-    let mut left_spacer = WidgetRef::new();
+    let mut left_spacer = Widget::new();
     layout!(left_spacer: width(50.0));
     root_widget.add_child(left_spacer);
 
@@ -36,7 +36,7 @@ fn main() {
     let text_style = style!(TextStyleable::BackgroundColor: WHITE);
     let text_drawable = TextDrawable::new("0");
     let text_dims = text_drawable.measure();
-    let mut text_widget = WidgetRef::new();
+    let mut text_widget = Widget::new();
     text_widget
         .set_drawable_with_style(text_drawable, text_style)
         .add_handler(CountHandler);
@@ -45,7 +45,7 @@ fn main() {
         height(text_dims.height),
         center_vertical(&root_widget));
 
-    let mut button_container = WidgetRef::new();
+    let mut button_container = Widget::new();
     let root_id = root_widget.clone();
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");

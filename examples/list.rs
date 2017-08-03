@@ -16,7 +16,7 @@ fn main() {
     let app = util::init_default("Limn list demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetRef::new();
+    let mut root_widget = Widget::new();
 
     let mut scroll_widget = ScrollBuilder::new();
     layout!(scroll_widget:
@@ -34,7 +34,7 @@ fn main() {
             let text_drawable = TextDrawable::new("hello");
             let text_size = text_drawable.measure();
 
-            let mut list_item_widget = WidgetRef::new();
+            let mut list_item_widget = Widget::new();
             list_item_widget
                 .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
                 .set_debug_name("item")
@@ -42,7 +42,7 @@ fn main() {
                 .enable_hover();
             layout!(list_item_widget: height(text_size.height));
 
-            let mut list_text_widget = WidgetRef::new();
+            let mut list_text_widget = Widget::new();
             list_text_widget
                 .set_drawable_with_style(text_drawable, text_style)
                 .set_debug_name("text");

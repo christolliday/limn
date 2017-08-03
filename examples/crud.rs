@@ -44,24 +44,24 @@ enum PeopleEvent {
     Add,
     Update,
     Delete,
-    PersonSelected(Option<WidgetRef>),
+    PersonSelected(Option<Widget>),
     ChangeFirstName(String),
     ChangeLastName(String),
 }
 
 struct Ids {
-    list_widget: WidgetRef,
-    first_name_box: WidgetRef,
-    last_name_box: WidgetRef,
-    create_button: WidgetRef,
-    update_button: WidgetRef,
-    delete_button: WidgetRef,
+    list_widget: Widget,
+    first_name_box: Widget,
+    last_name_box: Widget,
+    create_button: Widget,
+    update_button: Widget,
+    delete_button: Widget,
 }
 struct PeopleHandler {
     ids: Ids,
-    selected_item: Option<WidgetRef>,
+    selected_item: Option<Widget>,
     person: Person,
-    people: HashMap<WidgetRef, Person>,
+    people: HashMap<Widget, Person>,
 }
 impl PeopleHandler {
     fn new(ids: Ids) -> Self {
@@ -144,18 +144,18 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
 }
 
 use limn::widgets::edit_text;
-pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
+pub fn add_person(person: &Person, mut list_widget_id: Widget) -> Widget {
     let list_item_widget = {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());
         let text_size = text_drawable.measure();
-        let mut list_item_widget = WidgetRef::new();
+        let mut list_item_widget = Widget::new();
         list_item_widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
             .list_item(list_widget_id.clone())
             .enable_hover();
         layout!(list_item_widget: height(text_size.height));
-        let mut list_text_widget = WidgetRef::new();
+        let mut list_text_widget = Widget::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
             .add_handler_fn(edit_text::text_change_handle);
@@ -171,16 +171,16 @@ fn main() {
     let mut app = util::init_default("Limn edit text demo");
     util::load_default_font();
 
-    let mut root_widget = WidgetRef::new();
+    let mut root_widget = Widget::new();
     layout!(root_widget: min_size(Size::new(300.0, 300.0)));
-    let mut container = WidgetRef::new();
+    let mut container = Widget::new();
     layout!(container: bound_by(&root_widget).padding(20.0));
 
-    let create_name_group = |title, container: &mut WidgetRef| {
-        let mut name_container = WidgetRef::new();
+    let create_name_group = |title, container: &mut Widget| {
+        let mut name_container = Widget::new();
         layout!(name_container: match_width(container));
 
-        let mut static_text = WidgetRef::new();
+        let mut static_text = Widget::new();
         let text = TextDrawable::new(title);
         let text_size = text.measure();
         static_text.set_drawable(text);
@@ -210,7 +210,7 @@ fn main() {
         event!(Target::Ui, PeopleEvent::ChangeLastName(text.0.clone()));
     });
 
-    let mut button_container = WidgetRef::new();
+    let mut button_container = Widget::new();
     layout!(button_container: below(&last_name_container).padding(20.0));
 
     let mut create_button = PushButtonBuilder::new();

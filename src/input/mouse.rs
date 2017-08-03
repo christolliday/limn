@@ -2,7 +2,7 @@ use glutin;
 
 use event::{Target, UiEventHandler, WidgetEventArgs};
 use util::Point;
-use widget::WidgetRef;
+use widget::Widget;
 use widget::property::{Property, PropChange};
 use layout::LayoutChanged;
 use ui::Ui;
@@ -30,7 +30,7 @@ pub struct ClickEvent {
 
 struct MouseController {
     pub mouse: Point,
-    pub widget_under_mouse: Option<WidgetRef>,
+    pub widget_under_mouse: Option<Widget>,
 }
 impl MouseController {
     pub fn new() -> Self {
@@ -114,7 +114,7 @@ fn handle_hover(event: &MouseOverEvent, args: WidgetEventArgs) {
     args.widget.event_subtree(event);
 }
 
-impl WidgetRef {
+impl Widget {
     pub fn enable_hover(&mut self) -> &mut Self {
         self.add_handler_fn(handle_hover)
     }

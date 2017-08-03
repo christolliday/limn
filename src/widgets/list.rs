@@ -1,5 +1,5 @@
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::WidgetRef;
+use widget::Widget;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use drawable::rect::RectStyleable;
@@ -7,7 +7,7 @@ use input::mouse::ClickEvent;
 use util::Color;
 
 pub struct ListItemSelected {
-    widget: Option<WidgetRef>,
+    widget: Option<Widget>,
 }
 
 static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
@@ -23,7 +23,7 @@ lazy_static! {
 }
 
 pub struct ListHandler {
-    selected: Option<WidgetRef>,
+    selected: Option<Widget>,
 }
 impl ListHandler {
     pub fn new() -> Self {
@@ -47,10 +47,10 @@ fn list_handle_deselect(_: &ClickEvent, args: WidgetEventArgs) {
 }
 
 pub struct ListItemHandler {
-    list_id: WidgetRef,
+    list_id: Widget,
 }
 impl ListItemHandler {
-    pub fn new(list_id: WidgetRef) -> Self {
+    pub fn new(list_id: Widget) -> Self {
         ListItemHandler { list_id: list_id }
     }
 }
@@ -66,13 +66,13 @@ impl WidgetEventHandler<ClickEvent> for ListItemHandler {
 }
 
 pub struct ListBuilder {
-    pub widget: WidgetRef,
+    pub widget: Widget,
 }
 widget_builder!(ListBuilder);
 
 impl ListBuilder {
     pub fn new() -> Self {
-        let mut widget = WidgetRef::new();
+        let mut widget = Widget::new();
         widget.add_handler(ListHandler::new())
               .add_handler_fn(list_handle_deselect)
               .vbox();
@@ -81,7 +81,7 @@ impl ListBuilder {
         }
     }
     pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
-        where F: Fn(Option<WidgetRef>, WidgetEventArgs) + 'static
+        where F: Fn(Option<Widget>, WidgetEventArgs) + 'static
     {
         self.widget.add_handler_fn(move |event: &ListItemSelected, args| {
             on_item_selected(event.widget.clone(), args);
@@ -90,8 +90,8 @@ impl ListBuilder {
     }
 }
 
-impl WidgetRef {
-    pub fn list_item(&mut self, list_id: WidgetRef) -> &mut Self {
+impl Widget {
+    pub fn list_item(&mut self, list_id: Widget) -> &mut Self {
         self.add_handler(ListItemHandler::new(list_id))
     }
 }
