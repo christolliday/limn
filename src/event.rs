@@ -46,12 +46,12 @@ impl Queue {
             events_loop_proxy.wakeup().unwrap();
         }
     }
-    pub fn is_empty(&mut self) -> bool {
-        self.queue.len() == 0
-    }
+}
+impl Iterator for Queue {
+    type Item = (Target, TypeId, Box<Any>);
     /// Take the next event off the Queue, should only be called by App
-    pub fn next(&mut self) -> (Target, TypeId, Box<Any>) {
-        self.queue.pop_front().unwrap()
+    fn next(&mut self) -> Option<(Target, TypeId, Box<Any>)> {
+        self.queue.pop_front()
     }
 }
 
@@ -173,12 +173,7 @@ thread_local! {
     }
 }
 
-pub fn queue_is_empty() -> bool {
-    let mut is_empty = true;
-    LOCAL_QUEUE.with(|queue| is_empty = queue.as_ref().unwrap().borrow_mut().is_empty());
-    is_empty
-}
-pub fn queue_next() -> (Target, TypeId, Box<Any>) {
+pub fn queue_next() -> Option<(Target, TypeId, Box<Any>)> {
     let mut next = None;
     LOCAL_QUEUE.with(|queue| next = Some(queue.as_ref().unwrap().borrow_mut().next()));
     next.unwrap()

@@ -106,8 +106,7 @@ impl App {
 
     /// Handle all the pending events in the event queue
     pub fn handle_events(&mut self) {
-        while !event::queue_is_empty() {
-            let (event_address, type_id, data) = event::queue_next();
+        while let Some((event_address, type_id, data)) = event::queue_next() {
             let data = &data;
             match event_address {
                 Target::Ui => {
