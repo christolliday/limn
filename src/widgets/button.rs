@@ -60,7 +60,7 @@ pub enum ToggleEvent {
 }
 // show whether toggle button is activated
 fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: WidgetEventArgs) {
-    if let &WidgetMouseButton(glutin::ElementState::Released, _) = event {
+    if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
         let (toggle_event, prop_event) = match args.widget.props().contains(&Property::Activated) {
             true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
             false => (ToggleEvent::On, PropChange::Add(Property::Activated)),

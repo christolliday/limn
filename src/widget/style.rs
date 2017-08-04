@@ -42,18 +42,16 @@ impl<T> Selector<T> {
     }
 }
 
-impl<T> Value<T>
-    where T: Clone
-{
-    pub fn from_props(&self, props: &PropSet) -> T {
+impl<T: Clone> Value<T> {
+    pub fn get(&self, props: &PropSet) -> T {
         let val = match *self {
             Value::Selector::<T>(ref sel) => {
                 let &Selector { ref matcher, ref default } = sel;
-                if matcher.contains_key(&props) {
-                    matcher.get(&props).unwrap()
+                if matcher.contains_key(props) {
+                    matcher.get(props).unwrap()
                 } else {
                     matcher.iter().find(|&(matcher_props, _)| {
-                        matcher_props.is_subset(&props)
+                        matcher_props.is_subset(props)
                     }).map(|(_, val)| val).unwrap_or(default)
                 }
             },
@@ -85,7 +83,7 @@ pub trait Styleable<D> {
     fn apply(&self, state: &mut D, props: &PropSet);
 }
 
-pub fn apply_style<D, S: Styleable<D>>(state: &mut D, style: &Vec<S>, props: &PropSet) {
+pub fn apply_style<D, S: Styleable<D>>(state: &mut D, style: &[S], props: &PropSet) {
     for field in style.iter() {
         field.apply(state, props);
     }

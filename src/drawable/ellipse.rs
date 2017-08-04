@@ -57,9 +57,9 @@ impl Styleable<EllipseDrawable> for EllipseStyleable {
     fn apply(&self, drawable: &mut EllipseDrawable, props: &PropSet) {
         match *self {
             EllipseStyleable::BackgroundColor(ref val) => {
-                drawable.background_color = val.from_props(props)
+                drawable.background_color = val.get(props)
             },
-            EllipseStyleable::Border(ref val) => drawable.border = val.from_props(props),
+            EllipseStyleable::Border(ref val) => drawable.border = val.get(props),
         }
     }
 }

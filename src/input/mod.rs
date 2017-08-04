@@ -47,7 +47,7 @@ impl App {
 pub struct EscKeyCloseHandler;
 impl UiEventHandler<KeyboardInput> for EscKeyCloseHandler {
     fn handle(&mut self, event: &KeyboardInput, ui: &mut Ui) {
-        if let &KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = event {
+        if let KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = *event {
             ui.close();
         }
     }
@@ -65,17 +65,17 @@ impl DebugSettingsHandler {
 use glutin::ElementState;
 impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
     fn handle(&mut self, event: &KeyboardInput, ui: &mut Ui) {
-        if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = event {
+        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = *event {
             self.debug_on = !self.debug_on;
             ui.set_debug_draw_bounds(self.debug_on);
         }
-        if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F2)) = event {
+        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F2)) = *event {
             ui.debug_constraints();
         }
-        if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F3)) = event {
+        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F3)) = *event {
             ui.debug_widget_positions();
         }
-        if let &KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F4)) = event {
+        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F4)) = *event {
             ui.debug_variables();
         }
     }

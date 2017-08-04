@@ -131,11 +131,7 @@ impl Ui {
         Bfs::new(self.get_root())
     }
 
-    fn handle_widget_event(&mut self,
-                           widget_ref: Widget,
-                           type_id: TypeId,
-                           data: &Box<Any>) -> bool
-    {
+    fn handle_widget_event(&mut self, widget_ref: Widget, type_id: TypeId, data: &Any) -> bool {
         let handled = widget_ref.trigger_event(type_id, data);
         if widget_ref.has_updated() {
             self.needs_redraw = true;
@@ -144,10 +140,7 @@ impl Ui {
         handled
     }
 
-    pub fn handle_event(&mut self,
-                        address: Target,
-                        type_id: TypeId,
-                        data: &Box<Any>) {
+    pub fn handle_event(&mut self, address: Target, type_id: TypeId, data: &Any) {
         match address {
             Target::Widget(widget_ref) => {
                 self.handle_widget_event(widget_ref, type_id, data);
@@ -167,7 +160,7 @@ impl Ui {
             _ => ()
         }
     }
-    fn handle_event_subtree(&mut self, widget_ref: Widget, type_id: TypeId, data: &Box<Any>) {
+    fn handle_event_subtree(&mut self, widget_ref: Widget, type_id: TypeId, data: &Any) {
         self.handle_widget_event(widget_ref.clone(), type_id, data);
         let children = &widget_ref.widget().children;
         for child in children {
@@ -176,8 +169,7 @@ impl Ui {
     }
     pub fn debug_widget_positions(&mut self) {
         println!("WIDGET POSITIONS");
-        let mut bfs = self.bfs();
-        while let Some(widget_ref) = bfs.next() {
+        for widget_ref in self.bfs() {
             let bounds = widget_ref.bounds();
             let name = widget_ref.debug_name().clone();
             println!("{:?} {:?}", name, bounds);
@@ -232,9 +224,13 @@ impl CursorWidgetWalker {
             dfs: DfsPostReverse::new(root),
         }
     }
-    pub fn next(&mut self) -> Option<Widget> {
-        while let Some(widget_ref) = self.dfs.next() {
-            let ref widget = widget_ref.widget();
+}
+
+impl Iterator for CursorWidgetWalker {
+    type Item = Widget;
+    fn next(&mut self) -> Option<Widget> {
+        for widget_ref in self.dfs.by_ref() {
+            let widget = &widget_ref.widget();
             if widget.is_mouse_over(self.point) {
                 return Some(widget_ref.clone());
             }
@@ -259,8 +255,12 @@ impl DfsPostReverse {
             finished: HashSet::new(),
         }
     }
-    pub fn next(&mut self) -> Option<Widget> {
-        while let Some(widget_ref) = self.stack.last().map(|w| w.clone()) {
+}
+
+impl Iterator for DfsPostReverse {
+    type Item = Widget;
+    fn next(&mut self) -> Option<Widget> {
+        while let Some(widget_ref) = self.stack.last().cloned() {
             if self.discovered.insert(widget_ref.clone()) {
                 for child in &widget_ref.widget().children {
                     self.stack.push(child.clone());
@@ -286,13 +286,18 @@ impl Bfs {
         queue.push_front(root);
         Bfs { queue: queue }
     }
-    pub fn next(&mut self) -> Option<Widget> {
-        while let Some(widget_ref) = self.queue.pop_front() {
+}
+
+impl Iterator for Bfs {
+    type Item = Widget;
+    fn next(&mut self) -> Option<Widget> {
+        if let Some(widget_ref) = self.queue.pop_front() {
             for child in &widget_ref.widget().children {
                 self.queue.push_back(child.clone());
             }
-            return Some(widget_ref);
+            Some(widget_ref)
+        } else {
+            None
         }
-        None
     }
 }

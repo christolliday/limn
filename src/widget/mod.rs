@@ -110,7 +110,7 @@ impl Widget {
         self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new_from_fn(handler))
     }
     pub fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self {
-        self.widget_mut().handlers.entry(type_id).or_insert(Vec::new())
+        self.widget_mut().handlers.entry(type_id).or_insert_with(Vec::new)
             .push(Rc::new(RefCell::new(handler)));
         self
     }
@@ -200,7 +200,7 @@ impl Hash for Widget {
 use std::fmt;
 impl fmt::Debug for Widget {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.widget().debug_name.clone().unwrap_or("None".to_owned()))
+        write!(f, "{}", self.widget().debug_name.clone().unwrap_or_else(|| "None".to_owned()))
     }
 }
 
@@ -331,10 +331,7 @@ impl Widget {
     pub fn event_bubble_up<T: 'static>(&self, data: T) {
         event!(Target::BubbleUp(self.clone()), data);
     }
-    pub fn trigger_event(&self,
-                         type_id: TypeId,
-                         event: &Box<Any>)
-                         -> bool {
+    pub fn trigger_event(&self, type_id: TypeId, event: &Any) -> bool {
         let handlers = {
             let mut widget = self.0.borrow_mut();
             let mut handlers: Vec<Rc<RefCell<WidgetHandlerWrapper>>> = Vec::new();

@@ -6,7 +6,7 @@ pub trait Id: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {
     fn new(index: usize) -> Self;
 }
 
-/// Create a new simple id type, wrapper around a usize that can be created via IdGen
+/// Create a new simple id type, wrapper around a usize that can be created via `IdGen`
 #[macro_export]
 macro_rules! named_id {
     ($name:ident) => {
@@ -21,7 +21,7 @@ macro_rules! named_id {
 }
 
 /// Generates named Ids, wrappers around increasing usize values.
-/// For Ids to be unique, just needs to be one IdGen per Id type.
+/// For Ids to be unique, just needs to be one `IdGen` per Id type.
 pub struct IdGen<I> {
     id: usize,
     phantom: PhantomData<I>,

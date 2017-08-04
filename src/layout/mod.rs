@@ -80,7 +80,7 @@ impl LayoutManager {
     pub fn check_changes(&mut self) {
         let changes = self.solver.fetch_changes();
         debug!("layout has {} changes", changes.len());
-        if changes.len() > 0 {
+        if !changes.is_empty() {
             event!(Target::Ui, LayoutChanged(changes));
         }
     }
@@ -104,7 +104,7 @@ impl App {
             ui.layout.check_changes();
         });
         self.add_handler_fn(|event: &LayoutChanged, ui| {
-            let ref changes = event.0;
+            let changes = &event.0;
             for &(widget_id, var, value) in changes {
                 let widget_id = WidgetId(widget_id);
                 if let Some(widget) = ui.get_widget(widget_id) {

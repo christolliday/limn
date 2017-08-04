@@ -106,10 +106,10 @@ impl Styleable<RectDrawable> for RectStyleable {
     fn apply(&self, drawable: &mut RectDrawable, props: &PropSet) {
         match *self {
             RectStyleable::BackgroundColor(ref val) => {
-                drawable.background_color = val.from_props(props)
+                drawable.background_color = val.get(props)
             }
-            RectStyleable::CornerRadius(ref val) => drawable.corner_radius = val.from_props(props),
-            RectStyleable::Border(ref val) => drawable.border = val.from_props(props),
+            RectStyleable::CornerRadius(ref val) => drawable.corner_radius = val.get(props),
+            RectStyleable::Border(ref val) => drawable.border = val.get(props),
         }
     }
 }

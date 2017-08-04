@@ -35,7 +35,7 @@ pub mod states {
 pub fn prop_change_handle(event: &PropChange, mut args: WidgetEventArgs) {
     match *event {
         PropChange::Add(ref property) => args.widget.props().insert(property.clone()),
-        PropChange::Remove(ref property) => args.widget.props().remove(&property),
+        PropChange::Remove(ref property) => args.widget.props().remove(property),
     };
     args.widget.apply_style();
 }

@@ -1,6 +1,6 @@
 use glutin;
 
-use event::{Target, UiEventHandler, WidgetEventArgs};
+use event::{Target, UiEventHandler};
 use util::Point;
 use widget::Widget;
 use widget::property::{Property, PropChange};
@@ -43,35 +43,36 @@ impl MouseController {
 impl UiEventHandler<MouseInputEvent> for MouseController {
     fn handle(&mut self, event: &MouseInputEvent, ui: &mut Ui) {
 
-        if let &MouseInputEvent::LayoutChanged = event {
-            event!(Target::Ui, MouseMoved(Point::new(self.mouse.x, self.mouse.y)));
-        }
-        if let &MouseInputEvent::MouseMoved(mouse) = event {
-            self.mouse = mouse;
-
-            let widget_under_cursor = ui.widget_under_cursor(mouse);
-            if widget_under_cursor != self.widget_under_mouse {
-                if let Some(ref old_widget) = self.widget_under_mouse {
-                    old_widget.event_bubble_up(MouseOverEvent::Out);
+        match *event {
+            MouseInputEvent::LayoutChanged => {
+                event!(Target::Ui, MouseMoved(Point::new(self.mouse.x, self.mouse.y)));
+            }
+            MouseInputEvent::MouseMoved(mouse) => {
+                self.mouse = mouse;
+                let widget_under_cursor = ui.widget_under_cursor(mouse);
+                if widget_under_cursor != self.widget_under_mouse {
+                    if let Some(ref old_widget) = self.widget_under_mouse {
+                        old_widget.event_bubble_up(MouseOverEvent::Out);
+                    }
+                    if let Some(ref widget_under_cursor) = widget_under_cursor {
+                        widget_under_cursor.event_bubble_up(MouseOverEvent::Over);
+                    }
                 }
-                if let Some(ref widget_under_cursor) = widget_under_cursor {
-                    widget_under_cursor.event_bubble_up(MouseOverEvent::Over);
+                self.widget_under_mouse = widget_under_cursor;
+            }
+            MouseInputEvent::MouseButton(state, button) => {
+                if let Some(ref widget_under) = self.widget_under_mouse {
+                    widget_under.event_bubble_up(WidgetMouseButton(state, button));
+                    if (state == glutin::ElementState::Released) && (button == glutin::MouseButton::Left) {
+                        let event = ClickEvent { position: self.mouse };
+                        widget_under.event_bubble_up(event);
+                    }
                 }
             }
-            self.widget_under_mouse = widget_under_cursor;
-        }
-        if let &MouseInputEvent::MouseButton(state, button) = event {
-            if let Some(ref widget_under) = self.widget_under_mouse {
-                widget_under.event_bubble_up(WidgetMouseButton(state, button));
-                if (state == glutin::ElementState::Released) && (button == glutin::MouseButton::Left) {
-                    let event = ClickEvent { position: self.mouse };
-                    widget_under.event_bubble_up(event);
+            MouseInputEvent::MouseWheel(mouse_scroll_delta) => {
+                if let Some(ref widget_under) = self.widget_under_mouse {
+                    widget_under.event_bubble_up(WidgetMouseWheel(mouse_scroll_delta));
                 }
-            }
-        }
-        if let &MouseInputEvent::MouseWheel(mouse_scroll_delta) = event {
-            if let Some(ref widget_under) = self.widget_under_mouse {
-                widget_under.event_bubble_up(WidgetMouseWheel(mouse_scroll_delta));
             }
         }
     }
@@ -106,16 +107,14 @@ pub enum MouseOverEvent {
     Out,
 }
 
-fn handle_hover(event: &MouseOverEvent, args: WidgetEventArgs) {
-    let event = match *event {
-        MouseOverEvent::Over => PropChange::Add(Property::MouseOver),
-        MouseOverEvent::Out => PropChange::Remove(Property::MouseOver),
-    };
-    args.widget.event_subtree(event);
-}
-
 impl Widget {
     pub fn enable_hover(&mut self) -> &mut Self {
-        self.add_handler_fn(handle_hover)
+        self.add_handler_fn(|event: &MouseOverEvent, args| {
+            let event = match *event {
+                MouseOverEvent::Over => PropChange::Add(Property::MouseOver),
+                MouseOverEvent::Out => PropChange::Remove(Property::MouseOver),
+            };
+            args.widget.event_subtree(event);
+        })
     }
 }

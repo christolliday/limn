@@ -19,7 +19,7 @@ pub trait Drawable: Downcast {
 }
 impl_downcast!(Drawable);
 
-type StyleFn = Fn(&mut Drawable, &Box<Any>, &PropSet);
+type StyleFn = Fn(&mut Drawable, &Any, &PropSet);
 
 pub struct DrawableStyle {
     pub style: Box<Any>,
@@ -39,7 +39,7 @@ impl DrawableWrapper {
     }
     pub fn new_with_style<T: Drawable + 'static, S: Style<T> + 'static>(drawable: T, style: S) -> Self
     {
-        let style_fn = |drawable: &mut Drawable, style: &Box<Any>, props: &PropSet| {
+        let style_fn = |drawable: &mut Drawable, style: &Any, props: &PropSet| {
             let drawable: &mut T = drawable.downcast_mut().unwrap();
             let style: &S = style.downcast_ref().unwrap();
             style.apply(drawable, props);

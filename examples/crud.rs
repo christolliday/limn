@@ -35,7 +35,7 @@ impl Person {
         format!("{}, {}", self.last_name, self.first_name)
     }
     fn is_valid(&self) -> bool {
-        self.first_name.len() > 0 && self.last_name.len() > 0
+        !self.first_name.is_empty() && !self.last_name.is_empty()
     }
 }
 
@@ -76,7 +76,7 @@ impl PeopleHandler {
 
 impl PeopleHandler {
     fn update_selected(&mut self) {
-        let ref ids = self.ids;
+        let ids = &self.ids;
         ids.first_name_box.event_subtree(TextUpdated(self.person.first_name.clone()));
         ids.last_name_box.event_subtree(TextUpdated(self.person.last_name.clone()));
         if self.selected_item.is_some() {

@@ -55,7 +55,7 @@ impl Iterator for Queue {
     }
 }
 
-/// Context passed to a WidgetEventHandler, allows modification
+/// Context passed to a `WidgetEventHandler`, allows modification
 /// to a widget and it's layout, and posting events to the Queue.
 pub struct WidgetEventArgs<'a> {
     pub widget: Widget,
@@ -72,10 +72,10 @@ pub trait UiEventHandler<T> {
     fn handle(&mut self, event: &T, ui: &mut Ui);
 }
 
-/// Non-generic WidgetEventHandler or Widget callback wrapper.
+/// Non-generic `WidgetEventHandler` or Widget callback wrapper.
 pub struct WidgetHandlerWrapper {
     handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any>, WidgetEventArgs)>,
+    handle_fn: Box<Fn(&mut Any, &Any, WidgetEventArgs)>,
 }
 // implementation for WidgetHandlerWrapper and UiHandlerWrapper can probably only be shared
 // by a macro, to make it generic over the *EventHandler and *EventArgs requires
@@ -86,7 +86,7 @@ impl WidgetHandlerWrapper {
         where H: WidgetEventHandler<E> + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, args: WidgetEventArgs| {
+        let handle_fn = |handler: &mut Any, event: &Any, args: WidgetEventArgs| {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler.handle(event, args);
@@ -100,7 +100,7 @@ impl WidgetHandlerWrapper {
         where H: Fn(&E, WidgetEventArgs) + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, args: WidgetEventArgs| {
+        let handle_fn = |handler: &mut Any, event: &Any, args: WidgetEventArgs| {
             let event: &E = event.downcast_ref().unwrap();
             debug!("widget handle {}", ::type_name::<E>());
             let handler: &mut H = handler.downcast_mut().unwrap();
@@ -111,22 +111,22 @@ impl WidgetHandlerWrapper {
             handle_fn: Box::new(handle_fn),
         }
     }
-    pub fn handle(&mut self, event: &Box<Any>, args: WidgetEventArgs) {
+    pub fn handle(&mut self, event: &Any, args: WidgetEventArgs) {
         (self.handle_fn)(&mut self.handler, event, args);
     }
 }
 
-/// Non-generic UiEventHandler or Ui callback wrapper.
+/// Non-generic `UiEventHandler` or Ui callback wrapper.
 pub struct UiHandlerWrapper {
     handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Box<Any>, &Box<Any>, &mut Ui)>,
+    handle_fn: Box<Fn(&mut Any, &Any, &mut Ui)>,
 }
 impl UiHandlerWrapper {
     pub fn new<H, E>(handler: H) -> Self
         where H: UiEventHandler<E> + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, ui: &mut Ui| {
+        let handle_fn = |handler: &mut Any, event: &Any, ui: &mut Ui| {
             let event: &E = event.downcast_ref().unwrap();
             debug!("ui handle {}", ::type_name::<E>());
             let handler: &mut H = handler.downcast_mut().unwrap();
@@ -141,7 +141,7 @@ impl UiHandlerWrapper {
         where H: Fn(&E, &mut Ui) + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Box<Any>, event: &Box<Any>, ui: &mut Ui| {
+        let handle_fn = |handler: &mut Any, event: &Any, ui: &mut Ui| {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &H = handler.downcast_ref().unwrap();
             handler(event, ui);
@@ -151,7 +151,7 @@ impl UiHandlerWrapper {
             handle_fn: Box::new(handle_fn),
         }
     }
-    pub fn handle(&mut self, event: &Box<Any>, ui: &mut Ui) {
+    pub fn handle(&mut self, event: &Any, ui: &mut Ui) {
         (self.handle_fn)(&mut self.handler, event, ui);
     }
 }

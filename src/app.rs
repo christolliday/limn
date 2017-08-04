@@ -54,18 +54,12 @@ impl App {
     }
 
     fn handle_window_event(&mut self, event: glutin::Event) {
-        match event {
-            glutin::Event::WindowEvent { event, .. } => {
-                match event {
-                    glutin::WindowEvent::Resized(width, height) => {
-                        self.ui.window_resized(Size::new(width as f64, height as f64));
-                    }
-                    _ => {
-                        event!(Target::Ui, InputEvent(event));
-                    }
-                }
+        if let glutin::Event::WindowEvent { event, .. } = event {
+            if let glutin::WindowEvent::Resized(width, height) = event {
+                self.ui.window_resized(Size::new(width as f64, height as f64));
+            } else {
+                event!(Target::Ui, InputEvent(event));
             }
-            _ => ()
         }
     }
     /// Application main loop
@@ -127,12 +121,12 @@ impl App {
 
     /// Add a new stateful global event handler
     pub fn add_handler<H: UiEventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
+        self.handlers.entry(TypeId::of::<E>()).or_insert_with(Vec::new)
             .push(UiHandlerWrapper::new(handler));
     }
     /// Add a new stateless global event handler
     pub fn add_handler_fn<E: 'static, T: Fn(&E, &mut Ui) + 'static>(&mut self, handler: T) -> &mut Self {
-        self.handlers.entry(TypeId::of::<E>()).or_insert(Vec::new())
+        self.handlers.entry(TypeId::of::<E>()).or_insert_with(Vec::new)
             .push(UiHandlerWrapper::new_from_fn(handler));
         self
     }

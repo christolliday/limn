@@ -33,8 +33,7 @@ fn init(title: &str, size: Option<(u32, u32)>) -> App {
     let window_size = size.unwrap_or((100, 100));
     let events_loop = glutin::EventsLoop::new();
     let window = Window::new(title, window_size, Some(window_size), &events_loop);
-    let app = App::new(window, events_loop);
-    app
+    App::new(window, events_loop)
 }
 
 #[allow(dead_code)]

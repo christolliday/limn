@@ -59,8 +59,8 @@ impl FocusHandler {
 }
 impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
     fn handle(&mut self, event: &KeyboardInputEvent, _: &mut Ui) {
-        match event {
-            &KeyboardInputEvent::AddFocusable(ref widget_id) => {
+        match *event {
+            KeyboardInputEvent::AddFocusable(ref widget_id) => {
                 self.focusable.insert(self.focus_index_max, widget_id.clone());
                 self.focusable_map.insert(widget_id.clone(), self.focus_index_max);
                 self.focus_index_max += 1;
@@ -68,30 +68,30 @@ impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
                     self.set_focus(Some(widget_id.clone()));
                 }
             }
-            &KeyboardInputEvent::RemoveFocusable(ref widget_id) => {
+            KeyboardInputEvent::RemoveFocusable(ref widget_id) => {
                 if let Some(focused) = self.focused.clone() {
                     if focused == *widget_id {
                         self.set_focus(None);
                     }
                 }
-                let index = self.focusable_map.remove(&widget_id).unwrap();
+                let index = self.focusable_map.remove(widget_id).unwrap();
                 self.focusable.remove(&index);
             }
-            &KeyboardInputEvent::FocusChange(ref new_focus) => {
+            KeyboardInputEvent::FocusChange(ref new_focus) => {
                 self.set_focus(new_focus.clone());
             }
-            &KeyboardInputEvent::KeyboardInput(ref key_input) => {
+            KeyboardInputEvent::KeyboardInput(ref key_input) => {
                 if let Some(ref focused) = self.focused {
                     let &KeyboardInput(state, scan_code, maybe_keycode) = key_input;
                     let event = WidgetKeyboardInput(state, scan_code, maybe_keycode);
                     focused.event_subtree(event);
                 }
             }
-            &KeyboardInputEvent::ReceivedCharacter(ref received_char) => {
+            KeyboardInputEvent::ReceivedCharacter(ref received_char) => {
                 let &ReceivedCharacter(char) = received_char;
                 if char == '\t' {
                     let mut new_focus = self.focused.clone().and_then(|focused| {
-                        let index = self.focusable_map.get(&focused).unwrap();
+                        let index = &self.focusable_map[&focused];
                         self.focusable.range(Excluded(index), Unbounded).next().map(|(_, v)| v.clone())
                     });
                     if new_focus.is_none() {

@@ -167,16 +167,14 @@ pub enum TextStyleable {
 impl Styleable<TextDrawable> for TextStyleable {
     fn apply(&self, state: &mut TextDrawable, props: &PropSet) {
         match *self {
-            TextStyleable::Text(ref val) => state.text = val.from_props(props),
-            TextStyleable::FontId(ref val) => state.font_id = val.from_props(props),
-            TextStyleable::FontSize(ref val) => state.font_size = val.from_props(props),
-            TextStyleable::TextColor(ref val) => state.text_color = val.from_props(props),
-            TextStyleable::BackgroundColor(ref val) => {
-                state.background_color = val.from_props(props)
-            }
-            TextStyleable::Wrap(ref val) => state.wrap = val.from_props(props),
-            TextStyleable::Align(ref val) => state.align = val.from_props(props),
-            TextStyleable::VertAlign(ref val) => state.vertical_align = val.from_props(props),
+            TextStyleable::Text(ref val) => state.text = val.get(props),
+            TextStyleable::FontId(ref val) => state.font_id = val.get(props),
+            TextStyleable::FontSize(ref val) => state.font_size = val.get(props),
+            TextStyleable::TextColor(ref val) => state.text_color = val.get(props),
+            TextStyleable::BackgroundColor(ref val) => state.background_color = val.get(props),
+            TextStyleable::Wrap(ref val) => state.wrap = val.get(props),
+            TextStyleable::Align(ref val) => state.align = val.get(props),
+            TextStyleable::VertAlign(ref val) => state.vertical_align = val.get(props),
         }
     }
 }
