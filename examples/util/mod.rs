@@ -51,8 +51,9 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
     resources().images.insert_from_file(&mut window.context.factory, image_path)
 }
 
-pub fn set_root_and_loop(mut app: App, root_widget: Widget)
+pub fn set_root_and_loop(mut app: App, mut root_widget: Widget)
 {
+    layout!(root_widget: match_layout(&app.ui.root));
     app.ui.root.add_child(root_widget);
 
     // Closes app on ESC key
