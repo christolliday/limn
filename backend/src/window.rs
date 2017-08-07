@@ -1,6 +1,3 @@
-use std::rc::Rc;
-use std::cell::RefCell;
-
 use gfx::{GfxContext, G2d};
 use shader_version::OpenGL;
 use graphics::Viewport;

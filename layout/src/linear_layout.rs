@@ -4,7 +4,6 @@ use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 use cassowary::Variable;
 
-use super::constraint::*;
 use super::{LayoutId, LayoutVars, Layout};
 
 #[derive(Copy, Clone)]

@@ -6,7 +6,6 @@ use widget::Widget;
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
-use layout::constraint::*;
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use ui::ChildAttachedEvent;

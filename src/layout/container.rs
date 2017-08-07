@@ -1,4 +1,3 @@
-use limn_layout::constraint::*;
 use widget::Widget;
 use resources::WidgetId;
 

@@ -240,6 +240,8 @@ macro_rules! layout {
     };
     ($widget:ident: $($func:expr,)*) => {
         {
+            #[allow(unused_imports)]
+            use $crate::constraint::*;
             $(
                 $widget.layout().add($func);
             )*

@@ -1,7 +1,6 @@
 use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
-use super::constraint::*;
 use super::{LayoutVars, Layout, Constraint};
 
 pub struct GridLayout {

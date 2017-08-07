@@ -7,7 +7,6 @@ use widget::{BuildWidget, Widget};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Point, Size, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
-use layout::constraint::*;
 use input::mouse::WidgetMouseWheel;
 use drawable::rect::{RectDrawable, RectStyleable};
 use color::*;

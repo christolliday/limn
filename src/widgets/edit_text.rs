@@ -2,7 +2,6 @@ use text_layout::Align;
 
 use widget::{Widget, BuildWidget};
 use widget::property::states::*;
-use layout::constraint::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::{RectDrawable, RectStyleable};

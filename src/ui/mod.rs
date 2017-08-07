@@ -15,7 +15,6 @@ use backend::window::Window;
 use app::App;
 use widget::Widget;
 use layout::{LayoutManager, LayoutVars};
-use layout::constraint::*;
 use util::{Point, Rect, Size};
 use resources::WidgetId;
 use event::Target;

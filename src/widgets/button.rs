@@ -6,7 +6,6 @@ use event::WidgetEventArgs;
 use widget::Widget;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
-use layout::constraint::*;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::text::{TextDrawable, TextStyleable};
