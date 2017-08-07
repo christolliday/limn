@@ -101,19 +101,18 @@ impl App {
     /// Handle all the pending events in the event queue
     pub fn handle_events(&mut self) {
         while let Some((event_address, type_id, data)) = event::queue_next() {
-            let data = &data;
             match event_address {
                 Target::Ui => {
                     if let Some(handlers) = self.handlers.get_mut(&type_id) {
                         for event_handler in handlers.iter_mut() {
-                            event_handler.handle(data, &mut self.ui);
+                            event_handler.handle(data.as_ref(), &mut self.ui);
                         }
                     } else {
                         println!("no handler found for type");
                     }
                 }
                 _ => {
-                    self.ui.handle_event(event_address, type_id, data);
+                    self.ui.handle_event(event_address, type_id, data.as_ref());
                 }
             }
         }

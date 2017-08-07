@@ -55,7 +55,7 @@ impl DrawableWrapper {
     }
     pub fn apply_style(&mut self, props: &PropSet) -> bool {
         if let Some(ref style) = self.style {
-            (style.style_fn)(self.drawable.as_mut(), &style.style, props);
+            (style.style_fn)(self.drawable.as_mut(), style.style.as_ref(), props);
             true
         } else {
             false

@@ -112,7 +112,7 @@ impl WidgetHandlerWrapper {
         }
     }
     pub fn handle(&mut self, event: &Any, args: WidgetEventArgs) {
-        (self.handle_fn)(&mut self.handler, event, args);
+        (self.handle_fn)(self.handler.as_mut(), event, args);
     }
 }
 
@@ -152,7 +152,7 @@ impl UiHandlerWrapper {
         }
     }
     pub fn handle(&mut self, event: &Any, ui: &mut Ui) {
-        (self.handle_fn)(&mut self.handler, event, ui);
+        (self.handle_fn)(self.handler.as_mut(), event, ui);
     }
 }
 
