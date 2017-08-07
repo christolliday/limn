@@ -94,50 +94,6 @@ macro_rules! widget_builder {
     };
 }
 
-impl Widget {
-    pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
-        self.widget_mut().drawable = Some(DrawableWrapper::new(drawable));
-        self
-    }
-    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
-        self.widget_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
-        self
-    }
-    pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new(handler))
-    }
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
-        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new_from_fn(handler))
-    }
-    pub fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self {
-        self.widget_mut().handlers.entry(type_id).or_insert_with(Vec::new)
-            .push(Rc::new(RefCell::new(handler)));
-        self
-    }
-    pub fn set_inactive(&mut self) -> &mut Self {
-        self.widget_mut().props.insert(Property::Inactive);
-        for child in &mut self.widget_mut().children {
-            child.widget_mut().props.insert(Property::Inactive);
-        }
-        self
-    }
-    pub fn no_container(&mut self) -> &mut Self {
-        self.widget_mut().container = None;
-        self
-    }
-    pub fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self {
-        self.widget_mut().container = Some(Rc::new(RefCell::new(Box::new(container))));
-        self
-    }
-    pub fn set_padding(&mut self, padding: f64) -> &mut Self {
-        {
-            let mut widget = self.widget_mut();
-            widget.container.as_mut().unwrap().borrow_mut().set_padding(padding);
-        }
-        self
-    }
-}
-
 pub struct LayoutGuard<'a> {
     guard: RefMut<'a, WidgetInner>
 }
@@ -222,6 +178,47 @@ impl Widget {
     }
     pub fn widget(&self) -> Ref<WidgetInner> {
         self.0.borrow()
+    }
+    pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
+        self.widget_mut().drawable = Some(DrawableWrapper::new(drawable));
+        self
+    }
+    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
+        self.widget_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
+        self
+    }
+    pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new(handler))
+    }
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new_from_fn(handler))
+    }
+    pub fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self {
+        self.widget_mut().handlers.entry(type_id).or_insert_with(Vec::new)
+            .push(Rc::new(RefCell::new(handler)));
+        self
+    }
+    pub fn set_inactive(&mut self) -> &mut Self {
+        self.widget_mut().props.insert(Property::Inactive);
+        for child in &mut self.widget_mut().children {
+            child.widget_mut().props.insert(Property::Inactive);
+        }
+        self
+    }
+    pub fn no_container(&mut self) -> &mut Self {
+        self.widget_mut().container = None;
+        self
+    }
+    pub fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self {
+        self.widget_mut().container = Some(Rc::new(RefCell::new(Box::new(container))));
+        self
+    }
+    pub fn set_padding(&mut self, padding: f64) -> &mut Self {
+        {
+            let mut widget = self.widget_mut();
+            widget.container.as_mut().unwrap().borrow_mut().set_padding(padding);
+        }
+        self
     }
     pub fn layout(&mut self) -> LayoutGuard {
         LayoutGuard { guard: self.0.borrow_mut() }
