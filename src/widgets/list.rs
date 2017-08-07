@@ -68,7 +68,7 @@ impl WidgetEventHandler<ClickEvent> for ListItemHandler {
 pub struct ListBuilder {
     pub widget: Widget,
 }
-widget_builder!(ListBuilder);
+widget_wrapper!(ListBuilder);
 
 impl ListBuilder {
     pub fn new() -> Self {

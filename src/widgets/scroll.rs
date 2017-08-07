@@ -90,8 +90,9 @@ impl ScrollBuilder {
         self.scrollbars = Some((corner, scrollbar_h, scrollbar_v));
         self
     }
-
-    pub fn build(mut self) -> Widget {
+}
+impl BuildWidget for ScrollBuilder {
+    fn build(mut self) -> Widget {
         let widget_ref = self.content_holder.clone();
         self.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
             widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
@@ -119,7 +120,6 @@ impl ScrollBuilder {
         self.widget
     }
 }
-
 widget_builder!(ScrollBuilder);
 
 #[allow(dead_code)]

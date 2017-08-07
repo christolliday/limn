@@ -1,6 +1,6 @@
 use text_layout::Align;
 
-use widget::Widget;
+use widget::{Widget, BuildWidget};
 use widget::property::states::*;
 use layout::constraint::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
@@ -48,7 +48,6 @@ pub struct EditTextBuilder {
     pub widget: Widget,
     pub text_widget: Widget,
 }
-widget_builder!(EditTextBuilder);
 
 impl EditTextBuilder {
     pub fn new() -> Self {
@@ -91,7 +90,11 @@ impl EditTextBuilder {
         self.text_widget.add_handler_fn(callback);
         self
     }
-    pub fn build(mut self) -> Widget {
+}
+
+widget_builder!(EditTextBuilder);
+impl BuildWidget for EditTextBuilder {
+    fn build(mut self) -> Widget {
         self.widget.add_child(self.text_widget);
         self.widget
     }

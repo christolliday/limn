@@ -73,7 +73,7 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: WidgetEventAr
 pub struct ToggleButtonBuilder {
     pub widget: Widget,
 }
-widget_builder!(ToggleButtonBuilder);
+widget_wrapper!(ToggleButtonBuilder);
 
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
@@ -113,7 +113,7 @@ impl ToggleButtonBuilder {
 pub struct PushButtonBuilder {
     pub widget: Widget,
 }
-widget_builder!(PushButtonBuilder);
+widget_wrapper!(PushButtonBuilder);
 
 impl PushButtonBuilder {
     pub fn new() -> Self {

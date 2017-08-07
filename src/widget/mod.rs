@@ -38,7 +38,7 @@ impl AsRef<Widget> for Widget {
         self
     }
 }
-pub trait BuildWidget: AsMut<Widget> {
+pub trait BuildWidget {
     fn build(self) -> Widget;
 }
 impl BuildWidget for Widget {
@@ -54,6 +54,18 @@ impl <'a> BuildWidget for &'a mut Widget {
 impl LayoutRef for Widget {
     fn layout_ref(&self) -> LayoutVars {
         self.widget_mut().layout.vars.clone()
+    }
+}
+
+#[macro_export]
+macro_rules! widget_wrapper {
+    ($builder_type:ty) => {
+        widget_builder!($builder_type);
+        impl $crate::widget::BuildWidget for $builder_type {
+            fn build(self) -> Widget {
+                self.widget
+            }
+        }
     }
 }
 
@@ -84,11 +96,6 @@ macro_rules! widget_builder {
         impl $crate::layout::LayoutRef for $builder_type {
             fn layout_ref(&self) -> $crate::layout::LayoutVars {
                 self.as_ref().widget_mut().layout.vars.clone()
-            }
-        }
-        impl $crate::widget::BuildWidget for $builder_type {
-            fn build(self) -> Widget {
-                self.widget
             }
         }
     };
