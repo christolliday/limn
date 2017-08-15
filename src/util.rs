@@ -1,6 +1,6 @@
 use std::f64;
 
-use euclid::{self, Point2D, Size2D};
+use euclid::{self, Point2D, Size2D, Vector2D};
 
 use rusttype;
 use graphics::{self, Context};
@@ -13,6 +13,7 @@ use text_layout;
 
 pub type Size = Size2D<f64>;
 pub type Point = Point2D<f64>;
+pub type Vector = Vector2D<f64>;
 pub type Rect = euclid::Rect<f64>;
 
 pub trait RectExt<T> {

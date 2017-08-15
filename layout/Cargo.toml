@@ -5,7 +5,7 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 
 [dependencies]
 cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "0329f1799dd606e999f26407f06169e0b7d408f8" }
-euclid = "0.11.2"
+euclid = "0.15.1"
 log = "0.3"
 lazy_static = "0.2.2"
 linked-hash-map = "0.3.0"

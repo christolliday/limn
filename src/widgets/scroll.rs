@@ -5,7 +5,7 @@ use cassowary::WeightedRelation::*;
 use event::{WidgetEventArgs, WidgetEventHandler};
 use widget::{BuildWidget, Widget};
 use widgets::slider::{SliderBuilder, SetSliderValue};
-use util::{Point, Size, Rect, RectExt};
+use util::{Point, Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
 use input::mouse::WidgetMouseWheel;
 use drawable::rect::{RectDrawable, RectStyleable};
@@ -154,7 +154,7 @@ struct ScrollParent {
     width_ratio: f64,
     height_ratio: f64,
     scrollable_area: Size,
-    offset: Point,
+    offset: Vector,
     pub size_handler: Option<ScrollSizeHandler>,
 }
 impl ScrollParent {
@@ -165,7 +165,7 @@ impl ScrollParent {
             width_ratio: 0.0,
             height_ratio: 0.0,
             scrollable_area: Size::zero(),
-            offset: Point::zero(),
+            offset: Vector::zero(),
             size_handler: None,
         }
     }
@@ -261,13 +261,13 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
         }
     }
 }
-fn get_scroll(event: glutin::MouseScrollDelta) -> Point {
+fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
     match event {
         glutin::MouseScrollDelta::LineDelta(x, y) => {
-            Point::new(x as f64, y as f64)
+            Vector::new(x as f64, y as f64)
         }
         glutin::MouseScrollDelta::PixelDelta(x, y) => {
-            Point::new(x as f64, y as f64)
+            Vector::new(x as f64, y as f64)
         }
     }
 }
