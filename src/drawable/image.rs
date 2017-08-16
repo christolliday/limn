@@ -1,8 +1,4 @@
-use graphics::{self, Context, Transformed};
-
-use backend::gfx::{ImageSize, G2d};
-use backend::glyph::GlyphCache;
-
+use render::RenderBuilder;
 use widget::drawable::Drawable;
 use resources::{ImageId, resources};
 use util::{Rect, RectExt, Size, SizeExt};
@@ -11,7 +7,7 @@ pub struct ImageDrawable {
     pub image_id: ImageId,
     pub scale: Size,
 }
-impl ImageDrawable {
+/* impl ImageDrawable {
     pub fn new(image_id: ImageId) -> Self {
         ImageDrawable {
             image_id: image_id,
@@ -26,10 +22,10 @@ impl ImageDrawable {
     pub fn scale(&mut self, scale: Size) {
         self.scale = scale;
     }
-}
+} */
 impl Drawable for ImageDrawable {
-    fn draw(&mut self, bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
-        let res = resources();
+    fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        /*let res = resources();
         let img = res.images.get(self.image_id).unwrap();
         let dims = Size::from_tuple(img.get_size());
         let scale = Size::new(
@@ -40,6 +36,6 @@ impl Drawable for ImageDrawable {
         image.rect(bounds.to_slice());
         let context = context.trans(bounds.left(), bounds.top()).scale(scale.width, scale.height);
 
-        image.draw(img, &context.draw_state, context.transform, graphics);
+        image.draw(img, &context.draw_state, context.transform, graphics);*/
     }
 }

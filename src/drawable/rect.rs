@@ -3,16 +3,12 @@ use std::f64::consts::PI;
 use graphics;
 use graphics::types::Color;
 
-use backend::gfx::G2d;
-use backend::glyph::GlyphCache;
-use graphics::Context;
-
+use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
-use util::{Scalar, Rect, Point, RectExt};
+use util::{self, Scalar, Rect, Point, RectExt};
 use color::*;
-
 
 pub struct RectDrawable {
     pub background_color: Color,
@@ -34,8 +30,10 @@ impl RectDrawable {
     }
 }
 impl Drawable for RectDrawable {
-    fn draw(&mut self, mut bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
 
+        renderer.builder.push_rect(util::to_layout_rect(bounds), None, util::to_colorf(self.background_color));
+        /*
         // using piston graphics, drawing borders and rounded edges is currently the largest performance bottleneck
         // todo: make it faster! probably will require replacing piston graphics
         if let Some((radius, _)) = self.border {
@@ -91,7 +89,7 @@ impl Drawable for RectDrawable {
             graphics::Rectangle::new(self.background_color)
                 .maybe_border(border)
                 .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
-        }
+        }*/
     }
 }
 

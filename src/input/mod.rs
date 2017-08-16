@@ -63,6 +63,7 @@ impl DebugSettingsHandler {
     }
 }
 use glutin::ElementState;
+use webrender::renderer::PROFILER_DBG;
 impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
     fn handle(&mut self, event: &KeyboardInput, ui: &mut Ui) {
         if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = *event {
@@ -77,6 +78,9 @@ impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
         }
         if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F4)) = *event {
             ui.debug_variables();
+        }
+        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::P)) = *event {
+            ui.render.toggle_flags(PROFILER_DBG);
         }
     }
 }

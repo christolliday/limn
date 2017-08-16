@@ -5,25 +5,22 @@ use std::cell::RefCell;
 
 use cassowary::strength::*;
 
-use graphics;
-use graphics::Context;
+use glutin;
 
-use backend::gfx::G2d;
-use backend::glyph::GlyphCache;
-use backend::window::Window;
-
+use window::Window;
 use app::App;
 use widget::Widget;
 use layout::{LayoutManager, LayoutVars};
 use util::{Point, Rect, Size};
 use resources::WidgetId;
 use event::Target;
+use render::WebRenderContext;
 
 pub struct Ui {
     pub root: Widget,
     widget_map: HashMap<WidgetId, Widget>,
     pub layout: LayoutManager,
-    glyph_cache: GlyphCache,
+    pub render: WebRenderContext,
     pub needs_redraw: bool,
     should_close: bool,
     debug_draw_bounds: bool,
@@ -31,7 +28,7 @@ pub struct Ui {
 }
 
 impl Ui {
-    pub fn new(mut window: Window) -> Self {
+    pub fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
         let mut layout = LayoutManager::new();
         let mut root = Widget::new_named("root");
         layout!(root: top_left(Point::zero()));
@@ -46,11 +43,12 @@ impl Ui {
         root.add_handler_fn(|_: &::layout::LayoutUpdated, _| {
             event!(Target::Ui, ::layout::ResizeWindow);
         });
+        let render = WebRenderContext::new(&mut window, events_loop);
         Ui {
             widget_map: HashMap::new(),
             root: root,
             layout: layout,
-            glyph_cache: GlyphCache::new(&mut window.context.factory, 512, 512),
+            render: render,
             needs_redraw: false,
             should_close: false,
             debug_draw_bounds: false,
@@ -79,7 +77,7 @@ impl Ui {
     }
     pub fn resize_window_to_fit(&mut self) {
         let window_dims = self.get_root_dims();
-        self.window.borrow_mut().window.set_inner_size(window_dims.width as u32, window_dims.height as u32);
+        self.window.borrow_mut().resize(window_dims.width as u32, window_dims.height as u32);
     }
     pub fn get_root_dims(&mut self) -> Size {
         let root = self.get_root();
@@ -90,7 +88,8 @@ impl Ui {
         dims
     }
     pub fn window_resized(&mut self, window_dims: Size) {
-        self.window.borrow_mut().window_resized();
+        let window_size = self.window.borrow_mut().size_u32();
+        self.render.window_resized(window_size);
         let mut root = self.get_root();
         root.update_layout(|layout| {
             layout.edit_right().set(window_dims.width);
@@ -105,21 +104,26 @@ impl Ui {
     }
     pub fn draw_if_needed(&mut self) {
         if self.needs_redraw {
-            let window = self.window.clone();
-            window.borrow_mut().draw_2d(|context, graphics| {
-                graphics::clear([0.8, 0.8, 0.8, 1.0], graphics);
-                self.draw(context, graphics);
-            });
+            self.draw();
             self.needs_redraw = false;
         }
     }
-    pub fn draw(&mut self, context: Context, graphics: &mut G2d) {
-        let crop_to = Rect::new(Point::zero(), Size::new(::std::f64::MAX, ::std::f64::MAX));
-        let root = self.get_root();
-        root.widget_mut().draw(crop_to, &mut self.glyph_cache, context, graphics);
-        if self.debug_draw_bounds {
-            root.widget_mut().draw_debug(context, graphics);
-        }
+
+    pub fn draw(&mut self) {
+        let window_size = self.window.borrow_mut().size_f32();
+        let (builder, resources) = {
+            let mut renderer = self.render.render_builder(window_size);
+            let crop_to = Rect::new(Point::zero(), Size::new(::std::f64::MAX, ::std::f64::MAX));
+            self.root.widget_mut().draw(crop_to, &mut renderer);
+            if self.debug_draw_bounds {
+                self.root.widget_mut().draw_debug(&mut renderer);
+            }
+            (renderer.builder, renderer.resources)
+        };
+        self.render.update(builder, resources, window_size);
+        self.render.render(self.window.borrow_mut().size_u32());
+        let window = self.window.borrow_mut();
+        window.swap_buffers();
     }
 
     pub fn widget_under_cursor(&mut self, point: Point) -> Option<Widget> {

@@ -1,10 +1,6 @@
-use graphics;
 use graphics::types::Color;
 
-use backend::gfx::G2d;
-use backend::glyph::GlyphCache;
-use graphics::Context;
-
+use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Styleable, Value};
@@ -31,8 +27,8 @@ impl EllipseDrawable {
 }
 
 impl Drawable for EllipseDrawable {
-    fn draw(&mut self, bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
-        let (bounds, border) = if let Some((radius, color)) = self.border {
+    fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        /*let (bounds, border) = if let Some((radius, color)) = self.border {
             (bounds.shrink_bounds(radius), Some(graphics::ellipse::Border {
                 radius: radius,
                 color: color,
@@ -42,7 +38,7 @@ impl Drawable for EllipseDrawable {
         };
         graphics::Ellipse::new(self.background_color)
             .maybe_border(border)
-            .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
+            .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);*/
     }
 }
 

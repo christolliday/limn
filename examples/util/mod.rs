@@ -1,11 +1,9 @@
 extern crate find_folder;
-extern crate graphics;
-extern crate backend;
 extern crate glutin;
 extern crate env_logger;
 extern crate log;
 
-use self::backend::Window;
+use limn::window::Window;
 use limn::app::App;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::resources::{FontId, ImageId, resources};
@@ -36,6 +34,7 @@ fn init(title: &str, size: Option<(u32, u32)>) -> App {
     App::new(window, events_loop)
 }
 
+/*
 #[allow(dead_code)]
 pub fn load_default_font() -> FontId {
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
@@ -49,7 +48,7 @@ pub fn load_default_image(window: &mut Window) -> ImageId {
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
     let image_path = assets.join("images/rust.png");
     resources().images.insert_from_file(&mut window.context.factory, image_path)
-}
+}*/
 
 pub fn set_root_and_loop(mut app: App, mut root_widget: Widget)
 {

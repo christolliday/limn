@@ -3,13 +3,14 @@ use std::f64;
 use euclid::{self, Point2D, Size2D, Vector2D};
 
 use rusttype;
-use graphics::{self, Context};
 
 pub use graphics::types::{Color, Scalar};
 
-use backend::gfx::G2d;
+use webrender_api::*;
 
 use text_layout;
+
+use render::RenderBuilder;
 
 pub type Size = Size2D<f64>;
 pub type Point = Point2D<f64>;
@@ -105,34 +106,20 @@ pub fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
 }
 
-// Retrieve the "dots per inch" factor by dividing the window width by the view.
-#[allow(dead_code)]
-fn get_dpi(context: &Context) -> f32 {
-    let view_size = context.get_view_size();
-    context.viewport
-        .map(|v| v.window_size[0] as f32 / view_size[0] as f32)
-        .unwrap_or(1.0)
+pub fn draw_rect_outline(rect: Rect, color: Color, renderer: &mut RenderBuilder) {
+    let widths = BorderWidths { left: 1.0, right: 1.0, top: 1.0, bottom: 1.0 };
+    let side = BorderSide { color: to_colorf(color), style: BorderStyle::Solid };
+    let border = NormalBorder { left: side, right: side, top: side, bottom: side, radius: BorderRadius::zero() };
+    let details = BorderDetails::Normal(border);
+    renderer.builder.push_border(to_layout_rect(rect), None, widths, details);
 }
 
-pub fn draw_rect_outline(rect: Rect, color: Color, context: Context, graphics: &mut G2d) {
-    let points = [[rect.left(), rect.top()],
-                  [rect.right(), rect.top()],
-                  [rect.right(), rect.bottom()],
-                  [rect.left(), rect.bottom()],
-                  [rect.left(), rect.top()]];
-    let mut points = points.iter();
-    if let Some(first) = points.next() {
-        let line = graphics::Line::new_round(color, 1.0);
-        let mut start = first;
-        for end in points {
-            let coords = [start[0], start[1], end[0], end[1]];
-            line.draw(coords, &context.draw_state, context.transform, graphics);
-            start = end;
-        }
-    }
+pub fn to_colorf(color: Color) -> ColorF {
+    ColorF::new(color[0], color[1], color[2], color[3])
 }
 
-pub fn crop_context(context: Context, rect: Rect) -> Context {
-    let scissor_bounds = [rect.left() as u32, rect.top() as u32, rect.width() as u32, rect.height() as u32];
-    Context { draw_state: context.draw_state.scissor(scissor_bounds), ..context }
+pub fn to_layout_rect(rect: Rect) -> LayoutRect {
+    LayoutRect::new(
+        LayoutPoint::new(rect.origin.x as f32, rect.origin.y as f32),
+        LayoutSize::new(rect.size.width as f32, rect.size.height as f32))
 }

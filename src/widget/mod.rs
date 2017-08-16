@@ -10,12 +10,9 @@ use std::cell::{RefCell, Ref, RefMut};
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
-use graphics::Context;
 use graphics::types::Color;
 
-use backend::gfx::G2d;
-use backend::glyph::GlyphCache;
-
+use render::RenderBuilder;
 use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
@@ -406,30 +403,26 @@ impl WidgetInner {
     pub fn layout(&mut self) -> &mut Layout {
         &mut self.layout
     }
-    pub fn draw(&mut self,
-                crop_to: Rect,
-                glyph_cache: &mut GlyphCache,
-                context: Context,
-                graphics: &mut G2d) {
-
+    pub fn draw(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
+        let bounds = self.bounds;
+        let clip_id = renderer.builder.define_clip(None, util::to_layout_rect(bounds), vec![], None);
+        renderer.builder.push_clip_id(clip_id);
         if let Some(drawable) = self.drawable.as_mut() {
-            let bounds = self.bounds;
-            let context = util::crop_context(context, crop_to);
-            drawable.drawable.draw(bounds, crop_to, glyph_cache, context, graphics);
+            drawable.drawable.draw(bounds, crop_to, renderer);
         }
-        if let Some(crop_to) = crop_to.intersection(&self.bounds) {
+        if let Some(crop_to) = crop_to.intersection(&bounds) {
             for child in &self.children {
                 let mut child = child.widget_mut();
-                child.draw(crop_to, glyph_cache, context, graphics);
+                child.draw(crop_to, renderer);
             }
         }
+        renderer.builder.pop_clip_id();
     }
-    pub fn draw_debug(&mut self, context: Context, graphics: &mut G2d) {
+    pub fn draw_debug(&mut self, renderer: &mut RenderBuilder) {
         let color = self.debug_color.unwrap_or(::color::GREEN);
-        util::draw_rect_outline(self.bounds, color, context, graphics);
+        util::draw_rect_outline(self.bounds, color, renderer);
         for child in &self.children {
-            let mut child = child.widget_mut();
-            child.draw_debug(context, graphics);
+            child.widget_mut().draw_debug(renderer);
         }
     }
 

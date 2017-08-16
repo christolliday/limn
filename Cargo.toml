@@ -12,6 +12,10 @@ cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "0329
 
 euclid = "0.15.1"
 log = "0.3"
+gleam = "0.4.7"
+
+webrender = { git = "https://github.com/servo/webrender", rev = "9e1a85e8226d7746e82902f44467293d1a9938ca" }
+webrender_api = { git = "https://github.com/servo/webrender", rev = "9e1a85e8226d7746e82902f44467293d1a9938ca" }
 
 rusttype = "0.2.1"
 piston2d-graphics = "0.21"

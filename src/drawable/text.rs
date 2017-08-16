@@ -1,10 +1,6 @@
-use graphics;
 use graphics::types::Color;
-use graphics::Context;
 
-use backend::glyph::{self, GlyphCache};
-use backend::gfx::{ImageSize, G2d};
-
+use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::{FontId, resources};
 use util::{self, Point, Size, SizeExt, Scalar, Rect, RectExt};
@@ -76,7 +72,8 @@ impl TextDrawable {
 }
 
 impl Drawable for TextDrawable {
-    fn draw(&mut self, bounds: Rect, _: Rect, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d) {
+    fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        /*
         graphics::Rectangle::new(self.background_color)
                 .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
 
@@ -149,6 +146,7 @@ impl Drawable for TextDrawable {
                                        &context.draw_state,
                                        context.transform,
                                        graphics);
+                                       */
     }
 }
 

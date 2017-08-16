@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use self::id::{Id, IdGen};
 
 use self::font::Font;
-use self::image::Texture;
+//use self::image::Texture;
 
 lazy_static! {
     static ref RES: Mutex<Resources> = Mutex::new(Resources::new());
@@ -51,14 +51,14 @@ impl<I: Id, T> Map<I, T> {
 
 pub struct Resources {
     pub fonts: Map<FontId, Font>,
-    pub images: Map<ImageId, Texture>,
+    //pub images: Map<ImageId, Texture>,
     pub widget_id: IdGen<WidgetId>,
 }
 impl Resources {
     pub fn new() -> Self {
         Resources {
             fonts: Map::new(),
-            images: Map::new(),
+            //images: Map::new(),
             widget_id: IdGen::new(),
         }
     }

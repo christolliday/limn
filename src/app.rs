@@ -6,7 +6,7 @@ use std::cell::RefCell;
 
 use glutin;
 
-use backend::Window;
+use window::Window;
 
 use ui::Ui;
 use input::InputEvent;
@@ -30,7 +30,7 @@ pub struct App {
 impl App {
     pub fn new(window: Window, events_loop: glutin::EventsLoop) -> Self {
         event::queue_set_events_loop(events_loop.create_proxy());
-        let ui = Ui::new(window);
+        let ui = Ui::new(window, &events_loop);
         let mut app = App {
             ui: ui,
             handlers: HashMap::new(),
@@ -63,7 +63,7 @@ impl App {
         }
     }
     /// Application main loop
-    pub fn main_loop(&mut self) {
+    pub fn main_loop(mut self) {
         let events_loop = self.events_loop.clone();
         let mut events_loop = events_loop.borrow_mut();
 
@@ -72,6 +72,7 @@ impl App {
                 self.handle_window_event(event);
             });
             if self.ui.should_close() {
+                self.ui.render.deinit();
                 return;
             }
             self.handle_events();

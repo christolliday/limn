@@ -2,11 +2,8 @@ use std::any::Any;
 use std::marker::PhantomData;
 
 use downcast_rs::Downcast;
-use graphics::Context;
 
-use backend::gfx::G2d;
-use backend::glyph::GlyphCache;
-
+use render::RenderBuilder;
 use event::{WidgetEventHandler, WidgetEventArgs};
 use widget::property::PropSet;
 use widget::style::Style;
@@ -15,7 +12,7 @@ use util::Rect;
 
 
 pub trait Drawable: Downcast {
-    fn draw(&mut self, bounds: Rect, crop_to: Rect, glyph_cache: &mut GlyphCache, context: Context, graphics: &mut G2d);
+    fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder);
 }
 impl_downcast!(Drawable);
 
