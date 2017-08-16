@@ -35,7 +35,7 @@ impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 
 fn main() {
     let app = util::init_default("Limn edit text demo");
-    util::load_default_font();
+    //util::load_default_font();
 
     let mut root_widget = Widget::new();
     layout!(root_widget: min_size(Size::new(300.0, 300.0)));

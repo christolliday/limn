@@ -9,7 +9,7 @@ use limn::prelude::*;
 use limn::drawable::image::ImageDrawable;
 
 fn main() {
-    let app = util::init_default("Limn button demo");
+    /*let app = util::init_default("Limn button demo");
     let image_id = util::load_default_image(&mut app.ui.window.borrow_mut());
 
     let mut root_widget = Widget::new();
@@ -23,5 +23,5 @@ fn main() {
         bound_by(&root_widget).padding(50.0));
     root_widget.add_child(image_widget);
 
-    util::set_root_and_loop(app, root_widget);
+    util::set_root_and_loop(app, root_widget);*/
 }

@@ -14,7 +14,7 @@ use limn::drawable::rect::RectDrawable;
 
 fn main() {
     let app = util::init_default("Limn list demo");
-    util::load_default_font();
+    //util::load_default_font();
 
     let mut root_widget = Widget::new();
 

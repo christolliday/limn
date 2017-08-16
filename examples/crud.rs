@@ -169,7 +169,7 @@ pub fn add_person(person: &Person, mut list_widget_id: Widget) -> Widget {
 
 fn main() {
     let mut app = util::init_default("Limn edit text demo");
-    util::load_default_font();
+    //util::load_default_font();
 
     let mut root_widget = Widget::new();
     layout!(root_widget: min_size(Size::new(300.0, 300.0)));

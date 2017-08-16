@@ -2,7 +2,6 @@
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
-extern crate backend;
 extern crate graphics;
 
 extern crate chrono;
@@ -14,10 +13,6 @@ use std::f64;
 
 use chrono::{Local, Timelike};
 use graphics::types::Color;
-use graphics::Context;
-
-use backend::glyph::GlyphCache;
-use backend::gfx::G2d;
 
 use limn::prelude::*;
 
@@ -42,8 +37,8 @@ impl HandDrawable {
     }
 }
 impl Drawable for HandDrawable {
-    fn draw(&mut self, bounds: Rect, _: Rect, _: &mut GlyphCache, context: Context, graphics: &mut G2d) {
-        let cos = self.angle.cos();
+    fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        /* let cos = self.angle.cos();
         let sin = self.angle.sin();
         let hand_dir = Point::new(sin * 1.0, -cos * 1.0) * self.length;
         let hand_norm = Point::new(-cos * 1.0, -sin * 1.0) * self.width;
@@ -56,7 +51,7 @@ impl Drawable for HandDrawable {
             .map(|point| [point.x, point.y])
             .collect();
         graphics::Polygon::new(self.color)
-            .draw(&points, &context.draw_state, context.transform, graphics);
+            .draw(&points, &context.draw_state, context.transform, graphics); */
     }
 }
 
