@@ -2,7 +2,6 @@
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
-extern crate graphics;
 
 extern crate chrono;
 
@@ -12,7 +11,6 @@ use std::f64;
 //use std::{thread, time};
 
 use chrono::{Local, Timelike};
-use graphics::types::Color;
 
 use limn::prelude::*;
 
@@ -22,12 +20,12 @@ struct ClockTick;
 
 pub struct HandDrawable {
     color: Color,
-    width: Scalar,
-    length: Scalar,
-    angle: Scalar, // radians
+    width: f64,
+    length: f64,
+    angle: f64, // radians
 }
 impl HandDrawable {
-    pub fn new(color: Color, width: Scalar, length: Scalar, angle: Scalar) -> Self {
+    pub fn new(color: Color, width: f64, length: f64, angle: f64) -> Self {
         HandDrawable {
             color: color,
             width: width,

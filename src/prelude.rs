@@ -1,4 +1,4 @@
-pub use util::{Point, Rect, RectExt, Size, Scalar, Color};
+pub use util::{Point, Rect, RectExt, Size};
 pub use event::{Target, WidgetEventHandler, WidgetEventArgs, UiEventHandler};
 pub use widget::{Widget, BuildWidget};
 pub use widget::drawable::{Drawable, DrawableEventHandler};

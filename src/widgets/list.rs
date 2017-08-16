@@ -4,15 +4,15 @@ use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use drawable::rect::RectStyleable;
 use input::mouse::ClickEvent;
-use util::Color;
+use color::*;
 
 pub struct ListItemSelected {
     widget: Option<Widget>,
 }
 
-static COLOR_LIST_ITEM_DEFAULT: Color = [0.3, 0.3, 0.3, 1.0];
-static COLOR_LIST_ITEM_MOUSEOVER: Color = [0.6, 0.6, 0.6, 1.0];
-static COLOR_LIST_ITEM_SELECTED: Color = [0.2, 0.2, 1.0, 1.0];
+static COLOR_LIST_ITEM_DEFAULT: Color = GRAY_30;
+static COLOR_LIST_ITEM_MOUSEOVER: Color = GRAY_60;
+static COLOR_LIST_ITEM_SELECTED: Color = BLUE_HIGHLIGHT;
 
 lazy_static! {
     pub static ref STYLE_LIST_ITEM: Vec<RectStyleable> = {

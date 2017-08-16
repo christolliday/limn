@@ -4,13 +4,12 @@ use euclid::{self, Point2D, Size2D, Vector2D};
 
 use rusttype;
 
-pub use graphics::types::{Color, Scalar};
-
 use webrender_api::*;
 
 use text_layout;
 
 use render::RenderBuilder;
+use color::Color;
 
 pub type Size = Size2D<f64>;
 pub type Point = Point2D<f64>;
@@ -106,16 +105,12 @@ pub fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
 }
 
-pub fn draw_rect_outline(rect: Rect, color: Color, renderer: &mut RenderBuilder) {
+pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut RenderBuilder) {
     let widths = BorderWidths { left: 1.0, right: 1.0, top: 1.0, bottom: 1.0 };
-    let side = BorderSide { color: to_colorf(color), style: BorderStyle::Solid };
+    let side = BorderSide { color: color.into(), style: BorderStyle::Solid };
     let border = NormalBorder { left: side, right: side, top: side, bottom: side, radius: BorderRadius::zero() };
     let details = BorderDetails::Normal(border);
     renderer.builder.push_border(to_layout_rect(rect), None, widths, details);
-}
-
-pub fn to_colorf(color: Color) -> ColorF {
-    ColorF::new(color[0], color[1], color[2], color[3])
 }
 
 pub fn to_layout_rect(rect: Rect) -> LayoutRect {

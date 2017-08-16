@@ -1,19 +1,16 @@
 use std::f64::consts::PI;
 
-use graphics;
-use graphics::types::Color;
-
 use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
-use util::{self, Scalar, Rect, Point, RectExt};
+use util::{self, Rect, Point, RectExt};
 use color::*;
 
 pub struct RectDrawable {
     pub background_color: Color,
-    pub corner_radius: Option<Scalar>,
-    pub border: Option<(Scalar, Color)>,
+    pub corner_radius: Option<f64>,
+    pub border: Option<(f64, Color)>,
 }
 impl Default for RectDrawable {
     fn default() -> Self {
@@ -32,7 +29,7 @@ impl RectDrawable {
 impl Drawable for RectDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
 
-        renderer.builder.push_rect(util::to_layout_rect(bounds), None, util::to_colorf(self.background_color));
+        renderer.builder.push_rect(util::to_layout_rect(bounds), None, self.background_color.into());
         /*
         // using piston graphics, drawing borders and rounded edges is currently the largest performance bottleneck
         // todo: make it faster! probably will require replacing piston graphics
@@ -96,8 +93,8 @@ impl Drawable for RectDrawable {
 #[derive(Clone)]
 pub enum RectStyleable {
     BackgroundColor(Value<Color>),
-    CornerRadius(Value<Option<Scalar>>),
-    Border(Value<Option<(Scalar, Color)>>),
+    CornerRadius(Value<Option<f64>>),
+    Border(Value<Option<(f64, Color)>>),
 }
 
 impl Styleable<RectDrawable> for RectStyleable {

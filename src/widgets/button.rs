@@ -9,18 +9,18 @@ use widget::property::states::*;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::text::{TextDrawable, TextStyleable};
-use util::{Scalar, Size, Color};
+use util::Size;
 use color::*;
 
-static COLOR_BUTTON_DEFAULT: Color = [0.8, 0.8, 0.8, 1.0];
-static COLOR_BUTTON_PRESSED: Color = [0.6, 0.6, 0.6, 1.0];
-static COLOR_BUTTON_ACTIVATED: Color = [0.4, 0.4, 0.4, 1.0];
-static COLOR_BUTTON_ACTIVATED_PRESSED: Color = [0.3, 0.3, 0.3, 1.0];
-static COLOR_BUTTON_INACTIVE: Color = [0.9, 0.9, 0.9, 1.0];
-static COLOR_BUTTON_TEXT_INACTIVE: Color = [0.7, 0.7, 0.7, 1.0];
+static COLOR_BUTTON_DEFAULT: Color = GRAY_80;
+static COLOR_BUTTON_PRESSED: Color = GRAY_60;
+static COLOR_BUTTON_ACTIVATED: Color = GRAY_40;
+static COLOR_BUTTON_ACTIVATED_PRESSED: Color = GRAY_30;
+static COLOR_BUTTON_INACTIVE: Color = GRAY_90;
+static COLOR_BUTTON_TEXT_INACTIVE: Color = GRAY_70;
 
-static BUTTON_BORDER: (Scalar, Color) = (1.0, [0.4, 0.4, 0.4, 1.0]);
-static BUTTON_BORDER_INACTIVE: (Scalar, Color) = (1.0, [0.7, 0.7, 0.7, 1.0]);
+static BUTTON_BORDER: (f64, Color) = (1.0, GRAY_40);
+static BUTTON_BORDER_INACTIVE: (f64, Color) = (1.0, GRAY_70);
 
 
 lazy_static! {

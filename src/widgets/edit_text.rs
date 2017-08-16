@@ -50,7 +50,7 @@ pub struct EditTextBuilder {
 
 impl EditTextBuilder {
     pub fn new() -> Self {
-        let default_border = Some((1.0, GRAY));
+        let default_border = Some((1.0, GRAY_70));
         let focused_border = Some((1.0, BLUE));
         let rect_style = style!(
             RectStyleable::Border: selector!(default_border, FOCUSED: focused_border),

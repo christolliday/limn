@@ -39,7 +39,7 @@ fn main() {
         add_rect(CYAN);
         add_rect(FUSCHIA);
         add_rect(WHITE);
-        add_rect(GRAY);
+        add_rect(GRAY_50);
         add_rect(BLACK);
     }
 

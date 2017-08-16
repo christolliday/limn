@@ -1,9 +1,7 @@
-use graphics::types::Color;
-
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::{FontId, resources};
-use util::{self, Point, Size, SizeExt, Scalar, Rect, RectExt};
+use util::{self, Point, Size, SizeExt, Rect, RectExt};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
@@ -14,7 +12,7 @@ const DEBUG_LINE_BOUNDS: bool = false;
 pub struct TextDrawable {
     pub text: String,
     pub font_id: FontId,
-    pub font_size: Scalar,
+    pub font_size: f64,
     pub text_color: Color,
     pub background_color: Color,
     pub wrap: Wrap,
@@ -54,7 +52,7 @@ impl TextDrawable {
             self.wrap);
         Size::from_text_layout(dims)
     }
-    pub fn min_height(&self) -> Scalar {
+    pub fn min_height(&self) -> f64 {
         self.font_size * 1.25
     }
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
@@ -154,7 +152,7 @@ impl Drawable for TextDrawable {
 pub enum TextStyleable {
     Text(Value<String>),
     FontId(Value<FontId>),
-    FontSize(Value<Scalar>),
+    FontSize(Value<f64>),
     TextColor(Value<Color>),
     BackgroundColor(Value<Color>),
     Wrap(Value<Wrap>),

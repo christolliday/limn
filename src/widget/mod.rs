@@ -10,14 +10,13 @@ use std::cell::{RefCell, Ref, RefMut};
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
-use graphics::types::Color;
-
 use render::RenderBuilder;
 use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
 use util::{self, Point, Rect};
+use color::Color;
 use event::Target;
 use layout::UpdateLayout;
 

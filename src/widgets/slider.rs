@@ -9,7 +9,7 @@ use widgets::drag::{DragEvent, WidgetDrag};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use ui::ChildAttachedEvent;
-use util::{Rect, RectExt, Scalar, Color};
+use util::{Rect, RectExt};
 use color::*;
 
 #[derive(Clone, Copy)]
@@ -36,11 +36,11 @@ pub struct SliderBuilder {
     pub variable_handle_size: bool,
     pub handle_style: HandleStyle,
     pub bar_style: BarStyle,
-    pub border: Option<(Scalar, Color)>,
+    pub border: Option<(f64, Color)>,
     pub bar_color: Color,
     pub handle_color: Color,
     pub highlight: Option<Color>,
-    pub width: Scalar,
+    pub width: f64,
 }
 
 impl SliderBuilder {
@@ -63,9 +63,9 @@ impl SliderBuilder {
             variable_handle_size: false,
             handle_style: HandleStyle::Round,
             bar_style: BarStyle::NarrowRound,
-            border: Some((1.0, DARK_GRAY)),
-            bar_color: MID_GRAY,
-            handle_color: LIGHT_GRAY,
+            border: Some((1.0, GRAY_30)),
+            bar_color: GRAY_70,
+            handle_color: GRAY_80,
             highlight: Some(BLUE_HIGHLIGHT),
             width: 30.0,
         }
@@ -79,13 +79,13 @@ impl SliderBuilder {
         self.handle_style = HandleStyle::Square;
         self.bar_style = BarStyle::Wide;
         self.border = None;
-        self.bar_color = LIGHT_GRAY;
-        self.handle_color = MID_GRAY;
+        self.bar_color = GRAY_80;
+        self.handle_color = GRAY_70;
         self.highlight = None;
         self.width = 15.0;
         self
     }
-    pub fn set_width(&mut self, width: Scalar) -> &mut Self {
+    pub fn set_width(&mut self, width: f64) -> &mut Self {
         self.width = width;
         self
     }

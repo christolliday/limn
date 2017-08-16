@@ -3,7 +3,6 @@
 extern crate text_layout;
 #[macro_use]
 extern crate limn_layout;
-extern crate graphics;
 extern crate cassowary;
 extern crate rusttype;
 extern crate glutin;

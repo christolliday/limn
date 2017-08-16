@@ -4,7 +4,6 @@ extern crate limn;
 extern crate limn_layout;
 extern crate text_layout;
 extern crate glutin;
-extern crate graphics;
 extern crate cassowary;
 
 mod util;
@@ -25,7 +24,7 @@ use limn::input::keyboard::KeyboardInput;
 
 fn create_slider_control() -> Widget {
 
-    let text_style = style!(TextStyleable::TextColor: selector!(BLACK, INACTIVE: [0.5, 0.5, 0.5, 1.0]));
+    let text_style = style!(TextStyleable::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
     let mut slider_container = Widget::new();
     slider_container
         .set_debug_name("slider_container")
@@ -74,7 +73,7 @@ fn create_slider_control() -> Widget {
     slider_container
 }
 fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
-    let control_color = [0.7, 0.7, 0.7, 1.0];
+    let control_color = GRAY_70;
     let mut button_container = Widget::new();
     let style = style!(RectStyleable::BackgroundColor: control_color);
     button_container
