@@ -6,8 +6,6 @@ extern crate limn_layout;
 extern crate graphics;
 extern crate cassowary;
 extern crate rusttype;
-extern crate gfx_device_gl;
-extern crate gfx_graphics;
 extern crate glutin;
 #[macro_use]
 extern crate lazy_static;

@@ -5,7 +5,6 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-backend = { path = "backend" }
 text_layout = { path = "text_layout" }
 limn-layout = { path = "layout" }
 cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "0329f1799dd606e999f26407f06169e0b7d408f8" }
@@ -19,8 +18,6 @@ webrender_api = { git = "https://github.com/servo/webrender", rev = "9e1a85e8226
 
 rusttype = "0.2.1"
 piston2d-graphics = "0.21"
-gfx_device_gl = "0.13.0"
-piston2d-gfx_graphics = "0.38.0"
 glutin = "0.9.1"
 
 lazy_static = "0.2.2"
