@@ -7,7 +7,7 @@ use color::*;
 
 pub struct EllipseDrawable {
     pub background_color: Color,
-    pub border: Option<(f64, Color)>,
+    pub border: Option<(f32, Color)>,
 }
 impl Default for EllipseDrawable {
     fn default() -> Self {
@@ -44,7 +44,7 @@ impl Drawable for EllipseDrawable {
 #[derive(Clone)]
 pub enum EllipseStyleable {
     BackgroundColor(Value<Color>),
-    Border(Value<Option<(f64, Color)>>),
+    Border(Value<Option<(f32, Color)>>),
 }
 
 impl Styleable<EllipseDrawable> for EllipseStyleable {

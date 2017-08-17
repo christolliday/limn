@@ -145,14 +145,14 @@ enum ScrollParentEvent {
     ContainerLayoutUpdated,
     ContentLayoutUpdated(Rect),
     WidgetMouseWheel(WidgetMouseWheel),
-    OffsetX(f64),
-    OffsetY(f64),
+    OffsetX(f32),
+    OffsetY(f32),
 }
 struct ScrollParent {
     scrollable: Widget,
     content_rect: Rect,
-    width_ratio: f64,
-    height_ratio: f64,
+    width_ratio: f32,
+    height_ratio: f32,
     scrollable_area: Size,
     offset: Vector,
     pub size_handler: Option<ScrollSizeHandler>,
@@ -220,8 +220,8 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                     parent_bounds.width() - self.content_rect.width(),
                     parent_bounds.height() - self.content_rect.height());
                 self.offset = self.offset + scroll * 13.0;
-                self.offset.x = f64::min(0.0, f64::max(max_scroll.x, self.offset.x));
-                self.offset.y = f64::min(0.0, f64::max(max_scroll.y, self.offset.y));
+                self.offset.x = f32::min(0.0, f32::max(max_scroll.x, self.offset.x));
+                self.offset.y = f32::min(0.0, f32::max(max_scroll.y, self.offset.y));
 
                 let scrollable_left = parent_bounds.left() + self.offset.x;
                 let scrollable_top = parent_bounds.top() + self.offset.y;
@@ -264,10 +264,10 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
 fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
     match event {
         glutin::MouseScrollDelta::LineDelta(x, y) => {
-            Vector::new(x as f64, y as f64)
+            Vector::new(x as f32, y as f32)
         }
         glutin::MouseScrollDelta::PixelDelta(x, y) => {
-            Vector::new(x as f64, y as f64)
+            Vector::new(x as f32, y as f32)
         }
     }
 }

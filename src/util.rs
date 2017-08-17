@@ -1,4 +1,4 @@
-use std::f64;
+use std::f32;
 
 use euclid::{self, Point2D, Size2D, Vector2D};
 
@@ -11,10 +11,10 @@ use text_layout;
 use render::RenderBuilder;
 use color::Color;
 
-pub type Size = Size2D<f64>;
-pub type Point = Point2D<f64>;
-pub type Vector = Vector2D<f64>;
-pub type Rect = euclid::Rect<f64>;
+pub type Size = Size2D<f32>;
+pub type Point = Point2D<f32>;
+pub type Vector = Vector2D<f32>;
+pub type Rect = euclid::Rect<f32>;
 
 pub trait RectExt<T> {
     fn from_text_layout(rect: text_layout::Rectangle) -> Self;
@@ -30,48 +30,50 @@ pub trait RectExt<T> {
     fn center(&self) -> Point;
     fn shrink_bounds(&self, size: T) -> Self;
 }
-impl RectExt<f64> for Rect {
+impl RectExt<f32> for Rect {
     fn from_text_layout(rect: text_layout::Rectangle) -> Self {
-        Rect::new(Point::new(rect.left, rect.top), Size::new(rect.width, rect.height))
+        Rect::new(
+            Point::new(rect.left as f32, rect.top as f32),
+            Size::new(rect.width as f32, rect.height as f32))
     }
-    fn from_rusttype<S: Into<f64>>(rect: rusttype::Rect<S>) -> Self {
+    fn from_rusttype<S: Into<f32>>(rect: rusttype::Rect<S>) -> Self {
         let origin = Point::new(rect.min.x.into(), rect.min.y.into());
         let size = Size::new(rect.max.x.into() - origin.x, rect.max.y.into() - origin.y);
         Rect::new(origin, size)
     }
     fn to_text_layout(&self) -> text_layout::Rectangle {
         text_layout::Rectangle {
-            left: self.left(),
-            top: self.top(),
-            width: self.width(),
-            height: self.height(),
+            left: self.left() as f64,
+            top: self.top() as f64,
+            width: self.width() as f64,
+            height: self.height() as f64,
         }
     }
-    fn to_slice(&self) -> [f64; 4] {
+    fn to_slice(&self) -> [f32; 4] {
         [self.left(), self.top(), self.width(), self.height()]
     }
-    fn left(&self) -> f64 {
+    fn left(&self) -> f32 {
         self.origin.x
     }
-    fn top(&self) -> f64 {
+    fn top(&self) -> f32 {
         self.origin.y
     }
-    fn right(&self) -> f64 {
+    fn right(&self) -> f32 {
         self.origin.x + self.size.width
     }
-    fn bottom(&self) -> f64 {
+    fn bottom(&self) -> f32 {
         self.origin.y + self.size.height
     }
-    fn width(&self) -> f64 {
+    fn width(&self) -> f32 {
         self.size.width
     }
-    fn height(&self) -> f64 {
+    fn height(&self) -> f32 {
         self.size.height
     }
     fn center(&self) -> Point {
         Point::new(self.left() + self.width() / 2.0, self.top() + self.height() / 2.0)
     }
-    fn shrink_bounds(&self, size: f64) -> Self {
+    fn shrink_bounds(&self, size: f32) -> Self {
         Rect::new(
             Point::new(self.origin.x + size / 2.0, self.origin.y + size / 2.0),
             Size::new(self.size.width - size, self.size.height - size))
@@ -83,15 +85,15 @@ pub trait SizeExt<T> {
     fn from_tuple(size: (u32, u32)) -> Self;
     fn from_text_layout(rect: text_layout::Dimensions) -> Self;
 }
-impl SizeExt<f64> for Size {
+impl SizeExt<f32> for Size {
     fn from_array(size: [u32; 2]) -> Self {
-        Size::new(size[0] as f64, size[1] as f64)
+        Size::new(size[0] as f32, size[1] as f32)
     }
     fn from_tuple(size: (u32, u32)) -> Self {
-        Size::new(size.0 as f64, size.1 as f64)
+        Size::new(size.0 as f32, size.1 as f32)
     }
     fn from_text_layout(rect: text_layout::Dimensions) -> Self {
-        Size::new(rect.width, rect.height)
+        Size::new(rect.width as f32, rect.height as f32)
     }
 }
 
@@ -115,6 +117,6 @@ pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut R
 
 pub fn to_layout_rect(rect: Rect) -> LayoutRect {
     LayoutRect::new(
-        LayoutPoint::new(rect.origin.x as f32, rect.origin.y as f32),
-        LayoutSize::new(rect.size.width as f32, rect.size.height as f32))
+        LayoutPoint::new(rect.origin.x, rect.origin.y),
+        LayoutSize::new(rect.size.width, rect.size.height))
 }

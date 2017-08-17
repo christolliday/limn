@@ -19,10 +19,10 @@ use self::constraint::ConstraintBuilder;
 
 use euclid::{Point2D, Size2D, UnknownUnit};
 
-pub type Length = euclid::Length<f64, UnknownUnit>;
-pub type Size = Size2D<f64>;
-pub type Point = Point2D<f64>;
-pub type Rect = euclid::Rect<f64>;
+pub type Length = euclid::Length<f32, UnknownUnit>;
+pub type Size = Size2D<f32>;
+pub type Point = Point2D<f32>;
+pub type Rect = euclid::Rect<f32>;
 
 pub type LayoutId = usize;
 
@@ -197,8 +197,8 @@ impl<'a> VariableEditable<'a> {
         self.strength = strength;
         self
     }
-    pub fn set(mut self, val: f64) -> Self {
-        self.val = Some(val);
+    pub fn set(mut self, val: f32) -> Self {
+        self.val = Some(val as f64);
         self
     }
 }

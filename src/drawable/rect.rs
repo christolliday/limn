@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 
 use render::RenderBuilder;
 use widget::drawable::Drawable;
@@ -9,8 +9,8 @@ use color::*;
 
 pub struct RectDrawable {
     pub background_color: Color,
-    pub corner_radius: Option<f64>,
-    pub border: Option<(f64, Color)>,
+    pub corner_radius: Option<f32>,
+    pub border: Option<(f32, Color)>,
 }
 impl Default for RectDrawable {
     fn default() -> Self {
@@ -42,12 +42,12 @@ impl Drawable for RectDrawable {
         if let Some(radius) = self.corner_radius {
             let points_per_corner = 8;
             let angle_per_step = 2.0 * PI / (points_per_corner * 4) as Scalar;
-            fn circle_coords(radius: f64, step: f64, angle_per_step: f64) -> [f64; 2] {
+            fn circle_coords(radius: f32, step: f32, angle_per_step: f32) -> [f32; 2] {
                 [radius * (step * angle_per_step).cos(), radius * (step * angle_per_step).sin()]
             };
             // corners are center points of four circle arcs
             let inner_rect = bounds.shrink_bounds(radius * 2.0);
-            let points: Vec<[f64; 2]> = (0..4)
+            let points: Vec<[f32; 2]> = (0..4)
                 .flat_map(|corner| {
                     let center: Point = match corner {
                         0 => inner_rect.bottom_right(),
@@ -59,7 +59,7 @@ impl Drawable for RectDrawable {
                     let step_offset: u32 = corner * points_per_corner;
                     (0..points_per_corner + 1).map(move |corner_step| {
                         let circle_step = step_offset + corner_step;
-                        let circle_offset = circle_coords(radius, circle_step as f64, angle_per_step);
+                        let circle_offset = circle_coords(radius, circle_step as f32, angle_per_step);
                         [center.x + circle_offset[0], center.y + circle_offset[1]]
                     })
                 })
@@ -93,8 +93,8 @@ impl Drawable for RectDrawable {
 #[derive(Clone)]
 pub enum RectStyleable {
     BackgroundColor(Value<Color>),
-    CornerRadius(Value<Option<f64>>),
-    Border(Value<Option<(f64, Color)>>),
+    CornerRadius(Value<Option<f32>>),
+    Border(Value<Option<(f32, Color)>>),
 }
 
 impl Styleable<RectDrawable> for RectStyleable {

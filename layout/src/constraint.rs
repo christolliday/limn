@@ -4,16 +4,16 @@ use cassowary::strength::*;
 
 use super::{LAYOUT, LayoutRef, LayoutVars, Size, Point};
 
-pub fn width(width: f64) -> WidgetConstraintBuilder {
+pub fn width(width: f32) -> WidgetConstraintBuilder {
     WidgetConstraint::Width(width).builder(REQUIRED)
 }
-pub fn height(height: f64) -> WidgetConstraintBuilder {
+pub fn height(height: f32) -> WidgetConstraintBuilder {
     WidgetConstraint::Height(height).builder(REQUIRED)
 }
-pub fn min_width(width: f64) -> WidgetConstraintBuilder {
+pub fn min_width(width: f32) -> WidgetConstraintBuilder {
     WidgetConstraint::MinWidth(width).builder(REQUIRED)
 }
-pub fn min_height(height: f64) -> WidgetConstraintBuilder {
+pub fn min_height(height: f32) -> WidgetConstraintBuilder {
     WidgetConstraint::MinHeight(height).builder(REQUIRED)
 }
 pub fn size(size: Size) -> WidgetConstraintBuilder {
@@ -22,7 +22,7 @@ pub fn size(size: Size) -> WidgetConstraintBuilder {
 pub fn min_size(size: Size) -> WidgetConstraintBuilder {
     WidgetConstraint::MinSize(size).builder(REQUIRED)
 }
-pub fn aspect_ratio(aspect_ratio: f64) -> WidgetConstraintBuilder {
+pub fn aspect_ratio(aspect_ratio: f32) -> WidgetConstraintBuilder {
     WidgetConstraint::AspectRatio(aspect_ratio).builder(REQUIRED)
 }
 pub fn shrink() -> WidgetConstraintBuilder {
@@ -119,13 +119,13 @@ pub fn match_height<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
 }
 
 pub enum WidgetConstraint {
-    Width(f64),
-    Height(f64),
-    MinWidth(f64),
-    MinHeight(f64),
+    Width(f32),
+    Height(f32),
+    MinWidth(f32),
+    MinHeight(f32),
     Size(Size),
     MinSize(Size),
-    AspectRatio(f64),
+    AspectRatio(f32),
     Shrink,
     ShrinkHorizontal,
     ShrinkVertical,
@@ -184,14 +184,14 @@ impl WidgetConstraintBuilder {
 pub struct PaddableConstraintBuilder {
     constraint: PaddableConstraint,
     strength: f64,
-    padding: f64,
+    padding: f32,
 }
 impl PaddableConstraintBuilder {
     pub fn strength(mut self, strength: f64) -> Self {
         self.strength = strength;
         self
     }
-    pub fn padding(mut self, padding: f64) -> Self {
+    pub fn padding(mut self, padding: f32) -> Self {
         self.padding = padding;
         self
     }

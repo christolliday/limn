@@ -105,7 +105,7 @@ fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
     (undo_widget, redo_widget, slider_container)
 }
 
-fn create_circle(center: &Point, mut parent_id: Widget, size: f64) -> Widget {
+fn create_circle(center: &Point, mut parent_id: Widget, size: f32) -> Widget {
     let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyleable::Border: Some((1.0, BLACK)));
     let mut widget = Widget::new();
@@ -121,7 +121,7 @@ fn create_circle(center: &Point, mut parent_id: Widget, size: f64) -> Widget {
     widget
 }
 
-struct ResizeEvent(f64);
+struct ResizeEvent(f32);
 struct CircleHandler {
     center: Point,
 }
@@ -143,7 +143,7 @@ enum CircleEvent {
     Redo,
     Select(Option<Widget>),
     Delete,
-    Resize(f64),
+    Resize(f32),
 }
 
 struct CircleEventHandler {
@@ -152,9 +152,9 @@ struct CircleEventHandler {
     redo_id: Widget,
     slider_id: Widget,
 
-    circles: HashMap<Widget, (Point, f64)>,
+    circles: HashMap<Widget, (Point, f32)>,
     undo_queue: Vec<Widget>,
-    redo_queue: Vec<(Point, f64)>,
+    redo_queue: Vec<(Point, f32)>,
     selected: Option<Widget>,
 }
 impl CircleEventHandler {

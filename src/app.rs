@@ -56,7 +56,7 @@ impl App {
     fn handle_window_event(&mut self, event: glutin::Event) {
         if let glutin::Event::WindowEvent { event, .. } = event {
             if let glutin::WindowEvent::Resized(width, height) = event {
-                self.ui.window_resized(Size::new(width as f64, height as f64));
+                self.ui.window_resized(Size::new(width as f32, height as f32));
             } else {
                 event!(Target::Ui, InputEvent(event));
             }

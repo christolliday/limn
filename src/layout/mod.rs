@@ -18,7 +18,7 @@ pub use self::solver::LimnSolver;
 pub use limn_layout::*;
 
 impl LayoutContainer for LinearLayoutHandler {
-    fn set_padding(&mut self, padding: f64) {
+    fn set_padding(&mut self, padding: f32) {
         self.padding = padding;
     }
     fn add_child(&mut self, mut parent: Widget, mut child: Widget) {
@@ -112,6 +112,7 @@ impl App {
                     {
                         let widget = &mut *widget.widget_mut();
                         let var = vars.get_var(var).expect("Missing variable for widget");
+                        let value = value as f32;
                         debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
                         match var {
                             VarUpdate::Left => widget.bounds.origin.x = value,

@@ -20,7 +20,7 @@ struct WidgetData {
     succ: Option<LayoutId>,
 }
 pub struct LinearLayoutHandler {
-    pub padding: f64,
+    pub padding: f32,
 
     orientation: Orientation,
     top: Variable,

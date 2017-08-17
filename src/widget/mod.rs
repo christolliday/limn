@@ -216,7 +216,7 @@ impl Widget {
         self.widget_mut().container = Some(Rc::new(RefCell::new(Box::new(container))));
         self
     }
-    pub fn set_padding(&mut self, padding: f64) -> &mut Self {
+    pub fn set_padding(&mut self, padding: f32) -> &mut Self {
         {
             let mut widget = self.widget_mut();
             widget.container.as_mut().unwrap().borrow_mut().set_padding(padding);

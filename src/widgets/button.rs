@@ -19,8 +19,8 @@ static COLOR_BUTTON_ACTIVATED_PRESSED: Color = GRAY_30;
 static COLOR_BUTTON_INACTIVE: Color = GRAY_90;
 static COLOR_BUTTON_TEXT_INACTIVE: Color = GRAY_70;
 
-static BUTTON_BORDER: (f64, Color) = (1.0, GRAY_40);
-static BUTTON_BORDER_INACTIVE: (f64, Color) = (1.0, GRAY_70);
+static BUTTON_BORDER: (f32, Color) = (1.0, GRAY_40);
+static BUTTON_BORDER_INACTIVE: (f32, Color) = (1.0, GRAY_70);
 
 
 lazy_static! {

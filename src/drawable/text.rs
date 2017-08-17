@@ -52,8 +52,8 @@ impl TextDrawable {
             self.wrap);
         Size::from_text_layout(dims)
     }
-    pub fn min_height(&self) -> f64 {
-        self.font_size * 1.25
+    pub fn min_height(&self) -> f32 {
+        (self.font_size * 1.25) as f32
     }
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
         let res = resources();
@@ -64,8 +64,8 @@ impl TextDrawable {
                                          self.font_size,
                                          self.font_size * 1.25,
                                          self.wrap,
-                                         bounds.width());
-        height < bounds.height()
+                                         bounds.width() as f64);
+        height < bounds.height() as f64
     }
 }
 
@@ -119,7 +119,7 @@ impl Drawable for TextDrawable {
 
             let tex_dim = {
                 let (tex_w, tex_h) = text_texture_cache.get_size();
-                Size::new(tex_w as f64, tex_h as f64)
+                Size::new(tex_w as f32, tex_h as f32)
             };
 
             let scale_rect = |rect: Rect, size: Size| -> Rect {

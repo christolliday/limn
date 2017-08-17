@@ -28,7 +28,7 @@ impl App {
                     event!(Target::Ui, MouseButton(state, button));
                 }
                 glutin::WindowEvent::MouseMoved { position, .. } => {
-                    let point = Point::new(position.0, position.1);
+                    let point = Point::new(position.0 as f32, position.1 as f32);
                     event!(Target::Ui, MouseMoved(point));
                 }
                 glutin::WindowEvent::KeyboardInput { input, .. } => {

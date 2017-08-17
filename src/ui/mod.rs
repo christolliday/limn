@@ -83,8 +83,8 @@ impl Ui {
         let root = self.get_root();
         let mut dims = root.bounds().size;
         // use min size to prevent window size from being set to 0 (X crashes)
-        dims.width = f64::max(100.0, dims.width);
-        dims.height = f64::max(100.0, dims.height);
+        dims.width = f32::max(100.0, dims.width);
+        dims.height = f32::max(100.0, dims.height);
         dims
     }
     pub fn window_resized(&mut self, window_dims: Size) {
@@ -113,7 +113,7 @@ impl Ui {
         let window_size = self.window.borrow_mut().size_f32();
         let (builder, resources) = {
             let mut renderer = self.render.render_builder(window_size);
-            let crop_to = Rect::new(Point::zero(), Size::new(::std::f64::MAX, ::std::f64::MAX));
+            let crop_to = Rect::new(Point::zero(), Size::new(::std::f32::MAX, ::std::f32::MAX));
             self.root.widget_mut().draw(crop_to, &mut renderer);
             if self.debug_draw_bounds {
                 self.root.widget_mut().draw_debug(&mut renderer);

@@ -7,7 +7,7 @@ extern crate chrono;
 
 mod util;
 
-use std::f64;
+use std::f32;
 //use std::{thread, time};
 
 use chrono::{Local, Timelike};
@@ -20,12 +20,12 @@ struct ClockTick;
 
 pub struct HandDrawable {
     color: Color,
-    width: f64,
-    length: f64,
-    angle: f64, // radians
+    width: f32,
+    length: f32,
+    angle: f32, // radians
 }
 impl HandDrawable {
-    pub fn new(color: Color, width: f64, length: f64, angle: f64) -> Self {
+    pub fn new(color: Color, width: f32, length: f32, angle: f32) -> Self {
         HandDrawable {
             color: color,
             width: width,
@@ -41,7 +41,7 @@ impl Drawable for HandDrawable {
         let hand_dir = Point::new(sin * 1.0, -cos * 1.0) * self.length;
         let hand_norm = Point::new(-cos * 1.0, -sin * 1.0) * self.width;
         let center = bounds.center();
-        let points: Vec<[f64; 2]> = [center + hand_norm,
+        let points: Vec<[f32; 2]> = [center + hand_norm,
                                      center + hand_norm + hand_dir,
                                      center - hand_norm + hand_dir,
                                      center - hand_norm]
@@ -66,9 +66,9 @@ impl ClockBuilder {
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
         layout!(widget: size(Size::new(200.0, 200.0)));
 
-        let hour_angle = || 2.0 * f64::consts::PI * (Local::now().hour() % 12) as f64 / 12.0;
-        let minute_angle = || 2.0 * f64::consts::PI * Local::now().minute() as f64 / 60.0;
-        let second_angle = || 2.0 * f64::consts::PI * Local::now().second() as f64 / 60.0;
+        let hour_angle = || 2.0 * f32::consts::PI * (Local::now().hour() % 12) as f32 / 12.0;
+        let minute_angle = || 2.0 * f32::consts::PI * Local::now().minute() as f32 / 60.0;
+        let second_angle = || 2.0 * f32::consts::PI * Local::now().second() as f32 / 60.0;
         let mut hour_widget = Widget::new();
         hour_widget
             .set_drawable(HandDrawable::new(BLACK, 4.0, 60.0, hour_angle()))

@@ -2,13 +2,13 @@ use widget::Widget;
 use resources::WidgetId;
 
 pub trait LayoutContainer {
-    fn set_padding(&mut self, _padding: f64) {}
+    fn set_padding(&mut self, _padding: f32) {}
     fn add_child(&mut self, parent: Widget, child: Widget);
     fn remove_child(&mut self, _parent: Widget, _child_id: WidgetId) {}
 }
 
 pub struct Frame {
-    padding: f64,
+    padding: f32,
 }
 impl Frame {
     pub fn new() -> Self {
@@ -18,7 +18,7 @@ impl Frame {
     }
 }
 impl LayoutContainer for Frame {
-    fn set_padding(&mut self, padding: f64) {
+    fn set_padding(&mut self, padding: f32) {
         self.padding = padding;
     }
     fn add_child(&mut self, parent: Widget, mut child: Widget) {

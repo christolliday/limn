@@ -32,15 +32,15 @@ pub struct SliderBuilder {
     pub widget: Widget,
     pub slider_handle: Widget,
     pub orientation: Orientation,
-    pub init_value: f64,
+    pub init_value: f32,
     pub variable_handle_size: bool,
     pub handle_style: HandleStyle,
     pub bar_style: BarStyle,
-    pub border: Option<(f64, Color)>,
+    pub border: Option<(f32, Color)>,
     pub bar_color: Color,
     pub handle_color: Color,
     pub highlight: Option<Color>,
-    pub width: f64,
+    pub width: f32,
 }
 
 impl SliderBuilder {
@@ -85,16 +85,16 @@ impl SliderBuilder {
         self.width = 15.0;
         self
     }
-    pub fn set_width(&mut self, width: f64) -> &mut Self {
+    pub fn set_width(&mut self, width: f32) -> &mut Self {
         self.width = width;
         self
     }
-    pub fn set_value(&mut self, value: f64) -> &mut Self {
+    pub fn set_value(&mut self, value: f32) -> &mut Self {
         self.init_value = value;
         self
     }
     pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
-        where F: Fn(f64, &mut WidgetEventArgs) + 'static
+        where F: Fn(f32, &mut WidgetEventArgs) + 'static
     {
         self.widget.add_handler_fn(move |event: &MovedSliderWidgetEvent, mut args| {
             let bounds = args.widget.bounds();
@@ -243,20 +243,20 @@ widget_builder!(SliderBuilder);
 
 struct MovedSliderWidgetEvent {
     orientation: Orientation,
-    slider_pos: f64,
-    handle_size: f64,
+    slider_pos: f32,
+    handle_size: f32,
 }
 
-pub struct SetSliderValue(pub f64);
+pub struct SetSliderValue(pub f32);
 pub enum SliderHandleInput {
     WidgetDrag(WidgetDrag),
-    SetValue((f64, Rect)),
-    SliderClicked((f64, Rect)),
+    SetValue((f32, Rect)),
+    SliderClicked((f32, Rect)),
 }
 struct DragHandler {
     orientation: Orientation,
     container: Widget,
-    start_pos: f64,
+    start_pos: f32,
 }
 impl DragHandler {
     pub fn new(orientation: Orientation, container: Widget) -> Self {
@@ -330,7 +330,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 let position = if let Orientation::Horizontal = self.orientation {
                     let min = parent_bounds.left() + handle_radius;
                     let max = parent_bounds.left() + parent_bounds.width() - handle_radius;
-                    let position = f64::min(f64::max(position, min), max);
+                    let position = f32::min(f32::max(position, min), max);
                     args.widget.update_layout(|layout| {
                         layout.edit_left().set(position - handle_radius);
                     });
@@ -338,7 +338,7 @@ impl WidgetEventHandler<SliderHandleInput> for DragHandler {
                 } else {
                     let min = parent_bounds.top() + handle_radius;
                     let max = parent_bounds.top() + parent_bounds.height() - handle_radius;
-                    let position = f64::min(f64::max(position, min), max);
+                    let position = f32::min(f32::max(position, min), max);
                     args.widget.update_layout(|layout| {
                         layout.edit_top().set(position - handle_radius);
                     });
