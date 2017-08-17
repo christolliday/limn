@@ -30,7 +30,7 @@ impl WebRenderContext {
         let opts = webrender::RendererOptions {
             resource_override_path: None,
             debug: true,
-            precache_shaders: true,
+            precache_shaders: false,
             device_pixel_ratio: window.hidpi_factor(),
             .. webrender::RendererOptions::default()
         };
@@ -67,7 +67,7 @@ impl WebRenderContext {
             resources: ResourceUpdates::new(),
         }
     }
-    pub fn update(&mut self, builder: DisplayListBuilder, resources: ResourceUpdates, window_size: LayoutSize) {
+    pub fn set_display_list(&mut self, builder: DisplayListBuilder, resources: ResourceUpdates, window_size: LayoutSize) {
         self.render_api.set_display_list(
             self.document_id,
             self.epoch,
@@ -77,12 +77,14 @@ impl WebRenderContext {
             true,
             resources
         );
+    }
+    pub fn generate_frame(&mut self) {
         self.render_api.generate_frame(self.document_id, None);
     }
-    pub fn render(&mut self, window_size: DeviceUintSize) {
+    // if there is a frame ready, update current frame and render it, otherwise, does nothing
+    pub fn update(&mut self, window_size: DeviceUintSize) {
         self.renderer.update();
         self.renderer.render(window_size);
-        //window.swap_buffers();
     }
     pub fn toggle_flags(&mut self, toggle_flags: webrender::renderer::DebugFlags) {
         let mut flags = self.renderer.get_debug_flags();

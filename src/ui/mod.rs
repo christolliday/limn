@@ -49,7 +49,7 @@ impl Ui {
             root: root,
             layout: layout,
             render: render,
-            needs_redraw: false,
+            needs_redraw: true,
             should_close: false,
             debug_draw_bounds: false,
             window: Rc::new(RefCell::new(window)),
@@ -95,7 +95,6 @@ impl Ui {
             layout.edit_right().set(window_dims.width);
             layout.edit_bottom().set(window_dims.height);
         });
-        self.layout.check_changes();
         self.needs_redraw = true;
     }
 
@@ -120,8 +119,11 @@ impl Ui {
             }
             (renderer.builder, renderer.resources)
         };
-        self.render.update(builder, resources, window_size);
-        self.render.render(self.window.borrow_mut().size_u32());
+        self.render.set_display_list(builder, resources, window_size);
+        self.render.generate_frame();
+    }
+    pub fn update(&mut self) {
+        self.render.update(self.window.borrow_mut().size_u32());
         let window = self.window.borrow_mut();
         window.swap_buffers();
     }

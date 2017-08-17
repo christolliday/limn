@@ -86,6 +86,8 @@ impl App {
                 }
                 self.ui.draw_if_needed();
             }
+            self.ui.update();
+
             if !self.ui.needs_redraw {
                 let mut events = Vec::new();
                 events_loop.run_forever(|window_event| {
