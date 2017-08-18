@@ -4,7 +4,7 @@ use app_units;
 
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
-use resources::{FontId, resources};
+use resources::resources;
 use util::{self, Point, Size, SizeExt, Rect, RectExt};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
@@ -102,7 +102,8 @@ fn get_glyphs(text: &str, rect: Rect, size: f32, info: &stb_truetype::FontInfo<V
 impl Drawable for TextDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let (key, glyphs) = {
-            let font_info = renderer.get_font(&self.font);
+            let mut resources = resources();
+            let font_info = resources.get_font(&self.font);
             (font_info.key, get_glyphs(&self.text, bounds, self.font_size, &font_info.info))
         };
         renderer.builder.push_text(

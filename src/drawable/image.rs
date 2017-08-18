@@ -2,7 +2,7 @@ use webrender_api::*;
 
 use render::RenderBuilder;
 use widget::drawable::Drawable;
-use resources::{ImageId, resources};
+use resources::resources;
 use util::{self, Rect, RectExt, Size, SizeExt};
 
 pub struct ImageDrawable {
@@ -17,10 +17,9 @@ impl ImageDrawable {
         }
     }
     pub fn measure(&self) -> Size {
-        Size::zero()
-        /* let res = resources();
-        let img = res.images.get(self.image_id).unwrap();
-        Size::from_tuple(img.get_size()) */
+        let mut res = resources();
+        let info = res.get_image(&self.image).info;
+        Size::new(info.width as f32, info.height as f32)
     }
     pub fn scale(&mut self, scale: Size) {
         self.scale = scale;
@@ -28,26 +27,15 @@ impl ImageDrawable {
 }
 impl Drawable for ImageDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
-        let key = renderer.get_image(&self.image).key;
+        let key = resources().get_image(&self.image).key;
+        let rect = util::to_layout_rect(bounds);
         renderer.builder.push_image(
-            util::to_layout_rect(bounds),
+            rect,
             None,
-            LayoutSize::zero(),
+            rect.size,
             LayoutSize::zero(),
             ImageRendering::Auto,
             key,
         );
-        /*let res = resources();
-        let img = res.images.get(self.image_id).unwrap();
-        let dims = Size::from_tuple(img.get_size());
-        let scale = Size::new(
-            bounds.size.width / dims.width,
-            bounds.size.height / dims.height,
-        );
-        let image = graphics::image::Image::new();
-        image.rect(bounds.to_slice());
-        let context = context.trans(bounds.left(), bounds.top()).scale(scale.width, scale.height);
-
-        image.draw(img, &context.draw_state, context.transform, graphics);*/
     }
 }
