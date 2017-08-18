@@ -4,3 +4,4 @@ pub mod drag;
 pub mod list;
 pub mod slider;
 pub mod edit_text;
+pub mod image;
