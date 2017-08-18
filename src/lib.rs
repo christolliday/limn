@@ -23,6 +23,7 @@ extern crate webrender_api;
 extern crate gleam;
 extern crate stb_truetype;
 extern crate app_units;
+extern crate image;
 
 #[macro_use]
 pub mod event;

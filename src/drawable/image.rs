@@ -1,30 +1,42 @@
+use webrender_api::*;
+
 use render::RenderBuilder;
 use widget::drawable::Drawable;
 use resources::{ImageId, resources};
-use util::{Rect, RectExt, Size, SizeExt};
+use util::{self, Rect, RectExt, Size, SizeExt};
 
 pub struct ImageDrawable {
-    pub image_id: ImageId,
+    pub image: String,
     pub scale: Size,
 }
-/* impl ImageDrawable {
-    pub fn new(image_id: ImageId) -> Self {
+impl ImageDrawable {
+    pub fn new(image: &str) -> Self {
         ImageDrawable {
-            image_id: image_id,
+            image: image.to_owned(),
             scale: Size::new(1.0, 1.0),
         }
     }
     pub fn measure(&self) -> Size {
-        let res = resources();
+        Size::zero()
+        /* let res = resources();
         let img = res.images.get(self.image_id).unwrap();
-        Size::from_tuple(img.get_size())
+        Size::from_tuple(img.get_size()) */
     }
     pub fn scale(&mut self, scale: Size) {
         self.scale = scale;
     }
-} */
+}
 impl Drawable for ImageDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        let key = renderer.get_image(&self.image).key;
+        renderer.builder.push_image(
+            util::to_layout_rect(bounds),
+            None,
+            LayoutSize::zero(),
+            LayoutSize::zero(),
+            ImageRendering::Auto,
+            key,
+        );
         /*let res = resources();
         let img = res.images.get(self.image_id).unwrap();
         let dims = Size::from_tuple(img.get_size());

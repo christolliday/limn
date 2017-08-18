@@ -20,6 +20,7 @@ stb_truetype = "0.2.1"
 app_units = "0.5"
 rusttype = "0.2.1"
 glutin = "0.9.1"
+image = "0.15"
 
 lazy_static = "0.2.2"
 linked-hash-map = "0.3.0"
