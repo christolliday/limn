@@ -36,14 +36,6 @@ fn init(title: &str, size: Option<(u32, u32)>) -> App {
 
 /*
 #[allow(dead_code)]
-pub fn load_default_font() -> FontId {
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/Hack/Hack-Regular.ttf");
-    let mut res = resources();
-    res.fonts.insert_from_file(font_path).unwrap()
-}
-
-#[allow(dead_code)]
 pub fn load_default_image(window: &mut Window) -> ImageId {
     let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
     let image_path = assets.join("images/rust.png");

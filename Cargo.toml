@@ -16,6 +16,8 @@ gleam = "0.4.7"
 webrender = { git = "https://github.com/servo/webrender", rev = "9e1a85e8226d7746e82902f44467293d1a9938ca" }
 webrender_api = { git = "https://github.com/servo/webrender", rev = "9e1a85e8226d7746e82902f44467293d1a9938ca" }
 
+stb_truetype = "0.2.1"
+app_units = "0.5"
 rusttype = "0.2.1"
 glutin = "0.9.1"
 

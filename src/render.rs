@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use gleam::gl;
 use glutin;
 use webrender;
 use webrender::api::*;
+use stb_truetype;
 
 use window::Window;
 //use util::Point;
@@ -14,12 +17,40 @@ pub struct WebRenderContext {
     pub pipeline_id: PipelineId,
     pub document_id: DocumentId,
     pub root_background_color: ColorF,
+    pub fonts: HashMap<String, FontInfo>,
 }
 
 pub struct RenderBuilder<'a> {
-    pub render: &'a WebRenderContext,
+    pub render: &'a mut WebRenderContext,
     pub builder: DisplayListBuilder,
     pub resources: ResourceUpdates,
+}
+
+pub struct FontInfo {
+    pub key: FontKey,
+    pub info: stb_truetype::FontInfo<Vec<u8>>,
+}
+
+impl <'a> RenderBuilder<'a> {
+    pub fn get_font(&mut self, name: &str) -> &FontInfo {
+        if !self.render.fonts.contains_key(name) {
+            let data = self.load_font(name).unwrap();
+            let key = self.render.render_api.generate_font_key();
+            let info = stb_truetype::FontInfo::new(data.clone(), 0).unwrap();
+            self.resources.add_raw_font(key, data, 0);
+            let font_info = FontInfo { key: key, info: info };
+            self.render.fonts.insert(name.to_owned(), font_info);
+        }
+        &self.render.fonts[name]
+    }
+    fn load_font(&self, name: &str) -> Result<Vec<u8>, ::std::io::Error> {
+        use std::fs::File;
+        use std::io::Read;
+        let mut file = File::open(format!("assets/fonts/{}.ttf", name)).expect("Font missing");
+        let mut data = Vec::new();
+        try!(file.read_to_end(&mut data));
+        Ok(data)
+    }
 }
 
 impl WebRenderContext {
@@ -54,6 +85,7 @@ impl WebRenderContext {
             pipeline_id: pipeline_id,
             document_id: document_id,
             root_background_color: root_background_color,
+            fonts: HashMap::new(),
         }
     }
     pub fn deinit(self) {

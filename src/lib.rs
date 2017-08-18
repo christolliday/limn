@@ -21,6 +21,8 @@ extern crate multi_mut;
 extern crate webrender;
 extern crate webrender_api;
 extern crate gleam;
+extern crate stb_truetype;
+extern crate app_units;
 
 #[macro_use]
 pub mod event;

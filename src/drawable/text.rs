@@ -1,3 +1,7 @@
+use stb_truetype;
+use webrender_api::{LayoutPoint, GlyphInstance};
+use app_units;
+
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::{FontId, resources};
@@ -11,8 +15,8 @@ const DEBUG_LINE_BOUNDS: bool = false;
 
 pub struct TextDrawable {
     pub text: String,
-    pub font_id: FontId,
-    pub font_size: f64,
+    pub font: String,
+    pub font_size: f32,
     pub text_color: Color,
     pub background_color: Color,
     pub wrap: Wrap,
@@ -23,7 +27,7 @@ impl Default for TextDrawable {
     fn default() -> Self {
         TextDrawable {
             text: "".to_owned(),
-            font_id: FontId(0),
+            font: "Hack/Hack-Regular".to_owned(),
             font_size: 20.0,
             text_color: BLACK,
             background_color: TRANSPARENT,
@@ -41,7 +45,8 @@ impl TextDrawable {
         drawable
     }
     pub fn measure(&self) -> Size {
-        let res = resources();
+        Size::zero()
+        /* let res = resources();
         let font = res.fonts.get(self.font_id).unwrap();
 
         let dims = text_layout::get_text_dimensions(
@@ -50,13 +55,14 @@ impl TextDrawable {
             self.font_size,
             self.font_size * 1.25,
             self.wrap);
-        Size::from_text_layout(dims)
+        Size::from_text_layout(dims) */
     }
     pub fn min_height(&self) -> f32 {
         (self.font_size * 1.25) as f32
     }
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
-        let res = resources();
+        false
+        /* let res = resources();
         let font = res.fonts.get(self.font_id).unwrap();
         let height =
             text_layout::get_text_height(text,
@@ -65,12 +71,49 @@ impl TextDrawable {
                                          self.font_size * 1.25,
                                          self.wrap,
                                          bounds.width() as f64);
-        height < bounds.height() as f64
+        height < bounds.height() as f64 */
     }
+}
+
+fn get_glyphs(text: &str, rect: Rect, size: f32, info: &stb_truetype::FontInfo<Vec<u8>>) -> Vec<GlyphInstance> {
+
+    let scale = info.scale_for_pixel_height(size);
+    let len = text.len();
+    text[0..len].chars().scan((0.0, None), move |state, v| {
+        let index = info.find_glyph_index(v as u32);
+        state.0 = if let Some(last) = state.1 {
+            let kern = info.get_glyph_kern_advance(last, index);
+            state.0 + kern as f32 * scale
+        } else {
+            state.0
+        };
+        state.1 = Some(index);
+        let pos = state.0;
+        state.0 += (info.get_glyph_h_metrics(index).advance_width as f32 * scale).ceil();
+        Some(GlyphInstance {
+            index: index,
+            point: LayoutPoint::new(
+                rect.origin.x + pos,
+                rect.origin.y + size),
+        })
+    }).collect()
 }
 
 impl Drawable for TextDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        let (key, glyphs) = {
+            let font_info = renderer.get_font(&self.font);
+            (font_info.key, get_glyphs(&self.text, bounds, self.font_size, &font_info.info))
+        };
+        renderer.builder.push_text(
+            util::to_layout_rect(bounds),
+            None,
+            &glyphs,
+            key,
+            self.text_color.into(),
+            app_units::Au::from_px(self.font_size as i32),
+            None
+        );
         /*
         graphics::Rectangle::new(self.background_color)
                 .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
@@ -151,8 +194,8 @@ impl Drawable for TextDrawable {
 #[derive(Debug, Clone)]
 pub enum TextStyleable {
     Text(Value<String>),
-    FontId(Value<FontId>),
-    FontSize(Value<f64>),
+    Font(Value<String>),
+    FontSize(Value<f32>),
     TextColor(Value<Color>),
     BackgroundColor(Value<Color>),
     Wrap(Value<Wrap>),
@@ -164,7 +207,7 @@ impl Styleable<TextDrawable> for TextStyleable {
     fn apply(&self, state: &mut TextDrawable, props: &PropSet) {
         match *self {
             TextStyleable::Text(ref val) => state.text = val.get(props),
-            TextStyleable::FontId(ref val) => state.font_id = val.get(props),
+            TextStyleable::Font(ref val) => state.font = val.get(props),
             TextStyleable::FontSize(ref val) => state.font_size = val.get(props),
             TextStyleable::TextColor(ref val) => state.text_color = val.get(props),
             TextStyleable::BackgroundColor(ref val) => state.background_color = val.get(props),
