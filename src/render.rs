@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::sync::Arc;
+use std::sync::atomic::{self, AtomicBool};
 
 use gleam::gl;
 use glutin;
@@ -12,12 +14,16 @@ use euclid::TypedPoint2D;
 use resources;
 
 pub struct WebRenderContext {
-    renderer: webrender::Renderer,
+    pub renderer: webrender::Renderer,
     pub render_api: RenderApi,
     pub epoch: Epoch,
     pub pipeline_id: PipelineId,
     pub document_id: DocumentId,
     pub root_background_color: ColorF,
+    // store frame ready event in case it is received after
+    // update but before the event queue is waiting, otherwise
+    // the event queue can go idle while there is a frame ready
+    pub frame_ready: Arc<AtomicBool>,
 }
 
 pub struct RenderBuilder<'a> {
@@ -44,7 +50,8 @@ impl WebRenderContext {
         resources::init_resources(sender.create_api());
         let document_id = api.add_document(window.size_u32());
 
-        let notifier = Box::new(Notifier { events_proxy: events_loop.create_proxy() });
+        let frame_ready = Arc::new(AtomicBool::new(false));
+        let notifier = Box::new(Notifier::new(events_loop.create_proxy(), frame_ready.clone()));
         renderer.set_render_notifier(notifier);
 
         let epoch = Epoch(0);
@@ -59,6 +66,7 @@ impl WebRenderContext {
             pipeline_id: pipeline_id,
             document_id: document_id,
             root_background_color: root_background_color,
+            frame_ready: frame_ready,
         }
     }
     pub fn deinit(self) {
@@ -86,8 +94,12 @@ impl WebRenderContext {
     pub fn generate_frame(&mut self) {
         self.render_api.generate_frame(self.document_id, None);
     }
+    pub fn frame_ready(&mut self) -> bool {
+        self.frame_ready.load(atomic::Ordering::Acquire)
+    }
     // if there is a frame ready, update current frame and render it, otherwise, does nothing
     pub fn update(&mut self, window_size: DeviceUintSize) {
+        self.frame_ready.store(false, atomic::Ordering::Release);
         self.renderer.update();
         self.renderer.render(window_size);
     }
@@ -104,11 +116,13 @@ impl WebRenderContext {
 
 struct Notifier {
     events_proxy: glutin::EventsLoopProxy,
+    frame_ready: Arc<AtomicBool>,
 }
 impl Notifier {
-    fn new(events_proxy: glutin::EventsLoopProxy) -> Self {
+    fn new(events_proxy: glutin::EventsLoopProxy, frame_ready: Arc<AtomicBool>) -> Self {
         Notifier {
             events_proxy: events_proxy,
+            frame_ready: frame_ready,
         }
     }
 }
@@ -116,11 +130,14 @@ impl Notifier {
 impl RenderNotifier for Notifier {
     fn new_frame_ready(&mut self) {
         #[cfg(not(target_os = "android"))]
+        debug!("new frame ready");
         self.events_proxy.wakeup().ok();
+        self.frame_ready.store(true, atomic::Ordering::Release);
     }
 
     fn new_scroll_frame_ready(&mut self, _composite_needed: bool) {
         #[cfg(not(target_os = "android"))]
+        debug!("new scroll frame ready");
         self.events_proxy.wakeup().ok();
     }
 }

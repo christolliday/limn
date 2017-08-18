@@ -54,6 +54,7 @@ impl App {
     }
 
     fn handle_window_event(&mut self, event: glutin::Event) {
+        debug!("handle window event {:?}", event);
         if let glutin::Event::WindowEvent { event, .. } = event {
             if let glutin::WindowEvent::Resized(width, height) = event {
                 self.ui.window_resized(Size::new(width as f32, height as f32));
@@ -88,7 +89,7 @@ impl App {
             }
             self.ui.update();
 
-            if !self.ui.needs_redraw {
+            if !self.ui.needs_redraw && !self.ui.render.frame_ready() {
                 let mut events = Vec::new();
                 events_loop.run_forever(|window_event| {
                     events.push(window_event);
