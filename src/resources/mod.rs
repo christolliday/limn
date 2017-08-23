@@ -7,8 +7,11 @@ use std::collections::HashMap;
 use webrender::api::*;
 use stb_truetype;
 use image;
+use rusttype;
 
 use self::id::{Id, IdGen};
+
+pub type Font = rusttype::Font<'static>;
 
 lazy_static! {
     static ref RES: Mutex<Resources> = Mutex::new(Resources::new());
@@ -26,7 +29,7 @@ named_id!(WidgetId);
 
 pub struct FontInfo {
     pub key: FontKey,
-    pub info: stb_truetype::FontInfo<Vec<u8>>,
+    pub info: Font,
 }
 
 pub struct ImageInfo {
@@ -92,13 +95,14 @@ impl Resources {
     }
     pub fn get_font(&mut self, name: &str) -> &FontInfo {
         if !self.fonts.contains_key(name) {
-            let data = load_font(name).unwrap();
+            let data = load_font_data(name).unwrap();
             let key = self.render.as_ref().unwrap().generate_font_key();
-            let info = stb_truetype::FontInfo::new(data.clone(), 0).unwrap();
             let mut resources = ResourceUpdates::new();
             resources.add_raw_font(key, data, 0);
+
+            let font = load_font(name).unwrap();
             self.render.as_ref().unwrap().update_resources(resources);
-            let font_info = FontInfo { key: key, info: info };
+            let font_info = FontInfo { key: key, info: font };
             self.fonts.insert(name.to_owned(), font_info);
         }
         &self.fonts[name]
@@ -125,14 +129,6 @@ fn load_image(file: &str) -> Result<(ImageData, ImageDescriptor), image::ImageEr
     let descriptor = ImageDescriptor::new(image_dims.0, image_dims.1, format, opaque);
     let data = ImageData::new(bytes);
     Ok((data, descriptor))
-}
-fn load_font(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
-    use std::fs::File;
-    use std::io::Read;
-    let mut file = File::open(format!("assets/fonts/{}.ttf", name)).expect("Font missing");
-    let mut data = Vec::new();
-    try!(file.read_to_end(&mut data));
-    Ok(data)
 }
 fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
     match format {
@@ -167,4 +163,19 @@ pub fn premultiply(data: &mut [u8]) {
         pixel[1] = ((g * a + 128) / 255) as u8;
         pixel[0] = ((b * a + 128) / 255) as u8;
     }
+}
+
+fn load_font_data(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
+    use std::fs::File;
+    use std::io::Read;
+    let mut file = File::open(format!("assets/fonts/{}.ttf", name)).expect("Font missing");
+    let mut data = Vec::new();
+    try!(file.read_to_end(&mut data));
+    Ok(data)
+}
+
+pub fn load_font(name: &str) -> Result<Font, ::std::io::Error> {
+    let data = try!(load_font_data(name));
+    let collection = rusttype::FontCollection::from_bytes(data);
+    Ok(collection.into_font().unwrap())
 }

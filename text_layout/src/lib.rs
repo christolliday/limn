@@ -84,16 +84,28 @@ pub fn get_positioned_glyphs(text: &str,
     let line_infos = line_infos.iter().cloned();
     let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
     let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
+    let scale = Scale::uniform(font_size as f32);
 
     let mut positioned_glyphs = Vec::new();
     for (line_text, line_rect) in line_texts.zip(line_rects) {
-
+        // point specifies bottom left corner of text line
         let point = rusttype::Point {
             x: line_rect.left as f32,
             y: line_rect.top as f32 + font_size as f32,
         };
-        positioned_glyphs.extend(font.layout(line_text, Scale::uniform(font_size as f32), point)
-            .map(|g| g.standalone()));
+
+        positioned_glyphs.extend(font.glyphs_for(line_text.chars())
+            .scan((None, 0.0), |state, g| {
+                let &mut (last, x) = state;
+                let g = g.scaled(scale);
+
+                let kern = last.map(|last| font.pair_kerning(scale, last, g.id())).unwrap_or(0.0);
+                let width = g.h_metrics().advance_width;
+
+                let next = g.positioned(point + rusttype::vector(x, 0.0));
+                *state = (Some(next.id()), x + width + kern);
+                Some(next.standalone())
+            }));
     }
     positioned_glyphs
 }
@@ -129,13 +141,17 @@ impl<'a, I> Iterator for Lines<'a, I>
     }
 }
 
-
 /// Converts the given font size in "points" to its font size in pixels.
+/// assumes 96 dpi display. 1 pt = 1/72"
 pub fn pt_to_px(font_size_in_points: Scalar) -> f32 {
-    font_size_in_points as f32
+    (font_size_in_points * 4.0) as f32 / 3.0
+}
+
+pub fn px_to_pt(font_size_in_px: Scalar) -> f32 {
+    (font_size_in_px * 3.0) as f32 / 4.0
 }
 
 /// Converts the given font size in "points" to a uniform `rusttype::Scale`.
 pub fn pt_to_scale(font_size_in_points: Scalar) -> Scale {
-    Scale::uniform(pt_to_px(font_size_in_points))
+    Scale::uniform(font_size_in_points as f32)
 }

@@ -503,7 +503,7 @@ fn next_break_by_whitespace(text: &str,
 
 /// Produce the width of the given line of text including spaces (i.e. ' ').
 pub fn width(text: &str, font: &Font, font_size: Scalar) -> Scalar {
-    let scale = Scale::uniform(super::pt_to_px(font_size));
+    let scale = Scale::uniform(font_size as f32);
     let point = rusttype::Point { x: 0.0, y: 0.0 };
 
     let mut total_w = 0.0;

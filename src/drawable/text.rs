@@ -1,10 +1,9 @@
-use stb_truetype;
-use webrender_api::{LayoutPoint, GlyphInstance};
+use webrender_api::{LayoutPoint, GlyphInstance, FontKey};
 use app_units;
 
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
-use resources::resources;
+use resources::{resources, Font};
 use util::{self, Point, Size, SizeExt, Rect, RectExt};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
@@ -27,8 +26,8 @@ impl Default for TextDrawable {
     fn default() -> Self {
         TextDrawable {
             text: "".to_owned(),
-            font: "Hack/Hack-Regular".to_owned(),
-            font_size: 20.0,
+            font: "NotoSans/NotoSans-Regular".to_owned(),
+            font_size: 60.0,
             text_color: BLACK,
             background_color: TRANSPARENT,
             wrap: Wrap::Whitespace,
@@ -45,150 +44,93 @@ impl TextDrawable {
         drawable
     }
     pub fn measure(&self) -> Size {
-        Size::zero()
-        /* let res = resources();
-        let font = res.fonts.get(self.font_id).unwrap();
-
+        let mut resources = resources();
+        let font = resources.get_font(&self.font);
         let dims = text_layout::get_text_dimensions(
             &self.text,
-            font,
-            self.font_size,
-            self.font_size * 1.25,
+            &font.info,
+            self.font_size as f64,
+            self.line_height() as f64,
             self.wrap);
-        Size::from_text_layout(dims) */
+        Size::from_text_layout(dims)
     }
     pub fn min_height(&self) -> f32 {
-        (self.font_size * 1.25) as f32
+        self.line_height()
+    }
+    pub fn line_height(&self) -> f32 {
+        (self.font_size * 1.25)
     }
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
-        false
-        /* let res = resources();
-        let font = res.fonts.get(self.font_id).unwrap();
-        let height =
-            text_layout::get_text_height(text,
-                                         font,
-                                         self.font_size,
-                                         self.font_size * 1.25,
-                                         self.wrap,
-                                         bounds.width() as f64);
-        height < bounds.height() as f64 */
+        let mut resources = resources();
+        let font = resources.get_font(&self.font);
+        let height = text_layout::get_text_height(
+            text,
+            &font.info,
+            self.font_size as f64,
+            self.line_height() as f64,
+            self.wrap,
+            bounds.width() as f64);
+        height < bounds.height() as f64
     }
-}
-
-fn get_glyphs(text: &str, rect: Rect, size: f32, info: &stb_truetype::FontInfo<Vec<u8>>) -> Vec<GlyphInstance> {
-
-    let scale = info.scale_for_pixel_height(size);
-    let len = text.len();
-    text[0..len].chars().scan((0.0, None), move |state, v| {
-        let index = info.find_glyph_index(v as u32);
-        state.0 = if let Some(last) = state.1 {
-            let kern = info.get_glyph_kern_advance(last, index);
-            state.0 + kern as f32 * scale
-        } else {
-            state.0
-        };
-        state.1 = Some(index);
-        let pos = state.0;
-        state.0 += (info.get_glyph_h_metrics(index).advance_width as f32 * scale).ceil();
-        Some(GlyphInstance {
-            index: index,
-            point: LayoutPoint::new(
-                rect.origin.x + pos,
-                rect.origin.y + size),
-        })
-    }).collect()
+    fn get_line_rects(&self, bounds: Rect) -> Vec<Rect> {
+        let mut resources = resources();
+        let font = resources.get_font(&self.font);
+        text_layout::get_line_rects(
+            &self.text,
+            bounds.to_text_layout(),
+            &font.info,
+            self.font_size as f64,
+            self.line_height() as f64,
+            self.wrap,
+            self.align,
+            self.vertical_align).iter().map(|rect| {
+                Rect::from_text_layout(*rect)
+            }).collect()
+    }
+    fn position_glyphs(&self, bounds: Rect) -> Vec<GlyphInstance> {
+        let mut resources = resources();
+        let font = resources.get_font(&self.font);
+        let positions = text_layout::get_positioned_glyphs(
+            &self.text,
+            bounds.to_text_layout(),
+            &font.info,
+            self.font_size as f64,
+            self.line_height() as f64,
+            self.wrap,
+            self.align,
+            self.vertical_align).iter().map(|glyph| {
+                let position = glyph.position();
+                GlyphInstance {
+                    index: glyph.id().0,
+                    point: LayoutPoint::new(position.x, position.y),
+                }
+            }).collect();
+        positions
+    }
+    fn font_key(&self) -> FontKey {
+        resources().get_font(&self.font).key
+    }
 }
 
 impl Drawable for TextDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
-        let (key, glyphs) = {
-            let mut resources = resources();
-            let font_info = resources.get_font(&self.font);
-            (font_info.key, get_glyphs(&self.text, bounds, self.font_size, &font_info.info))
-        };
+        if DEBUG_LINE_BOUNDS {
+            for rect in self.get_line_rects(bounds) {
+                util::draw_rect_outline(rect, CYAN, renderer);
+            }
+        }
+        let size = app_units::Au::from_f32_px(text_layout::px_to_pt(self.font_size as f64));
+        let glyphs = self.position_glyphs(bounds);
+        let key = self.font_key();
         renderer.builder.push_text(
             util::to_layout_rect(bounds),
             None,
             &glyphs,
             key,
             self.text_color.into(),
-            app_units::Au::from_px(self.font_size as i32),
+            size,
             None
         );
-        /*
-        graphics::Rectangle::new(self.background_color)
-                .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
-
-            let &mut GlyphCache { texture: ref mut text_texture_cache,
-                                cache: ref mut glyph_cache,
-                                ref mut vertex_data } = glyph_cache;
-
-            let res = resources();
-            let font = res.fonts.get(self.font_id).unwrap();
-
-            let line_height = self.font_size * 1.25;
-            if DEBUG_LINE_BOUNDS {
-                let line_rects = &text_layout::get_line_rects(&self.text,
-                                                              bounds.to_text_layout(),
-                                                              font,
-                                                              self.font_size,
-                                                              line_height,
-                                                              self.wrap,
-                                                              self.align,
-                                                              self.vertical_align);
-                for line_rect in line_rects {
-                    let rect = Rect::from_text_layout(*line_rect);
-                    util::draw_rect_outline(rect, CYAN, context, graphics);
-                }
-            }
-            let positioned_glyphs = &text_layout::get_positioned_glyphs(&self.text,
-                                                                        bounds.to_text_layout(),
-                                                                        font,
-                                                                        self.font_size,
-                                                                        line_height,
-                                                                        self.wrap,
-                                                                        self.align,
-                                                                        self.vertical_align);
-
-            // Queue the glyphs to be cached.
-            for glyph in positioned_glyphs.iter() {
-                glyph_cache.queue_glyph(self.font_id.0, glyph.clone());
-            }
-
-            // Cache the glyphs within the GPU cache.
-            glyph_cache.cache_queued(|rect, data| {
-                    glyph::cache_queued_glyphs(graphics, text_texture_cache, rect, data, vertex_data)
-                })
-                .unwrap();
-
-            let tex_dim = {
-                let (tex_w, tex_h) = text_texture_cache.get_size();
-                Size::new(tex_w as f32, tex_h as f32)
-            };
-
-            let scale_rect = |rect: Rect, size: Size| -> Rect {
-                Rect::new(
-                    Point::new(rect.left() * size.width, rect.top() * size.height),
-                    Size::new(rect.width() * size.width, rect.height() * size.height),
-                )
-            };
-            let rectangles = positioned_glyphs.into_iter()
-                .filter_map(|g| glyph_cache.rect_for(self.font_id.0, g).ok().unwrap_or(None))
-                .map(|(uv_rect, screen_rect)| {
-                    let screen_rect = Rect::from_rusttype(screen_rect).to_slice();
-                    let uv_rect = scale_rect(Rect::from_rusttype(uv_rect), tex_dim).to_slice();
-                    (screen_rect, uv_rect)
-                });
-            // Contains each glyph's screen and texture positions.
-            let mut glyph_rectangles = Vec::new();
-            glyph_rectangles.extend(rectangles);
-            graphics::image::draw_many(&glyph_rectangles,
-                                       self.text_color,
-                                       text_texture_cache,
-                                       &context.draw_state,
-                                       context.transform,
-                                       graphics);
-                                       */
     }
 }
 
