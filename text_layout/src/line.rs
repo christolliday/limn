@@ -210,7 +210,7 @@ impl<'a> Iterator for LineInfos<'a> {
 #[derive(Clone)]
 pub struct LineRects<I> {
     infos: I,
-    x_align: Align,
+    align: Align,
     line_height: Scalar,
     next: Option<Rectangle>,
 }
@@ -225,8 +225,7 @@ impl<I> LineRects<I>
     pub fn new(mut infos: I,
                font_size: Scalar,
                bounding_rect: Rectangle,
-               x_align: Align,
-               y_align: Align,
+               align: Align,
                line_height: Scalar)
                -> Self {
         let num_lines = infos.len();
@@ -235,7 +234,7 @@ impl<I> LineRects<I>
             let bounding_y = bounding_rect.y_range();
             // Calculate the `x` `Range` of the first line `Rect`.
             let range = Range::new(0.0, first_info.width);
-            let x = match x_align {
+            let x = match align {
                 Align::Start => range.align_start_of(bounding_x),
                 Align::Middle => range.align_middle_of(bounding_x),
                 Align::End => range.align_end_of(bounding_x),
@@ -244,11 +243,7 @@ impl<I> LineRects<I>
             // Calculate the `y` `Range` of the first line `Rect`.
             let total_text_height = num_lines as Scalar * line_height;
             let total_text_y_range = Range::new(0.0, total_text_height);
-            let total_text_y = match y_align {
-                Align::Start => total_text_y_range.align_start_of(bounding_y),
-                Align::Middle => total_text_y_range.align_middle_of(bounding_y),
-                Align::End => total_text_y_range.align_end_of(bounding_y),
-            };
+            let total_text_y = total_text_y_range.align_start_of(bounding_y);
             let range = Range::new(0.0, font_size as Scalar);
             let y = range.align_start_of(total_text_y);
 
@@ -258,7 +253,7 @@ impl<I> LineRects<I>
         LineRects {
             infos: infos,
             next: first_rect,
-            x_align: x_align,
+            align: align,
             line_height: line_height,
         }
     }
@@ -269,13 +264,13 @@ impl<I> Iterator for LineRects<I>
 {
     type Item = Rectangle;
     fn next(&mut self) -> Option<Self::Item> {
-        let LineRects { ref mut next, ref mut infos, x_align, line_height } = *self;
+        let LineRects { ref mut next, ref mut infos, align, line_height } = *self;
         next.map(|line_rect| {
             *next = infos.next().map(|info| {
                 let y = Range::new(line_rect.bottom(), line_rect.bottom() + line_height);
                 let x = {
                     let range = Range::new(0.0, info.width);
-                    match x_align {
+                    match align {
                         Align::Start => range.align_start_of(line_rect.x_range()),
                         Align::Middle => range.align_middle_of(line_rect.x_range()),
                         Align::End => range.align_end_of(line_rect.x_range()),

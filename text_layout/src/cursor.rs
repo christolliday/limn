@@ -283,8 +283,7 @@ pub fn xys_per_line_from_text<'a>(text: &'a str,
                                   line_infos: &'a [LineInfo],
                                   font: &'a Font,
                                   font_size: Scalar,
-                                  x_align: Align,
-                                  y_align: Align,
+                                  align: Align,
                                   line_spacing: Scalar,
                                   rect: Rectangle)
                                   -> XysPerLineFromText<'a> {
@@ -292,8 +291,7 @@ pub fn xys_per_line_from_text<'a>(text: &'a str,
     let line_rects = LineRects::new(line_infos.clone(),
                                     font_size,
                                     rect,
-                                    x_align,
-                                    y_align,
+                                    align,
                                     line_spacing);
     let lines = line_infos.clone();
     let lines_with_rects = lines.zip(line_rects.clone());

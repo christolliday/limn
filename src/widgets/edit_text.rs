@@ -66,11 +66,9 @@ impl EditTextBuilder {
             })
             .make_focusable();
 
-
-        let text_style = style!(TextStyleable::VertAlign: Align::Start);
         let mut text_widget = Widget::new();
         text_widget
-            .set_drawable_with_style(TextDrawable::default(), text_style)
+            .set_drawable(TextDrawable::default())
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);
         layout!(text_widget:

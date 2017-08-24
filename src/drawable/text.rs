@@ -20,7 +20,6 @@ pub struct TextDrawable {
     pub background_color: Color,
     pub wrap: Wrap,
     pub align: Align,
-    pub vertical_align: Align,
 }
 impl Default for TextDrawable {
     fn default() -> Self {
@@ -32,7 +31,6 @@ impl Default for TextDrawable {
             background_color: TRANSPARENT,
             wrap: Wrap::Whitespace,
             align: Align::Start,
-            vertical_align: Align::Middle,
         }
     }
 }
@@ -82,8 +80,7 @@ impl TextDrawable {
             self.font_size as f64,
             self.line_height() as f64,
             self.wrap,
-            self.align,
-            self.vertical_align).iter().map(|rect| {
+            self.align).iter().map(|rect| {
                 Rect::from_text_layout(*rect)
             }).collect()
     }
@@ -97,8 +94,7 @@ impl TextDrawable {
             self.font_size as f64,
             self.line_height() as f64,
             self.wrap,
-            self.align,
-            self.vertical_align).iter().map(|glyph| {
+            self.align).iter().map(|glyph| {
                 let position = glyph.position();
                 GlyphInstance {
                     index: glyph.id().0,
@@ -143,7 +139,6 @@ pub enum TextStyleable {
     BackgroundColor(Value<Color>),
     Wrap(Value<Wrap>),
     Align(Value<Align>),
-    VertAlign(Value<Align>),
 }
 
 impl Styleable<TextDrawable> for TextStyleable {
@@ -156,7 +151,6 @@ impl Styleable<TextDrawable> for TextStyleable {
             TextStyleable::BackgroundColor(ref val) => state.background_color = val.get(props),
             TextStyleable::Wrap(ref val) => state.wrap = val.get(props),
             TextStyleable::Align(ref val) => state.align = val.get(props),
-            TextStyleable::VertAlign(ref val) => state.vertical_align = val.get(props),
         }
     }
 }

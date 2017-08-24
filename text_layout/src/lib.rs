@@ -58,14 +58,13 @@ pub fn get_line_rects(text: &str,
                       font_size: Scalar,
                       line_height: Scalar,
                       line_wrap: Wrap,
-                      x_align: Align,
-                      y_align: Align)
+                      align: Align)
                       -> Vec<Rectangle> {
 
     let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width)
         .collect();
     let line_infos = line_infos.iter().cloned();
-    let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
+    let line_rects = LineRects::new(line_infos, font_size, rect, align, line_height);
     line_rects.collect()
 }
 
@@ -75,15 +74,14 @@ pub fn get_positioned_glyphs(text: &str,
                              font_size: Scalar,
                              line_height: Scalar,
                              line_wrap: Wrap,
-                             x_align: Align,
-                             y_align: Align)
+                             align: Align)
                              -> Vec<PositionedGlyph>
 {
     let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width)
         .collect();
     let line_infos = line_infos.iter().cloned();
     let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
-    let line_rects = LineRects::new(line_infos, font_size, rect, x_align, y_align, line_height);
+    let line_rects = LineRects::new(line_infos, font_size, rect, align, line_height);
     let scale = Scale::uniform(font_size as f32);
 
     let mut positioned_glyphs = Vec::new();

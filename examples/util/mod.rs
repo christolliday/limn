@@ -6,7 +6,6 @@ extern crate log;
 use limn::window::Window;
 use limn::app::App;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
-use limn::resources::resources;
 use limn::widget::Widget;
 use limn::util::Size;
 

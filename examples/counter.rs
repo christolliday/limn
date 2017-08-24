@@ -16,7 +16,6 @@ struct CountEvent(u32);
 
 fn main() {
     let app = util::init_default("Limn counter demo");
-    //util::load_default_font();
 
     let mut root_widget = Widget::new();
     root_widget.hbox();

@@ -10,7 +10,6 @@ use limn::widgets::button::ToggleButtonBuilder;
 
 fn main() {
     let app = util::init_default("Limn button demo");
-    //util::load_default_font();
 
     let mut root_widget = Widget::new();
     let mut button = ToggleButtonBuilder::new();

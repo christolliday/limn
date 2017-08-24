@@ -245,7 +245,6 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
 
 fn main() {
     let mut app = util::init_default("Limn circles demo");
-    //util::load_default_font();
 
     let mut root_widget = Widget::new();
 

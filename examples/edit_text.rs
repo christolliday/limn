@@ -5,7 +5,7 @@ extern crate text_layout;
 
 mod util;
 
-use text_layout::Align;
+use text_layout::{Align, Wrap};
 
 use limn::prelude::*;
 
@@ -14,20 +14,16 @@ use limn::widgets::edit_text::EditTextBuilder;
 use limn::drawable::text::TextDrawable;
 
 enum EditTextSettingsEvent {
-    LeftAlign,
-    RightAlign,
-    TopAlign,
-    BottomAlign,
+    Align(Align),
+    Wrap(Wrap),
 }
 struct EditTextSettingsHandler;
 impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
     fn handle(&mut self, event: &EditTextSettingsEvent, mut args: WidgetEventArgs) {
         args.widget.update(|drawable: &mut TextDrawable| {
             match *event {
-                EditTextSettingsEvent::LeftAlign => drawable.align = Align::Start,
-                EditTextSettingsEvent::RightAlign => drawable.align = Align::End,
-                EditTextSettingsEvent::TopAlign => drawable.vertical_align = Align::Start,
-                EditTextSettingsEvent::BottomAlign => drawable.vertical_align = Align::End,
+                EditTextSettingsEvent::Align(align) => drawable.align = align,
+                EditTextSettingsEvent::Wrap(wrap) => drawable.wrap = wrap,
             }
         });
     }
@@ -35,7 +31,6 @@ impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 
 fn main() {
     let app = util::init_default("Limn edit text demo");
-    //util::load_default_font();
 
     let mut root_widget = Widget::new();
     layout!(root_widget: min_size(Size::new(300.0, 300.0)));
@@ -50,10 +45,10 @@ fn main() {
         .on_toggle(move |event, _| {
             match *event {
                 ToggleEvent::On => {
-                    edit_text_ref.event(EditTextSettingsEvent::RightAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::Align(Align::End));
                 },
                 ToggleEvent::Off => {
-                    edit_text_ref.event(EditTextSettingsEvent::LeftAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::Align(Align::Start));
                 },
             }
         });
@@ -61,14 +56,14 @@ fn main() {
     let edit_text_ref = edit_text_box.text_widget.clone();
     let mut v_align_button = ToggleButtonBuilder::new();
     v_align_button
-        .set_text("Bottom Align", "Top Align")
+        .set_text("Wrap Word", "Wrap Char")
         .on_toggle(move |event, _| {
             match *event {
                 ToggleEvent::On => {
-                    edit_text_ref.event(EditTextSettingsEvent::BottomAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::Wrap(Wrap::Whitespace));
                 },
                 ToggleEvent::Off => {
-                    edit_text_ref.event(EditTextSettingsEvent::TopAlign);
+                    edit_text_ref.event(EditTextSettingsEvent::Wrap(Wrap::Character));
                 },
             }
         });

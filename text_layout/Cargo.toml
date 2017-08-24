@@ -6,3 +6,4 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 rusttype = "0.2.1"
+euclid = "0.15.1"
