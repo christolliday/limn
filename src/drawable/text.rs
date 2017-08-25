@@ -44,13 +44,12 @@ impl TextDrawable {
     pub fn measure(&self) -> Size {
         let mut resources = resources();
         let font = resources.get_font(&self.font);
-        let dims = text_layout::get_text_dimensions(
+        text_layout::get_text_size(
             &self.text,
             &font.info,
-            self.font_size as f64,
-            self.line_height() as f64,
-            self.wrap);
-        Size::from_text_layout(dims)
+            self.font_size,
+            self.line_height(),
+            self.wrap)
     }
     pub fn min_height(&self) -> f32 {
         self.line_height()
@@ -64,35 +63,33 @@ impl TextDrawable {
         let height = text_layout::get_text_height(
             text,
             &font.info,
-            self.font_size as f64,
-            self.line_height() as f64,
+            self.font_size,
+            self.line_height(),
             self.wrap,
-            bounds.width() as f64);
-        height < bounds.height() as f64
+            bounds.width());
+        height < bounds.height()
     }
     fn get_line_rects(&self, bounds: Rect) -> Vec<Rect> {
         let mut resources = resources();
         let font = resources.get_font(&self.font);
         text_layout::get_line_rects(
             &self.text,
-            bounds.to_text_layout(),
+            bounds,
             &font.info,
-            self.font_size as f64,
-            self.line_height() as f64,
+            self.font_size,
+            self.line_height(),
             self.wrap,
-            self.align).iter().map(|rect| {
-                Rect::from_text_layout(*rect)
-            }).collect()
+            self.align)
     }
     fn position_glyphs(&self, bounds: Rect) -> Vec<GlyphInstance> {
         let mut resources = resources();
         let font = resources.get_font(&self.font);
         let positions = text_layout::get_positioned_glyphs(
             &self.text,
-            bounds.to_text_layout(),
+            bounds,
             &font.info,
-            self.font_size as f64,
-            self.line_height() as f64,
+            self.font_size,
+            self.line_height(),
             self.wrap,
             self.align).iter().map(|glyph| {
                 let position = glyph.position();
@@ -115,7 +112,7 @@ impl Drawable for TextDrawable {
                 util::draw_rect_outline(rect, CYAN, renderer);
             }
         }
-        let size = app_units::Au::from_f32_px(text_layout::px_to_pt(self.font_size as f64));
+        let size = app_units::Au::from_f32_px(text_layout::px_to_pt(self.font_size));
         let glyphs = self.position_glyphs(bounds);
         let key = self.font_key();
         renderer.builder.push_text(

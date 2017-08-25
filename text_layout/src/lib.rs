@@ -1,23 +1,26 @@
 //! Text layout logic.
 
 extern crate rusttype;
+extern crate euclid;
 
 pub mod types;
 pub mod cursor;
 pub mod glyph;
 pub mod line;
 
-use std::f64;
+use std::f32;
 use rusttype::Scale;
 use self::line::{LineRects, LineInfo, LineInfos};
+use self::types::*;
 
-pub type FontSize = u32;
+
+
 /// The RustType `PositionedGlyph` type used by conrod.
 pub type PositionedGlyph = rusttype::PositionedGlyph<'static>;
 
 pub type Font = rusttype::Font<'static>;
 
-pub use types::{Align, Scalar, Rectangle, Dimensions};
+pub use types::Align;
 
 /// The way in which text should wrap around the width.
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -29,39 +32,38 @@ pub enum Wrap {
     Whitespace,
 }
 
-pub fn get_text_dimensions(text: &str,
-                           font: &Font,
-                           font_size: Scalar,
-                           line_height: Scalar,
-                           wrap: Wrap)
-                           -> Dimensions {
+pub fn get_text_size(text: &str,
+                     font: &Font,
+                     font_size: f32,
+                     line_height: f32,
+                     wrap: Wrap) -> Size {
 
-    let line_infos = LineInfos::new(text, font, font_size, wrap, f64::MAX);
-    let max_width = line_infos.fold(0.0, |max, line_info| f64::max(max, line_info.width));
-    Dimensions {
-        width: max_width,
-        height: line_infos.count() as f64 * line_height,
-    }
-}pub fn get_text_height(text: &str,
-                        font: &Font,
-                        font_size: Scalar,
-                        line_height: Scalar,
-                        wrap: Wrap,
-                        width: Scalar)
-                        -> Scalar {
-    let line_infos = LineInfos::new(text, font, font_size, wrap, width);
-    line_infos.count() as f64 * line_height
+    let line_infos = LineInfos::new(text, font, font_size, wrap, f32::MAX);
+    let max_width = line_infos.fold(0.0, |max, line_info| f32::max(max, line_info.width));
+    Size::new(max_width, line_infos.count() as f32 * line_height)
 }
+
+pub fn get_text_height(text: &str,
+                        font: &Font,
+                        font_size: f32,
+                        line_height: f32,
+                        wrap: Wrap,
+                        width: f32)
+                        -> f32 {
+    let line_infos = LineInfos::new(text, font, font_size, wrap, width);
+    line_infos.count() as f32 * line_height
+}
+
 pub fn get_line_rects(text: &str,
-                      rect: Rectangle,
+                      rect: Rect,
                       font: &Font,
-                      font_size: Scalar,
-                      line_height: Scalar,
+                      font_size: f32,
+                      line_height: f32,
                       line_wrap: Wrap,
                       align: Align)
-                      -> Vec<Rectangle> {
+                      -> Vec<Rect> {
 
-    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width)
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width())
         .collect();
     let line_infos = line_infos.iter().cloned();
     let line_rects = LineRects::new(line_infos, font_size, rect, align, line_height);
@@ -69,27 +71,27 @@ pub fn get_line_rects(text: &str,
 }
 
 pub fn get_positioned_glyphs(text: &str,
-                             rect: Rectangle,
+                             rect: Rect,
                              font: &Font,
-                             font_size: Scalar,
-                             line_height: Scalar,
+                             font_size: f32,
+                             line_height: f32,
                              line_wrap: Wrap,
                              align: Align)
                              -> Vec<PositionedGlyph>
 {
-    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width)
+    let line_infos: Vec<LineInfo> = LineInfos::new(text, font, font_size, line_wrap, rect.width())
         .collect();
     let line_infos = line_infos.iter().cloned();
     let line_texts = line_infos.clone().map(|info| &text[info.byte_range()]);
     let line_rects = LineRects::new(line_infos, font_size, rect, align, line_height);
-    let scale = Scale::uniform(font_size as f32);
+    let scale = Scale::uniform(font_size);
 
     let mut positioned_glyphs = Vec::new();
     for (line_text, line_rect) in line_texts.zip(line_rects) {
         // point specifies bottom left corner of text line
         let point = rusttype::Point {
-            x: line_rect.left as f32,
-            y: line_rect.top as f32 + font_size as f32,
+            x: line_rect.left(),
+            y: line_rect.top() + font_size,
         };
 
         positioned_glyphs.extend(font.glyphs_for(line_text.chars())
@@ -141,15 +143,15 @@ impl<'a, I> Iterator for Lines<'a, I>
 
 /// Converts the given font size in "points" to its font size in pixels.
 /// assumes 96 dpi display. 1 pt = 1/72"
-pub fn pt_to_px(font_size_in_points: Scalar) -> f32 {
+pub fn pt_to_px(font_size_in_points: f32) -> f32 {
     (font_size_in_points * 4.0) as f32 / 3.0
 }
 
-pub fn px_to_pt(font_size_in_px: Scalar) -> f32 {
+pub fn px_to_pt(font_size_in_px: f32) -> f32 {
     (font_size_in_px * 3.0) as f32 / 4.0
 }
 
 /// Converts the given font size in "points" to a uniform `rusttype::Scale`.
-pub fn pt_to_scale(font_size_in_points: Scalar) -> Scale {
-    Scale::uniform(font_size_in_points as f32)
+pub fn pt_to_scale(font_size_in_points: f32) -> Scale {
+    Scale::uniform(font_size_in_points)
 }

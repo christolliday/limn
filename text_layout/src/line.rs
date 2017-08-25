@@ -5,7 +5,7 @@
 use rusttype;
 use super::Font;
 use rusttype::Scale;
-use types::{Rectangle, Scalar, Range, Align};
+use types::{Range, Align, Rect, RectExt};
 use std;
 use rusttype::GlyphId;
 use std::str::CharIndices;
@@ -62,7 +62,7 @@ pub struct LineInfo {
     /// caused by a `Newline` character or a `Wrap` by the given wrap function.
     pub end_break: Break,
     /// The total width of all characters within the line.
-    pub width: Scalar,
+    pub width: f32,
 }
 
 impl LineInfo {
@@ -99,8 +99,8 @@ impl LineInfo {
 pub struct LineInfos<'a> {
     text: &'a str,
     font: &'a Font,
-    font_size: Scalar,
-    max_width: Scalar,
+    font_size: f32,
+    max_width: f32,
     line_wrap: Wrap,
     /// The index that indicates the start of the next line to be yielded.
     start_byte: usize,
@@ -113,9 +113,9 @@ pub struct LineInfos<'a> {
 impl<'a> LineInfos<'a> {
     pub fn new(text: &'a str,
                font: &'a Font,
-               font_size: Scalar,
+               font_size: f32,
                line_wrap: Wrap,
-               max_width: Scalar)
+               max_width: f32)
                -> Self {
         LineInfos {
             text: text,
@@ -211,8 +211,8 @@ impl<'a> Iterator for LineInfos<'a> {
 pub struct LineRects<I> {
     infos: I,
     align: Align,
-    line_height: Scalar,
-    next: Option<Rectangle>,
+    line_height: f32,
+    next: Option<Rect>,
 }
 
 impl<I> LineRects<I>
@@ -223,10 +223,10 @@ impl<I> LineRects<I>
     /// This function assumes that `font_size` is the same `FontSize` used to produce the `Info`s
     /// yielded by the `infos` Iterator.
     pub fn new(mut infos: I,
-               font_size: Scalar,
-               bounding_rect: Rectangle,
+               font_size: f32,
+               bounding_rect: Rect,
                align: Align,
-               line_height: Scalar)
+               line_height: f32)
                -> Self {
         let num_lines = infos.len();
         let first_rect = infos.next().map(|first_info| {
@@ -241,13 +241,13 @@ impl<I> LineRects<I>
             };
 
             // Calculate the `y` `Range` of the first line `Rect`.
-            let total_text_height = num_lines as Scalar * line_height;
+            let total_text_height = num_lines as f32 * line_height;
             let total_text_y_range = Range::new(0.0, total_text_height);
             let total_text_y = total_text_y_range.align_start_of(bounding_y);
-            let range = Range::new(0.0, font_size as Scalar);
+            let range = Range::new(0.0, font_size as f32);
             let y = range.align_start_of(total_text_y);
 
-            Rectangle::from_ranges(x, y)
+            Rect::from_ranges(x, y)
         });
 
         LineRects {
@@ -262,7 +262,7 @@ impl<I> LineRects<I>
 impl<I> Iterator for LineRects<I>
     where I: Iterator<Item = LineInfo>
 {
-    type Item = Rectangle;
+    type Item = Rect;
     fn next(&mut self) -> Option<Self::Item> {
         let LineRects { ref mut next, ref mut infos, align, line_height } = *self;
         next.map(|line_rect| {
@@ -276,7 +276,7 @@ impl<I> Iterator for LineRects<I>
                         Align::End => range.align_end_of(line_rect.x_range()),
                     }
                 };
-                Rectangle::from_ranges(x, y)
+                Rect::from_ranges(x, y)
             });
 
             line_rect
@@ -293,7 +293,7 @@ pub struct SelectedLineRects<'a, I> {
     selected_glyph_rects_per_line: super::glyph::SelectedGlyphRectsPerLine<'a, I>,
 }
 impl<'a, I> SelectedLineRects<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
+    where I: Iterator<Item = (&'a str, Rect)>
 {
     /// Produces an iterator yielding a `Rect` for the selected range in each
     /// selected line in a block of text.
@@ -303,7 +303,7 @@ impl<'a, I> SelectedLineRects<'a, I>
     /// Lines that do not contain any selected text will be skipped.
     pub fn new(lines_with_rects: I,
                font: &'a Font,
-               font_size: Scalar,
+               font_size: f32,
                start: super::cursor::Index,
                end: super::cursor::Index)
                -> SelectedLineRects<'a, I> {
@@ -317,15 +317,15 @@ impl<'a, I> SelectedLineRects<'a, I>
     }
 }
 impl<'a, I> Iterator for SelectedLineRects<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
+    where I: Iterator<Item = (&'a str, Rect)>
 {
-    type Item = Rectangle;
+    type Item = Rect;
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(mut rects) = self.selected_glyph_rects_per_line.next() {
             if let Some(first_rect) = rects.next() {
                 let total_selected_rect = rects.fold(first_rect, |mut total, next| {
                     // TODO ?
-                    total.width = next.width;
+                    total.size.width = next.width();
                     total
                 });
                 return Some(total_selected_rect);
@@ -343,13 +343,13 @@ impl<'a, I> Iterator for SelectedLineRects<'a, I>
 /// This is primarily for use within the `next_break` functions below.
 ///
 /// The following code is adapted from the rusttype::LayoutIter::next src.
-fn advance_width(ch: char, font: &Font, scale: Scale, last_glyph: &mut Option<GlyphId>) -> Scalar {
+fn advance_width(ch: char, font: &Font, scale: Scale, last_glyph: &mut Option<GlyphId>) -> f32 {
     let g = font.glyph(ch).unwrap().scaled(scale);
     let kern = last_glyph.map(|last| font.pair_kerning(scale, last, g.id()))
         .unwrap_or(0.0);
     let advance_width = g.h_metrics().advance_width;
     *last_glyph = Some(g.id());
-    (kern + advance_width) as Scalar
+    (kern + advance_width) as f32
 }
 
 fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char_expected: char) -> bool {
@@ -362,7 +362,7 @@ fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char_expected: 
 
 /// Returns the next index at which the text naturally breaks via a newline character,
 /// along with the width of the line.
-fn next_break(text: &str, font: &Font, font_size: Scalar) -> (Break, Scalar) {
+fn next_break(text: &str, font: &Font, font_size: f32) -> (Break, f32) {
     let scale = super::pt_to_scale(font_size);
     let mut width = 0.0;
     let mut char_i = 0;
@@ -392,9 +392,9 @@ fn next_break(text: &str, font: &Font, font_size: Scalar) -> (Break, Scalar) {
 /// Also returns the width of each line alongside the Break.
 fn next_break_by_character(text: &str,
                            font: &Font,
-                           font_size: Scalar,
-                           max_width: Scalar)
-                           -> (Break, Scalar) {
+                           font_size: f32,
+                           max_width: f32)
+                           -> (Break, f32) {
     let scale = super::pt_to_scale(font_size);
     let mut width = 0.0;
     let mut char_i = 0;
@@ -437,13 +437,13 @@ fn next_break_by_character(text: &str,
 /// Also returns the width the line alongside the Break.
 fn next_break_by_whitespace(text: &str,
                             font: &Font,
-                            font_size: Scalar,
-                            max_width: Scalar)
-                            -> (Break, Scalar) {
+                            font_size: f32,
+                            max_width: f32)
+                            -> (Break, f32) {
     struct Last {
         byte: usize,
         char: usize,
-        width_before: Scalar,
+        width_before: f32,
     }
     let scale = super::pt_to_scale(font_size);
     let mut last_whitespace_start = None;
@@ -497,7 +497,7 @@ fn next_break_by_whitespace(text: &str,
 }
 
 /// Produce the width of the given line of text including spaces (i.e. ' ').
-pub fn width(text: &str, font: &Font, font_size: Scalar) -> Scalar {
+pub fn width(text: &str, font: &Font, font_size: f32) -> f32 {
     let scale = Scale::uniform(font_size as f32);
     let point = rusttype::Point { x: 0.0, y: 0.0 };
 
@@ -508,5 +508,5 @@ pub fn width(text: &str, font: &Font, font_size: Scalar) -> Scalar {
             None => total_w += g.unpositioned().h_metrics().advance_width,
         }
     }
-    total_w as Scalar
+    total_w as f32
 }

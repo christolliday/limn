@@ -1,7 +1,7 @@
 /// Logic related to the positioning of the cursor within text.
 
 use std;
-use types::{Range, Align, Rectangle, Point, Scalar};
+use types::{Range, Align, Rect, RectExt, Point};
 use rusttype;
 use rusttype::LayoutIter;
 
@@ -17,7 +17,7 @@ pub struct XysPerLine<'a, I> {
     lines_with_rects: I,
     font: &'a Font,
     text: &'a str,
-    font_size: Scalar,
+    font_size: f32,
 }
 
 /// Similarly to `XysPerLine`, yields every possible cursor position within each line of text
@@ -41,7 +41,7 @@ pub struct XysPerLineFromText<'a> {
 ///
 /// `Xs` iterators are produced by the `XysPerLine` iterator.
 pub struct Xs<'a, 'b> {
-    next_x: Option<Scalar>,
+    next_x: Option<f32>,
     layout: LayoutIter<'a, 'b>,
 }
 
@@ -260,7 +260,7 @@ impl Index {
 pub fn xys_per_line<'a, I>(lines_with_rects: I,
                            font: &'a Font,
                            text: &'a str,
-                           font_size: Scalar)
+                           font_size: f32)
                            -> XysPerLine<'a, I> {
     XysPerLine {
         lines_with_rects: lines_with_rects,
@@ -282,10 +282,10 @@ pub fn xys_per_line<'a, I>(lines_with_rects: I,
 pub fn xys_per_line_from_text<'a>(text: &'a str,
                                   line_infos: &'a [LineInfo],
                                   font: &'a Font,
-                                  font_size: Scalar,
+                                  font_size: f32,
                                   align: Align,
-                                  line_spacing: Scalar,
-                                  rect: Rectangle)
+                                  line_spacing: f32,
+                                  rect: Rect)
                                   -> XysPerLineFromText<'a> {
     let line_infos = line_infos.iter().cloned();
     let line_rects = LineRects::new(line_infos.clone(),
@@ -318,7 +318,7 @@ pub fn index_before_char<I>(line_infos: I, char_index: usize) -> Option<Index>
 }
 
 /// Determine the *xy* location of the cursor at the given cursor `Index`.
-pub fn xy_at<'a, I>(xys_per_line: I, idx: Index) -> Option<(Scalar, Range)>
+pub fn xy_at<'a, I>(xys_per_line: I, idx: Index) -> Option<(f32, Range)>
     where I: Iterator<Item = (Xs<'a, 'a>, Range)>
 {
     for (i, (xs, y)) in xys_per_line.enumerate() {
@@ -337,7 +337,7 @@ pub fn xy_at<'a, I>(xys_per_line: I, idx: Index) -> Option<(Scalar, Range)>
 /// return the line index, Xs iterator, and y-range of that line
 ///
 /// Returns `None` if there are no lines
-pub fn closest_line<'a, I>(y_pos: Scalar, xys_per_line: I) -> Option<(usize, Xs<'a, 'a>, Range)>
+pub fn closest_line<'a, I>(y_pos: f32, xys_per_line: I) -> Option<(usize, Xs<'a, 'a>, Range)>
     where I: Iterator<Item = (Xs<'a, 'a>, Range)>
 {
     let mut xys_per_line_enumerated = xys_per_line.enumerate();
@@ -377,17 +377,14 @@ pub fn closest_cursor_index_and_xy<'a, I>(point: Point, xys_per_line: I) -> Opti
                 line: closest_line_idx,
                 char: closest_char_idx,
             };
-            let point = Point {
-                x: closest_x,
-                y: closest_line_y.middle(),
-            };
+            let point = Point::new(closest_x, closest_line_y.middle());
             Some((index, point))
         })
 }
 
 /// Find the closest cursor index to the given `x` position on the given line along with the
 /// `x` position of that cursor.
-pub fn closest_cursor_index_on_line<'a>(x_pos: Scalar, line_xs: Xs<'a, 'a>) -> (usize, Scalar) {
+pub fn closest_cursor_index_on_line<'a>(x_pos: f32, line_xs: Xs<'a, 'a>) -> (usize, f32) {
     let mut xs_enumerated = line_xs.enumerate();
     // `xs` always yields at least one `x` (the start of the line).
     let (first_idx, first_x) = xs_enumerated.next().unwrap();
@@ -408,7 +405,7 @@ pub fn closest_cursor_index_on_line<'a>(x_pos: Scalar, line_xs: Xs<'a, 'a>) -> (
 
 
 impl<'a, I> Iterator for XysPerLine<'a, I>
-    where I: Iterator<Item = (LineInfo, Rectangle)>
+    where I: Iterator<Item = (LineInfo, Rect)>
 {
     // The `Range` occupied by the line across the *y* axis, along with an iterator yielding
     // each possible cursor position along the *x* axis.
@@ -418,12 +415,12 @@ impl<'a, I> Iterator for XysPerLine<'a, I>
         let scale = super::pt_to_scale(font_size);
         lines_with_rects.next().map(|(line_info, line_rect)| {
             let line = &text[line_info.byte_range()];
-            let (x, y) = (line_rect.left as f32, line_rect.top as f32);
+            let (x, y) = (line_rect.left(), line_rect.top());
             let point = rusttype::Point { x: x, y: y };
             let y = line_rect.y_range();
             let layout = font.layout(line, scale, point);
             let xs = Xs {
-                next_x: Some(line_rect.left),
+                next_x: Some(line_rect.left()),
                 layout: layout,
             };
             (xs, y)
@@ -440,15 +437,15 @@ impl<'a> Iterator for XysPerLineFromText<'a> {
 
 impl<'a, 'b> Iterator for Xs<'a, 'b> {
     // Each possible cursor position along the *x* axis.
-    type Item = Scalar;
+    type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
         self.next_x.map(|x| {
             self.next_x = self.layout
                 .next()
                 .map(|g| {
                     g.pixel_bounding_box()
-                        .map(|r| r.max.x as Scalar)
-                        .unwrap_or_else(|| x + g.unpositioned().h_metrics().advance_width as Scalar)
+                        .map(|r| r.max.x as f32)
+                        .unwrap_or_else(|| x + g.unpositioned().h_metrics().advance_width as f32)
                 });
             x
         })

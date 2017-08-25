@@ -1,6 +1,6 @@
 use std::f32;
 
-use euclid::{self, Point2D, Size2D, Vector2D};
+use euclid;
 
 use rusttype;
 
@@ -11,15 +11,13 @@ use text_layout;
 use render::RenderBuilder;
 use color::Color;
 
-pub type Size = Size2D<f32>;
-pub type Point = Point2D<f32>;
-pub type Vector = Vector2D<f32>;
+pub type Size = euclid::Size2D<f32>;
+pub type Point = euclid::Point2D<f32>;
+pub type Vector = euclid::Vector2D<f32>;
 pub type Rect = euclid::Rect<f32>;
 
 pub trait RectExt<T> {
-    fn from_text_layout(rect: text_layout::Rectangle) -> Self;
     fn from_rusttype<S: Into<T>>(rect: rusttype::Rect<S>) -> Self;
-    fn to_text_layout(&self) -> text_layout::Rectangle;
     fn to_slice(&self) -> [T; 4];
     fn left(&self) -> T;
     fn top(&self) -> T;
@@ -31,23 +29,10 @@ pub trait RectExt<T> {
     fn shrink_bounds(&self, size: T) -> Self;
 }
 impl RectExt<f32> for Rect {
-    fn from_text_layout(rect: text_layout::Rectangle) -> Self {
-        Rect::new(
-            Point::new(rect.left as f32, rect.top as f32),
-            Size::new(rect.width as f32, rect.height as f32))
-    }
     fn from_rusttype<S: Into<f32>>(rect: rusttype::Rect<S>) -> Self {
         let origin = Point::new(rect.min.x.into(), rect.min.y.into());
         let size = Size::new(rect.max.x.into() - origin.x, rect.max.y.into() - origin.y);
         Rect::new(origin, size)
-    }
-    fn to_text_layout(&self) -> text_layout::Rectangle {
-        text_layout::Rectangle {
-            left: self.left() as f64,
-            top: self.top() as f64,
-            width: self.width() as f64,
-            height: self.height() as f64,
-        }
     }
     fn to_slice(&self) -> [f32; 4] {
         [self.left(), self.top(), self.width(), self.height()]
@@ -83,7 +68,6 @@ impl RectExt<f32> for Rect {
 pub trait SizeExt<T> {
     fn from_array(size: [u32; 2]) -> Self;
     fn from_tuple(size: (u32, u32)) -> Self;
-    fn from_text_layout(rect: text_layout::Dimensions) -> Self;
 }
 impl SizeExt<f32> for Size {
     fn from_array(size: [u32; 2]) -> Self {
@@ -91,9 +75,6 @@ impl SizeExt<f32> for Size {
     }
     fn from_tuple(size: (u32, u32)) -> Self {
         Size::new(size.0 as f32, size.1 as f32)
-    }
-    fn from_text_layout(rect: text_layout::Dimensions) -> Self {
-        Size::new(rect.width as f32, rect.height as f32)
     }
 }
 

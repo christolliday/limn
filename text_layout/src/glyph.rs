@@ -1,7 +1,7 @@
 /// Logic and types specific to individual glyph layout.
 
 use super::Font;
-use types::{Range, Rectangle, Scalar};
+use types::{Range, Rect, RectExt};
 use std;
 use rusttype;
 use rusttype::LayoutIter;
@@ -14,24 +14,24 @@ pub struct GlyphRects<'a, 'b> {
     /// Every yielded `Rect` will use this as its `y` `Range`.
     y: Range,
     /// The position of the next `Rect`'s left edge along the *x* axis.
-    next_left: Scalar,
+    next_left: f32,
     /// `PositionedGlyphs` yielded by the RustType `LayoutIter`.
     layout: LayoutIter<'a, 'b>,
 }
 
 
 impl<'a, 'b> Iterator for GlyphRects<'a, 'b> {
-    type Item = Rectangle;
+    type Item = Rect;
     fn next(&mut self) -> Option<Self::Item> {
         let GlyphRects { ref mut next_left, ref mut layout, y } = *self;
         layout.next().map(|g| {
             let left = *next_left;
             let right = g.pixel_bounding_box()
-                .map(|bb| bb.max.x as Scalar)
-                .unwrap_or_else(|| left + g.unpositioned().h_metrics().advance_width as Scalar);
+                .map(|bb| bb.max.x as f32)
+                .unwrap_or_else(|| left + g.unpositioned().h_metrics().advance_width as f32);
             *next_left = right;
             let x = Range::new(left, right);
-            Rectangle::from_ranges(x, y)
+            Rect::from_ranges(x, y)
         })
     }
 }
@@ -41,18 +41,18 @@ impl<'a, 'b> Iterator for GlyphRects<'a, 'b> {
 pub struct GlyphRectsPerLine<'a, I> {
     lines_with_rects: I,
     font: &'a Font,
-    font_size: Scalar,
+    font_size: f32,
 }
 
 impl<'a, I> GlyphRectsPerLine<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
+    where I: Iterator<Item = (&'a str, Rect)>
 {
     /// Produce an iterator that, for every `(line, line_rect)` pair yielded by the given iterator,
     /// produces an iterator that yields a `Rect` for every character in that line.
     ///
     /// This is useful when information about character positioning is needed when reasoning about
     /// text layout.
-    pub fn new(lines_with_rects: I, font: &'a Font, font_size: Scalar) -> GlyphRectsPerLine<'a, I> {
+    pub fn new(lines_with_rects: I, font: &'a Font, font_size: f32) -> GlyphRectsPerLine<'a, I> {
         GlyphRectsPerLine {
             lines_with_rects: lines_with_rects,
             font: font,
@@ -61,17 +61,17 @@ impl<'a, I> GlyphRectsPerLine<'a, I>
     }
 }
 impl<'a, I> Iterator for GlyphRectsPerLine<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
+    where I: Iterator<Item = (&'a str, Rect)>
 {
     type Item = GlyphRects<'a, 'a>;
     fn next(&mut self) -> Option<Self::Item> {
         let GlyphRectsPerLine { ref mut lines_with_rects, font, font_size } = *self;
         let scale = super::pt_to_scale(font_size);
         lines_with_rects.next().map(|(line_text, line_rect)| {
-            let (x, y) = (line_rect.left as f32, line_rect.top as f32);
+            let (x, y) = (line_rect.left(), line_rect.top());
             let point = rusttype::Point { x: x, y: y };
             GlyphRects {
-                next_left: line_rect.left,
+                next_left: line_rect.left(),
                 layout: font.layout(line_text, scale, point),
                 y: line_rect.y_range(),
             }
@@ -87,7 +87,7 @@ pub struct SelectedGlyphRects<'a, 'b> {
     end_char_idx: usize,
 }
 impl<'a, 'b> Iterator for SelectedGlyphRects<'a, 'b> {
-    type Item = Rectangle;
+    type Item = Rect;
     fn next(&mut self) -> Option<Self::Item> {
         let SelectedGlyphRects { ref mut enumerated_rects, end_char_idx } = *self;
         enumerated_rects.next()
@@ -110,7 +110,7 @@ pub struct SelectedGlyphRectsPerLine<'a, I> {
 }
 
 impl<'a, I> SelectedGlyphRectsPerLine<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
+    where I: Iterator<Item = (&'a str, Rect)>
 {
     /// Produces an iterator that yields iteraors yielding `Rect`s for each selected character in
     /// each line of text within the given iterator yielding char `Rect`s.
@@ -121,7 +121,7 @@ impl<'a, I> SelectedGlyphRectsPerLine<'a, I>
     /// All lines that have no selected `Rect`s will be skipped.
     pub fn new(lines_with_rects: I,
                font: &'a Font,
-               font_size: Scalar,
+               font_size: f32,
                start: super::cursor::Index,
                end: super::cursor::Index)
                -> SelectedGlyphRectsPerLine<'a, I> {
@@ -134,7 +134,7 @@ impl<'a, I> SelectedGlyphRectsPerLine<'a, I>
     }
 }
 impl<'a, I> Iterator for SelectedGlyphRectsPerLine<'a, I>
-    where I: Iterator<Item = (&'a str, Rectangle)>
+    where I: Iterator<Item = (&'a str, Rect)>
 {
     type Item = SelectedGlyphRects<'a, 'a>;
     fn next(&mut self) -> Option<Self::Item> {

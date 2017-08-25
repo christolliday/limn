@@ -1,58 +1,49 @@
+use euclid;
 
-/// The type used for scalars.
-pub type Scalar = f64;
+// in logical pixels
+pub type Size = euclid::Size2D<f32>;
+pub type Point = euclid::Point2D<f32>;
+pub type Vector = euclid::Vector2D<f32>;
+pub type Rect = euclid::Rect<f32>;
 
-#[derive(Copy, Clone, Debug)]
-pub struct Dimensions {
-    pub width: Scalar,
-    pub height: Scalar,
+pub trait RectExt<T> {
+    fn left(&self) -> T;
+    fn top(&self) -> T;
+    fn right(&self) -> T;
+    fn bottom(&self) -> T;
+    fn width(&self) -> T;
+    fn height(&self) -> T;
+    fn from_ranges(x: Range, y: Range) -> Self;
+    fn x_range(&self) -> Range;
+    fn y_range(&self) -> Range;
 }
-
-#[derive(Copy, Clone, Debug)]
-pub struct Point {
-    pub x: Scalar,
-    pub y: Scalar,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct Rectangle {
-    pub top: Scalar,
-    pub left: Scalar,
-    pub width: Scalar,
-    pub height: Scalar,
-}
-
-impl Rectangle {
-    pub fn new(left: Scalar, top: Scalar, width: Scalar, height: Scalar) -> Self {
-        Rectangle {
-            left: left,
-            top: top,
-            width: width,
-            height: height,
-        }
+impl RectExt<f32> for Rect {
+    fn left(&self) -> f32 {
+        self.origin.x
     }
-    pub fn new_empty() -> Self {
-        Rectangle::new(0.0, 0.0, 0.0, 0.0)
+    fn top(&self) -> f32 {
+        self.origin.y
     }
-    pub fn from_ranges(x: Range, y: Range) -> Self {
-        Rectangle {
-            left: x.start,
-            top: y.start,
-            width: x.end - x.start,
-            height: y.end - y.start,
-        }
+    fn right(&self) -> f32 {
+        self.origin.x + self.size.width
     }
-    pub fn x_range(&self) -> Range {
-        Range::new(self.left, self.right())
+    fn bottom(&self) -> f32 {
+        self.origin.y + self.size.height
     }
-    pub fn y_range(&self) -> Range {
-        Range::new(self.top, self.bottom())
+    fn width(&self) -> f32 {
+        self.size.width
     }
-    pub fn right(&self) -> Scalar {
-        self.left + self.width
+    fn height(&self) -> f32 {
+        self.size.height
     }
-    pub fn bottom(&self) -> Scalar {
-        self.top + self.height
+    fn from_ranges(x: Range, y: Range) -> Self {
+        Rect::new(Point::new(x.start, y.start), Size::new(x.end - x.start, y.end - y.start))
+    }
+    fn x_range(&self) -> Range {
+        Range::new(self.left(), self.right())
+    }
+    fn y_range(&self) -> Range {
+        Range::new(self.top(), self.bottom())
     }
 }
 
@@ -70,28 +61,28 @@ pub enum Align {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Range {
     /// The start of some `Range` along an axis.
-    pub start: Scalar,
+    pub start: f32,
     /// The end of some `Range` along an axis.
-    pub end: Scalar,
+    pub end: f32,
 }
 
 impl Range {
-    pub fn new(start: Scalar, end: Scalar) -> Range {
+    pub fn new(start: f32, end: f32) -> Range {
         Range {
             start: start,
             end: end,
         }
     }
-    pub fn from_pos_and_len(pos: Scalar, len: Scalar) -> Range {
+    pub fn from_pos_and_len(pos: f32, len: f32) -> Range {
         let half_len = len / 2.0;
         let start = pos - half_len;
         let end = pos + half_len;
         Range::new(start, end)
     }
-    pub fn middle(&self) -> Scalar {
+    pub fn middle(&self) -> f32 {
         (self.end + self.start) / 2.0
     }
-    pub fn is_over(&self, pos: Scalar) -> bool {
+    pub fn is_over(&self, pos: f32) -> bool {
         let Range { start, end } = self.undirected();
         pos >= start && pos <= end
     }
@@ -100,7 +91,7 @@ impl Range {
         let other_direction = other.start <= other.end;
         self_direction == other_direction
     }
-    pub fn shift(self, amount: Scalar) -> Range {
+    pub fn shift(self, amount: f32) -> Range {
         Range {
             start: self.start + amount,
             end: self.end + amount,
