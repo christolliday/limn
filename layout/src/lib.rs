@@ -26,13 +26,6 @@ pub type Rect = euclid::Rect<f32>;
 
 pub type LayoutId = usize;
 
-#[derive(Debug)]
-pub enum VarUpdate {
-    Left,
-    Top,
-    Width,
-    Height,
-}
 #[derive(Clone)]
 pub struct LayoutVars {
     pub left: Variable,
@@ -52,13 +45,6 @@ impl LayoutVars {
             width: Variable::new(),
             height: Variable::new(),
         }
-    }
-    pub fn get_var(&self, var: Variable) -> Option<VarUpdate> {
-        if var == self.left { Some(VarUpdate::Left) }
-        else if var == self.top { Some(VarUpdate::Top) }
-        else if var == self.width { Some(VarUpdate::Width) }
-        else if var == self.height { Some(VarUpdate::Height) }
-        else { None }
     }
     pub fn array(&self) -> [Variable; 6] {
         [self.left, self.top, self.right, self.bottom, self.width, self.height]
@@ -169,12 +155,6 @@ impl Layout {
     }
     pub fn get_edit_vars(&mut self) -> Vec<EditVariable> {
         mem::replace(&mut self.edit_vars, Vec::new())
-    }
-    pub fn debug_constraints(&self) {
-        println!("{:?}", self.name);
-        for constraint in &self.constraints {
-            solver::debug_constraint(constraint);
-        }
     }
 }
 
@@ -435,10 +415,11 @@ mod test {
                 println!("{} = {}", solver::fmt_variable(var), value);
                 let var = vars.get_var(var).unwrap();
                 match var {
-                    VarUpdate::Left => rect.origin.x = value,
-                    VarUpdate::Top => rect.origin.y = value,
-                    VarUpdate::Width => rect.size.width = value,
-                    VarUpdate::Height => rect.size.height = value,
+                    VarType::Left => rect.origin.x = value,
+                    VarType::Top => rect.origin.y = value,
+                    VarType::Width => rect.size.width = value,
+                    VarType::Height => rect.size.height = value,
+                    _ => (),
                 }
             }
         }

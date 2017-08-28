@@ -2,6 +2,7 @@ use cassowary::Variable;
 
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
 use limn_layout::grid_layout::GridLayout;
+use limn_layout::solver::VarType;
 
 use resources::WidgetId;
 
@@ -89,7 +90,7 @@ impl LayoutManager {
 #[derive(Clone)]
 pub struct UpdateLayout(pub Widget);
 pub struct ResizeWindow;
-pub struct LayoutChanged(Vec<(usize, Variable, f64)>);
+pub struct LayoutChanged(Vec<(usize, VarType, f64)>);
 pub struct LayoutUpdated;
 
 impl App {
@@ -108,17 +109,18 @@ impl App {
             for &(widget_id, var, value) in changes {
                 let widget_id = WidgetId(widget_id);
                 if let Some(widget) = ui.get_widget(widget_id) {
-                    let vars = &ui.layout.solver.layouts[&widget_id.0];
+                    //let vars = &ui.layout.solver.layouts[&widget_id.0];
                     {
                         let widget = &mut *widget.widget_mut();
-                        let var = vars.get_var(var).expect("Missing variable for widget");
+                        //let var = vars.get_var(var).expect("Missing variable for widget");
                         let value = value as f32;
                         debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
                         match var {
-                            VarUpdate::Left => widget.bounds.origin.x = value,
-                            VarUpdate::Top => widget.bounds.origin.y = value,
-                            VarUpdate::Width => widget.bounds.size.width = value,
-                            VarUpdate::Height => widget.bounds.size.height = value,
+                            VarType::Left => widget.bounds.origin.x = value,
+                            VarType::Top => widget.bounds.origin.y = value,
+                            VarType::Width => widget.bounds.size.width = value,
+                            VarType::Height => widget.bounds.size.height = value,
+                            _ => (),
                         }
                     }
                     widget.event(LayoutUpdated);

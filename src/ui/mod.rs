@@ -180,14 +180,6 @@ impl Ui {
             println!("{:?} {:?}", name, bounds);
         }
     }
-    pub fn debug_constraints(&mut self) {
-        println!("CONSTRAINTS");
-        let root = self.get_root();
-        root.widget().debug_constraints();
-    }
-    pub fn debug_variables(&mut self) {
-        self.layout.solver.debug_variables();
-    }
 }
 
 #[derive(Clone)]
