@@ -74,13 +74,14 @@ impl LayoutRef for LayoutVars {
 pub struct Layout {
     pub vars: LayoutVars,
     pub name: Option<String>,
+    pub id: LayoutId,
     edit_vars: Vec<EditVariable>,
     constraints: HashSet<Constraint>,
     new_constraints: HashSet<Constraint>,
     removed_constraints: Vec<Constraint>,
 }
 impl Layout {
-    pub fn new(name: Option<String>) -> Self {
+    pub fn new(id: LayoutId, name: Option<String>) -> Self {
         let vars = LayoutVars::new();
         let mut new_constraints = HashSet::new();
         new_constraints.insert(vars.right - vars.left| EQ(REQUIRED) | vars.width);
@@ -90,11 +91,12 @@ impl Layout {
         //constraints.push(vars.height | GE(REQUIRED) | 0.0);
         Layout {
             vars: vars,
+            name: name,
+            id: id,
             edit_vars: Vec::new(),
             constraints: HashSet::new(),
             new_constraints: new_constraints,
             removed_constraints: Vec::new(),
-            name: name,
         }
     }
     pub fn layout(&mut self) -> &mut Self {

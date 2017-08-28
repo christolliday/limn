@@ -109,10 +109,8 @@ impl App {
             for &(widget_id, var, value) in changes {
                 let widget_id = WidgetId(widget_id);
                 if let Some(widget) = ui.get_widget(widget_id) {
-                    //let vars = &ui.layout.solver.layouts[&widget_id.0];
                     {
                         let widget = &mut *widget.widget_mut();
-                        //let var = vars.get_var(var).expect("Missing variable for widget");
                         let value = value as f32;
                         debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
                         match var {

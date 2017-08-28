@@ -241,6 +241,7 @@ impl Widget {
     pub fn set_debug_name(&mut self, name: &str) -> &mut Self {
         self.widget_mut().debug_name = Some(name.to_owned());
         self.widget_mut().layout.name = Some(name.to_owned());
+        event!(Target::Ui, UpdateLayout(self.clone()));
         self
     }
     pub fn set_debug_color(&mut self, color: Color) -> &mut Self {
@@ -383,11 +384,12 @@ pub struct WidgetInner {
 
 impl WidgetInner {
     fn new(name: Option<String>) -> Self {
+        let id = resources().widget_id();
         WidgetInner {
-            id: resources().widget_id(),
+            id: id,
             drawable: None,
             props: PropSet::new(),
-            layout: Layout::new(None),
+            layout: Layout::new(id.0, name.clone()),
             has_updated: false,
             bounds: Rect::zero(),
             debug_name: name,

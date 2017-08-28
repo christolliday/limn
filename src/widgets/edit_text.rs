@@ -55,7 +55,7 @@ impl EditTextBuilder {
         let rect_style = style!(
             RectStyleable::Border: selector!(default_border, FOCUSED: focused_border),
             RectStyleable::CornerRadius: Some(3.0));
-        let mut widget = Widget::new();
+        let mut widget = Widget::new_named("edit_text");
         widget
             .set_drawable_with_style(RectDrawable::new(), rect_style)
             .add_handler_fn(|_: &WidgetAttachedEvent, args| {
@@ -66,7 +66,7 @@ impl EditTextBuilder {
             })
             .make_focusable();
 
-        let mut text_widget = Widget::new();
+        let mut text_widget = Widget::new_named("edit_text_text");
         text_widget
             .set_drawable(TextDrawable::default())
             .add_handler_fn(edit_text_handle_char)

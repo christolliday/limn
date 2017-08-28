@@ -21,8 +21,8 @@ impl LimnSolver {
         }
     }
 
-    pub fn register_widget(&mut self, id: LayoutId, name: &Option<String>, layout: &mut Layout) {
-        self.layouts.register_widget(id, name, layout);
+    pub fn register_widget(&mut self, layout: &mut Layout) {
+        self.layouts.register_widget(layout);
     }
 
     pub fn remove_widget(&mut self, id: LayoutId) {
@@ -111,6 +111,7 @@ impl LimnSolver {
     }
 
     pub fn update_layout(&mut self, layout: &mut Layout) {
+        self.layouts.layout_names.insert(layout.id, layout.name.clone());
         for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
                 if !self.solver.has_edit_variable(&edit_var.var) {
@@ -133,8 +134,10 @@ impl LimnSolver {
             }
         }
         for constraint in layout.get_constraints() {
-            self.solver.add_constraint(constraint.clone()).expect(
-                &format!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint)));
+            if self.solver.add_constraint(constraint.clone()).is_err() {
+                eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
+                self.debug_constraints();
+            }
             let var_list = self.layouts.constraint_vars.entry(constraint.clone()).or_insert(Vec::new());
             for term in &constraint.0.expression.terms {
                 let variable = term.variable;
@@ -213,7 +216,8 @@ impl LayoutManager {
             edit_strengths: HashMap::new(),
         }
     }
-    pub fn register_widget(&mut self, id: LayoutId, name: &Option<String>, layout: &mut Layout) {
+    pub fn register_widget(&mut self, layout: &mut Layout) {
+        let id = layout.id;
         if id > self.last_layout {
             self.last_layout = id;
         }

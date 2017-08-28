@@ -76,7 +76,7 @@ widget_wrapper!(ToggleButtonBuilder);
 
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
-        let mut widget = Widget::new();
+        let mut widget = Widget::new_named("toggle_button");
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
@@ -116,7 +116,7 @@ widget_wrapper!(PushButtonBuilder);
 
 impl PushButtonBuilder {
     pub fn new() -> Self {
-        let mut widget = Widget::new();
+        let mut widget = Widget::new_named("push_button");
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
