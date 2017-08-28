@@ -87,8 +87,8 @@ impl Layout {
         new_constraints.insert(vars.right - vars.left| EQ(REQUIRED) | vars.width);
         new_constraints.insert(vars.bottom - vars.top | EQ(REQUIRED) | vars.height);
         // temporarily disabling this, as it tends to cause width/height to snap to 0
-        //constraints.push(vars.width | GE(REQUIRED) | 0.0);
-        //constraints.push(vars.height | GE(REQUIRED) | 0.0);
+        //new_constraints.insert(vars.width | GE(REQUIRED) | 0.0);
+        //new_constraints.insert(vars.height | GE(REQUIRED) | 0.0);
         Layout {
             vars: vars,
             name: name,

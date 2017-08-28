@@ -188,6 +188,7 @@ impl Widget {
     }
     pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
         self.widget_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
+        self.apply_style();
         self
     }
     pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
@@ -279,6 +280,7 @@ impl Widget {
 
     pub fn apply_style(&mut self) {
         self.0.borrow_mut().apply_style();
+        self.event(self::style::StyleUpdated);
     }
 
     pub fn add_child<U: BuildWidget>(&mut self, child: U) -> &mut Self{

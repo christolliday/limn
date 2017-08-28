@@ -131,3 +131,5 @@ macro_rules! style {
         }
     };
 }
+
+pub struct StyleUpdated;

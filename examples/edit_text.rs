@@ -32,8 +32,10 @@ impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 fn main() {
     let app = util::init_default("Limn edit text demo");
 
-    let mut root_widget = Widget::new();
-    layout!(root_widget: min_size(Size::new(300.0, 300.0)));
+    let mut root_widget = Widget::new_named("root");
+    let mut content_widget = Widget::new_named("content");
+    layout!(root_widget: min_size(Size::new(500.0, 500.0)));
+    layout!(content_widget: match_layout(&root_widget).padding(20.0));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
@@ -69,23 +71,25 @@ fn main() {
         });
 
     layout!(h_align_button:
-        align_top(&root_widget).padding(20.0),
-        align_left(&root_widget).padding(20.0));
+        align_top(&content_widget),
+        align_left(&content_widget));
 
     layout!(v_align_button:
-        align_top(&root_widget).padding(20.0),
-        align_right(&root_widget).padding(20.0));
+        align_top(&content_widget),
+        align_right(&content_widget));
 
     layout!(edit_text_box:
         below(&h_align_button).padding(20.0),
-        align_bottom(&root_widget).padding(20.0),
-        align_left(&root_widget).padding(20.0),
-        align_right(&root_widget).padding(20.0));
+        below(&v_align_button).padding(20.0),
+        align_bottom(&content_widget),
+        align_left(&content_widget),
+        align_right(&content_widget));
 
-    root_widget
+    content_widget
         .add_child(h_align_button)
         .add_child(v_align_button)
         .add_child(edit_text_box);
 
+    root_widget.add_child(content_widget);
     util::set_root_and_loop(app, root_widget);
 }

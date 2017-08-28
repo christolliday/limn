@@ -1,11 +1,9 @@
-use text_layout::Align;
-
 use widget::{Widget, BuildWidget};
 use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
-use drawable::text::{TextDrawable, TextStyleable};
+use drawable::text::TextDrawable;
 use event::{Target, WidgetEventArgs};
 use color::*;
 
@@ -72,8 +70,7 @@ impl EditTextBuilder {
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);
         layout!(text_widget:
-            bound_left(&widget).padding(5.0),
-            bound_right(&widget).padding(5.0));
+            match_layout(&widget).padding(5.0));
 
         EditTextBuilder {
             widget: widget,
