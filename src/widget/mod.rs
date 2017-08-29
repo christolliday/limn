@@ -268,8 +268,8 @@ impl Widget {
     pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
-        let mut widget = self.0.borrow_mut();
-        widget.update(f);
+        self.0.borrow_mut().update(f);
+        self.event(self::style::StyleUpdated);
     }
     pub fn update_layout<F>(&mut self, f: F)
         where F: FnOnce(&mut Layout)
