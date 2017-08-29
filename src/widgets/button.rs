@@ -100,6 +100,8 @@ impl ToggleButtonBuilder {
         layout!(button_text_widget:
             bound_left(&self.widget).padding(20.0),
             bound_right(&self.widget).padding(20.0),
+            bound_top(&self.widget).padding(10.0),
+            bound_bottom(&self.widget).padding(10.0),
             center(&self.widget));
 
         self.widget.add_child(button_text_widget);
@@ -143,6 +145,8 @@ impl PushButtonBuilder {
         layout!(button_text_widget:
             bound_left(&self.widget).padding(20.0),
             bound_right(&self.widget).padding(20.0),
+            bound_top(&self.widget).padding(10.0),
+            bound_bottom(&self.widget).padding(10.0),
             center(&self.widget));
 
         self.widget.add_child(button_text_widget);

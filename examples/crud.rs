@@ -16,6 +16,7 @@ use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
+use limn::widgets::text::TextBuilder;
 use limn::drawable::text::{TextDrawable, TextStyleable};
 use limn::drawable::rect::RectDrawable;
 
@@ -179,13 +180,9 @@ fn main() {
         let mut name_container = Widget::new();
         layout!(name_container: match_width(container));
 
-        let mut static_text = Widget::new();
-        let text = TextDrawable::new(title);
-        let text_size = text.measure();
-        static_text.set_drawable(text);
+        let mut static_text = TextBuilder::new(title);
         layout!(static_text:
-            center_vertical(&name_container),
-            size(text_size));
+            center_vertical(&name_container));
 
         let mut text_box = EditTextBuilder::new();
         layout!(text_box:

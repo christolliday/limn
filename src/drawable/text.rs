@@ -27,7 +27,7 @@ impl Default for TextDrawable {
         TextDrawable {
             text: "".to_owned(),
             font: "NotoSans/NotoSans-Regular".to_owned(),
-            font_size: 30.0,
+            font_size: 24.0,
             text_color: BLACK,
             background_color: TRANSPARENT,
             wrap: Wrap::Whitespace,
@@ -70,7 +70,7 @@ impl TextDrawable {
             line_height,
             self.wrap,
             bounds.width());
-        height < bounds.height()
+        height <= bounds.height()
     }
     fn get_line_rects(&self, bounds: Rect) -> Vec<Rect> {
         let line_height = self.line_height();
