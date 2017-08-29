@@ -15,7 +15,7 @@ use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef};
 use layout::container::{LayoutContainer, Frame};
 use resources::{resources, WidgetId};
-use util::{self, Point, Rect};
+use util::{self, Point, Rect, RectExt};
 use color::Color;
 use event::Target;
 use layout::UpdateLayout;
@@ -408,7 +408,7 @@ impl WidgetInner {
     }
     pub fn draw(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
         let bounds = self.bounds;
-        let clip_id = renderer.builder.define_clip(None, util::to_layout_rect(bounds), vec![], None);
+        let clip_id = renderer.builder.define_clip(None, bounds.typed(), vec![], None);
         renderer.builder.push_clip_id(clip_id);
         if let Some(drawable) = self.drawable.as_mut() {
             drawable.drawable.draw(bounds, crop_to, renderer);

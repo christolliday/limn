@@ -2,7 +2,7 @@ use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Styleable, Value};
-use util::{Rect, RectExt};
+use util::Rect;
 use color::*;
 
 pub struct EllipseDrawable {
@@ -25,7 +25,7 @@ impl EllipseDrawable {
 }
 
 impl Drawable for EllipseDrawable {
-    fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+    fn draw(&mut self, _: Rect, _: Rect, _: &mut RenderBuilder) {
         /*let (bounds, border) = if let Some((radius, color)) = self.border {
             (bounds.shrink_bounds(radius), Some(graphics::ellipse::Border {
                 radius: radius,

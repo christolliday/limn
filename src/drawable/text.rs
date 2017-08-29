@@ -3,8 +3,8 @@ use app_units;
 
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
-use resources::{resources, Font};
-use util::{self, Point, Size, SizeExt, Rect, RectExt};
+use resources::resources;
+use util::{self, Size, Rect, RectExt};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
@@ -116,7 +116,7 @@ impl Drawable for TextDrawable {
         let glyphs = self.position_glyphs(bounds);
         let key = self.font_key();
         renderer.builder.push_text(
-            util::to_layout_rect(bounds),
+            bounds.typed(),
             None,
             &glyphs,
             key,

@@ -1,10 +1,8 @@
-use std::f32::consts::PI;
-
 use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
-use util::{self, Rect, Point, RectExt};
+use util::{Rect, RectExt};
 use color::*;
 
 pub struct RectDrawable {
@@ -29,7 +27,7 @@ impl RectDrawable {
 impl Drawable for RectDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
 
-        renderer.builder.push_rect(util::to_layout_rect(bounds), None, self.background_color.into());
+        renderer.builder.push_rect(bounds.typed(), None, self.background_color.into());
         /*
         // using piston graphics, drawing borders and rounded edges is currently the largest performance bottleneck
         // todo: make it faster! probably will require replacing piston graphics

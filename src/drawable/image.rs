@@ -3,7 +3,7 @@ use webrender_api::*;
 use render::RenderBuilder;
 use widget::drawable::Drawable;
 use resources::resources;
-use util::{self, Rect, RectExt, Size, SizeExt};
+use util::{Rect, RectExt, Size, SizeExt};
 
 pub struct ImageDrawable {
     pub image: String,
@@ -28,11 +28,10 @@ impl ImageDrawable {
 impl Drawable for ImageDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let key = resources().get_image(&self.image).key;
-        let rect = util::to_layout_rect(bounds);
         renderer.builder.push_image(
-            rect,
+            bounds.typed(),
             None,
-            rect.size,
+            bounds.size.typed(),
             LayoutSize::zero(),
             ImageRendering::Auto,
             key,

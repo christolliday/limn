@@ -5,7 +5,6 @@ use std::sync::{Mutex, MutexGuard};
 use std::collections::HashMap;
 
 use webrender::api::*;
-use stb_truetype;
 use image;
 use rusttype;
 

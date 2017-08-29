@@ -31,7 +31,7 @@ struct TextUpdatedHandler {
     size_constraints: Vec<Constraint>,
 }
 impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
-    fn handle(&mut self, event: &StyleUpdated, mut args: WidgetEventArgs) {
+    fn handle(&mut self, _: &StyleUpdated, mut args: WidgetEventArgs) {
         for constraint in self.size_constraints.drain(..) {
             args.widget.layout().remove_constraint(constraint);
         }

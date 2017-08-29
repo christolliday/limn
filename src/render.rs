@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{self, AtomicBool};
 
@@ -6,8 +5,6 @@ use gleam::gl;
 use glutin;
 use webrender;
 use webrender::api::*;
-use stb_truetype;
-use image;
 
 use window::Window;
 use euclid::TypedPoint2D;

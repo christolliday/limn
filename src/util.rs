@@ -1,15 +1,10 @@
 use std::f32;
 
 use euclid;
-
 use rusttype;
-
 use webrender_api::*;
 
-use text_layout;
-
 use render::RenderBuilder;
-use color::Color;
 
 pub type Size = euclid::Size2D<f32>;
 pub type Point = euclid::Point2D<f32>;
@@ -27,6 +22,7 @@ pub trait RectExt<T> {
     fn height(&self) -> T;
     fn center(&self) -> Point;
     fn shrink_bounds(&self, size: T) -> Self;
+    fn typed(&self) -> LayoutRect;
 }
 impl RectExt<f32> for Rect {
     fn from_rusttype<S: Into<f32>>(rect: rusttype::Rect<S>) -> Self {
@@ -63,18 +59,36 @@ impl RectExt<f32> for Rect {
             Point::new(self.origin.x + size / 2.0, self.origin.y + size / 2.0),
             Size::new(self.size.width - size, self.size.height - size))
     }
+    fn typed(&self) -> LayoutRect {
+        LayoutRect::from_untyped(self)
+    }
+}
+
+pub trait PointExt {
+    fn typed(&self) -> LayoutPoint;
+}
+
+impl PointExt for Point {
+    fn typed(&self) -> LayoutPoint {
+        LayoutPoint::from_untyped(self)
+    }
 }
 
 pub trait SizeExt<T> {
     fn from_array(size: [u32; 2]) -> Self;
     fn from_tuple(size: (u32, u32)) -> Self;
+    fn typed(&self) -> LayoutSize;
 }
+
 impl SizeExt<f32> for Size {
     fn from_array(size: [u32; 2]) -> Self {
         Size::new(size[0] as f32, size[1] as f32)
     }
     fn from_tuple(size: (u32, u32)) -> Self {
         Size::new(size.0 as f32, size.1 as f32)
+    }
+    fn typed(&self) -> LayoutSize {
+        LayoutSize::from_untyped(self)
     }
 }
 
@@ -93,11 +107,5 @@ pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut R
     let side = BorderSide { color: color.into(), style: BorderStyle::Solid };
     let border = NormalBorder { left: side, right: side, top: side, bottom: side, radius: BorderRadius::zero() };
     let details = BorderDetails::Normal(border);
-    renderer.builder.push_border(to_layout_rect(rect), None, widths, details);
-}
-
-pub fn to_layout_rect(rect: Rect) -> LayoutRect {
-    LayoutRect::new(
-        LayoutPoint::new(rect.origin.x, rect.origin.y),
-        LayoutSize::new(rect.size.width, rect.size.height))
+    renderer.builder.push_border(rect.typed(), None, widths, details);
 }

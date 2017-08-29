@@ -9,7 +9,7 @@ use widget::property::states::*;
 use widgets::text::TextBuilder;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
-use drawable::text::{TextDrawable, TextStyleable};
+use drawable::text::TextStyleable;
 use util::Size;
 use color::*;
 
