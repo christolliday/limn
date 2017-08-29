@@ -16,10 +16,11 @@ use limn::prelude::*;
 
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue};
-use limn::drawable::text::{TextDrawable, TextStyleable};
+use limn::drawable::text::TextStyleable;
 use limn::drawable::rect::{RectDrawable, RectStyleable};
 use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
 use limn::widgets::edit_text::{self, TextUpdated};
+use limn::widgets::text::TextBuilder;
 use limn::input::keyboard::KeyboardInput;
 
 fn create_slider_control() -> Widget {
@@ -29,25 +30,21 @@ fn create_slider_control() -> Widget {
     slider_container
         .set_debug_name("slider_container")
         .set_inactive();
-    let mut slider_title = Widget::new();
+    let mut slider_title = TextBuilder::new_with_style(
+        style!(parent: text_style, TextStyleable::Text: "Circle Size".to_owned()));
     slider_title.set_debug_name("slider_title");
-    slider_title.set_drawable_with_style(TextDrawable::new("Circle Size"), text_style.clone());
-    layout!(slider_title:
-        align_left(&slider_container),
-        width(150.0));
-    let style = style!(parent: text_style, TextStyleable::Align: Align::End);
-    let mut slider_value = Widget::new();
+    layout!(slider_title: align_left(&slider_container));
+    let mut slider_value = TextBuilder::new_with_style(
+        style!(parent: text_style, TextStyleable::Align: Align::End, TextStyleable::Text: "30".to_owned()));
     slider_value
         .set_debug_name("slider_value")
-        .set_drawable_with_style(TextDrawable::new("30"), style)
         .add_handler_fn(edit_text::text_change_handle);
     layout!(slider_value:
-        width(50.0),
         align_right(&slider_container));
     let mut slider_widget = SliderBuilder::new();
     slider_widget.set_debug_name("slider_widget");
     layout!(slider_widget:
-        width(300.0),
+        min_width(300.0),
         below(&slider_title).padding(10.0),
         below(&slider_value).padding(10.0),
         match_width(&slider_container));
@@ -90,11 +87,15 @@ fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
         .set_text("Undo")
         .set_inactive()
         .on_click(|_, _| { event!(Target::Ui, CircleEvent::Undo); });
+    layout!(undo_widget:
+        center_vertical(&button_container));
     let mut redo_widget = PushButtonBuilder::new();
     redo_widget
         .set_text("Redo")
         .set_inactive()
         .on_click(|_, _| { event!(Target::Ui, CircleEvent::Redo); });
+    layout!(redo_widget:
+        center_vertical(&button_container));
     let slider_container = create_slider_control().build();
     let (undo_widget, redo_widget) = (undo_widget.build(), redo_widget.build());
     button_container
@@ -250,7 +251,8 @@ fn main() {
 
     let mut circle_canvas = Widget::new();
     circle_canvas.no_container();
-    layout!(circle_canvas: min_height(600.0));
+    layout!(circle_canvas:
+        min_height(600.0));
     circle_canvas
         .set_debug_name("circle_canvas")
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))

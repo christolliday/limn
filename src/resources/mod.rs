@@ -17,11 +17,11 @@ lazy_static! {
 }
 
 pub fn init_resources(render_api: RenderApi) {
-    RES.lock().unwrap().render = Some(render_api);
+    RES.try_lock().unwrap().render = Some(render_api);
 }
 // Allow global access to Resources
 pub fn resources() -> MutexGuard<'static, Resources> {
-    RES.lock().unwrap()
+    RES.try_lock().unwrap()
 }
 
 named_id!(WidgetId);

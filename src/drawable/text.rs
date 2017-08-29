@@ -1,10 +1,11 @@
 use webrender_api::{LayoutPoint, GlyphInstance, FontKey};
 use app_units;
+use rusttype::{Scale, GlyphId, VMetrics};
 
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::resources;
-use util::{self, Size, Rect, RectExt};
+use util::{self, Size, Rect, RectExt, Vector};
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Value, Styleable};
@@ -26,7 +27,7 @@ impl Default for TextDrawable {
         TextDrawable {
             text: "".to_owned(),
             font: "NotoSans/NotoSans-Regular".to_owned(),
-            font_size: 60.0,
+            font_size: 30.0,
             text_color: BLACK,
             background_color: TRANSPARENT,
             wrap: Wrap::Whitespace,
@@ -42,34 +43,37 @@ impl TextDrawable {
         drawable
     }
     pub fn measure(&self) -> Size {
+        let line_height = self.line_height();
         let mut resources = resources();
         let font = resources.get_font(&self.font);
         text_layout::get_text_size(
             &self.text,
             &font.info,
             self.font_size,
-            self.line_height(),
+            line_height,
             self.wrap)
     }
     pub fn min_height(&self) -> f32 {
         self.line_height()
     }
     pub fn line_height(&self) -> f32 {
-        (self.font_size * 1.25)
+        self.font_size + self.v_metrics().line_gap
     }
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
+        let line_height = self.line_height();
         let mut resources = resources();
         let font = resources.get_font(&self.font);
         let height = text_layout::get_text_height(
             text,
             &font.info,
             self.font_size,
-            self.line_height(),
+            line_height,
             self.wrap,
             bounds.width());
         height < bounds.height()
     }
     fn get_line_rects(&self, bounds: Rect) -> Vec<Rect> {
+        let line_height = self.line_height();
         let mut resources = resources();
         let font = resources.get_font(&self.font);
         text_layout::get_line_rects(
@@ -77,11 +81,13 @@ impl TextDrawable {
             bounds,
             &font.info,
             self.font_size,
-            self.line_height(),
+            line_height,
             self.wrap,
             self.align)
     }
     fn position_glyphs(&self, bounds: Rect) -> Vec<GlyphInstance> {
+        let line_height = self.line_height();
+        let descent = self.v_metrics().descent;
         let mut resources = resources();
         let font = resources.get_font(&self.font);
         let positions = text_layout::get_positioned_glyphs(
@@ -89,13 +95,13 @@ impl TextDrawable {
             bounds,
             &font.info,
             self.font_size,
-            self.line_height(),
+            line_height,
             self.wrap,
             self.align).iter().map(|glyph| {
                 let position = glyph.position();
                 GlyphInstance {
                     index: glyph.id().0,
-                    point: LayoutPoint::new(position.x, position.y),
+                    point: LayoutPoint::new(position.x, position.y + descent),
                 }
             }).collect();
         positions
@@ -103,17 +109,38 @@ impl TextDrawable {
     fn font_key(&self) -> FontKey {
         resources().get_font(&self.font).key
     }
+    fn v_metrics(&self) -> VMetrics {
+        let mut resources = resources();
+        let font = resources.get_font(&self.font);
+        font.info.v_metrics(Scale::uniform(self.font_size))
+    }
 }
 
 impl Drawable for TextDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        let glyphs = self.position_glyphs(bounds);
         if DEBUG_LINE_BOUNDS {
-            for rect in self.get_line_rects(bounds) {
+            let line_rects = self.get_line_rects(bounds);
+            let v_metrics = self.v_metrics();
+            let mut resources = resources();
+            let font = resources.get_font(&self.font);
+            for mut rect in line_rects {
                 util::draw_rect_outline(rect, CYAN, renderer);
+                rect.origin.y = rect.bottom() + v_metrics.descent;
+                rect.size.height = 1.0;
+                util::draw_rect_outline(rect, RED, renderer);
+            }
+            let scale = Scale::uniform(self.font_size);
+            for glyph in &glyphs {
+                let scaled_glyph = font.info.glyph(GlyphId(glyph.index)).unwrap().scaled(scale);
+                if let Some(rect) = scaled_glyph.exact_bounding_box() {
+                    let origin = glyph.point.to_vector().to_untyped() + Vector::new(0.0, -1.0);
+                    let rect = Rect::from_rusttype(rect).translate(&origin);
+                    util::draw_rect_outline(rect, BLUE, renderer);
+                }
             }
         }
         let size = app_units::Au::from_f32_px(text_layout::px_to_pt(self.font_size));
-        let glyphs = self.position_glyphs(bounds);
         let key = self.font_key();
         renderer.builder.push_text(
             bounds.typed(),

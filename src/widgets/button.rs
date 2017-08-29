@@ -97,7 +97,10 @@ impl ToggleButtonBuilder {
             TextStyleable::Align: Align::Middle);
         let mut button_text_widget = TextBuilder::new_with_style(style);
         button_text_widget.set_debug_name("button_text");
-        layout!(button_text_widget: center(&self.widget));
+        layout!(button_text_widget:
+            bound_left(&self.widget).padding(20.0),
+            bound_right(&self.widget).padding(20.0),
+            center(&self.widget));
 
         self.widget.add_child(button_text_widget);
         self
@@ -137,7 +140,10 @@ impl PushButtonBuilder {
 
         let mut button_text_widget = TextBuilder::new_with_style(style);
         button_text_widget.set_debug_name("button_text");
-        layout!(button_text_widget: center(self.as_mut()));
+        layout!(button_text_widget:
+            bound_left(&self.widget).padding(20.0),
+            bound_right(&self.widget).padding(20.0),
+            center(&self.widget));
 
         self.widget.add_child(button_text_widget);
         self
