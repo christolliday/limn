@@ -108,7 +108,7 @@ fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
 
 fn create_circle(center: &Point, mut parent_id: Widget, size: f32) -> Widget {
     let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
-                       EllipseStyleable::Border: Some((1.0, BLACK)));
+                       EllipseStyleable::Border: Some((2.0, BLACK)));
     let mut widget = Widget::new();
     widget.set_debug_name("circle");
     widget.set_drawable_with_style(EllipseDrawable::new(), style);

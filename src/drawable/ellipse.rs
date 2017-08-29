@@ -1,8 +1,10 @@
+use webrender_api::{ComplexClipRegion, BorderRadius, LocalClip};
+
 use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Styleable, Value};
-use util::Rect;
+use util::{Rect, RectExt};
 use color::*;
 
 pub struct EllipseDrawable {
@@ -24,19 +26,22 @@ impl EllipseDrawable {
     }
 }
 
+fn clip_ellipse(rect: Rect) -> LocalClip {
+    let rect = rect.typed();
+    let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform_size(rect.size / 2.0));
+    LocalClip::RoundedRect(rect, clip_region)
+}
+
 impl Drawable for EllipseDrawable {
-    fn draw(&mut self, _: Rect, _: Rect, _: &mut RenderBuilder) {
-        /*let (bounds, border) = if let Some((radius, color)) = self.border {
-            (bounds.shrink_bounds(radius), Some(graphics::ellipse::Border {
-                radius: radius,
-                color: color,
-            }))
+    fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        let outer_clip = clip_ellipse(bounds);
+        if let Some((radius, color)) = self.border {
+            renderer.builder.push_rect(bounds.typed(), Some(outer_clip), color.into());
+            let inner_clip = clip_ellipse(bounds.shrink_bounds(radius));
+            renderer.builder.push_rect(bounds.typed(), Some(inner_clip), self.background_color.into());
         } else {
-            (bounds, None)
+            renderer.builder.push_rect(bounds.typed(), Some(outer_clip), self.background_color.into());
         };
-        graphics::Ellipse::new(self.background_color)
-            .maybe_border(border)
-            .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);*/
     }
 }
 
