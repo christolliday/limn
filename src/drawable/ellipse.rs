@@ -34,10 +34,13 @@ fn clip_ellipse(rect: Rect) -> LocalClip {
 
 impl Drawable for EllipseDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
+        // rounding is a hack to prevent bug in webrender that produces artifacts around the corners
+        let bounds = bounds.round();
         let outer_clip = clip_ellipse(bounds);
-        if let Some((radius, color)) = self.border {
+        if let Some((width, color)) = self.border {
+            let width = if width < 2.0 { 2.0 } else { width };
             renderer.builder.push_rect(bounds.typed(), Some(outer_clip), color.into());
-            let inner_clip = clip_ellipse(bounds.shrink_bounds(radius));
+            let inner_clip = clip_ellipse(bounds.shrink_bounds(width));
             renderer.builder.push_rect(bounds.typed(), Some(inner_clip), self.background_color.into());
         } else {
             renderer.builder.push_rect(bounds.typed(), Some(outer_clip), self.background_color.into());

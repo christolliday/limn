@@ -1,3 +1,5 @@
+use webrender_api::{LocalClip, BorderRadius, ComplexClipRegion};
+
 use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
@@ -24,67 +26,28 @@ impl RectDrawable {
         RectDrawable::default()
     }
 }
+fn clip_rounded(rect: Rect, radius: Option<f32>) -> Option<LocalClip> {
+    if let Some(radius) = radius {
+        let rect = rect.typed();
+        let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform(radius));
+        Some(LocalClip::RoundedRect(rect, clip_region))
+    } else {
+        None
+    }
+}
 impl Drawable for RectDrawable {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
-
-        renderer.builder.push_rect(bounds.typed(), None, self.background_color.into());
-        /*
-        // using piston graphics, drawing borders and rounded edges is currently the largest performance bottleneck
-        // todo: make it faster! probably will require replacing piston graphics
-        if let Some((radius, _)) = self.border {
-            // piston graphics draws the border outside the rectangle bounds
-            // so it can get cut off by the clip rect, this shrinks the rect
-            // to accomodate the border.
-            bounds = bounds.shrink_bounds(radius * 2.0);
-        }
-        if let Some(radius) = self.corner_radius {
-            let points_per_corner = 8;
-            let angle_per_step = 2.0 * PI / (points_per_corner * 4) as Scalar;
-            fn circle_coords(radius: f32, step: f32, angle_per_step: f32) -> [f32; 2] {
-                [radius * (step * angle_per_step).cos(), radius * (step * angle_per_step).sin()]
-            };
-            // corners are center points of four circle arcs
-            let inner_rect = bounds.shrink_bounds(radius * 2.0);
-            let points: Vec<[f32; 2]> = (0..4)
-                .flat_map(|corner| {
-                    let center: Point = match corner {
-                        0 => inner_rect.bottom_right(),
-                        1 => inner_rect.bottom_left(),
-                        2 => inner_rect.origin,
-                        3 => inner_rect.top_right(),
-                        _ => unreachable!(),
-                    };
-                    let step_offset: u32 = corner * points_per_corner;
-                    (0..points_per_corner + 1).map(move |corner_step| {
-                        let circle_step = step_offset + corner_step;
-                        let circle_offset = circle_coords(radius, circle_step as f32, angle_per_step);
-                        [center.x + circle_offset[0], center.y + circle_offset[1]]
-                    })
-                })
-                .collect();
-            graphics::Polygon::new(self.background_color)
-                .draw(&points, &context.draw_state, context.transform, graphics);
-            if let Some((radius, color)) = self.border {
-                let line = graphics::Line::new_round(color, radius);
-                let mut points = points.iter().peekable();
-                let first = points.peek().unwrap().clone();
-                while let Some(val) = points.next() {
-                    let next = points.peek().unwrap_or(&first);
-                    let coords = [val[0], val[1], next[0], next[1]];
-                    line.draw(coords, &context.draw_state, context.transform, graphics);
-                }
-            }
+        // rounding is a hack to prevent bug in webrender that produces artifacts around the corners
+        let bounds = bounds.round();
+        let outer_clip = clip_rounded(bounds, self.corner_radius);
+        if let Some((width, color)) = self.border {
+            let width = if width < 2.0 { 2.0 } else { width };
+            renderer.builder.push_rect(bounds.typed(), outer_clip, color.into());
+            let inner_clip = clip_rounded(bounds.shrink_bounds(width), self.corner_radius);
+            renderer.builder.push_rect(bounds.typed(), inner_clip, self.background_color.into());
         } else {
-            let border = self.border.and_then(|(radius, color)| {
-                Some(graphics::rectangle::Border {
-                    radius: radius,
-                    color: color,
-                })
-            });
-            graphics::Rectangle::new(self.background_color)
-                .maybe_border(border)
-                .draw(bounds.to_slice(), &context.draw_state, context.transform, graphics);
-        }*/
+            renderer.builder.push_rect(bounds.typed(), outer_clip, self.background_color.into());
+        };
     }
 }
 
