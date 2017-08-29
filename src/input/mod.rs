@@ -2,6 +2,8 @@ pub mod mouse;
 pub mod keyboard;
 
 use glutin;
+use glutin::ElementState;
+use webrender;
 
 use event::{Target, UiEventHandler};
 use input::mouse::{MouseMoved, MouseButton, MouseWheel};
@@ -62,8 +64,6 @@ impl DebugSettingsHandler {
         }
     }
 }
-use glutin::ElementState;
-use webrender::renderer::PROFILER_DBG;
 impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
     fn handle(&mut self, event: &KeyboardInput, ui: &mut Ui) {
         if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = *event {
@@ -80,7 +80,7 @@ impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
             ui.layout.solver.debug_variables();
         }
         if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::P)) = *event {
-            ui.render.toggle_flags(PROFILER_DBG);
+            ui.render.toggle_flags(webrender::PROFILER_DBG);
         }
     }
 }

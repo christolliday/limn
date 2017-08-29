@@ -42,7 +42,7 @@ impl WebRenderContext {
             .. webrender::RendererOptions::default()
         };
 
-        let (renderer, sender) = webrender::renderer::Renderer::new(gl, opts).unwrap();
+        let (renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
         let api = sender.create_api();
         resources::init_resources(sender.create_api());
         let document_id = api.add_document(window.size_u32());
@@ -100,7 +100,7 @@ impl WebRenderContext {
         self.renderer.update();
         self.renderer.render(window_size);
     }
-    pub fn toggle_flags(&mut self, toggle_flags: webrender::renderer::DebugFlags) {
+    pub fn toggle_flags(&mut self, toggle_flags: webrender::DebugFlags) {
         let mut flags = self.renderer.get_debug_flags();
         flags.toggle(toggle_flags);
         self.renderer.set_debug_flags(flags);
