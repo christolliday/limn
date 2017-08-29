@@ -1,10 +1,15 @@
+use cassowary::Constraint;
+
+use layout;
+use layout::constraint::ConstraintBuilder;
+use widget::style::StyleUpdated;
 use widget::{Widget, BuildWidget};
 use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use drawable::rect::{RectDrawable, RectStyleable};
 use drawable::text::TextDrawable;
-use event::{Target, WidgetEventArgs};
+use event::{Target, WidgetEventHandler, WidgetEventArgs};
 use color::*;
 
 const BACKSPACE: char = '\u{8}';
@@ -67,10 +72,13 @@ impl EditTextBuilder {
         let mut text_widget = Widget::new_named("edit_text_text");
         text_widget
             .set_drawable(TextDrawable::default())
+            .add_handler(TextUpdatedHandler::default())
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);
         layout!(text_widget:
-            match_layout(&widget).padding(5.0));
+            align_left(&widget).padding(5.0),
+            align_top(&widget).padding(5.0),
+            bound_by(&widget).padding(5.0));
 
         EditTextBuilder {
             widget: widget,
@@ -91,5 +99,27 @@ impl BuildWidget for EditTextBuilder {
     fn build(mut self) -> Widget {
         self.widget.add_child(self.text_widget);
         self.widget
+    }
+}
+
+#[derive(Default)]
+struct TextUpdatedHandler {
+    size_constraints: Vec<Constraint>,
+}
+impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
+    fn handle(&mut self, _: &StyleUpdated, mut args: WidgetEventArgs) {
+        for constraint in self.size_constraints.drain(..) {
+            args.widget.layout().remove_constraint(constraint);
+        }
+        let line_height = {
+            let drawable = args.widget.drawable();
+            let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();
+            text_drawable.line_height()
+        };
+        let size_constraints = layout::constraint::min_height(line_height).build(&args.widget);
+        args.widget.update_layout(|layout| {
+            layout.add_constraints(size_constraints.clone())
+        });
+        self.size_constraints = size_constraints;
     }
 }

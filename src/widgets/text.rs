@@ -20,13 +20,14 @@ impl TextBuilder {
         let text_drawable = TextDrawable::default();
         let mut widget = Widget::new_named("text");
         widget.set_drawable_with_style(text_drawable, style);
-        widget.add_handler(TextUpdatedHandler { size_constraints: Vec::new() });
+        widget.add_handler(TextUpdatedHandler::default());
         widget
     }
 }
 
 use layout::constraint::ConstraintBuilder;
 
+#[derive(Default)]
 struct TextUpdatedHandler {
     size_constraints: Vec<Constraint>,
 }
