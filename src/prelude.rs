@@ -1,5 +1,6 @@
-pub use util::{Point, Rect, RectExt, Size};
+pub use util::{Point, PointExt, Rect, RectExt, Size, SizeExt};
 pub use event::{Target, WidgetEventHandler, WidgetEventArgs, UiEventHandler};
+pub use event::{event, event_global};
 pub use widget::{Widget, BuildWidget};
 pub use widget::drawable::{Drawable, DrawableEventHandler};
 pub use widget::property::{Property, PropChange};

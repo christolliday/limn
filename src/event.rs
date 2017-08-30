@@ -2,7 +2,7 @@ use std::any::{Any, TypeId};
 use std::sync::Mutex;
 use std::collections::VecDeque;
 
-use glutin::EventsLoopProxy;
+use glutin::{EventsLoop, EventsLoopProxy};
 
 use ui::Ui;
 use widget::Widget;
@@ -158,6 +158,7 @@ impl UiHandlerWrapper {
 
 lazy_static! {
     static ref FIRST_THREAD: Mutex<Cell<bool>> = Mutex::new(Cell::new(true));
+    static ref GLOBAL_QUEUE: Mutex<GlobalQueue> = Mutex::new(GlobalQueue::new());
 }
 use std::cell::{Cell, RefCell};
 
@@ -174,12 +175,17 @@ thread_local! {
 }
 
 pub fn queue_next() -> Option<(Target, TypeId, Box<Any>)> {
-    let mut next = None;
-    LOCAL_QUEUE.with(|queue| next = Some(queue.as_ref().unwrap().borrow_mut().next()));
-    next.unwrap()
+    if let Some(next) = GLOBAL_QUEUE.lock().unwrap().next() {
+        Some((Target::Ui, next.0, next.1))
+    } else {
+        let mut next = None;
+        LOCAL_QUEUE.with(|queue| next = Some(queue.as_ref().unwrap().borrow_mut().next()));
+        next.unwrap()
+    }
 }
-pub fn queue_set_events_loop(events_loop: EventsLoopProxy) {
-    LOCAL_QUEUE.with(|queue| queue.as_ref().unwrap().borrow_mut().set_events_loop(events_loop));
+pub fn queue_set_events_loop(events_loop: &EventsLoop) {
+    GLOBAL_QUEUE.lock().unwrap().set_events_loop(events_loop.create_proxy());
+    LOCAL_QUEUE.with(|queue| queue.as_ref().unwrap().borrow_mut().set_events_loop(events_loop.create_proxy()));
 }
 
 pub fn event<T: 'static>(address: Target, data: T) {
@@ -188,9 +194,12 @@ pub fn event<T: 'static>(address: Target, data: T) {
             debug!("push event {}", ::type_name::<T>());
             queue.borrow_mut().push(address, data);
         } else {
-            eprintln!("Tried to send event off the main thread");
+            eprintln!("Tried to send event off the main thread, use event_global");
         }
     });
+}
+pub fn event_global<T: 'static + Send>(data: T) {
+    GLOBAL_QUEUE.lock().unwrap().push(data);
 }
 
 #[macro_export]
@@ -200,4 +209,36 @@ macro_rules! event {
             $crate::event::event($address, $data);
         }
     };
+}
+
+pub struct GlobalQueue {
+    queue: VecDeque<(TypeId, Box<Any + Send>)>,
+    events_loop_proxy: Option<EventsLoopProxy>,
+}
+
+impl GlobalQueue {
+    fn new() -> Self {
+        GlobalQueue {
+            queue: VecDeque::new(),
+            events_loop_proxy: None,
+        }
+    }
+    pub fn set_events_loop(&mut self, events_loop: EventsLoopProxy) {
+        self.events_loop_proxy = Some(events_loop);
+    }
+    /// Push a new event on the queue and wake the window up if it is asleep
+    pub fn push<T: 'static + Send>(&mut self, data: T) {
+        let type_id = TypeId::of::<T>();
+        self.queue.push_back((type_id, Box::new(data)));
+        if let Some(ref events_loop_proxy) = self.events_loop_proxy {
+            events_loop_proxy.wakeup().unwrap();
+        }
+    }
+}
+impl Iterator for GlobalQueue {
+    type Item = (TypeId, Box<Any + Send>);
+    /// Take the next event off the Queue, should only be called by App
+    fn next(&mut self) -> Option<(TypeId, Box<Any + Send>)> {
+        self.queue.pop_front()
+    }
 }

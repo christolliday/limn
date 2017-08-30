@@ -29,7 +29,7 @@ pub struct App {
 
 impl App {
     pub fn new(window: Window, events_loop: glutin::EventsLoop) -> Self {
-        event::queue_set_events_loop(events_loop.create_proxy());
+        event::queue_set_events_loop(&events_loop);
         let ui = Ui::new(window, &events_loop);
         let mut app = App {
             ui: ui,
