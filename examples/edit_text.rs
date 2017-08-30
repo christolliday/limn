@@ -31,11 +31,11 @@ impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 
 fn main() {
     let app = util::init_default("Limn edit text demo");
+    let mut root = app.ui.root.clone();
 
-    let mut root_widget = Widget::new_named("root");
     let mut content_widget = Widget::new_named("content");
-    layout!(root_widget: min_size(Size::new(500.0, 500.0)));
-    layout!(content_widget: match_layout(&root_widget).padding(20.0));
+    layout!(root: min_size(Size::new(500.0, 500.0)));
+    layout!(content_widget: match_layout(&root).padding(20.0));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
@@ -90,6 +90,6 @@ fn main() {
         .add_child(v_align_button)
         .add_child(edit_text_box);
 
-    root_widget.add_child(content_widget);
-    util::set_root_and_loop(app, root_widget);
+    root.add_child(content_widget);
+    app.main_loop();
 }

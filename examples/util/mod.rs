@@ -6,7 +6,6 @@ extern crate log;
 use limn::window::Window;
 use limn::app::App;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
-use limn::widget::Widget;
 use limn::util::Size;
 
 /// Create the window and initialize the app.
@@ -30,17 +29,11 @@ fn init(title: &str, size: Option<(u32, u32)>) -> App {
     let window_size = size.unwrap_or((100, 100));
     let events_loop = glutin::EventsLoop::new();
     let window = Window::new(title, window_size, Some(window_size), &events_loop);
-    App::new(window, events_loop)
-}
-
-pub fn set_root_and_loop(mut app: App, mut root_widget: Widget)
-{
-    layout!(root_widget: match_layout(&app.ui.root));
-    app.ui.root.add_child(root_widget);
+    let mut app = App::new(window, events_loop);
 
     // Closes app on ESC key
     app.add_handler(EscKeyCloseHandler);
     // Toggles debug bounds drawing on F1 key
     app.add_handler(DebugSettingsHandler::new());
-    app.main_loop();
+    app
 }

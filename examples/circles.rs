@@ -246,8 +246,7 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
 
 fn main() {
     let mut app = util::init_default("Limn circles demo");
-
-    let mut root_widget = Widget::new();
+    let mut root = app.ui.root.clone();
 
     let mut circle_canvas = Widget::new();
     circle_canvas.no_container();
@@ -261,8 +260,8 @@ fn main() {
             event!(Target::Ui, event);
         });
     let circle_canvas_id = circle_canvas.clone();
-    root_widget.add_child(circle_canvas);
-    let (undo_id, redo_id, slider_id) = create_control_bar(&mut root_widget);
+    root.add_child(circle_canvas);
+    let (undo_id, redo_id, slider_id) = create_control_bar(&mut root);
 
     app.add_handler(CircleEventHandler::new(circle_canvas_id, undo_id, redo_id, slider_id));
     app.add_handler_fn(|event: &KeyboardInput, _| {
@@ -271,5 +270,5 @@ fn main() {
         }
     });
 
-    util::set_root_and_loop(app, root_widget);
+    app.main_loop();
 }

@@ -170,11 +170,11 @@ pub fn add_person(person: &Person, mut list_widget_id: Widget) -> Widget {
 
 fn main() {
     let mut app = util::init_default("Limn edit text demo");
+    let mut root = app.ui.root.clone();
 
-    let mut root_widget = Widget::new();
-    layout!(root_widget: min_size(Size::new(300.0, 300.0)));
+    layout!(root: min_size(Size::new(300.0, 300.0)));
     let mut container = Widget::new();
-    layout!(container: bound_by(&root_widget).padding(20.0));
+    layout!(container: bound_by(&root).padding(20.0));
 
     let create_name_group = |title, container: &mut Widget| {
         let mut name_container = Widget::new();
@@ -264,9 +264,9 @@ fn main() {
         .add_child(last_name_container)
         .add_child(button_container)
         .add_child(scroll_container);
-    root_widget.add_child(container);
+    root.add_child(container);
 
     app.add_handler(PeopleHandler::new(ids));
 
-    util::set_root_and_loop(app, root_widget);
+    app.main_loop();
 }

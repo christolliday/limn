@@ -119,13 +119,13 @@ impl ClockBuilder {
 
 fn main() {
     let mut app = util::init_default("Limn clock demo");
+    let mut root = app.ui.root.clone();
 
-    let mut root_widget = Widget::new();
     let mut clock = ClockBuilder::new().widget;
     layout!(clock:
-        center(&root_widget),
-        bound_by(&root_widget).padding(50.0));
-    root_widget.add_child(clock.clone());
+        center(&root),
+        bound_by(&root).padding(50.0));
+    root.add_child(clock.clone());
 
     thread::spawn(move || loop {
         thread::sleep(time::Duration::from_millis(1000));
@@ -134,5 +134,5 @@ fn main() {
     app.add_handler_fn(move |_: &ClockTick, _| {
         clock.event_subtree(ClockTick);
     });
-    util::set_root_and_loop(app, root_widget);
+    app.main_loop();
 }

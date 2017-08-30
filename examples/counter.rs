@@ -16,13 +16,13 @@ struct CountEvent(u32);
 
 fn main() {
     let app = util::init_default("Limn counter demo");
+    let mut root = app.ui.root.clone();
 
-    let mut root_widget = Widget::new();
-    root_widget.hbox();
+    root.hbox();
 
     let mut left_spacer = Widget::new();
     layout!(left_spacer: width(50.0));
-    root_widget.add_child(left_spacer);
+    root.add_child(left_spacer);
 
     struct CountHandler;
     impl WidgetEventHandler<CountEvent> for CountHandler {
@@ -42,10 +42,10 @@ fn main() {
     layout!(text_widget:
         width(80.0),
         height(text_dims.height),
-        center_vertical(&root_widget));
+        center_vertical(&root));
 
     let mut button_container = Widget::new();
-    let root_id = root_widget.clone();
+    let root_id = root.clone();
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");
     button_widget.on_click(move |_, _| {
@@ -55,7 +55,7 @@ fn main() {
         center(&button_container),
         bound_by(&button_container).padding(50.0));
     button_container.add_child(button_widget);
-    root_widget
+    root
         .add_child(text_widget)
         .add_child(button_container);
 
@@ -73,7 +73,7 @@ fn main() {
             args.widget.event_subtree(CountEvent(self.count));
         }
     }
-    root_widget.add_handler(CounterHandler::new());
+    root.add_handler(CounterHandler::new());
 
-    util::set_root_and_loop(app, root_widget);
+    app.main_loop();
 }

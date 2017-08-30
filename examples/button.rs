@@ -4,21 +4,19 @@ extern crate limn_layout;
 
 mod util;
 
-use limn::prelude::*;
-
 use limn::widgets::button::ToggleButtonBuilder;
 
 fn main() {
     let app = util::init_default("Limn button demo");
+    let mut root = app.ui.root.clone();
 
-    let mut root_widget = Widget::new();
     let mut button = ToggleButtonBuilder::new();
     button.set_text("ON", "OFF");
     button.set_debug_name("button");
     layout!(button:
-        center(&root_widget),
-        bound_by(&root_widget).padding(50.0));
-    root_widget.add_child(button);
+        center(&root),
+        bound_by(&root).padding(50.0));
+    root.add_child(button);
 
-    util::set_root_and_loop(app, root_widget);
+    app.main_loop();
 }
