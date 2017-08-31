@@ -33,6 +33,8 @@ multi_mut = "0.1.3"
 find_folder = "0.3.0"
 chrono = "0.2.25"
 env_logger = "0.3"
+lipsum = "0.3"
+rand = "0.3"
 
 [features]
 nightly = []

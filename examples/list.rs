@@ -2,6 +2,11 @@
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
+extern crate lipsum;
+extern crate rand;
+
+use lipsum::lipsum;
+use rand::Rng;
 
 mod util;
 
@@ -9,8 +14,10 @@ use limn::prelude::*;
 
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
-use limn::drawable::text::{TextDrawable, TextStyleable};
+use limn::widgets::text::TextBuilder;
+use limn::drawable::text::TextStyleable;
 use limn::drawable::rect::RectDrawable;
+
 
 fn main() {
     let app = util::init_default("Limn list demo");
@@ -23,38 +30,31 @@ fn main() {
     ]);
 
     let mut list_widget = ListBuilder::new();
-    list_widget.layout().add(match_width(&scroll_widget));
+    list_widget.layout().add(constraints![shrink(), match_width(&scroll_widget)]);
 
-    let list_item_widgets = {
-        let mut list_item_widgets = Vec::new();
-        for _ in 1..15 {
-            let text_style = style!(TextStyleable::TextColor: WHITE);
-            let text_drawable = TextDrawable::new("hello");
-            let text_size = text_drawable.measure();
+    let list_data = (0..15).map(|_| {
+        let rand = rand::thread_rng().gen_range(2, 6);
+        lipsum(rand)
+    });
+    let text_style = style!(TextStyleable::TextColor: WHITE);
+    list_widget.set_contents(list_data, |item, list| {
+        let text = (*item).to_owned();
+        let style = style!(parent: text_style, TextStyleable::Text: text);
+        let mut text_widget = TextBuilder::new_with_style(style);
 
-            let mut list_item_widget = Widget::new();
-            list_item_widget
-                .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
-                .set_debug_name("item")
-                .list_item(list_widget.widget.clone())
-                .enable_hover();
-            list_item_widget.layout().add(height(text_size.height));
+        let mut item_widget = Widget::new();
+        item_widget
+            .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
+            .set_debug_name("item")
+            .list_item(list.widget.clone())
+            .enable_hover();
 
-            let mut list_text_widget = Widget::new();
-            list_text_widget
-                .set_drawable_with_style(text_drawable, text_style)
-                .set_debug_name("text");
-            list_text_widget.layout().add(center(&list_item_widget));
-            list_item_widget.add_child(list_text_widget);
+        text_widget.layout().add(align_left(&item_widget));
+        item_widget.layout().add(match_width(list));
+        item_widget.add_child(text_widget);
+        item_widget
+    });
 
-            list_item_widgets.push(list_item_widget);
-        }
-        list_item_widgets
-    };
-
-    for list_item_widget in list_item_widgets {
-        list_widget.add_child(list_item_widget);
-    }
     scroll_widget.add_content(list_widget);
     root.add_child(scroll_widget);
 

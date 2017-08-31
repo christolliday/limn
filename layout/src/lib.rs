@@ -225,7 +225,7 @@ pub fn change_strength(constraints: &Vec<Constraint>, strength: f64) -> Vec<Cons
 // Can be removed if/when variadic generics are added to rust.
 #[macro_export]
 macro_rules! constraints {
-    ( $ ( $ x : expr , ) , * ) => {
+    ( $ ( $ x : expr ) , * ) => {
         constraints!( $ ( $ x , ) * )
     };
     ( $ ( $ x : expr , ) * ) => {

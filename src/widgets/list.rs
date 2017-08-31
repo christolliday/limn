@@ -88,6 +88,16 @@ impl ListBuilder {
         });
         self
     }
+    pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
+        where C: Iterator<Item=I>,
+              I: ::std::fmt::Debug,
+              F: Fn(I, &mut ListBuilder) -> Widget,
+    {
+        for item in contents {
+            let widget = build(item, self);
+            self.widget.add_child(widget);
+        }
+    }
 }
 
 impl Widget {
