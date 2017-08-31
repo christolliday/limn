@@ -4,7 +4,7 @@ extern crate euclid;
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
-extern crate linked_hash_map;
+#[macro_use]
 extern crate maplit;
 
 use std::collections::HashSet;
@@ -49,6 +49,16 @@ impl LayoutVars {
     pub fn array(&self) -> [Variable; 6] {
         [self.left, self.top, self.right, self.bottom, self.width, self.height]
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum VarType {
+    Left,
+    Top,
+    Right,
+    Bottom,
+    Width,
+    Height,
 }
 
 pub trait LayoutRef {
@@ -247,10 +257,8 @@ mod test {
     use std::collections::HashMap;
 
     use cassowary::strength::*;
-    use super::solver;
 
-    use super::{LimnSolver, LayoutId, Layout, LayoutVars, VarUpdate, LayoutRef};
-    use super::constraint::*;
+    use super::{LimnSolver, LayoutId, Layout, VarType};
     use super::{Size, Point, Rect};
 
     #[test]
@@ -260,9 +268,9 @@ mod test {
         let mut widget = layout.new_widget("widget");
         layout!(widget:
             top_left(Point::new(0.0, 0.0)),
-            dimensions(Size::new(200.0, 200.0)),
+            size(Size::new(200.0, 200.0)),
         );
-        layout.add_widget(&mut widget);
+        layout.solver.update_layout(&mut widget);
 
         layout.update();
         assert!(layout.layout == hashmap!{
@@ -280,7 +288,7 @@ mod test {
         let mut widget_br = layout.new_widget("widget_br");
         layout!(widget_o:
             top_left(Point::new(0.0, 0.0)),
-            dimensions(Size::new(300.0, 300.0)),
+            size(Size::new(300.0, 300.0)),
         );
         layout!(widget_tl:
             align_top(&widget_o),
@@ -307,11 +315,11 @@ mod test {
             match_width(&widget_bl),
             match_height(&widget_tr),
         );
-        layout.add_widget(&mut widget_o);
-        layout.add_widget(&mut widget_tl);
-        layout.add_widget(&mut widget_tr);
-        layout.add_widget(&mut widget_bl);
-        layout.add_widget(&mut widget_br);
+        layout.solver.update_layout(&mut widget_o);
+        layout.solver.update_layout(&mut widget_tl);
+        layout.solver.update_layout(&mut widget_tr);
+        layout.solver.update_layout(&mut widget_bl);
+        layout.solver.update_layout(&mut widget_br);
 
         layout.update();
         assert!(layout.layout == hashmap!{
@@ -333,8 +341,8 @@ mod test {
         layout!(root_widget:
             top_left(Point::new(0.0, 0.0)),
         );
-        root_widget.layout.edit_right().set(100.0).strength(STRONG);
-        root_widget.layout.edit_bottom().set(100.0).strength(STRONG);
+        root_widget.edit_right().set(100.0).strength(STRONG);
+        root_widget.edit_bottom().set(100.0).strength(STRONG);
         layout!(slider:
             align_left(&root_widget).padding(50.0),
         );
@@ -353,12 +361,12 @@ mod test {
         );
         let slider_handle_left = slider_handle.layout().vars.left;
 
-        layout.add_widget(&mut root_widget);
+        layout.solver.update_layout(&mut root_widget);
         layout.update();
 
-        layout.add_widget(&mut slider);
-        layout.add_widget(&mut slider_bar_pre);
-        layout.add_widget(&mut slider_handle);
+        layout.solver.update_layout(&mut slider);
+        layout.solver.update_layout(&mut slider_bar_pre);
+        layout.solver.update_layout(&mut slider_handle);
 
         layout.solver.solver.add_edit_variable(slider_handle_left, STRONG).unwrap();
         layout.solver.solver.suggest_value(slider_handle_left, 50.0).unwrap();
@@ -367,19 +375,9 @@ mod test {
     }
 
     // code below is used to create a test harness for creating layouts outside of the widget graph
-    struct TestWidget {
-        id: LayoutId,
-        layout: Layout,
-    }
-    impl TestWidget {
-        fn layout(&mut self) -> &mut Layout {
-            &mut self.layout
-        }
-    }
     struct TestLayout {
         id_gen: IdGen,
         solver: LimnSolver,
-        widget_map: HashMap<LayoutId, LayoutVars>,
         widget_names: HashMap<LayoutId, String>,
         layout: HashMap<LayoutId, Rect>,
     }
@@ -388,47 +386,30 @@ mod test {
             TestLayout {
                 id_gen: IdGen::new(),
                 solver: LimnSolver::new(),
-                widget_map: HashMap::new(),
                 widget_names: HashMap::new(),
                 layout: HashMap::new(),
             }
         }
-        fn new_widget(&mut self, name: &str) -> TestWidget {
-            let layout_builder = Layout::new();
+        fn new_widget(&mut self, name: &str) -> Layout {
             let id = self.id_gen.next();
-            self.widget_map.insert(id, layout_builder.vars.clone());
+            let mut layout = Layout::new(id, Some(name.to_owned()));
             self.widget_names.insert(id, name.to_owned());
-            TestWidget {
-                id: id,
-                layout: layout_builder,
-            }
-        }
-        fn add_widget(&mut self, widget: &mut TestWidget) {
-            use std::mem;
-            let name = self.widget_names.get(&widget.id).unwrap().clone();
-            let layout_builder = mem::replace(&mut widget.layout, Layout::new());
-            self.solver.add_widget(widget.id, &Some(name), layout_builder);
+            self.solver.register_widget(&mut layout);
+            layout
         }
         fn update(&mut self) {
-            use solver;
             for (widget_id, var, value) in self.solver.fetch_changes() {
                 let rect = self.layout.entry(widget_id).or_insert(Rect::zero());
-                let vars = self.widget_map.get(&widget_id).unwrap();
-                println!("{} = {}", solver::fmt_variable(var), value);
-                let var = vars.get_var(var).unwrap();
+                let name = &self.widget_names[&widget_id];
+                println!("{}.{:?} = {}", name, var, value);
                 match var {
-                    VarType::Left => rect.origin.x = value,
-                    VarType::Top => rect.origin.y = value,
-                    VarType::Width => rect.size.width = value,
-                    VarType::Height => rect.size.height = value,
+                    VarType::Left => rect.origin.x = value as f32,
+                    VarType::Top => rect.origin.y = value as f32,
+                    VarType::Width => rect.size.width = value as f32,
+                    VarType::Height => rect.size.height = value as f32,
                     _ => (),
                 }
             }
-        }
-    }
-    impl LayoutRef for TestWidget {
-        fn layout_ref(&self) -> &LayoutVars {
-            &self.layout.vars
         }
     }
     struct IdGen {

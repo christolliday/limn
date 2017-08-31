@@ -1,6 +1,5 @@
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
 use limn_layout::grid_layout::GridLayout;
-use limn_layout::solver::VarType;
 
 use resources::WidgetId;
 

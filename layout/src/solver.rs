@@ -1,4 +1,3 @@
-use std::sync::Mutex;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
@@ -6,7 +5,7 @@ use cassowary;
 use cassowary::strength;
 use cassowary::{Variable, Constraint, Expression};
 
-use super::{LayoutId, Layout, LayoutVars};
+use super::{LayoutId, Layout, VarType, LayoutVars};
 
 pub struct LimnSolver {
     pub solver: cassowary::Solver,
@@ -177,16 +176,6 @@ impl LimnSolver {
     pub fn debug_constraint(&self, constraint: &Constraint) {
         println!("{}", self.layouts.fmt_constraint(constraint));
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum VarType {
-    Left,
-    Top,
-    Right,
-    Bottom,
-    Width,
-    Height,
 }
 
 pub struct LayoutManager {
