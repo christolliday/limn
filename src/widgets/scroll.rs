@@ -2,6 +2,7 @@ use glutin;
 use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
+use layout::constraint::*;
 use event::{WidgetEventArgs, WidgetEventHandler};
 use widget::{BuildWidget, Widget};
 use widgets::slider::{SliderBuilder, SetSliderValue};
@@ -23,9 +24,10 @@ impl ScrollBuilder {
 
         let mut content_holder = Widget::new_named("content_holder");
         content_holder.no_container();
-        layout!(content_holder:
+        content_holder.layout().add(constraints![
             align_left(&widget),
-            align_top(&widget));
+            align_top(&widget),
+        ]);
 
         ScrollBuilder {
             widget: widget,
@@ -38,12 +40,12 @@ impl ScrollBuilder {
         let mut widget = widget.build();
         {
             let ref parent = self.content_holder.layout().vars;
-            layout!(widget:
+            widget.layout().add(constraints![
                 LAYOUT.left | LE(REQUIRED) | parent.left,
                 LAYOUT.top | LE(REQUIRED) | parent.top,
                 LAYOUT.right | GE(REQUIRED) | parent.right,
                 LAYOUT.bottom | GE(REQUIRED) | parent.bottom,
-            );
+            ]);
         }
         self.content = Some(widget);
         self
@@ -52,19 +54,19 @@ impl ScrollBuilder {
         let mut scrollbar_h = SliderBuilder::new();
         scrollbar_h.set_debug_name("scrollbar_h");
         scrollbar_h.scrollbar_style();
-        layout!(scrollbar_h:
+        scrollbar_h.layout().add(constraints![
             align_bottom(&self.widget),
             align_left(&self.widget),
             below(&self.content_holder),
-        );
+        ]);
         let mut scrollbar_v = SliderBuilder::new();
         scrollbar_v.set_debug_name("scrollbar_v");
         scrollbar_v.make_vertical().scrollbar_style();
-        layout!(scrollbar_v:
+        scrollbar_v.layout().add(constraints![
             align_right(&self.widget),
             align_top(&self.widget),
             to_right_of(&self.content_holder),
-        );
+        ]);
 
         let widget_ref = self.content_holder.clone();
         scrollbar_h.on_value_changed(move |value, _| {
@@ -77,14 +79,14 @@ impl ScrollBuilder {
         let corner_style = style!(RectStyleable::BackgroundColor: GRAY_70);
         let mut corner = Widget::new_named("corner");
         corner.set_drawable_with_style(RectDrawable::new(), corner_style);
-        layout!(corner:
+        corner.layout().add(constraints![
             align_bottom(&self.widget),
             align_right(&self.widget),
             to_right_of(&scrollbar_h),
             below(&scrollbar_v),
             match_height(&scrollbar_h),
             match_width(&scrollbar_v),
-        );
+        ]);
 
         self.scrollbars = Some((corner, scrollbar_h, scrollbar_v));
         self

@@ -34,8 +34,8 @@ fn main() {
     let mut root = app.ui.root.clone();
 
     let mut content_widget = Widget::new_named("content");
-    layout!(root: min_size(Size::new(500.0, 500.0)));
-    layout!(content_widget: match_layout(&root).padding(20.0));
+    root.layout().add(min_size(Size::new(500.0, 500.0)));
+    content_widget.layout().add(match_layout(&root).padding(20.0));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
@@ -70,20 +70,23 @@ fn main() {
             }
         });
 
-    layout!(h_align_button:
+    h_align_button.layout().add(constraints![
         align_top(&content_widget),
-        align_left(&content_widget));
+        align_left(&content_widget),
+    ]);
 
-    layout!(v_align_button:
+    v_align_button.layout().add(constraints![
         align_top(&content_widget),
-        align_right(&content_widget));
+        align_right(&content_widget),
+    ]);
 
-    layout!(edit_text_box:
+    edit_text_box.layout().add(constraints![
         below(&h_align_button).padding(20.0),
         below(&v_align_button).padding(20.0),
         align_bottom(&content_widget),
         align_left(&content_widget),
-        align_right(&content_widget));
+        align_right(&content_widget),
+    ]);
 
     content_widget
         .add_child(h_align_button)

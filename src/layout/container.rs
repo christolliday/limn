@@ -1,5 +1,6 @@
 use widget::Widget;
 use resources::WidgetId;
+use layout::constraint::*;
 
 pub trait LayoutContainer {
     fn set_padding(&mut self, _padding: f32) {}
@@ -22,6 +23,6 @@ impl LayoutContainer for Frame {
         self.padding = padding;
     }
     fn add_child(&mut self, parent: Widget, mut child: Widget) {
-        layout!(child: bound_by(&parent).padding(self.padding));
+        child.layout().add(bound_by(&parent).padding(self.padding));
     }
 }

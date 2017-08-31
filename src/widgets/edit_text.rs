@@ -1,7 +1,7 @@
 use cassowary::Constraint;
 
-use layout;
 use layout::constraint::ConstraintBuilder;
+use layout::constraint::*;
 use widget::style::StyleUpdated;
 use widget::{Widget, BuildWidget};
 use widget::property::states::*;
@@ -75,10 +75,12 @@ impl EditTextBuilder {
             .add_handler(TextUpdatedHandler::default())
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);
-        layout!(text_widget:
+
+        text_widget.layout().add(constraints![
             align_left(&widget).padding(5.0),
             align_top(&widget).padding(5.0),
-            bound_by(&widget).padding(5.0));
+            bound_by(&widget).padding(5.0),
+        ]);
 
         EditTextBuilder {
             widget: widget,
@@ -116,9 +118,9 @@ impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
             let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();
             text_drawable.line_height()
         };
-        let size_constraints = layout::constraint::min_height(line_height).build(&args.widget);
+        let size_constraints = min_height(line_height).build(&args.widget.layout().vars);
         args.widget.update_layout(|layout| {
-            layout.add_constraints(size_constraints.clone())
+            layout.add(size_constraints.clone())
         });
         self.size_constraints = size_constraints;
     }

@@ -2,7 +2,6 @@
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
-extern crate glutin;
 
 mod util;
 
@@ -21,7 +20,7 @@ fn main() {
     root.hbox();
 
     let mut left_spacer = Widget::new();
-    layout!(left_spacer: width(50.0));
+    left_spacer.layout().add(width(50.0));
     root.add_child(left_spacer);
 
     struct CountHandler;
@@ -39,10 +38,11 @@ fn main() {
     text_widget
         .set_drawable_with_style(text_drawable, text_style)
         .add_handler(CountHandler);
-    layout!(text_widget:
+    text_widget.layout().add(constraints![
         width(80.0),
         height(text_dims.height),
-        center_vertical(&root));
+        center_vertical(&root),
+    ]);
 
     let mut button_container = Widget::new();
     let root_id = root.clone();
@@ -51,9 +51,10 @@ fn main() {
     button_widget.on_click(move |_, _| {
         root_id.event(CounterEvent);
     });
-    layout!(button_widget:
+    button_widget.layout().add(constraints![
         center(&button_container),
-        bound_by(&button_container).padding(50.0));
+        bound_by(&button_container).padding(50.0),
+    ]);
     button_container.add_child(button_widget);
     root
         .add_child(text_widget)

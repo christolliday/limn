@@ -118,6 +118,7 @@ pub fn match_height<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
     PaddableConstraint::MatchHeight(widget.height).builder(REQUIRED)
 }
 
+#[derive(Clone)]
 pub enum WidgetConstraint {
     Width(f32),
     Height(f32),
@@ -134,6 +135,8 @@ pub enum WidgetConstraint {
     CenterHorizontal(Variable, Variable),
     CenterVertical(Variable, Variable),
 }
+
+#[derive(Clone)]
 pub enum PaddableConstraint {
     AlignTop(Variable),
     AlignBottom(Variable),
@@ -198,13 +201,12 @@ impl PaddableConstraintBuilder {
 }
 
 pub trait ConstraintBuilder {
-    fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint>;
+    fn build(&self, widget: &LayoutVars) -> Vec<Constraint>;
 }
 
 impl ConstraintBuilder for Constraint {
-    fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint> {
-        let widget = widget.layout_ref();
-        let cons = self.0;
+    fn build(&self, widget: &LayoutVars) -> Vec<Constraint> {
+        let cons = &self.0;
         let ref terms = cons.expression.terms;
         let mut new_terms = Vec::new();
         for term in terms {
@@ -235,10 +237,9 @@ impl ConstraintBuilder for Constraint {
 }
 
 impl ConstraintBuilder for WidgetConstraintBuilder {
-    fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint> {
-        let widget = widget.layout_ref();
+    fn build(&self, widget: &LayoutVars) -> Vec<Constraint> {
         let strength = self.strength;
-        match self.constraint {
+        match self.constraint.clone() {
             WidgetConstraint::Width(width) => {
                 vec![ widget.width | EQ(strength) | width ]
             }
@@ -301,11 +302,10 @@ impl ConstraintBuilder for WidgetConstraintBuilder {
 }
 
 impl ConstraintBuilder for PaddableConstraintBuilder {
-    fn build<T: LayoutRef>(self, widget: &T) -> Vec<Constraint> {
-        let widget = widget.layout_ref();
+    fn build(&self, widget: &LayoutVars) -> Vec<Constraint> {
         let strength = self.strength;
         let padding = self.padding;
-        match self.constraint {
+        match self.constraint.clone() {
             PaddableConstraint::AlignTop(top) => {
                 vec![ widget.top - top | EQ(strength) | padding ]
             }
@@ -365,5 +365,21 @@ impl ConstraintBuilder for PaddableConstraintBuilder {
                 vec![ height - widget.height | EQ(strength) | padding ]
             }
         }
+    }
+}
+
+impl <C: ConstraintBuilder> ConstraintBuilder for Vec<C> {
+    fn build(&self, widget: &LayoutVars) -> Vec<Constraint> {
+        let mut constraints = Vec::new();
+        for builder in self {
+            constraints.extend(builder.build(widget));
+        }
+        constraints
+    }
+}
+
+impl ConstraintBuilder for Box<ConstraintBuilder> {
+    fn build(&self, widget: &LayoutVars) -> Vec<Constraint> {
+        self.as_ref().build(widget)
     }
 }

@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate limn;
-#[macro_use]
-extern crate limn_layout;
-extern crate cassowary;
 
 mod util;
 
@@ -17,12 +14,11 @@ fn main() {
 
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.add_scrollbar();
-    layout!(scroll_widget:
-        match_layout(&root).padding(50.0));
+    scroll_widget.layout().add(match_layout(&root).padding(50.0));
 
     let mut rect_container = Widget::new_named("rect_container");
     rect_container.grid(3);
-    layout!(rect_container: size(Size::new(400.0, 400.0)));
+    rect_container.layout().add(size(Size::new(400.0, 400.0)));
 
     {
         let mut add_rect = |color| {

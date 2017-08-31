@@ -4,7 +4,7 @@ use widget::Widget;
 use widget::style::StyleUpdated;
 use drawable::text::{TextDrawable, TextStyleable};
 use event::{WidgetEventHandler, WidgetEventArgs};
-use layout;
+use layout::constraint::*;
 
 pub struct TextBuilder;
 
@@ -25,8 +25,6 @@ impl TextBuilder {
     }
 }
 
-use layout::constraint::ConstraintBuilder;
-
 #[derive(Default)]
 struct TextUpdatedHandler {
     size_constraints: Vec<Constraint>,
@@ -41,9 +39,9 @@ impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
             let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();
             text_drawable.measure()
         };
-        let size_constraints = layout::constraint::size(text_size).build(&args.widget);
+        let size_constraints = size(text_size).build(&args.widget.layout().vars);
         args.widget.update_layout(|layout| {
-            layout.add_constraints(size_constraints.clone())
+            layout.add(size_constraints.clone());
         });
         self.size_constraints = size_constraints;
     }

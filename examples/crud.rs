@@ -2,8 +2,6 @@
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
-extern crate text_layout;
-extern crate cassowary;
 
 mod util;
 
@@ -155,12 +153,12 @@ pub fn add_person(person: &Person, mut list_widget_id: Widget) -> Widget {
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
             .list_item(list_widget_id.clone())
             .enable_hover();
-        layout!(list_item_widget: height(text_size.height));
+        list_item_widget.layout().add(height(text_size.height));
         let mut list_text_widget = Widget::new();
         list_text_widget
             .set_drawable_with_style(text_drawable, text_style)
             .add_handler_fn(edit_text::text_change_handle);
-        layout!(list_text_widget: center(&list_item_widget));
+        list_text_widget.layout().add(center(&list_item_widget));
         list_item_widget.add_child(list_text_widget);
         list_item_widget
     };
@@ -172,24 +170,24 @@ fn main() {
     let mut app = util::init_default("Limn edit text demo");
     let mut root = app.ui.root.clone();
 
-    layout!(root: min_size(Size::new(300.0, 300.0)));
+    root.layout().add(min_size(Size::new(300.0, 300.0)));
     let mut container = Widget::new();
-    layout!(container: bound_by(&root).padding(20.0));
+    container.layout().add(bound_by(&root).padding(20.0));
 
     let create_name_group = |title, container: &mut Widget| {
         let mut name_container = Widget::new();
-        layout!(name_container: match_width(container));
+        name_container.layout().add(match_width(container));
 
         let mut static_text = TextBuilder::new(title);
-        layout!(static_text:
-            center_vertical(&name_container));
+        static_text.layout().add(center_vertical(&name_container));
 
         let mut text_box = EditTextBuilder::new();
-        layout!(text_box:
+        text_box.layout().add(constraints![
             min_height(30.0),
             min_width(200.0),
             align_right(&name_container),
-            to_right_of(&static_text).padding(20.0));
+            to_right_of(&static_text).padding(20.0),
+        ]);
         name_container.add_child(static_text);
         (name_container, text_box)
     };
@@ -197,8 +195,8 @@ fn main() {
     let (mut first_name_container, mut first_name_box) = create_name_group("First name:", &mut container);
     let (mut last_name_container, mut last_name_box) = create_name_group("Last name:", &mut container);
 
-    layout!(first_name_container: align_top(&container));
-    layout!(last_name_container: below(&first_name_container).padding(20.0));
+    first_name_container.layout().add(align_top(&container));
+    last_name_container.layout().add(below(&first_name_container).padding(20.0));
     first_name_box.on_text_changed(|text, _| {
         event!(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
     });
@@ -207,7 +205,7 @@ fn main() {
     });
 
     let mut button_container = Widget::new();
-    layout!(button_container: below(&last_name_container).padding(20.0));
+    button_container.layout().add(below(&last_name_container).padding(20.0));
 
     let mut create_button = PushButtonBuilder::new();
     create_button.set_text("Create");
@@ -224,21 +222,22 @@ fn main() {
     delete_button.on_click(|_, _| {
         event!(Target::Ui, PeopleEvent::Delete);
     });
-    layout!(update_button: to_right_of(&create_button).padding(20.0));
-    layout!(delete_button: to_right_of(&update_button).padding(20.0));
+    update_button.layout().add(to_right_of(&create_button).padding(20.0));
+    delete_button.layout().add(to_right_of(&update_button).padding(20.0));
 
     let mut scroll_container = ScrollBuilder::new();
     scroll_container
         .set_drawable(RectDrawable::new());
-    layout!(scroll_container:
+    scroll_container.layout().add(constraints![
         below(&button_container).padding(20.0),
-        min_height(260.0));
+        min_height(260.0),
+    ]);
 
     let mut list_widget = ListBuilder::new();
     list_widget.on_item_selected(|selected, _| {
         event!(Target::Ui, PeopleEvent::PersonSelected(selected));
     });
-    layout!(list_widget: match_width(&scroll_container));
+    list_widget.layout().add(match_width(&scroll_container));
 
     create_button.on_click(|_, _| {
         event!(Target::Ui, PeopleEvent::Add);

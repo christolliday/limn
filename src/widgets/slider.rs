@@ -1,5 +1,6 @@
 use cassowary::strength::*;
 
+use layout::constraint::*;
 use input::mouse::ClickEvent;
 use event::{WidgetEventHandler, WidgetEventArgs};
 use widget::Widget;
@@ -160,24 +161,24 @@ impl SliderBuilder {
         };
 
         if !self.variable_handle_size {
-            layout!(slider_handle: aspect_ratio(1.0));
+            slider_handle.layout().add(aspect_ratio(1.0));
         }
         match orientation {
             Orientation::Horizontal => {
-                layout!(slider:
-                    height(self.width));
-                layout!(slider_bar_pre:
+                slider.layout().add(height(self.width));
+                slider_bar_pre.layout().add(constraints![
                     height(bar_width),
                     center_vertical(&slider),
                     align_left(&slider).padding(bar_padding),
-                    to_left_of(&slider_handle).padding(-bar_padding));
-                layout!(slider_bar_post:
+                    to_left_of(&slider_handle).padding(-bar_padding),
+                ]);
+                slider_bar_post.layout().add(constraints![
                     height(bar_width),
                     center_vertical(&slider),
                     align_right(&slider).padding(bar_padding),
-                    to_right_of(&slider_handle).padding(-bar_padding));
-                layout!(slider_handle:
-                    match_height(&slider));
+                    to_right_of(&slider_handle).padding(-bar_padding),
+                ]);
+                slider_handle.layout().add(match_height(&slider));
 
                 if self.variable_handle_size {
                     // STRONG + 1.0 for higher strength than handle position
@@ -186,20 +187,21 @@ impl SliderBuilder {
                 }
             }
             Orientation::Vertical => {
-                layout!(slider:
-                    width(self.width));
-                layout!(slider_bar_pre:
+                slider.layout().add(width(self.width));
+                slider_bar_pre.layout().add(constraints![
                     width(bar_width),
                     center_horizontal(&slider),
                     align_top(&slider).padding(bar_padding),
-                    above(&slider_handle).padding(-bar_padding));
-                layout!(slider_bar_post:
+                    above(&slider_handle).padding(-bar_padding),
+                ]);
+                slider_bar_post.layout().add(constraints![
                     width(bar_width),
                     center_horizontal(&slider),
                     align_bottom(&slider).padding(bar_padding),
-                    below(&slider_handle).padding(-bar_padding));
-                layout!(slider_handle:
-                    match_width(&slider));
+                    below(&slider_handle).padding(-bar_padding),
+                ]);
+
+                slider_handle.layout().add(match_width(&slider));
 
                 if self.variable_handle_size {
                     // STRONG + 1.0 for higher strength than handle position

@@ -1,7 +1,5 @@
-extern crate find_folder;
 extern crate glutin;
 extern crate env_logger;
-extern crate log;
 
 use limn::window::Window;
 use limn::app::App;

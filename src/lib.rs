@@ -17,11 +17,9 @@ extern crate downcast_rs;
 extern crate euclid;
 #[macro_use]
 extern crate log;
-extern crate multi_mut;
 extern crate webrender;
 extern crate webrender_api;
 extern crate gleam;
-extern crate stb_truetype;
 extern crate app_units;
 extern crate image;
 

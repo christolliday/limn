@@ -4,7 +4,6 @@ extern crate limn;
 extern crate limn_layout;
 extern crate text_layout;
 extern crate glutin;
-extern crate cassowary;
 
 mod util;
 
@@ -33,21 +32,21 @@ fn create_slider_control() -> Widget {
     let mut slider_title = TextBuilder::new_with_style(
         style!(parent: text_style, TextStyleable::Text: "Circle Size".to_owned()));
     slider_title.set_debug_name("slider_title");
-    layout!(slider_title: align_left(&slider_container));
+    slider_title.layout().add(align_left(&slider_container));
     let mut slider_value = TextBuilder::new_with_style(
         style!(parent: text_style, TextStyleable::Align: Align::End, TextStyleable::Text: "30".to_owned()));
     slider_value
         .set_debug_name("slider_value")
         .add_handler_fn(edit_text::text_change_handle);
-    layout!(slider_value:
-        align_right(&slider_container));
+    slider_value.layout().add(align_right(&slider_container));
     let mut slider_widget = SliderBuilder::new();
     slider_widget.set_debug_name("slider_widget");
-    layout!(slider_widget:
+    slider_widget.layout().add(constraints![
         min_width(300.0),
         below(&slider_title).padding(10.0),
         below(&slider_value).padding(10.0),
-        match_width(&slider_container));
+        match_width(&slider_container),
+    ]);
 
     let slider_value_ref = slider_value.clone();
     slider_widget.on_value_changed(move |size, _| {
@@ -78,24 +77,23 @@ fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
         .set_drawable_with_style(RectDrawable::new(), style)
         .hbox()
         .set_padding(30.0);
-    layout!(button_container:
+    button_container.layout().add(constraints![
         match_width(root_widget),
         align_bottom(root_widget),
-        shrink_vertical());
+        shrink_vertical(),
+    ]);
     let mut undo_widget = PushButtonBuilder::new();
     undo_widget
         .set_text("Undo")
         .set_inactive()
         .on_click(|_, _| { event!(Target::Ui, CircleEvent::Undo); });
-    layout!(undo_widget:
-        center_vertical(&button_container));
+    undo_widget.layout().add(center_vertical(&button_container));
     let mut redo_widget = PushButtonBuilder::new();
     redo_widget
         .set_text("Redo")
         .set_inactive()
         .on_click(|_, _| { event!(Target::Ui, CircleEvent::Redo); });
-    layout!(redo_widget:
-        center_vertical(&button_container));
+    redo_widget.layout().add(center_vertical(&button_container));
     let slider_container = create_slider_control().build();
     let (undo_widget, redo_widget) = (undo_widget.build(), redo_widget.build());
     button_container
@@ -250,8 +248,7 @@ fn main() {
 
     let mut circle_canvas = Widget::new();
     circle_canvas.no_container();
-    layout!(circle_canvas:
-        min_height(600.0));
+    circle_canvas.layout().add(min_height(600.0));
     circle_canvas
         .set_debug_name("circle_canvas")
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))

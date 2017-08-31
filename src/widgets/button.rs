@@ -2,6 +2,7 @@ use glutin;
 
 use text_layout::Align;
 
+use layout::constraint::*;
 use event::WidgetEventArgs;
 use widget::Widget;
 use widget::property::{Property, PropChange};
@@ -82,10 +83,10 @@ impl ToggleButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
             .add_handler_fn(toggle_button_handle_mouse);
-        layout!(widget:
+        widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
             shrink(),
-        );
+        ]);
 
         ToggleButtonBuilder { widget: widget }
     }
@@ -97,12 +98,13 @@ impl ToggleButtonBuilder {
             TextStyleable::Align: Align::Middle);
         let mut button_text_widget = TextBuilder::new_with_style(style);
         button_text_widget.set_debug_name("button_text");
-        layout!(button_text_widget:
+        button_text_widget.layout().add(constraints![
             bound_left(&self.widget).padding(20.0),
             bound_right(&self.widget).padding(20.0),
             bound_top(&self.widget).padding(10.0),
             bound_bottom(&self.widget).padding(10.0),
-            center(&self.widget));
+            center(&self.widget),
+        ]);
 
         self.widget.add_child(button_text_widget);
         self
@@ -127,10 +129,10 @@ impl PushButtonBuilder {
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
 
-        layout!(widget:
+        widget.layout().add(constraints![
             min_size(Size::new(100.0, 50.0)),
             shrink(),
-        );
+        ]);
 
         PushButtonBuilder { widget: widget }
     }
@@ -142,12 +144,13 @@ impl PushButtonBuilder {
 
         let mut button_text_widget = TextBuilder::new_with_style(style);
         button_text_widget.set_debug_name("button_text");
-        layout!(button_text_widget:
+        button_text_widget.layout().add(constraints![
             bound_left(&self.widget).padding(20.0),
             bound_right(&self.widget).padding(20.0),
             bound_top(&self.widget).padding(10.0),
             bound_bottom(&self.widget).padding(10.0),
-            center(&self.widget));
+            center(&self.widget),
+        ]);
 
         self.widget.add_child(button_text_widget);
         self

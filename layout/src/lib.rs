@@ -15,9 +15,9 @@ use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
-use self::constraint::ConstraintBuilder;
-
 use euclid::{Point2D, Size2D, UnknownUnit};
+
+use self::constraint::ConstraintBuilder;
 
 pub type Length = euclid::Length<f32, UnknownUnit>;
 pub type Size = Size2D<f32>;
@@ -137,14 +137,8 @@ impl Layout {
         VariableEditable::new(self, var)
     }
     pub fn add<B: ConstraintBuilder>(&mut self, builder: B) {
-        let new_constraints = builder.build(self);
+        let new_constraints = builder.build(&self.vars);
         self.new_constraints.extend(new_constraints);
-    }
-    pub fn add_constraint(&mut self, constraint: Constraint) {
-        self.new_constraints.insert(constraint);
-    }
-    pub fn add_constraints(&mut self, constraints: Vec<Constraint>) {
-        self.new_constraints.extend(constraints);
     }
     pub fn remove_constraint(&mut self, constraint: Constraint) {
         if !self.new_constraints.remove(&constraint) {
@@ -225,24 +219,24 @@ pub fn change_strength(constraints: &Vec<Constraint>, strength: f64) -> Vec<Cons
     new_constraints
 }
 
+/// Used to specify a list of constraints.
+// Needed to box different ConstraintBuilder impls,
+// can't be done without specifying Vec<Box<ConstraintBuilder>>.
+// Can be removed if/when variadic generics are added to rust.
 #[macro_export]
-macro_rules! layout {
-    ($widget:ident: $($func:expr),*) => {
-        layout!($widget: $($func, )*);
+macro_rules! constraints {
+    ( $ ( $ x : expr , ) , * ) => {
+        constraints!( $ ( $ x , ) * )
     };
-    ($widget:ident: $($func:expr,)*) => {
+    ( $ ( $ x : expr , ) * ) => {
         {
-            #[allow(unused_imports)]
-            use $crate::constraint::*;
+            let mut vec: Vec<Box<ConstraintBuilder>> = Vec::new();
             $(
-                $widget.layout().add($func);
+                vec.push(Box::new($x));
             )*
+            vec
         }
     };
-}
-
-lazy_static! {
-    pub static ref LAYOUT: LayoutVars = LayoutVars::new();
 }
 
 pub mod solver;
@@ -252,6 +246,10 @@ pub mod grid_layout;
 
 pub use self::solver::LimnSolver;
 
+lazy_static! {
+    pub static ref LAYOUT: LayoutVars = LayoutVars::new();
+}
+
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
@@ -260,16 +258,17 @@ mod test {
 
     use super::{LimnSolver, LayoutId, Layout, VarType};
     use super::{Size, Point, Rect};
+    use super::constraint::*;
 
     #[test]
     fn one_widget() {
         let mut layout = TestLayout::new();
 
         let mut widget = layout.new_widget("widget");
-        layout!(widget:
+        widget.add(constraints![
             top_left(Point::new(0.0, 0.0)),
-            size(Size::new(200.0, 200.0)),
-        );
+            size(Size::new(200.0, 200.0))
+        ]);
         layout.solver.update_layout(&mut widget);
 
         layout.update();
@@ -286,35 +285,35 @@ mod test {
         let mut widget_bl = layout.new_widget("widget_bl");
         let mut widget_tr = layout.new_widget("widget_tr");
         let mut widget_br = layout.new_widget("widget_br");
-        layout!(widget_o:
+        widget_o.add(constraints![
             top_left(Point::new(0.0, 0.0)),
             size(Size::new(300.0, 300.0)),
-        );
-        layout!(widget_tl:
+        ]);
+        widget_tl.add(constraints![
             align_top(&widget_o),
             align_left(&widget_o),
-        );
-        layout!(widget_tr:
+        ]);
+        widget_tr.add(constraints![
             to_right_of(&widget_tl),
             align_top(&widget_o),
             align_right(&widget_o),
             match_width(&widget_tl),
-        );
-        layout!(widget_bl:
+        ]);
+        widget_bl.add(constraints![
             below(&widget_tl),
             align_bottom(&widget_o),
             align_left(&widget_o),
             match_width(&widget_tl),
             match_height(&widget_tl),
-        );
-        layout!(widget_br:
+        ]);
+        widget_br.add(constraints![
             below(&widget_tr),
             to_right_of(&widget_bl),
             align_bottom(&widget_o),
             align_right(&widget_o),
             match_width(&widget_bl),
             match_height(&widget_tr),
-        );
+        ]);
         layout.solver.update_layout(&mut widget_o);
         layout.solver.update_layout(&mut widget_tl);
         layout.solver.update_layout(&mut widget_tr);
@@ -338,27 +337,19 @@ mod test {
         let mut slider = layout.new_widget("slider");
         let mut slider_bar_pre = layout.new_widget("slider_bar_pre");
         let mut slider_handle = layout.new_widget("slider_handle");
-        layout!(root_widget:
-            top_left(Point::new(0.0, 0.0)),
-        );
+        root_widget.add(top_left(Point::new(0.0, 0.0)));
         root_widget.edit_right().set(100.0).strength(STRONG);
         root_widget.edit_bottom().set(100.0).strength(STRONG);
-        layout!(slider:
+        slider.add(constraints![
             align_left(&root_widget).padding(50.0),
-        );
-        layout!(slider_bar_pre:
-            to_left_of(&slider_handle),
-        );
-
-        layout!(slider_handle:
-            bound_by(&slider),
-        );
-        layout!(slider_bar_pre:
-            bound_by(&slider),
-        );
-        layout!(slider:
             bound_by(&root_widget),
-        );
+        ]);
+        slider_bar_pre.add(constraints![
+            to_left_of(&slider_handle),
+            bound_by(&slider),
+        ]);
+        slider_handle.add(bound_by(&slider));
+
         let slider_handle_left = slider_handle.layout().vars.left;
 
         layout.solver.update_layout(&mut root_widget);

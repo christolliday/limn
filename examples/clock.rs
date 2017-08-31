@@ -84,7 +84,7 @@ impl ClockBuilder {
             EllipseStyleable::Border: Some((2.0, BLACK)));
         let mut widget = Widget::new();
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
-        layout!(widget: size(Size::new(200.0, 200.0)));
+        widget.layout().add(size(Size::new(200.0, 200.0)));
 
         let hour_angle = || rotation((Local::now().hour() % 12) as f32 / 12.0);
         let minute_angle = || rotation(Local::now().minute() as f32 / 60.0);
@@ -122,9 +122,10 @@ fn main() {
     let mut root = app.ui.root.clone();
 
     let mut clock = ClockBuilder::new().widget;
-    layout!(clock:
+    clock.layout().add(constraints![
         center(&root),
-        bound_by(&root).padding(50.0));
+        bound_by(&root).padding(50.0),
+    ]);
     root.add_child(clock.clone());
 
     thread::spawn(move || loop {

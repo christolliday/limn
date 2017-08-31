@@ -2,6 +2,7 @@ use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
 use super::{LayoutVars, Layout, Constraint};
+use super::constraint::*;
 
 pub struct GridLayout {
     num_columns: usize,
@@ -33,7 +34,7 @@ impl GridLayout {
             if col == num_columns - 1 {
                 constraints.push(column.right | EQ(REQUIRED) | parent.vars.right);
             }
-            parent.add_constraints(constraints);
+            parent.add(constraints);
             columns.push(column);
         }
         GridLayout {
@@ -65,14 +66,15 @@ impl GridLayout {
             let row_end = row.bottom | EQ(REQUIRED) | parent.vars.bottom;
             self.row_end = Some(row_end.clone());
             constraints.push(row_end);
-            parent.add_constraints(constraints);
+            parent.add(constraints);
             self.rows.push(row);
             self.column = 0;
         }
         let (row, col) = (self.rows.last().unwrap(), self.columns.get(self.column).unwrap());
-        layout!(child:
+        child.add(constraints![
             bound_by(row),
-            bound_by(col));
+            bound_by(col),
+        ]);
         self.column += 1;
     }
 }

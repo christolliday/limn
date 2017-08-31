@@ -17,13 +17,13 @@ fn main() {
     let mut root = app.ui.root.clone();
 
     let mut scroll_widget = ScrollBuilder::new();
-    layout!(scroll_widget:
+    scroll_widget.layout().add(constraints![
         bound_by(&root).padding(50.0),
         size(Size::new(300.0, 300.0)),
-     );
+    ]);
 
     let mut list_widget = ListBuilder::new();
-    layout!(list_widget: match_width(&scroll_widget));
+    list_widget.layout().add(match_width(&scroll_widget));
 
     let list_item_widgets = {
         let mut list_item_widgets = Vec::new();
@@ -38,13 +38,13 @@ fn main() {
                 .set_debug_name("item")
                 .list_item(list_widget.widget.clone())
                 .enable_hover();
-            layout!(list_item_widget: height(text_size.height));
+            list_item_widget.layout().add(height(text_size.height));
 
             let mut list_text_widget = Widget::new();
             list_text_widget
                 .set_drawable_with_style(text_drawable, text_style)
                 .set_debug_name("text");
-            layout!(list_text_widget: center(&list_item_widget));
+            list_text_widget.layout().add(center(&list_item_widget));
             list_item_widget.add_child(list_text_widget);
 
             list_item_widgets.push(list_item_widget);

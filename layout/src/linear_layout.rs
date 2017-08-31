@@ -5,6 +5,7 @@ use cassowary::WeightedRelation::*;
 use cassowary::Variable;
 
 use super::{LayoutId, LayoutVars, Layout};
+use super::constraint::*;
 
 #[derive(Copy, Clone)]
 pub enum Orientation {
@@ -44,14 +45,16 @@ impl LinearLayoutHandler {
     pub fn add_child_layout(&mut self, parent: &LayoutVars, child: &mut Layout, child_id: LayoutId) {
         match self.orientation {
             Orientation::Horizontal => {
-                layout!(child:
+                child.add(constraints![
                     bound_top(parent).padding(self.padding),
-                    bound_bottom(parent).padding(self.padding));
+                    bound_bottom(parent).padding(self.padding),
+                ]);
             }
             Orientation::Vertical => {
-                layout!(child:
+                child.add(constraints![
                     bound_left(parent).padding(self.padding),
-                    bound_right(parent).padding(self.padding));
+                    bound_right(parent).padding(self.padding),
+                ]);
             }
         }
         let child_start = beginning(self.orientation, &child.vars);
@@ -64,9 +67,9 @@ impl LinearLayoutHandler {
             self.top
         };
         let constraint = child_start - end | EQ(REQUIRED) | self.padding;
-        child.add_constraint(constraint);
+        child.add(constraint);
         let constraint = self.bottom - child_end | GE(REQUIRED) | self.padding;
-        child.add_constraint(constraint);
+        child.add(constraint);
         if let Some(last_widget_id) = self.last_widget {
             self.widgets.insert(child_id, WidgetData {
                 start: child_start,
@@ -102,7 +105,7 @@ impl LinearLayoutHandler {
                 let succ = self.widgets.get_mut(&succ).unwrap();
                 succ.pred = widget_data.pred;
                 let succ_start = succ.start;
-                parent.add_constraint(pred_end - succ_start | EQ(STRONG) | self.padding);
+                parent.add(pred_end - succ_start | EQ(STRONG) | self.padding);
             }
         }
     }

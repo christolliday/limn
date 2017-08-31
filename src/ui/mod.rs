@@ -11,6 +11,7 @@ use window::Window;
 use app::App;
 use widget::Widget;
 use layout::{LayoutManager, LayoutVars};
+use layout::constraint::*;
 use util::{Point, Rect, Size};
 use resources::WidgetId;
 use event::Target;
@@ -31,7 +32,7 @@ impl Ui {
     pub fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
         let mut layout = LayoutManager::new();
         let mut root = Widget::new_named("root");
-        layout!(root: top_left(Point::zero()));
+        root.layout().add(top_left(Point::zero()));
         {
             let ref root_vars = root.layout().vars;
             layout.solver.update_solver(|solver| {
