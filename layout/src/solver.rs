@@ -229,10 +229,16 @@ impl LayoutManager {
     }
 
     pub fn fmt_variable(&self, var: Variable) -> String {
-        let layout = &self.var_ids[&var];
-        let var_type = &self.var_types[&var];
-        let layout_name = &self.layout_names[layout];
-        format!("{:?}.{:?}", layout_name, var_type)
+        let layout_name = self.var_ids.get(&var).and_then(|layout| {
+            self.layout_names.get(layout)
+                .and_then(|name| {
+                    name.clone().map(|name| format!("{}.", name).to_lowercase())
+                })
+        }).unwrap_or("".to_owned());
+        let var_type = self.var_types.get(&var)
+            .map(|var_type| format!("{:?}", var_type))
+            .unwrap_or("unknown".to_owned());
+        format!("{}{}", layout_name, var_type)
     }
 
     pub fn fmt_constraint(&self, constraint: &Constraint) -> String {
@@ -249,38 +255,44 @@ impl LayoutManager {
             else if stren == strength::REQUIRED { "REQD " }
             else { "REQD+" }
         };
-        format!("{} {} {} 0", strength_desc, self.fmt_expression(&constraint.expression), constraint.op)
+        format!("{} {}", strength_desc, self.fmt_expression(&constraint.expression, constraint.op))
     }
-    fn fmt_expression(&self, expression: &Expression) -> String {
-        let mut out = String::new();
-        let mut first = true;
-        if expression.constant != 0.0 {
-            write!(out, "{}", expression.constant).unwrap();
-            first = false;
-        }
-        for term in expression.terms.iter() {
-            let coef = {
-                if term.coefficient == 1.0 {
-                    if first {
-                        "".to_owned()
-                    } else {
-                        "+ ".to_owned()
-                    }
-                } else if term.coefficient == -1.0 {
-                    "- ".to_owned()
-                } else if term.coefficient > 0.0 {
-                    if !first {
-                        format!("+ {} * ", term.coefficient)
-                    } else {
-                        format!("{} * ", term.coefficient)
-                    }
-                } else {
-                    format!("- {} * ", term.coefficient)
-                }
-            };
-            write!(out, " {}{}", coef, self.fmt_variable(term.variable)).unwrap();
 
-            first = false;
+    fn fmt_expression(&self, expression: &Expression, op: cassowary::RelationalOperator) -> String {
+        let (mut neg_terms, mut pos_terms) = (Vec::new(), Vec::new());
+        for term in expression.terms.iter() {
+            let neg = term.coefficient < 0.0;
+            let coef = term.coefficient.abs();
+            let coef = if coef == 1.0 { "".to_owned() } else { coef.to_string() };
+            let desc = format!("{}{}", coef, self.fmt_variable(term.variable));
+            if neg { neg_terms.push(desc) } else { pos_terms.push(desc) }
+        }
+        if expression.constant != 0.0 {
+            let neg = expression.constant < 0.0;
+            let desc = expression.constant.abs().to_string();
+            if neg { neg_terms.push(desc) } else { pos_terms.push(desc) }
+        }
+        let mut out = String::new();
+        if pos_terms.len() == 0 {
+            write!(out, "0").unwrap();
+        } else {
+            let mut terms = pos_terms.iter();
+            let term = terms.next().unwrap();
+            write!(out, "{}", term).unwrap();
+            for term in terms {
+                write!(out, " + {}", term).unwrap();
+            }
+        }
+        write!(out, " {} ", op).unwrap();
+        if neg_terms.len() == 0 {
+            write!(out, "0").unwrap();
+        } else {
+            let mut terms = neg_terms.iter();
+            let term = terms.next().unwrap();
+            write!(out, "{}", term).unwrap();
+            for term in terms {
+                write!(out, " + {}", term).unwrap();
+            }
         }
         out
     }
