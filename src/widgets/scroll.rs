@@ -74,7 +74,7 @@ impl ScrollBuilder {
         });
         let widget_ref = self.content_holder.clone();
         scrollbar_v.on_value_changed(move |value, _| {
-            widget_ref.event(ScrollParentEvent::OffsetY(value));
+            widget_ref.event(ScrollParentEvent::OffsetY(-value));
         });
         let corner_style = style!(RectStyleable::BackgroundColor: GRAY_70);
         let mut corner = Widget::new_named("corner");

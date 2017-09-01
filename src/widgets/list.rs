@@ -2,8 +2,11 @@ use event::{WidgetEventArgs, WidgetEventHandler};
 use widget::Widget;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
-use drawable::rect::RectStyleable;
+use widgets::text::TextBuilder;
+use drawable::rect::{RectDrawable, RectStyleable};
+use drawable::text::TextStyleable;
 use input::mouse::ClickEvent;
+use layout::constraint::*;
 use color::*;
 
 pub struct ListItemSelected {
@@ -19,6 +22,9 @@ lazy_static! {
         style!(RectStyleable::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
             SELECTED: COLOR_LIST_ITEM_SELECTED,
             MOUSEOVER: COLOR_LIST_ITEM_MOUSEOVER))
+    };
+    pub static ref STYLE_LIST_TEXT: Vec<TextStyleable> = {
+        style!(TextStyleable::TextColor: WHITE)
     };
 }
 
@@ -90,18 +96,36 @@ impl ListBuilder {
     }
     pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
         where C: Iterator<Item=I>,
-              I: ::std::fmt::Debug,
               F: Fn(I, &mut ListBuilder) -> Widget,
     {
         for item in contents {
-            let widget = build(item, self);
+            let mut widget = build(item, self);
+            widget
+                .set_debug_name("item")
+                .list_item(&self.widget);
             self.widget.add_child(widget);
         }
     }
 }
 
 impl Widget {
-    pub fn list_item(&mut self, list_id: Widget) -> &mut Self {
-        self.add_handler(ListItemHandler::new(list_id))
+    pub fn list_item(&mut self, parent_list: &Widget) -> &mut Self {
+        self.add_handler(ListItemHandler::new(parent_list.clone()))
     }
+}
+
+pub fn default_text_adapter(item: String, list: &mut ListBuilder) -> Widget {
+    let text = (*item).to_owned();
+    let style = style!(parent: STYLE_LIST_TEXT, TextStyleable::Text: text);
+    let mut text_widget = TextBuilder::new_with_style(style);
+
+    let mut item_widget = Widget::new();
+    item_widget
+        .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
+        .enable_hover();
+
+    text_widget.layout().add(align_left(&item_widget));
+    item_widget.layout().add(match_width(list));
+    item_widget.add_child(text_widget);
+    item_widget
 }

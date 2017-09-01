@@ -12,11 +12,8 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
+use limn::widgets::list::{self, ListBuilder};
 use limn::widgets::scroll::ScrollBuilder;
-use limn::widgets::text::TextBuilder;
-use limn::drawable::text::TextStyleable;
-use limn::drawable::rect::RectDrawable;
 
 
 fn main() {
@@ -33,27 +30,10 @@ fn main() {
     list_widget.layout().add(constraints![shrink(), match_width(&scroll_widget)]);
 
     let list_data = (0..15).map(|_| {
-        let rand = rand::thread_rng().gen_range(2, 6);
+        let rand = rand::thread_rng().gen_range(1, 6);
         lipsum(rand)
     });
-    let text_style = style!(TextStyleable::TextColor: WHITE);
-    list_widget.set_contents(list_data, |item, list| {
-        let text = (*item).to_owned();
-        let style = style!(parent: text_style, TextStyleable::Text: text);
-        let mut text_widget = TextBuilder::new_with_style(style);
-
-        let mut item_widget = Widget::new();
-        item_widget
-            .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
-            .set_debug_name("item")
-            .list_item(list.widget.clone())
-            .enable_hover();
-
-        text_widget.layout().add(align_left(&item_widget));
-        item_widget.layout().add(match_width(list));
-        item_widget.add_child(text_widget);
-        item_widget
-    });
+    list_widget.set_contents(list_data, list::default_text_adapter);
 
     scroll_widget.add_content(list_widget);
     root.add_child(scroll_widget);
