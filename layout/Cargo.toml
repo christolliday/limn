@@ -8,4 +8,6 @@ cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "a595
 euclid = "0.15.1"
 log = "0.3"
 lazy_static = "0.2.2"
+
+[dev-dependencies]
 maplit = "0.1.4"
