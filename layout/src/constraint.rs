@@ -208,6 +208,7 @@ impl ConstraintBuilder for Constraint {
     fn build(&self, widget: &LayoutVars) -> Vec<Constraint> {
         let cons = &self.0;
         let ref terms = cons.expression.terms;
+        let mut vars_replaced = false;
         let mut new_terms = Vec::new();
         for term in terms {
             let var = if term.variable == LAYOUT.left {
@@ -225,14 +226,22 @@ impl ConstraintBuilder for Constraint {
             } else {
                 term.variable
             };
+            if var != term.variable {
+                vars_replaced = true;
+            }
             new_terms.push(Term {
                 variable: var,
                 coefficient: term.coefficient,
             });
         }
-        let expr = Expression::new(new_terms, cons.expression.constant);
-        let cons = Constraint::new(expr, cons.op, cons.strength);
-        vec![ cons ]
+        if vars_replaced {
+            let expr = Expression::new(new_terms, cons.expression.constant);
+            let cons = Constraint::new(expr, cons.op, cons.strength);
+            vec![ cons ]
+        } else {
+            // ensure hash value (from pointer) is unchanged if terms unchanged
+            vec![ self.clone() ]
+        }
     }
 }
 
