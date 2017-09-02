@@ -82,6 +82,43 @@ fn grid() {
         widget_br.id => Rect::new(Point::new(150.0, 150.0), Size::new(150.0, 150.0)),
     });
 }
+#[test]
+fn grid_layout() {
+    use layout::grid_layout::GridLayout;
+    let mut layout = TestLayout::new();
+
+    let mut grid = layout.new_widget("grid");
+    grid.add(constraints![
+        top_left(Point::new(0.0, 0.0)),
+        size(Size::new(200.0, 200.0)),
+    ]);
+    let mut widgets = {
+        let mut widgets = Vec::new();
+        for i in 0..4 {
+            widgets.push(layout.new_widget(&format!("widget_{}", i)));
+        }
+        widgets
+    };
+
+    let mut grid_layout = GridLayout::new(&mut grid, 2);
+    for ref mut widget in &mut widgets {
+        grid_layout.add_child_layout(&mut grid, widget);
+    }
+
+    layout.solver.update_layout(&mut grid);
+    for ref mut widget in &mut widgets {
+        layout.solver.update_layout(widget);
+    }
+    layout.update();
+
+    assert!(layout.layout == hashmap!{
+        grid.id => Rect::new(Point::new(0.0, 0.0), Size::new(200.0, 200.0)),
+        widgets[0].id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 100.0)),
+        widgets[1].id => Rect::new(Point::new(100.0, 0.0), Size::new(100.0, 100.0)),
+        widgets[2].id => Rect::new(Point::new(0.0, 100.0), Size::new(100.0, 100.0)),
+        widgets[3].id => Rect::new(Point::new(100.0, 100.0), Size::new(100.0, 100.0)),
+    });
+}
 
 #[test]
 fn edit_var() {
