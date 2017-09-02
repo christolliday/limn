@@ -110,6 +110,12 @@ impl LimnSolver {
     }
 
     pub fn update_layout(&mut self, layout: &mut Layout) {
+        // it's possible these names can be registered after other dependent
+        // layouts are updated, causing worse debug output, but avoiding that is
+        // more trouble than it's worth at this point
+        for (var, name) in layout.get_associated_vars() {
+            self.layouts.register_associated_var(layout.id, var, name);
+        }
         self.layouts.layout_names.insert(layout.id, layout.name.clone());
         for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
@@ -185,6 +191,7 @@ pub struct LayoutManager {
     var_types: HashMap<Variable, VarType>,
     pub layouts: HashMap<LayoutId, LayoutVars>,
     layout_names: HashMap<LayoutId, Option<String>>,
+    associated_vars: HashMap<LayoutId, HashMap<Variable, String>>,
     last_layout: LayoutId,
     hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
     edit_strengths: HashMap<Variable, f64>,
@@ -200,45 +207,43 @@ impl LayoutManager {
             var_types: HashMap::new(),
             layouts: HashMap::new(),
             layout_names: HashMap::new(),
+            associated_vars: HashMap::new(),
             last_layout: 0,
             hidden_layouts: HashMap::new(),
             edit_strengths: HashMap::new(),
         }
     }
+
     pub fn register_widget(&mut self, layout: &mut Layout) {
         let id = layout.id;
         if id > self.last_layout {
             self.last_layout = id;
         }
-        self.var_ids.insert(layout.vars.left, id);
-        self.var_ids.insert(layout.vars.top, id);
-        self.var_ids.insert(layout.vars.right, id);
-        self.var_ids.insert(layout.vars.bottom, id);
-        self.var_ids.insert(layout.vars.width, id);
-        self.var_ids.insert(layout.vars.height, id);
 
-        self.var_types.insert(layout.vars.left, VarType::Left);
-        self.var_types.insert(layout.vars.top, VarType::Top);
-        self.var_types.insert(layout.vars.right, VarType::Right);
-        self.var_types.insert(layout.vars.bottom, VarType::Bottom);
-        self.var_types.insert(layout.vars.width, VarType::Width);
-        self.var_types.insert(layout.vars.height, VarType::Height);
+        for var in layout.vars.array().iter() {
+            self.var_ids.insert(*var, id);
+            self.var_types.insert(*var, layout.vars.var_type(*var));
+        }
 
         self.layouts.insert(id, layout.vars.clone());
         self.layout_names.insert(id, layout.name.clone());
     }
+    pub fn register_associated_var(&mut self, id: LayoutId, var: Variable, name: String) {
+        self.var_ids.insert(var, id);
+        self.var_types.insert(var, VarType::Other);
+        self.associated_vars.entry(id).or_insert(HashMap::new()).insert(var, name);
+    }
 
     pub fn fmt_variable(&self, var: Variable) -> String {
-        let layout_name = self.var_ids.get(&var).and_then(|layout| {
-            self.layout_names.get(layout)
-                .and_then(|name| {
-                    name.clone().map(|name| format!("{}.", name).to_lowercase())
-                })
-        }).unwrap_or("".to_owned());
-        let var_type = self.var_types.get(&var)
-            .map(|var_type| format!("{:?}", var_type))
-            .unwrap_or("unknown".to_owned());
-        format!("{}{}", layout_name, var_type)
+        let id = self.var_ids[&var];
+        let layout_name = self.layout_names[&id].clone().unwrap_or("unknown".to_owned());
+        let var_type = self.var_types[&var];
+        let var_type = if let VarType::Other = var_type {
+            self.associated_vars[&id][&var].to_owned()
+        } else {
+            format!("{:?}", var_type).to_lowercase()
+        };
+        format!("{}.{}", layout_name, var_type)
     }
 
     pub fn fmt_constraint(&self, constraint: &Constraint) -> String {

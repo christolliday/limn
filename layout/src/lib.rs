@@ -47,6 +47,15 @@ impl LayoutVars {
     pub fn array(&self) -> [Variable; 6] {
         [self.left, self.top, self.right, self.bottom, self.width, self.height]
     }
+    pub fn var_type(&self, var: Variable) -> VarType {
+        if var == self.left { VarType::Left }
+        else if var == self.top { VarType::Top }
+        else if var == self.right { VarType::Right }
+        else if var == self.bottom { VarType::Bottom }
+        else if var == self.width { VarType::Width }
+        else if var == self.height { VarType::Height }
+        else { VarType::Other }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -57,6 +66,7 @@ pub enum VarType {
     Bottom,
     Width,
     Height,
+    Other,
 }
 
 pub trait LayoutRef {
@@ -87,6 +97,7 @@ pub struct Layout {
     constraints: HashSet<Constraint>,
     new_constraints: HashSet<Constraint>,
     removed_constraints: Vec<Constraint>,
+    associated_vars: Vec<(Variable, String)>,
 }
 impl Layout {
     pub fn new(id: LayoutId, name: Option<String>) -> Self {
@@ -105,6 +116,7 @@ impl Layout {
             constraints: HashSet::new(),
             new_constraints: new_constraints,
             removed_constraints: Vec::new(),
+            associated_vars: Vec::new(),
         }
     }
     pub fn layout(&mut self) -> &mut Self {
@@ -159,6 +171,15 @@ impl Layout {
     }
     pub fn get_edit_vars(&mut self) -> Vec<EditVariable> {
         mem::replace(&mut self.edit_vars, Vec::new())
+    }
+    pub fn add_associated_vars(&mut self, vars: &LayoutVars, name: &str) {
+        for var in vars.array().iter() {
+            let var_type = format!("{:?}", vars.var_type(*var)).to_lowercase();
+            self.associated_vars.push((*var, format!("{}.{}", name, var_type)));
+        }
+    }
+    pub fn get_associated_vars(&mut self) -> Vec<(Variable, String)> {
+        mem::replace(&mut self.associated_vars, Vec::new())
     }
 }
 

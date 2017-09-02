@@ -35,6 +35,7 @@ impl GridLayout {
                 constraints.push(column.right | EQ(REQUIRED) | parent.vars.right);
             }
             parent.add(constraints);
+            parent.add_associated_vars(&column, &format!("column_{}", col));
             columns.push(column);
         }
         GridLayout {
@@ -67,6 +68,7 @@ impl GridLayout {
             self.row_end = Some(row_end.clone());
             constraints.push(row_end);
             parent.add(constraints);
+            parent.add_associated_vars(&row, &format!("row_{}", self.rows.len()));
             self.rows.push(row);
             self.column = 0;
         }
