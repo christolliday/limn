@@ -151,7 +151,7 @@ pub fn add_person(person: &Person, mut list_widget_id: Widget) -> Widget {
         let mut list_item_widget = Widget::new();
         list_item_widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
-            .list_item(list_widget_id.clone())
+            .list_item(&list_widget_id)
             .enable_hover();
         list_item_widget.layout().add(height(text_size.height));
         let mut list_text_widget = Widget::new();
