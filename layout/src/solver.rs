@@ -3,7 +3,9 @@ use std::fmt::Write;
 
 use cassowary;
 use cassowary::strength;
+use cassowary::strength::*;
 use cassowary::{Variable, Constraint, Expression};
+use cassowary::WeightedRelation::*;
 
 use super::{LayoutId, Layout, VarType, LayoutVars};
 
@@ -20,75 +22,13 @@ impl LimnSolver {
         }
     }
 
-    pub fn remove_widget(&mut self, id: LayoutId) {
-        if let Some(layout) = self.layouts.layouts.remove(&id) {
-            for constraint in layout.constraints {
-                if self.solver.has_constraint(&constraint) {
-                    self.solver.remove_constraint(&constraint).unwrap();
-                }
-            }
-            for var in layout.vars.array().iter() {
-                self.layouts.var_ids.remove(&var);
-            }
-        }
-    }
-    // hide/unhide are a simplified way of temporarily removing a layout, by removing
-    // only the constraints on that widget directly
-    // if the layout has children that have constraints outside of the subtree, those
-    // constraints will not be removed. todo: find an efficient way of resolving this
-    pub fn hide_widget(&mut self, id: LayoutId) {
-        if !self.layouts.hidden_layouts.contains_key(&id) {
-            let mut constraints = Vec::new();
-            let layout = &self.layouts.layouts[&id];
-            for constraint in &layout.constraints {
-                if self.solver.has_constraint(&constraint) {
-                    self.solver.remove_constraint(&constraint).unwrap();
-                }
-                constraints.push(constraint.clone());
-            }
-            self.layouts.hidden_layouts.insert(id, constraints);
-        }
-    }
-    pub fn unhide_widget(&mut self, id: LayoutId) {
-        if let Some(constraints) = self.layouts.hidden_layouts.remove(&id) {
-            for constraint in constraints {
-                if !self.solver.has_constraint(&constraint) {
-                    self.solver.add_constraint(constraint).unwrap();
-                }
-            }
-        }
-    }
-    pub fn update_solver<F>(&mut self, f: F)
-        where F: Fn(&mut cassowary::Solver)
-    {
-        f(&mut self.solver);
-    }
-
-    pub fn has_edit_variable(&mut self, v: &Variable) -> bool {
-        self.solver.has_edit_variable(v)
-    }
-    pub fn has_constraint(&self, constraint: &Constraint) -> bool {
-        self.solver.has_constraint(constraint)
-    }
-
-    pub fn edit_variable(&mut self, var: Variable, val: f64) {
-        if !self.solver.has_edit_variable(&var) {
-            let strength = self.layouts.edit_strengths.remove(&var).unwrap_or(strength::STRONG);
-            self.solver.add_edit_variable(var, strength).unwrap();
-        }
-        self.suggest_value(var, val);
-    }
-
-    fn suggest_value(&mut self, var: Variable, val: f64) {
-        if val.is_finite() {
-            self.solver.suggest_value(var, val).unwrap();
-            debug!("suggest edit_var {} {}", self.layouts.fmt_variable(var), val);
-        } else {
-            debug!("invalid edit_var {} {}", self.layouts.fmt_variable(var), val);
-        }
-    }
 
     pub fn update_layout(&mut self, layout: &mut Layout) {
+        if layout.hidden && !self.layouts.layout_hidden(layout.id) {
+            self.hide_widget(layout.id);
+        } else if !layout.hidden && self.layouts.layout_hidden(layout.id) {
+            self.unhide_widget(layout.id);
+        }
         for constraint in layout.get_removed_constraints() {
             if self.solver.has_constraint(&constraint) {
                 self.solver.remove_constraint(&constraint).unwrap();
@@ -142,6 +82,87 @@ impl LimnSolver {
         }
     }
 
+    pub fn remove_widget(&mut self, id: LayoutId) {
+        if let Some(layout) = self.layouts.layouts.remove(&id) {
+            for constraint in layout.constraints {
+                if self.solver.has_constraint(&constraint) {
+                    self.solver.remove_constraint(&constraint).unwrap();
+                }
+            }
+            for var in layout.vars.array().iter() {
+                self.layouts.var_ids.remove(&var);
+            }
+        }
+    }
+
+    pub fn hide_widget(&mut self, id: LayoutId) {
+        if !self.layouts.hidden_layouts.contains_key(&id) {
+            let mut hidden_constraints = Vec::new();
+            let layout = &self.layouts.layouts[&id];
+            for constraint in &layout.constraints {
+                if self.solver.has_constraint(&constraint) {
+                    self.solver.remove_constraint(&constraint).unwrap();
+                }
+                hidden_constraints.push(constraint.clone());
+            }
+            let vars = &self.layouts.layouts[&id].vars;
+            let constraints: Vec<Constraint> = vec![vars.width | EQ(REQUIRED) | 0.0, vars.height | EQ(REQUIRED) | 0.0];
+            for constraint in &constraints {
+                self.solver.add_constraint(constraint.clone()).unwrap();
+            }
+            self.layouts.hidden_layouts.insert(id, (constraints, hidden_constraints));
+        }
+        let children = self.layouts.layouts[&id].children.clone();
+        for child in children {
+            self.hide_widget(child);
+        }
+    }
+    pub fn unhide_widget(&mut self, id: LayoutId) {
+        if let Some((constraints, hidden_constraints)) = self.layouts.hidden_layouts.remove(&id) {
+            for constraint in constraints {
+                self.solver.remove_constraint(&constraint).unwrap();
+            }
+            for constraint in hidden_constraints {
+                if !self.solver.has_constraint(&constraint) {
+                    self.solver.add_constraint(constraint).unwrap();
+                }
+            }
+        }
+        let children = self.layouts.layouts[&id].children.clone();
+        for child in children {
+            self.unhide_widget(child);
+        }
+    }
+    pub fn update_solver<F>(&mut self, f: F)
+        where F: Fn(&mut cassowary::Solver)
+    {
+        f(&mut self.solver);
+    }
+
+    pub fn has_edit_variable(&mut self, v: &Variable) -> bool {
+        self.solver.has_edit_variable(v)
+    }
+    pub fn has_constraint(&self, constraint: &Constraint) -> bool {
+        self.solver.has_constraint(constraint)
+    }
+
+    pub fn edit_variable(&mut self, var: Variable, val: f64) {
+        if !self.solver.has_edit_variable(&var) {
+            let strength = self.layouts.edit_strengths.remove(&var).unwrap_or(strength::STRONG);
+            self.solver.add_edit_variable(var, strength).unwrap();
+        }
+        self.suggest_value(var, val);
+    }
+
+    fn suggest_value(&mut self, var: Variable, val: f64) {
+        if val.is_finite() {
+            self.solver.suggest_value(var, val).unwrap();
+            debug!("suggest edit_var {} {}", self.layouts.fmt_variable(var), val);
+        } else {
+            debug!("invalid edit_var {} {}", self.layouts.fmt_variable(var), val);
+        }
+    }
+
     pub fn fetch_changes(&mut self) -> Vec<(LayoutId, VarType, f64)> {
         let mut changes = Vec::new();
         for &(var, val) in self.solver.fetch_changes() {
@@ -178,12 +199,13 @@ struct LayoutInternal {
     name: Option<String>,
     associated_vars: HashMap<Variable, String>,
     constraints: HashSet<Constraint>,
+    children: Vec<LayoutId>,
 }
 pub struct LayoutManager {
     var_ids: HashMap<Variable, LayoutId>,
     layouts: HashMap<LayoutId, LayoutInternal>,
 
-    hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
+    hidden_layouts: HashMap<LayoutId, (Vec<Constraint>, Vec<Constraint>)>,
     edit_strengths: HashMap<Variable, f64>,
 
     pending_constraints: HashMap<Variable, Vec<Constraint>>,
@@ -214,6 +236,7 @@ impl LayoutManager {
             name: layout.name.clone(),
             associated_vars: HashMap::new(),
             constraints: HashSet::new(),
+            children: Vec::new(),
         };
         self.layouts.insert(id, layout);
     }
@@ -251,6 +274,9 @@ impl LayoutManager {
             }
         }
         constraints
+    }
+    pub fn layout_hidden(&mut self, id: LayoutId) -> bool {
+        self.hidden_layouts.contains_key(&id)
     }
 
     pub fn fmt_variable(&self, var: Variable) -> String {

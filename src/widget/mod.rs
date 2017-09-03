@@ -294,6 +294,7 @@ impl Widget {
             let mut container = container.borrow_mut();
             container.add_child(self.clone(), child.clone());
         }
+        self.layout().add_child(child.id().0);
         self.event(::ui::WidgetAttachedEvent);
         self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars.clone()));
         self
@@ -306,6 +307,7 @@ impl Widget {
             let mut container = container.borrow_mut();
             container.remove_child(self.clone(), child_id);
         }
+        self.layout().remove_child(child_id.0);
         let mut widget = self.widget_mut();
         if let Some(index) = widget.children.iter().position(|widget| widget.id() == child_id) {
             widget.children.remove(index);

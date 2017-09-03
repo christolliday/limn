@@ -93,11 +93,13 @@ pub struct Layout {
     pub vars: LayoutVars,
     pub name: Option<String>,
     pub id: LayoutId,
+    children: Vec<LayoutId>,
     edit_vars: Vec<EditVariable>,
     constraints: HashSet<Constraint>,
     new_constraints: HashSet<Constraint>,
     removed_constraints: Vec<Constraint>,
     associated_vars: Vec<(Variable, String)>,
+    pub hidden: bool,
 }
 impl Layout {
     pub fn new(id: LayoutId, name: Option<String>) -> Self {
@@ -112,11 +114,13 @@ impl Layout {
             vars: vars,
             name: name,
             id: id,
+            children: Vec::new(),
             edit_vars: Vec::new(),
             constraints: HashSet::new(),
             new_constraints: new_constraints,
             removed_constraints: Vec::new(),
             associated_vars: Vec::new(),
+            hidden: false,
         }
     }
     pub fn layout(&mut self) -> &mut Self {
@@ -172,6 +176,17 @@ impl Layout {
     pub fn get_edit_vars(&mut self) -> Vec<EditVariable> {
         mem::replace(&mut self.edit_vars, Vec::new())
     }
+    pub fn add_child(&mut self, child_id: LayoutId) {
+        self.children.push(child_id);
+    }
+    pub fn remove_child(&mut self, child_id: LayoutId) {
+        if let Some(pos) = self.children.iter().position(|id| child_id == *id) {
+            self.children.remove(pos);
+        }
+    }
+    pub fn get_children(&self) -> &Vec<LayoutId> {
+        &self.children
+    }
     pub fn add_associated_vars(&mut self, vars: &LayoutVars, name: &str) {
         for var in vars.array().iter() {
             let var_type = format!("{:?}", vars.var_type(*var)).to_lowercase();
@@ -180,6 +195,12 @@ impl Layout {
     }
     pub fn get_associated_vars(&mut self) -> Vec<(Variable, String)> {
         mem::replace(&mut self.associated_vars, Vec::new())
+    }
+    pub fn hide(&mut self) {
+        self.hidden = true;
+    }
+    pub fn show(&mut self) {
+        self.hidden = false;
     }
 }
 
