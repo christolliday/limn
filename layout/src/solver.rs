@@ -25,26 +25,13 @@ impl LimnSolver {
     }
 
     pub fn remove_widget(&mut self, id: LayoutId) {
-        self.layouts.layout_names.remove(&id);
         if let Some(layout) = self.layouts.layouts.remove(&id) {
-            for var in layout.array().iter() {
-                // remove constraints that are relative to this widget from solver
-                if let Some(constraint_set) = self.layouts.var_constraints.remove(&var) {
-                    for constraint in constraint_set {
-                        if self.solver.has_constraint(&constraint) {
-                            self.solver.remove_constraint(&constraint).unwrap();
-                            // look up other variables that references this constraint,
-                            // and remove this constraint from those variables constraint sets
-                            if let Some(var_list) = self.layouts.constraint_vars.get(&constraint) {
-                                for var in var_list {
-                                    if let Some(constraint_set) = self.layouts.var_constraints.get_mut(&var) {
-                                        constraint_set.remove(&constraint);
-                                    }
-                                }
-                            }
-                        }
-                    }
+            for constraint in layout.constraints {
+                if self.solver.has_constraint(&constraint) {
+                    self.solver.remove_constraint(&constraint).unwrap();
                 }
+            }
+            for var in layout.vars.array().iter() {
                 self.layouts.var_ids.remove(&var);
             }
         }
@@ -57,15 +44,11 @@ impl LimnSolver {
         if !self.layouts.hidden_layouts.contains_key(&id) {
             let mut constraints = Vec::new();
             let layout = &self.layouts.layouts[&id];
-            for var in layout.array().iter() {
-                if let Some(constraint_set) = self.layouts.var_constraints.get(&var) {
-                    for constraint in constraint_set {
-                        if self.solver.has_constraint(&constraint) {
-                            self.solver.remove_constraint(&constraint).unwrap();
-                        }
-                        constraints.push(constraint.clone());
-                    }
+            for constraint in &layout.constraints {
+                if self.solver.has_constraint(&constraint) {
+                    self.solver.remove_constraint(&constraint).unwrap();
                 }
+                constraints.push(constraint.clone());
             }
             self.layouts.hidden_layouts.insert(id, constraints);
         }
@@ -110,13 +93,7 @@ impl LimnSolver {
     }
 
     pub fn update_layout(&mut self, layout: &mut Layout) {
-        // it's possible these names can be registered after other dependent
-        // layouts are updated, causing worse debug output, but avoiding that is
-        // more trouble than it's worth at this point
-        for (var, name) in layout.get_associated_vars() {
-            self.layouts.register_associated_var(layout.id, var, name);
-        }
-        self.layouts.layout_names.insert(layout.id, layout.name.clone());
+        self.layouts.update_layout(layout);
         for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
                 if !self.solver.has_edit_variable(&edit_var.var) {
@@ -143,12 +120,9 @@ impl LimnSolver {
                 eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
                 self.debug_constraints();
             }
-            let var_list = self.layouts.constraint_vars.entry(constraint.clone()).or_insert(Vec::new());
             for term in &constraint.0.expression.terms {
-                let variable = term.variable;
-                let constraint_set = self.layouts.var_constraints.entry(variable).or_insert(HashSet::new());
-                constraint_set.insert(constraint.clone());
-                var_list.push(variable);
+                let layout = self.layouts.var_ids[&term.variable];
+                self.layouts.layouts.get_mut(&layout).unwrap().constraints.insert(constraint.clone());
             }
         }
     }
@@ -158,7 +132,7 @@ impl LimnSolver {
         for &(var, val) in self.solver.fetch_changes() {
             debug!("solver {} = {}", self.layouts.fmt_variable(var), val);
             if let Some(widget_id) = self.layouts.var_ids.get(&var) {
-                let var_type = self.layouts.var_types[&var];
+                let var_type = self.layouts.layouts[&widget_id].vars.var_type(var);
                 changes.push((*widget_id, var_type, val));
             }
         }
@@ -167,7 +141,7 @@ impl LimnSolver {
 
     pub fn debug_variables(&self) {
         println!("VARIABLES");
-        for var in self.layouts.var_constraints.keys() {
+        for var in self.layouts.var_ids.keys() {
             println!("{}", self.layouts.fmt_variable(*var));
         }
     }
@@ -184,15 +158,15 @@ impl LimnSolver {
     }
 }
 
+struct LayoutInternal {
+    vars: LayoutVars,
+    name: Option<String>,
+    associated_vars: HashMap<Variable, String>,
+    constraints: HashSet<Constraint>,
+}
 pub struct LayoutManager {
-    var_constraints: HashMap<Variable, HashSet<Constraint>>,
-    constraint_vars: HashMap<Constraint, Vec<Variable>>,
     var_ids: HashMap<Variable, LayoutId>,
-    var_types: HashMap<Variable, VarType>,
-    pub layouts: HashMap<LayoutId, LayoutVars>,
-    layout_names: HashMap<LayoutId, Option<String>>,
-    associated_vars: HashMap<LayoutId, HashMap<Variable, String>>,
-    last_layout: LayoutId,
+    layouts: HashMap<LayoutId, LayoutInternal>,
     hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
     edit_strengths: HashMap<Variable, f64>,
 }
@@ -201,14 +175,8 @@ impl LayoutManager {
 
     pub fn new() -> Self {
         LayoutManager {
-            var_constraints: HashMap::new(),
-            constraint_vars: HashMap::new(),
             var_ids: HashMap::new(),
-            var_types: HashMap::new(),
             layouts: HashMap::new(),
-            layout_names: HashMap::new(),
-            associated_vars: HashMap::new(),
-            last_layout: 0,
             hidden_layouts: HashMap::new(),
             edit_strengths: HashMap::new(),
         }
@@ -216,30 +184,35 @@ impl LayoutManager {
 
     pub fn register_widget(&mut self, layout: &mut Layout) {
         let id = layout.id;
-        if id > self.last_layout {
-            self.last_layout = id;
-        }
 
         for var in layout.vars.array().iter() {
             self.var_ids.insert(*var, id);
-            self.var_types.insert(*var, layout.vars.var_type(*var));
         }
-
-        self.layouts.insert(id, layout.vars.clone());
-        self.layout_names.insert(id, layout.name.clone());
+        let layout = LayoutInternal {
+            vars: layout.vars.clone(),
+            name: layout.name.clone(),
+            associated_vars: HashMap::new(),
+            constraints: HashSet::new(),
+        };
+        self.layouts.insert(id, layout);
     }
-    pub fn register_associated_var(&mut self, id: LayoutId, var: Variable, name: String) {
-        self.var_ids.insert(var, id);
-        self.var_types.insert(var, VarType::Other);
-        self.associated_vars.entry(id).or_insert(HashMap::new()).insert(var, name);
+
+    pub fn update_layout(&mut self, layout: &mut Layout) {
+        let internal_layout = self.layouts.get_mut(&layout.id).unwrap();
+        for (var, name) in layout.get_associated_vars() {
+            self.var_ids.insert(var, layout.id);
+            internal_layout.associated_vars.insert(var, name);
+        }
+        internal_layout.name = layout.name.clone();
     }
 
     pub fn fmt_variable(&self, var: Variable) -> String {
         let id = self.var_ids[&var];
-        let layout_name = self.layout_names[&id].clone().unwrap_or("unknown".to_owned());
-        let var_type = self.var_types[&var];
+        let layout = &self.layouts[&id];
+        let layout_name = layout.name.clone().unwrap_or("unknown".to_owned());
+        let var_type = layout.vars.var_type(var);
         let var_type = if let VarType::Other = var_type {
-            self.associated_vars[&id][&var].to_owned()
+            layout.associated_vars[&var].to_owned()
         } else {
             format!("{:?}", var_type).to_lowercase()
         };
