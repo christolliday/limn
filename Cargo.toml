@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 text_layout = { path = "text_layout" }
 limn-layout = { path = "layout" }
-cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "a595d01fba47fd344855305fa4124a816d7ceaad" }
+cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "8c6927c8c3e93a5cdf66513ad504b6d9a2c17471" }
 
 euclid = "0.15.1"
 log = "0.3"

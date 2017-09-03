@@ -174,7 +174,7 @@ impl LimnSolver {
 
     pub fn debug_constraints(&self) {
         println!("CONSTRAINTS");
-        for constraint in self.layouts.constraint_vars.keys() {
+        for constraint in self.solver.get_constraints() {
             self.debug_constraint(constraint);
         }
     }
