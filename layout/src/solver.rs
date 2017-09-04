@@ -25,9 +25,9 @@ impl LimnSolver {
 
     pub fn update_layout(&mut self, layout: &mut Layout) {
         if layout.hidden && !self.layouts.layout_hidden(layout.id) {
-            self.hide_widget(layout.id);
+            self.hide_layout(layout.id);
         } else if !layout.hidden && self.layouts.layout_hidden(layout.id) {
-            self.unhide_widget(layout.id);
+            self.unhide_layout(layout.id);
         }
         for constraint in layout.get_removed_constraints() {
             if self.solver.has_constraint(&constraint) {
@@ -35,7 +35,7 @@ impl LimnSolver {
             }
         }
         if !self.layouts.layouts.contains_key(&layout.id) {
-            self.layouts.register_widget(layout);
+            self.layouts.register_layout(layout);
             self.layouts.update_layout(layout);
             for constraint in self.layouts.dequeue_constraints(layout) {
                 if self.solver.add_constraint(constraint.clone()).is_err() {
@@ -82,7 +82,7 @@ impl LimnSolver {
         }
     }
 
-    pub fn remove_widget(&mut self, id: LayoutId) {
+    pub fn remove_layout(&mut self, id: LayoutId) {
         if let Some(layout) = self.layouts.layouts.remove(&id) {
             for constraint in layout.constraints {
                 if self.solver.has_constraint(&constraint) {
@@ -95,7 +95,7 @@ impl LimnSolver {
         }
     }
 
-    pub fn hide_widget(&mut self, id: LayoutId) {
+    pub fn hide_layout(&mut self, id: LayoutId) {
         if !self.layouts.hidden_layouts.contains_key(&id) {
             let mut hidden_constraints = Vec::new();
             let layout = &self.layouts.layouts[&id];
@@ -114,10 +114,10 @@ impl LimnSolver {
         }
         let children = self.layouts.layouts[&id].children.clone();
         for child in children {
-            self.hide_widget(child);
+            self.hide_layout(child);
         }
     }
-    pub fn unhide_widget(&mut self, id: LayoutId) {
+    pub fn unhide_layout(&mut self, id: LayoutId) {
         if let Some((constraints, hidden_constraints)) = self.layouts.hidden_layouts.remove(&id) {
             for constraint in constraints {
                 self.solver.remove_constraint(&constraint).unwrap();
@@ -130,7 +130,7 @@ impl LimnSolver {
         }
         let children = self.layouts.layouts[&id].children.clone();
         for child in children {
-            self.unhide_widget(child);
+            self.unhide_layout(child);
         }
     }
     pub fn update_solver<F>(&mut self, f: F)
@@ -167,9 +167,9 @@ impl LimnSolver {
         let mut changes = Vec::new();
         for &(var, val) in self.solver.fetch_changes() {
             debug!("solver {} = {}", self.layouts.fmt_variable(var), val);
-            if let Some(widget_id) = self.layouts.var_ids.get(&var) {
-                let var_type = self.layouts.layouts[&widget_id].vars.var_type(var);
-                changes.push((*widget_id, var_type, val));
+            if let Some(layout_id) = self.layouts.var_ids.get(&var) {
+                let var_type = self.layouts.layouts[&layout_id].vars.var_type(var);
+                changes.push((*layout_id, var_type, val));
             }
         }
         changes
@@ -225,7 +225,7 @@ impl LayoutManager {
         }
     }
 
-    pub fn register_widget(&mut self, layout: &mut Layout) {
+    pub fn register_layout(&mut self, layout: &mut Layout) {
         let id = layout.id;
 
         for var in layout.vars.array().iter() {

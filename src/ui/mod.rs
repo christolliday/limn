@@ -198,7 +198,7 @@ impl App {
         self.add_handler_fn(|event: &RemoveWidget, ui| {
             let event = event.clone();
             let RemoveWidget(widget_ref) = event;
-            ui.layout.solver.remove_widget(widget_ref.id().0);
+            ui.layout.solver.remove_layout(widget_ref.id().0);
             ui.layout.check_changes();
             ui.widget_map.remove(&widget_ref.id());
         });
