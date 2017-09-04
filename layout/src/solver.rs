@@ -20,10 +20,6 @@ impl LimnSolver {
         }
     }
 
-    pub fn register_widget(&mut self, layout: &mut Layout) {
-        self.layouts.register_widget(layout);
-    }
-
     pub fn remove_widget(&mut self, id: LayoutId) {
         if let Some(layout) = self.layouts.layouts.remove(&id) {
             for constraint in layout.constraints {
@@ -93,7 +89,41 @@ impl LimnSolver {
     }
 
     pub fn update_layout(&mut self, layout: &mut Layout) {
-        self.layouts.update_layout(layout);
+        for constraint in layout.get_removed_constraints() {
+            if self.solver.has_constraint(&constraint) {
+                self.solver.remove_constraint(&constraint).unwrap();
+            }
+        }
+        if !self.layouts.layouts.contains_key(&layout.id) {
+            self.layouts.register_widget(layout);
+            self.layouts.update_layout(layout);
+            for constraint in self.layouts.dequeue_constraints(layout) {
+                if self.solver.add_constraint(constraint.clone()).is_err() {
+                    eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
+                    self.debug_constraints();
+                }
+            }
+        } else {
+            self.layouts.update_layout(layout);
+        }
+        for constraint in layout.get_constraints() {
+            let mut missing_layouts = false;
+            for term in &constraint.0.expression.terms {
+                if self.layouts.var_ids.contains_key(&term.variable) {
+                    let layout_id = self.layouts.var_ids[&term.variable];
+                    self.layouts.layouts.get_mut(&layout_id).unwrap().constraints.insert(constraint.clone());
+                } else {
+                    missing_layouts = true;
+                    self.layouts.queue_constraint(term.variable, constraint.clone());
+                }
+            }
+            if !missing_layouts {
+                if self.solver.add_constraint(constraint.clone()).is_err() {
+                    eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
+                    self.debug_constraints();
+                }
+            }
+        }
         for edit_var in layout.get_edit_vars() {
             if let Some(val) = edit_var.val {
                 if !self.solver.has_edit_variable(&edit_var.var) {
@@ -108,21 +138,6 @@ impl LimnSolver {
                 }
             } else {
                 self.layouts.edit_strengths.insert(edit_var.var, edit_var.strength);
-            }
-        }
-        for constraint in layout.get_removed_constraints() {
-            if self.solver.has_constraint(&constraint) {
-                self.solver.remove_constraint(&constraint).unwrap();
-            }
-        }
-        for constraint in layout.get_constraints() {
-            if self.solver.add_constraint(constraint.clone()).is_err() {
-                eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
-                self.debug_constraints();
-            }
-            for term in &constraint.0.expression.terms {
-                let layout = self.layouts.var_ids[&term.variable];
-                self.layouts.layouts.get_mut(&layout).unwrap().constraints.insert(constraint.clone());
             }
         }
     }
@@ -167,8 +182,12 @@ struct LayoutInternal {
 pub struct LayoutManager {
     var_ids: HashMap<Variable, LayoutId>,
     layouts: HashMap<LayoutId, LayoutInternal>,
+
     hidden_layouts: HashMap<LayoutId, Vec<Constraint>>,
     edit_strengths: HashMap<Variable, f64>,
+
+    pending_constraints: HashMap<Variable, Vec<Constraint>>,
+    missing_vars: HashMap<Constraint, usize>,
 }
 
 impl LayoutManager {
@@ -179,6 +198,8 @@ impl LayoutManager {
             layouts: HashMap::new(),
             hidden_layouts: HashMap::new(),
             edit_strengths: HashMap::new(),
+            pending_constraints: HashMap::new(),
+            missing_vars: HashMap::new(),
         }
     }
 
@@ -204,6 +225,32 @@ impl LayoutManager {
             internal_layout.associated_vars.insert(var, name);
         }
         internal_layout.name = layout.name.clone();
+    }
+
+    // if constraint added for non-registered variable, add to pending and increment counter
+    // of missing variables for that constraint
+    pub fn queue_constraint(&mut self, variable: Variable, constraint: Constraint) {
+        *self.missing_vars.entry(constraint.clone()).or_insert(0) += 1;
+        self.pending_constraints.entry(variable).or_insert_with(Vec::new)
+            .push(constraint);
+    }
+    // when new layout registered, if there are any pending constraints for it's variables
+    // and no other variables are missing for them, add those constraints
+    pub fn dequeue_constraints(&mut self, layout: &mut Layout) -> Vec<Constraint> {
+        let layout = &self.layouts[&layout.id];
+        let mut constraints = Vec::new();
+        for var in layout.vars.array().iter().chain(layout.associated_vars.keys()) {
+            if let Some(pending) = self.pending_constraints.remove(var) {
+                for constraint in pending {
+                    *self.missing_vars.get_mut(&constraint).unwrap() -= 1;
+                    if self.missing_vars[&constraint] == 0 {
+                        self.missing_vars.remove(&constraint);
+                        constraints.push(constraint);
+                    }
+                }
+            }
+        }
+        constraints
     }
 
     pub fn fmt_variable(&self, var: Variable) -> String {

@@ -74,7 +74,7 @@ impl ScrollBuilder {
         });
         let widget_ref = self.content_holder.clone();
         scrollbar_v.on_value_changed(move |value, _| {
-            widget_ref.event(ScrollParentEvent::OffsetY(-value));
+            widget_ref.event(ScrollParentEvent::OffsetY(value));
         });
         let corner_style = style!(RectStyleable::BackgroundColor: GRAY_70);
         let mut corner = Widget::new_named("corner");
@@ -266,10 +266,10 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
 fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
     match event {
         glutin::MouseScrollDelta::LineDelta(x, y) => {
-            Vector::new(x as f32, y as f32)
+            Vector::new(-x as f32, y as f32)
         }
         glutin::MouseScrollDelta::PixelDelta(x, y) => {
-            Vector::new(x as f32, y as f32)
+            Vector::new(-x as f32, y as f32)
         }
     }
 }

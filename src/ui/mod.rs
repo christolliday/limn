@@ -192,8 +192,7 @@ impl App {
     pub fn add_ui_handlers(&mut self) {
         self.add_handler_fn(|event: &RegisterWidget, ui| {
             let event = event.clone();
-            let RegisterWidget(mut widget_ref) = event;
-            ui.layout.solver.register_widget(&mut widget_ref.layout());
+            let RegisterWidget(widget_ref) = event;
             ui.widget_map.insert(widget_ref.id(), widget_ref.clone());
         });
         self.add_handler_fn(|event: &RemoveWidget, ui| {
