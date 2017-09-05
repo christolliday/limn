@@ -125,18 +125,18 @@ widget_builder!(ScrollBuilder);
 
 #[allow(dead_code)]
 struct ScrollBars {
-    scrollbar_h_id: Widget,
-    scrollbar_v_id: Widget,
-    corner_id: Widget,
+    scrollbar_h: Widget,
+    scrollbar_v: Widget,
+    corner: Widget,
     h_handle: Widget,
     v_handle: Widget,
 }
 impl ScrollBars {
-    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner_id: Widget) -> Self {
+    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner: Widget) -> Self {
         ScrollBars {
-            scrollbar_h_id: scrollbar_h.widget.clone(),
-            scrollbar_v_id: scrollbar_v.widget.clone(),
-            corner_id: corner_id,
+            scrollbar_h: scrollbar_h.widget.clone(),
+            scrollbar_v: scrollbar_v.widget.clone(),
+            corner: corner,
             h_handle: scrollbar_h.slider_handle.clone(),
             v_handle: scrollbar_v.slider_handle.clone(),
         }
@@ -190,6 +190,8 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                         let width = container_size.width * width_ratio;
                         scrollbars.h_handle.update_layout(|layout| {
                             layout.edit_width().set(width);
+                        });
+                        scrollbars.scrollbar_h.update_layout(|layout| {
                             if width_ratio >= 1.0 {
                                 layout.hide();
                             } else {
@@ -202,6 +204,8 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                         let height = container_size.height * height_ratio;
                         scrollbars.v_handle.update_layout(|layout| {
                             layout.edit_height().set(height);
+                        });
+                        scrollbars.scrollbar_v.update_layout(|layout| {
                             if height_ratio >= 1.0 {
                                 layout.hide();
                             } else {
@@ -209,10 +213,10 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                             }
                         });
                     }
-                    if !scrollbars.v_handle.layout().hidden && !scrollbars.h_handle.layout().hidden {
-                        scrollbars.corner_id.update_layout(|layout| layout.show());
+                    if !scrollbars.scrollbar_h.layout().hidden && !scrollbars.scrollbar_v.layout().hidden {
+                        scrollbars.corner.update_layout(|layout| layout.show());
                     } else {
-                        scrollbars.corner_id.update_layout(|layout| layout.hide());
+                        scrollbars.corner.update_layout(|layout| layout.hide());
                     }
                     let scrollable_area = self.content_rect.size - args.widget.bounds().size;
                     if content_offset != self.offset || scrollable_area != self.scrollable_area {
@@ -221,11 +225,11 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
 
                         if scrollable_area.width > 0.0 {
                             let offset_x = -content_offset.x / scrollable_area.width;
-                            scrollbars.scrollbar_h_id.event(SetSliderValue(offset_x));
+                            scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
                         }
                         if scrollable_area.height > 0.0 {
                             let offset_y = -content_offset.y / scrollable_area.height;
-                            scrollbars.scrollbar_v_id.event(SetSliderValue(offset_y));
+                            scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
                         }
                     }
                 }
@@ -252,11 +256,11 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                     let scrollable_area = self.content_rect.size - args.widget.bounds().size;
                     if scrollable_area.width > 0.0 {
                         let offset_x = -self.offset.x / scrollable_area.width;
-                        scrollbars.scrollbar_h_id.event(SetSliderValue(offset_x));
+                        scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
                     }
                     if scrollable_area.height > 0.0 {
                         let offset_y = -self.offset.y / scrollable_area.height;
-                        scrollbars.scrollbar_v_id.event(SetSliderValue(offset_y));
+                        scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
                     }
                 }
             }
