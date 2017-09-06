@@ -3,6 +3,7 @@ use std::any::{Any, TypeId};
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use cassowary::Constraint;
 use cassowary::strength::*;
 
 use glutin;
@@ -17,6 +18,10 @@ use resources::WidgetId;
 use event::Target;
 use render::WebRenderContext;
 
+/// If true, the constraint that matches the root layout size to the window size
+/// is required. This can be useful for debugging but can result in panics from resizing the window.
+const WINDOW_CONSTRAINT_REQUIRED: bool = true;
+
 pub struct Ui {
     pub root: Widget,
     widget_map: HashMap<WidgetId, Widget>,
@@ -26,6 +31,7 @@ pub struct Ui {
     should_close: bool,
     debug_draw_bounds: bool,
     pub window: Rc<RefCell<Window>>,
+    window_constraints: Vec<Constraint>,
 }
 
 impl Ui {
@@ -33,13 +39,12 @@ impl Ui {
         let mut layout = LayoutManager::new();
         let mut root = Widget::new_named("root");
         root.layout().add(top_left(Point::zero()));
-        {
+        if !WINDOW_CONSTRAINT_REQUIRED {
             let ref root_vars = root.layout().vars;
             layout.solver.update_solver(|solver| {
                 solver.add_edit_variable(root_vars.right, REQUIRED - 1.0).unwrap();
                 solver.add_edit_variable(root_vars.bottom, REQUIRED - 1.0).unwrap();
             });
-            layout.check_changes();
         }
         root.add_handler_fn(|_: &::layout::LayoutUpdated, _| {
             event!(Target::Ui, ::layout::ResizeWindow);
@@ -54,6 +59,7 @@ impl Ui {
             should_close: false,
             debug_draw_bounds: false,
             window: Rc::new(RefCell::new(window)),
+            window_constraints: Vec::new(),
         }
     }
     pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<Widget> {
@@ -92,10 +98,25 @@ impl Ui {
         let window_size = self.window.borrow_mut().size_u32();
         self.render.window_resized(window_size);
         let mut root = self.get_root();
-        root.update_layout(|layout| {
-            layout.edit_right().set(window_dims.width);
-            layout.edit_bottom().set(window_dims.height);
-        });
+
+        if WINDOW_CONSTRAINT_REQUIRED {
+            let window_constraints = root.layout().create_constraint(size(window_dims));
+            {
+                let window_constraints = window_constraints.clone();
+                root.update_layout(|layout| {
+                    for constraint in self.window_constraints.drain(..) {
+                        layout.remove_constraint(constraint);
+                    }
+                    layout.add(window_constraints);
+                });
+            }
+            self.window_constraints = window_constraints;
+        } else {
+            root.update_layout(|layout| {
+                layout.edit_right().set(window_dims.width);
+                layout.edit_bottom().set(window_dims.height);
+            });
+        }
         self.needs_redraw = true;
     }
 
