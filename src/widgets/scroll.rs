@@ -6,7 +6,7 @@ use layout::constraint::*;
 use event::{WidgetEventArgs, WidgetEventHandler};
 use widget::{BuildWidget, Widget};
 use widgets::slider::{SliderBuilder, SetSliderValue};
-use util::{Point, Size, Vector, Rect, RectExt};
+use util::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
 use input::mouse::WidgetMouseWheel;
 use drawable::rect::{RectDrawable, RectStyleable};
@@ -70,11 +70,11 @@ impl ScrollBuilder {
 
         let widget_ref = self.content_holder.clone();
         scrollbar_h.on_value_changed(move |value, _| {
-            widget_ref.event(ScrollParentEvent::OffsetX(value));
+            widget_ref.event(ScrollParentEvent::ScrollBarMovedX(value));
         });
         let widget_ref = self.content_holder.clone();
         scrollbar_v.on_value_changed(move |value, _| {
-            widget_ref.event(ScrollParentEvent::OffsetY(value));
+            widget_ref.event(ScrollParentEvent::ScrollBarMovedY(value));
         });
         let corner_style = style!(RectStyleable::BackgroundColor: GRAY_70);
         let mut corner = Widget::new_named("corner");
@@ -147,12 +147,13 @@ enum ScrollParentEvent {
     ContainerLayoutUpdated,
     ContentLayoutUpdated(Rect),
     WidgetMouseWheel(WidgetMouseWheel),
-    OffsetX(f32),
-    OffsetY(f32),
+    ScrollBarMovedX(f32),
+    ScrollBarMovedY(f32),
 }
 struct ScrollParent {
     scrollable: Widget,
     content_rect: Rect,
+    container_rect: Rect,
     width_ratio: f32,
     height_ratio: f32,
     scrollable_area: Size,
@@ -164,6 +165,7 @@ impl ScrollParent {
         ScrollParent {
             scrollable: scrollable.clone(),
             content_rect: Rect::zero(),
+            container_rect: Rect::zero(),
             width_ratio: 0.0,
             height_ratio: 0.0,
             scrollable_area: Size::zero(),
@@ -171,23 +173,54 @@ impl ScrollParent {
             scrollbars: None,
         }
     }
+    fn move_content_x(&mut self) {
+        let scroll_to = self.container_rect.left() + self.offset.x;
+        self.scrollable.update_layout(|layout| {
+            layout.edit_left().set(scroll_to);
+        });
+    }
+    fn move_content_y(&mut self) {
+        let scroll_to = self.container_rect.top() + self.offset.y;
+        self.scrollable.update_layout(|layout| {
+            layout.edit_top().set(scroll_to);
+        });
+    }
 }
 impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
     fn handle(&mut self, event: &ScrollParentEvent, args: WidgetEventArgs) {
         match *event {
             ScrollParentEvent::ContainerLayoutUpdated | ScrollParentEvent::ContentLayoutUpdated(_) => {
+
                 if let &ScrollParentEvent::ContentLayoutUpdated(rect) = event {
                     self.content_rect = rect
                 }
+                if let &ScrollParentEvent::ContainerLayoutUpdated = event {
+                    self.container_rect = args.widget.bounds();
+                }
+
+                let scrollable_area = self.content_rect.size - self.container_rect.size;
+                let content_offset = self.content_rect.origin - self.container_rect.origin;
+                if content_offset != self.offset || scrollable_area != self.scrollable_area {
+                    self.offset = content_offset;
+                    self.scrollable_area = scrollable_area;
+                    if let Some(ref mut scrollbars) = self.scrollbars {
+                        if scrollable_area.width > 0.0 {
+                            let offset_x = -self.offset.x / self.scrollable_area.width;
+                            scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
+                        }
+                        if scrollable_area.height > 0.0 {
+                            let offset_y = -self.offset.y / self.scrollable_area.height;
+                            scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
+                        }
+                    }
+                }
+
                 if let Some(ref mut scrollbars) = self.scrollbars {
-                    let container_size = args.widget.bounds().size;
-                    let width_ratio = container_size.width / self.content_rect.size.width;
-                    let height_ratio = container_size.height / self.content_rect.size.height;
-                    let content_offset = self.content_rect.origin - args.widget.bounds().origin;
                     // update handle sizes
+                    let width_ratio = self.container_rect.width() / self.content_rect.width();
                     if width_ratio.is_finite() && width_ratio != self.width_ratio {
                         self.width_ratio = width_ratio;
-                        let width = container_size.width * width_ratio;
+                        let width = self.container_rect.width() * width_ratio;
                         scrollbars.h_handle.update_layout(|layout| {
                             layout.edit_width().set(width);
                         });
@@ -199,9 +232,10 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                             }
                         });
                     }
+                    let height_ratio = self.container_rect.height() / self.content_rect.height();
                     if height_ratio.is_finite() && height_ratio != self.height_ratio {
                         self.height_ratio = height_ratio;
-                        let height = container_size.height * height_ratio;
+                        let height = self.container_rect.height() * height_ratio;
                         scrollbars.v_handle.update_layout(|layout| {
                             layout.edit_height().set(height);
                         });
@@ -218,78 +252,46 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                     } else {
                         scrollbars.corner.update_layout(|layout| layout.hide());
                     }
-                    let scrollable_area = self.content_rect.size - args.widget.bounds().size;
-                    if content_offset != self.offset || scrollable_area != self.scrollable_area {
-                        self.offset = content_offset;
-                        self.scrollable_area = scrollable_area;
-
-                        if scrollable_area.width > 0.0 {
-                            let offset_x = -content_offset.x / scrollable_area.width;
-                            scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
-                        }
-                        if scrollable_area.height > 0.0 {
-                            let offset_y = -content_offset.y / scrollable_area.height;
-                            scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
-                        }
-                    }
                 }
             }
             ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
                 let scroll = get_scroll(mouse_wheel.0);
-                let parent_bounds = args.widget.bounds();
-
-                let max_scroll = Point::new(
-                    parent_bounds.width() - self.content_rect.width(),
-                    parent_bounds.height() - self.content_rect.height());
-                self.offset = self.offset + scroll * 13.0;
-                self.offset.x = f32::min(0.0, f32::max(max_scroll.x, self.offset.x));
-                self.offset.y = f32::min(0.0, f32::max(max_scroll.y, self.offset.y));
-
-                let scrollable_left = parent_bounds.left() + self.offset.x;
-                let scrollable_top = parent_bounds.top() + self.offset.y;
-                self.scrollable.update_layout(|layout| {
-                    layout.edit_left().set(scrollable_left);
-                    layout.edit_top().set(scrollable_top);
-                });
-
-                if let Some(ref mut scrollbars) = self.scrollbars {
-                    let scrollable_area = self.content_rect.size - args.widget.bounds().size;
-                    if scrollable_area.width > 0.0 {
-                        let offset_x = -self.offset.x / scrollable_area.width;
+                if self.scrollable_area.width > 0.0 {
+                    self.offset.x = f32::min(0.0, f32::max(-self.scrollable_area.width, self.offset.x + scroll.x));
+                    self.move_content_x();
+                    if let Some(ref mut scrollbars) = self.scrollbars {
+                        let offset_x = -self.offset.x / self.scrollable_area.width;
                         scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
                     }
-                    if scrollable_area.height > 0.0 {
-                        let offset_y = -self.offset.y / scrollable_area.height;
+                }
+                if self.scrollable_area.height > 0.0 {
+                    self.offset.y = f32::min(0.0, f32::max(-self.scrollable_area.height, self.offset.y + scroll.y));
+                    self.move_content_y();
+                    if let Some(ref mut scrollbars) = self.scrollbars {
+                        let offset_y = -self.offset.y / self.scrollable_area.height;
                         scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
                     }
                 }
             }
-            ScrollParentEvent::OffsetX(ref offset) => {
-                self.offset.x = -offset * (self.content_rect.width() - args.widget.bounds().width());
-                let parent_bounds = args.widget.bounds();
-                let scrollable_left = parent_bounds.left() + self.offset.x;
-                self.scrollable.update_layout(|layout| {
-                    layout.edit_left().set(scrollable_left);
-                });
+            ScrollParentEvent::ScrollBarMovedX(ref offset) => {
+                self.offset.x = -offset * self.scrollable_area.width;
+                self.move_content_x();
             }
-            ScrollParentEvent::OffsetY(ref offset) => {
-                self.offset.y = -offset * (self.content_rect.height() - args.widget.bounds().height());
-                let parent_bounds = args.widget.bounds();
-                let scrollable_top = parent_bounds.top() + self.offset.y;
-                self.scrollable.update_layout(|layout| {
-                    layout.edit_top().set(scrollable_top);
-                });
+            ScrollParentEvent::ScrollBarMovedY(ref offset) => {
+                self.offset.y = -offset * self.scrollable_area.height;
+                self.move_content_y();
             }
         }
     }
 }
 fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
-    match event {
+    let vec = match event {
         glutin::MouseScrollDelta::LineDelta(x, y) => {
             Vector::new(-x as f32, y as f32)
         }
         glutin::MouseScrollDelta::PixelDelta(x, y) => {
             Vector::new(-x as f32, y as f32)
         }
-    }
+    };
+    vec * 13.0
 }
