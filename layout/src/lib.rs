@@ -162,6 +162,21 @@ impl Layout {
             self.removed_constraints.push(constraint);
         }
     }
+    pub fn remove_constraints(&mut self, constraints: Vec<Constraint>) {
+        for constraint in constraints {
+            if !self.new_constraints.remove(&constraint) {
+                self.removed_constraints.push(constraint);
+            }
+        }
+    }
+    pub fn has_constraint(&mut self, constraints: &Vec<Constraint>) -> bool {
+        for constraint in constraints {
+            if self.new_constraints.contains(constraint) || self.constraints.contains(constraint) {
+                return true
+            }
+        }
+        false
+    }
     pub fn get_constraints(&mut self) -> HashSet<Constraint> {
         let new_constraints = mem::replace(&mut self.new_constraints, HashSet::new());
         for constraint in new_constraints.clone() {
