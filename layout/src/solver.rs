@@ -92,10 +92,7 @@ impl LimnSolver {
         if !self.layouts.layout_hidden(id) {
             for constraint in &self.layouts.layouts[&id].constraints {
                 if self.solver.has_constraint(&constraint) {
-                    if self.solver.remove_constraint(&constraint).is_err() {
-                        self.solver.dump_data();
-                        panic!();
-                    }
+                    self.solver.remove_constraint(&constraint).unwrap();
                 }
             }
             {
@@ -214,12 +211,22 @@ impl LimnSolver {
                     shown_constraints.insert(constraint.clone());
                 }
             }
+            println!("EDIT_VARS");
+            for var in self.layouts.layout_vars(layout) {
+                if self.solver.has_edit_variable(&var) {
+                    self.debug_edit_var(&var);
+                }
+            }
             layouts.extend(self.layouts.children(layout));
         }
     }
 
     pub fn debug_constraint(&self, constraint: &Constraint) {
         println!("{}", self.layouts.fmt_constraint(constraint));
+    }
+
+    pub fn debug_edit_var(&self, var: &Variable) {
+        self.debug_constraint(&self.solver.get_edit_variable(*var).unwrap());
     }
 
     pub fn debug_layouts(&self) {
