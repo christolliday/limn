@@ -76,6 +76,7 @@ impl GridLayout {
         child.add(constraints![
             bound_by(row),
             bound_by(col),
+            match_layout(&parent).strength(STRONG),
         ]);
         self.column += 1;
     }

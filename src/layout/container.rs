@@ -1,3 +1,5 @@
+use cassowary::strength::*;
+
 use widget::Widget;
 use resources::WidgetId;
 use layout::constraint::*;
@@ -23,6 +25,9 @@ impl LayoutContainer for Frame {
         self.padding = padding;
     }
     fn add_child(&mut self, parent: Widget, mut child: Widget) {
-        child.layout().add(bound_by(&parent).padding(self.padding));
+        child.layout().add(constraints![
+            bound_by(&parent).padding(self.padding),
+            match_layout(&parent).strength(STRONG),
+        ]);
     }
 }
