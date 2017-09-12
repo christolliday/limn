@@ -24,10 +24,6 @@ impl ScrollBuilder {
 
         let mut content_holder = Widget::new_named("content_holder");
         content_holder.no_container();
-        content_holder.layout().add(constraints![
-            align_left(&widget),
-            align_top(&widget),
-        ]);
 
         ScrollBuilder {
             widget: widget,
@@ -37,17 +33,7 @@ impl ScrollBuilder {
         }
     }
     pub fn add_content<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
-        let mut widget = widget.build();
-        {
-            let ref parent = self.content_holder.layout().vars;
-            widget.layout().add(constraints![
-                LAYOUT.left | LE(REQUIRED) | parent.left,
-                LAYOUT.top | LE(REQUIRED) | parent.top,
-                LAYOUT.right | GE(REQUIRED) | parent.right,
-                LAYOUT.bottom | GE(REQUIRED) | parent.bottom,
-            ]);
-        }
-        self.content = Some(widget);
+        self.content = Some(widget.build());
         self
     }
     pub fn add_scrollbar(&mut self) -> &mut Self {
@@ -103,6 +89,21 @@ impl BuildWidget for ScrollBuilder {
         content.add_handler_fn(move |_: &LayoutUpdated, args| {
             widget_ref.event(ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
         });
+        self.content_holder.layout().add(constraints![
+            match_layout(&self.widget).strength(STRONG)
+        ]);
+        {
+            let ref content_holder = self.content_holder.layout().vars;
+            content.layout().add(constraints![
+                LAYOUT.left | LE(REQUIRED) | content_holder.left,
+                LAYOUT.top | LE(REQUIRED) | content_holder.top,
+                LAYOUT.left | EQ(WEAK) | content_holder.left,
+                LAYOUT.top | EQ(WEAK) | content_holder.top,
+                LAYOUT.right | GE(STRONG) | content_holder.right,
+                LAYOUT.bottom | GE(STRONG) | content_holder.bottom,
+            ]);
+        }
+
         let mut scroll_parent_handler = ScrollParent::new(&mut content);
         if let Some((ref mut corner, ref mut scrollbar_h, ref mut scrollbar_v)) = self.scrollbars {
             scroll_parent_handler.scrollbars = Some(ScrollBars::new(scrollbar_h, scrollbar_v, corner.clone()));
@@ -112,6 +113,16 @@ impl BuildWidget for ScrollBuilder {
             args.widget.event(ScrollParentEvent::WidgetMouseWheel(event.clone()));
         });
         self.content_holder.add_child(content);
+        if self.scrollbars.is_some() {
+            self.content_holder.layout().add(constraints![
+                align_left(&self.widget),
+                align_top(&self.widget),
+            ]);
+        } else {
+            self.content_holder.layout().add(constraints![
+                match_layout(&self.widget),
+            ]);
+        }
         self.widget.add_child(self.content_holder);
         if let Some((corner, scrollbar_h, scrollbar_v)) = self.scrollbars {
             self.widget.add_child(corner);
@@ -185,6 +196,18 @@ impl ScrollParent {
             layout.edit_top().set(scroll_to);
         });
     }
+    fn move_slider_x(&mut self) {
+        if let Some(ref mut scrollbars) = self.scrollbars {
+            let offset_x = -self.offset.x / self.scrollable_area.width;
+            scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
+        }
+    }
+    fn move_slider_y(&mut self) {
+        if let Some(ref mut scrollbars) = self.scrollbars {
+            let offset_y = -self.offset.y / self.scrollable_area.height;
+            scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
+        }
+    }
 }
 impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
     fn handle(&mut self, event: &ScrollParentEvent, args: WidgetEventArgs) {
@@ -203,74 +226,80 @@ impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
                 if content_offset != self.offset || scrollable_area != self.scrollable_area {
                     self.offset = content_offset;
                     self.scrollable_area = scrollable_area;
-                    if let Some(ref mut scrollbars) = self.scrollbars {
-                        if scrollable_area.width > 0.0 {
-                            let offset_x = -self.offset.x / self.scrollable_area.width;
-                            scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
-                        }
-                        if scrollable_area.height > 0.0 {
-                            let offset_y = -self.offset.y / self.scrollable_area.height;
-                            scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
-                        }
+                    if self.scrollable_area.width > 0.0 {
+                        self.move_slider_x();
+                    }
+                    if self.scrollable_area.height > 0.0 {
+                        self.move_slider_y();
                     }
                 }
-
+                let width_ratio = self.container_rect.width() / self.content_rect.width();
+                let height_ratio = self.container_rect.height() / self.content_rect.height();
                 if let Some(ref mut scrollbars) = self.scrollbars {
                     // update handle sizes
-                    let width_ratio = self.container_rect.width() / self.content_rect.width();
+                    let mut visibility_updated = false;
                     if width_ratio.is_finite() && width_ratio != self.width_ratio {
-                        self.width_ratio = width_ratio;
                         let width = self.container_rect.width() * width_ratio;
                         scrollbars.h_handle.update_layout(|layout| {
                             layout.edit_width().set(width);
                         });
-                        scrollbars.scrollbar_h.update_layout(|layout| {
-                            if width_ratio >= 1.0 {
-                                layout.hide();
-                            } else {
-                                layout.show();
-                            }
-                        });
+                        let scrollbar_hidden = scrollbars.scrollbar_h.layout().hidden;
+                        let hide_scrollbar = width_ratio >= 1.0 && !scrollbar_hidden;
+                        let show_scrollbar = width_ratio < 1.0 && scrollbar_hidden;
+                        if hide_scrollbar | show_scrollbar {
+                            visibility_updated |= true;
+                            scrollbars.scrollbar_h.update_layout(|layout| {
+                                if hide_scrollbar {
+                                    layout.hide();
+                                }
+                                if show_scrollbar {
+                                    layout.show();
+                                }
+                            });
+                        }
                     }
-                    let height_ratio = self.container_rect.height() / self.content_rect.height();
                     if height_ratio.is_finite() && height_ratio != self.height_ratio {
-                        self.height_ratio = height_ratio;
                         let height = self.container_rect.height() * height_ratio;
                         scrollbars.v_handle.update_layout(|layout| {
                             layout.edit_height().set(height);
                         });
-                        scrollbars.scrollbar_v.update_layout(|layout| {
-                            if height_ratio >= 1.0 {
-                                layout.hide();
-                            } else {
-                                layout.show();
-                            }
-                        });
+                        let scrollbar_hidden = scrollbars.scrollbar_v.layout().hidden;
+                        let hide_scrollbar = height_ratio >= 1.0 && !scrollbar_hidden;
+                        let show_scrollbar = height_ratio < 1.0 && scrollbar_hidden;
+                        if hide_scrollbar | show_scrollbar {
+                            visibility_updated |= true;
+                            scrollbars.scrollbar_v.update_layout(|layout| {
+                                if hide_scrollbar {
+                                    layout.hide();
+                                }
+                                if show_scrollbar {
+                                    layout.show();
+                                }
+                            });
+                        }
                     }
-                    if !scrollbars.scrollbar_h.layout().hidden && !scrollbars.scrollbar_v.layout().hidden {
-                        scrollbars.corner.update_layout(|layout| layout.show());
-                    } else {
-                        scrollbars.corner.update_layout(|layout| layout.hide());
+                    if visibility_updated {
+                        if !scrollbars.scrollbar_h.layout().hidden && !scrollbars.scrollbar_v.layout().hidden {
+                            scrollbars.corner.update_layout(|layout| layout.show());
+                        } else {
+                            scrollbars.corner.update_layout(|layout| layout.hide());
+                        }
                     }
                 }
+                self.width_ratio = width_ratio;
+                self.height_ratio = height_ratio;
             }
             ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
                 let scroll = get_scroll(mouse_wheel.0);
                 if self.scrollable_area.width > 0.0 {
                     self.offset.x = f32::min(0.0, f32::max(-self.scrollable_area.width, self.offset.x + scroll.x));
                     self.move_content_x();
-                    if let Some(ref mut scrollbars) = self.scrollbars {
-                        let offset_x = -self.offset.x / self.scrollable_area.width;
-                        scrollbars.scrollbar_h.event(SetSliderValue(offset_x));
-                    }
+                    self.move_slider_x();
                 }
                 if self.scrollable_area.height > 0.0 {
                     self.offset.y = f32::min(0.0, f32::max(-self.scrollable_area.height, self.offset.y + scroll.y));
                     self.move_content_y();
-                    if let Some(ref mut scrollbars) = self.scrollbars {
-                        let offset_y = -self.offset.y / self.scrollable_area.height;
-                        scrollbars.scrollbar_v.event(SetSliderValue(offset_y));
-                    }
+                    self.move_slider_y();
                 }
             }
             ScrollParentEvent::ScrollBarMovedX(ref offset) => {
