@@ -7,7 +7,7 @@ use cassowary::strength::*;
 use cassowary::{Variable, Constraint, Expression};
 use cassowary::WeightedRelation::*;
 
-use super::{LayoutId, Layout, VarType, LayoutVars, Rect, Point, Size};
+use super::{LayoutId, Layout, VarType, LayoutVars, EditVariable, Rect, Point, Size};
 
 pub struct LimnSolver {
     pub solver: cassowary::Solver,
@@ -31,16 +31,11 @@ impl LimnSolver {
         self.layouts.update_layout(layout);
         for constraint in layout.get_removed_constraints() {
             self.layouts.remove_constraint(&constraint);
-            if self.solver.has_constraint(&constraint) {
-                self.solver.remove_constraint(&constraint).unwrap();
-            }
+            self.remove_constraint(&constraint);
         }
         if !registered {
             for constraint in self.layouts.dequeue_constraints(layout) {
-                if self.solver.add_constraint(constraint.clone()).is_err() {
-                    eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
-                    self.debug_constraints();
-                }
+                self.add_constraint(constraint.clone());
             }
         }
 
@@ -51,36 +46,48 @@ impl LimnSolver {
         }
         for constraint in layout.get_constraints() {
             if self.layouts.add_constraint(&constraint) {
-                if self.solver.add_constraint(constraint.clone()).is_err() {
-                    eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
-                    self.debug_constraints();
-                }
+                self.add_constraint(constraint.clone());
             }
         }
         for edit_var in layout.get_edit_vars() {
-            if let Some(val) = edit_var.val {
-                if !self.solver.has_edit_variable(&edit_var.var) {
-                    debug!("add edit_var {}", self.layouts.fmt_variable(edit_var.var));
-                    self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
-                }
-                if val.is_finite() {
-                    self.solver.suggest_value(edit_var.var, val).unwrap();
-                    debug!("suggest edit_var {} {}", self.layouts.fmt_variable(edit_var.var), val);
-                } else {
-                    debug!("invalid edit_var {} {}", self.layouts.fmt_variable(edit_var.var), val);
-                }
-            } else {
-                self.layouts.edit_strengths.insert(edit_var.var, edit_var.strength);
+            self.update_edit_var(edit_var);
+        }
+    }
+    fn update_edit_var(&mut self, edit_var: EditVariable) {
+        if let Some(val) = edit_var.val {
+            if !self.solver.has_edit_variable(&edit_var.var) {
+                debug!("add edit_var {}", self.layouts.fmt_variable(edit_var.var));
+                self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
             }
+            if val.is_finite() {
+                self.solver.suggest_value(edit_var.var, val).unwrap();
+                debug!("suggest edit_var {} {}", self.layouts.fmt_variable(edit_var.var), val);
+            } else {
+                debug!("invalid edit_var {} {}", self.layouts.fmt_variable(edit_var.var), val);
+            }
+        } else {
+            self.layouts.edit_strengths.insert(edit_var.var, edit_var.strength);
+        }
+    }
+    fn add_constraint(&mut self, constraint: Constraint) {
+        debug!("adding constraint {}", self.layouts.fmt_constraint(&constraint));
+        if self.solver.add_constraint(constraint.clone()).is_err() {
+            eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
+            self.debug_associated_constraints(&constraint);
+        }
+    }
+
+    fn remove_constraint(&mut self, constraint: &Constraint) {
+        debug!("removing constraint {}", self.layouts.fmt_constraint(constraint));
+        if self.solver.has_constraint(constraint) {
+            self.solver.remove_constraint(constraint).unwrap();
         }
     }
 
     pub fn remove_layout(&mut self, id: LayoutId) {
         if let Some(layout) = self.layouts.layouts.remove(&id) {
             for constraint in layout.constraints {
-                if self.solver.has_constraint(&constraint) {
-                    self.solver.remove_constraint(&constraint).unwrap();
-                }
+                self.remove_constraint(&constraint);
             }
             for var in layout.vars.array().iter() {
                 self.layouts.var_ids.remove(&var);
@@ -90,10 +97,8 @@ impl LimnSolver {
 
     pub fn hide_layout(&mut self, id: LayoutId) {
         if !self.layouts.layout_hidden(id) {
-            for constraint in &self.layouts.layouts[&id].constraints {
-                if self.solver.has_constraint(&constraint) {
-                    self.solver.remove_constraint(&constraint).unwrap();
-                }
+            for constraint in self.layouts.layouts[&id].constraints.clone() {
+                self.remove_constraint(&constraint);
             }
             {
                 let layout = self.layouts.layouts.get_mut(&id).unwrap();
@@ -106,15 +111,8 @@ impl LimnSolver {
                 }
                 layout.hidden = true;
             }
-            for constraint in &self.layouts.layouts[&id].hidden_constraints {
-                if !self.solver.has_constraint(&constraint) {
-                    self.solver.add_constraint(constraint.clone()).unwrap();
-                }
-            }
-            for var in self.layouts.layout_vars(id) {
-                if self.solver.has_edit_variable(&var) {
-                    self.solver.remove_edit_variable(var).unwrap();
-                }
+            for constraint in self.layouts.layouts[&id].hidden_constraints.clone() {
+                self.add_constraint(constraint.clone());
             }
         }
         let children = self.layouts.layouts[&id].children.clone();
@@ -124,20 +122,20 @@ impl LimnSolver {
     }
     pub fn unhide_layout(&mut self, id: LayoutId) {
         if self.layouts.layout_hidden(id) {
-            for constraint in &self.layouts.layouts[&id].hidden_constraints {
-                self.solver.remove_constraint(&constraint).unwrap();
+            for constraint in self.layouts.layouts[&id].hidden_constraints.clone() {
+                self.remove_constraint(&constraint);
             }
-            for constraint in &self.layouts.layouts[&id].constraints {
+            for constraint in self.layouts.layouts[&id].constraints.clone() {
                 if !self.solver.has_constraint(&constraint) {
                     let mut hidden = false;
-                    for layout_id in self.layouts.dependent_layouts(constraint) {
+                    for layout_id in self.layouts.dependent_layouts(&constraint) {
                         if layout_id != id && self.layouts.layout_hidden(layout_id) {
                             hidden = true;
                             break;
                         }
                     }
                     if !hidden {
-                        self.solver.add_constraint(constraint.clone()).unwrap();
+                        self.add_constraint(constraint.clone());
                     }
                 }
             }
@@ -160,23 +158,6 @@ impl LimnSolver {
     }
     pub fn has_constraint(&self, constraint: &Constraint) -> bool {
         self.solver.has_constraint(constraint)
-    }
-
-    pub fn edit_variable(&mut self, var: Variable, val: f64) {
-        if !self.solver.has_edit_variable(&var) {
-            let strength = self.layouts.edit_strengths.remove(&var).unwrap_or(strength::STRONG);
-            self.solver.add_edit_variable(var, strength).unwrap();
-        }
-        self.suggest_value(var, val);
-    }
-
-    fn suggest_value(&mut self, var: Variable, val: f64) {
-        if val.is_finite() {
-            self.solver.suggest_value(var, val).unwrap();
-            debug!("suggest edit_var {} {}", self.layouts.fmt_variable(var), val);
-        } else {
-            debug!("invalid edit_var {} {}", self.layouts.fmt_variable(var), val);
-        }
     }
 
     pub fn fetch_changes(&mut self) -> Vec<(LayoutId, VarType, f64)> {
@@ -225,6 +206,33 @@ impl LimnSolver {
         println!("{}", self.layouts.fmt_constraint(constraint));
     }
 
+    pub fn debug_associated_constraints(&self, constraint: &Constraint) {
+        let mut visited_constraints = HashSet::new();
+        let mut new_constraints = HashSet::new();
+        new_constraints.insert(constraint.clone());
+
+        loop {
+            if new_constraints.len() == 0 {
+                break;
+            }
+            let mut newer_constraints = HashSet::new();
+            for constraint in new_constraints.drain() {
+                for var in constraint_vars(&constraint) {
+                    for constraint in self.layouts.constraints_for(var) {
+                        if !visited_constraints.contains(constraint) {
+                            newer_constraints.insert(constraint.clone());
+                        }
+                    }
+                }
+                visited_constraints.insert(constraint);
+            }
+            new_constraints = newer_constraints;
+        }
+        for constraint in visited_constraints {
+            self.debug_constraint(&constraint);
+        }
+    }
+
     pub fn debug_edit_var(&self, var: &Variable) {
         self.debug_constraint(&self.solver.get_edit_variable(*var).unwrap());
     }
@@ -251,6 +259,10 @@ impl LimnSolver {
     }
 }
 
+fn constraint_vars(constraint: &Constraint) -> Vec<Variable> {
+    constraint.0.expression.terms.iter().map(|term| term.variable).collect()
+}
+
 struct LayoutInternal {
     vars: LayoutVars,
     name: Option<String>,
@@ -264,6 +276,7 @@ pub struct LayoutManager {
     root: LayoutId,
     var_ids: HashMap<Variable, LayoutId>,
     layouts: HashMap<LayoutId, LayoutInternal>,
+    constraints: HashMap<Variable, HashSet<Constraint>>,
 
     edit_strengths: HashMap<Variable, f64>,
 
@@ -278,6 +291,7 @@ impl LayoutManager {
             root: 0,
             var_ids: HashMap::new(),
             layouts: HashMap::new(),
+            constraints: HashMap::new(),
             edit_strengths: HashMap::new(),
             pending_constraints: HashMap::new(),
             missing_vars: HashMap::new(),
@@ -314,6 +328,7 @@ impl LayoutManager {
     pub fn add_constraint(&mut self, constraint: &Constraint) -> bool {
         let mut missing_layouts = false;
         for term in &constraint.0.expression.terms {
+            self.constraints.entry(term.variable).or_insert_with(HashSet::new).insert(constraint.clone());
             if self.var_ids.contains_key(&term.variable) {
                 let layout_id = self.var_ids[&term.variable];
                 self.layouts.get_mut(&layout_id).unwrap().constraints.insert(constraint.clone());
@@ -327,11 +342,16 @@ impl LayoutManager {
 
     pub fn remove_constraint(&mut self, constraint: &Constraint) {
         for term in &constraint.0.expression.terms {
+            self.constraints.entry(term.variable).or_insert_with(HashSet::new).remove(constraint);
             if self.var_ids.contains_key(&term.variable) {
                 let layout_id = self.var_ids[&term.variable];
                 self.layouts.get_mut(&layout_id).unwrap().constraints.remove(constraint);
             }
         }
+    }
+
+    fn constraints_for(&self, variable: Variable) -> &HashSet<Constraint> {
+        &self.constraints[&variable]
     }
 
     // if constraint added for non-registered variable, add to pending and increment counter
