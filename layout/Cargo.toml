@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 
 [dependencies]
-cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "31238b518189823a61523a884cd39d09d54defa3" }
+cassowary = { git = "https://github.com/christolliday/cassowary-rs", rev = "c7f57f8661b736be7ddf537b1d4dccbc5e3d13db" }
 euclid = "0.15.1"
 log = "0.3"
 lazy_static = "0.2.2"
