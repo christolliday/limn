@@ -50,23 +50,21 @@ impl LimnSolver {
             }
         }
         for edit_var in layout.get_edit_vars() {
-            self.update_edit_var(edit_var);
+            self.update_edit_var(&edit_var);
+            self.layouts.update_edit_var(layout.id, edit_var);
         }
     }
-    fn update_edit_var(&mut self, edit_var: EditVariable) {
-        if let Some(val) = edit_var.val {
-            if !self.solver.has_edit_variable(&edit_var.var) {
-                debug!("add edit_var {}", self.layouts.fmt_variable(edit_var.var));
-                self.solver.add_edit_variable(edit_var.var, edit_var.strength).unwrap();
-            }
-            if val.is_finite() {
-                self.solver.suggest_value(edit_var.var, val).unwrap();
-                debug!("suggest edit_var {} {}", self.layouts.fmt_variable(edit_var.var), val);
-            } else {
-                debug!("invalid edit_var {} {}", self.layouts.fmt_variable(edit_var.var), val);
-            }
+    fn update_edit_var(&mut self, edit_var: &EditVariable) {
+        let &EditVariable { var, val, strength } = edit_var;
+        if !self.solver.has_edit_variable(&var) {
+            debug!("add edit_var {}", self.layouts.fmt_variable(var));
+            self.solver.add_edit_variable(var, strength).unwrap();
+        }
+        if val.is_finite() {
+            self.solver.suggest_value(var, val).unwrap();
+            debug!("suggest edit_var {} {}", self.layouts.fmt_variable(var), val);
         } else {
-            self.layouts.edit_strengths.insert(edit_var.var, edit_var.strength);
+            debug!("invalid edit_var {} {}", self.layouts.fmt_variable(var), val);
         }
     }
     fn add_constraint(&mut self, constraint: Constraint) {
@@ -193,10 +191,8 @@ impl LimnSolver {
                 }
             }
             println!("EDIT_VARS");
-            for var in self.layouts.layout_vars(layout) {
-                if self.solver.has_edit_variable(&var) {
-                    self.debug_edit_var(&var);
-                }
+            for (_, edit_var) in &self.layouts.layouts[&layout].edit_vars {
+                println!("{}", self.layouts.fmt_edit_variable(edit_var));
             }
             layouts.extend(self.layouts.children(layout));
         }
@@ -233,10 +229,6 @@ impl LimnSolver {
         }
     }
 
-    pub fn debug_edit_var(&self, var: &Variable) {
-        self.debug_constraint(&self.solver.get_edit_variable(*var).unwrap());
-    }
-
     pub fn debug_layouts(&self) {
         println!("LAYOUTS");
         let mut layouts = VecDeque::new();
@@ -260,13 +252,14 @@ impl LimnSolver {
 }
 
 fn constraint_vars(constraint: &Constraint) -> Vec<Variable> {
-    constraint.0.expression.terms.iter().map(|term| term.variable).collect()
+    constraint.expr().terms.iter().map(|term| term.variable).collect()
 }
 
 struct LayoutInternal {
     vars: LayoutVars,
     name: Option<String>,
     associated_vars: HashMap<Variable, String>,
+    edit_vars: HashMap<Variable, EditVariable>,
     constraints: HashSet<Constraint>,
     children: Vec<LayoutId>,
     hidden: bool,
@@ -277,8 +270,6 @@ pub struct LayoutManager {
     var_ids: HashMap<Variable, LayoutId>,
     layouts: HashMap<LayoutId, LayoutInternal>,
     constraints: HashMap<Variable, HashSet<Constraint>>,
-
-    edit_strengths: HashMap<Variable, f64>,
 
     pending_constraints: HashMap<Variable, Vec<Constraint>>,
     missing_vars: HashMap<Constraint, usize>,
@@ -292,7 +283,6 @@ impl LayoutManager {
             var_ids: HashMap::new(),
             layouts: HashMap::new(),
             constraints: HashMap::new(),
-            edit_strengths: HashMap::new(),
             pending_constraints: HashMap::new(),
             missing_vars: HashMap::new(),
         }
@@ -308,6 +298,7 @@ impl LayoutManager {
             vars: layout.vars.clone(),
             name: layout.name.clone(),
             associated_vars: HashMap::new(),
+            edit_vars: HashMap::new(),
             constraints: HashSet::new(),
             children: layout.children.clone(),
             hidden: false,
@@ -327,7 +318,7 @@ impl LayoutManager {
 
     pub fn add_constraint(&mut self, constraint: &Constraint) -> bool {
         let mut missing_layouts = false;
-        for term in &constraint.0.expression.terms {
+        for term in &constraint.expr().terms {
             self.constraints.entry(term.variable).or_insert_with(HashSet::new).insert(constraint.clone());
             if self.var_ids.contains_key(&term.variable) {
                 let layout_id = self.var_ids[&term.variable];
@@ -341,13 +332,16 @@ impl LayoutManager {
     }
 
     pub fn remove_constraint(&mut self, constraint: &Constraint) {
-        for term in &constraint.0.expression.terms {
+        for term in &constraint.expr().terms {
             self.constraints.entry(term.variable).or_insert_with(HashSet::new).remove(constraint);
             if self.var_ids.contains_key(&term.variable) {
                 let layout_id = self.var_ids[&term.variable];
                 self.layouts.get_mut(&layout_id).unwrap().constraints.remove(constraint);
             }
         }
+    }
+    fn update_edit_var(&mut self, layout_id: LayoutId, edit_var: EditVariable) {
+        self.layouts.get_mut(&layout_id).unwrap().edit_vars.insert(edit_var.var, edit_var);
     }
 
     fn constraints_for(&self, variable: Variable) -> &HashSet<Constraint> {
@@ -380,7 +374,7 @@ impl LayoutManager {
             constraints
         };
         for constraint in &constraints {
-            for term in &constraint.0.expression.terms {
+            for term in &constraint.expr().terms {
                 let layout_id = self.var_ids[&term.variable];
                 self.layouts.get_mut(&layout_id).unwrap().constraints.insert(constraint.clone());
             }
@@ -397,7 +391,7 @@ impl LayoutManager {
     }
 
     fn dependent_layouts(&self, constraint: &Constraint) -> Vec<LayoutId> {
-        constraint.0.expression.terms.iter().map(|term| self.var_ids[&term.variable]).collect()
+        constraint.expr().terms.iter().map(|term| self.var_ids[&term.variable]).collect()
     }
 
     pub fn children(&self, id: LayoutId) -> Vec<LayoutId> {
@@ -421,10 +415,13 @@ impl LayoutManager {
         format!("{}.{}", layout_name, var_type)
     }
 
+    pub fn fmt_edit_variable(&self, edit_var: &EditVariable) -> String {
+        format!("{} {} == {}", edit_var.strength, self.fmt_variable(edit_var.var), edit_var.val)
+    }
+
     pub fn fmt_constraint(&self, constraint: &Constraint) -> String {
-        let ref constraint = constraint.0;
         let strength_desc = {
-            let stren = constraint.strength;
+            let stren = constraint.strength();
             if stren < strength::WEAK { "WEAK-" }
             else if stren == strength::WEAK { "WEAK " }
             else if stren < strength::MEDIUM { "WEAK+" }
@@ -435,7 +432,7 @@ impl LayoutManager {
             else if stren == strength::REQUIRED { "REQD " }
             else { "REQD+" }
         };
-        format!("{} {}", strength_desc, self.fmt_expression(&constraint.expression, constraint.op))
+        format!("{} {}", strength_desc, self.fmt_expression(&constraint.expr(), constraint.op()))
     }
 
     fn fmt_expression(&self, expression: &Expression, op: cassowary::RelationalOperator) -> String {

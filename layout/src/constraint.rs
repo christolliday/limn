@@ -206,8 +206,7 @@ pub trait ConstraintBuilder {
 
 impl ConstraintBuilder for Constraint {
     fn build(&self, widget: &LayoutVars) -> Vec<Constraint> {
-        let cons = &self.0;
-        let ref terms = cons.expression.terms;
+        let ref terms = self.expr().terms;
         let mut vars_replaced = false;
         let mut new_terms = Vec::new();
         for term in terms {
@@ -235,8 +234,8 @@ impl ConstraintBuilder for Constraint {
             });
         }
         if vars_replaced {
-            let expr = Expression::new(new_terms, cons.expression.constant);
-            let cons = Constraint::new(expr, cons.op, cons.strength);
+            let expr = Expression::new(new_terms, self.expr().constant);
+            let cons = Constraint::new(expr, self.op(), self.strength());
             vec![ cons ]
         } else {
             // ensure hash value (from pointer) is unchanged if terms unchanged

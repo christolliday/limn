@@ -254,14 +254,14 @@ impl<'a> Drop for VariableEditable<'a> {
 #[derive(Debug)]
 pub struct EditVariable {
     var: Variable,
-    val: Option<f64>,
+    val: f64,
     strength: f64,
 }
 impl EditVariable {
     fn new(editable: &VariableEditable) -> Self {
         EditVariable {
             var: editable.var,
-            val: editable.val,
+            val: editable.val.unwrap_or(0.0),
             strength: editable.strength,
         }
     }
@@ -270,7 +270,7 @@ impl EditVariable {
 pub fn change_strength(constraints: &Vec<Constraint>, strength: f64) -> Vec<Constraint> {
     let mut new_constraints = Vec::new();
     for cons in constraints {
-        let cons = Constraint::new(cons.0.expression.clone(), cons.0.op, strength);
+        let cons = Constraint::new(cons.expr().clone(), cons.op(), strength);
         new_constraints.push(cons);
     }
     new_constraints
