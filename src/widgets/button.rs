@@ -1,6 +1,7 @@
 use glutin;
 
 use text_layout::Align;
+use cassowary::strength::*;
 
 use layout::constraint::*;
 use event::WidgetEventArgs;
@@ -130,7 +131,7 @@ impl PushButtonBuilder {
             .add_handler_fn(button_handle_mouse_down);
 
         widget.layout().add(constraints![
-            min_size(Size::new(100.0, 50.0)),
+            min_size(Size::new(100.0, 50.0)).strength(STRONG),
             shrink(),
         ]);
 

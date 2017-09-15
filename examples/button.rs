@@ -16,7 +16,7 @@ fn main() {
     button.set_debug_name("button");
     button.layout().add(constraints![
         center(&root),
-        bound_by(&root).padding(50.0),
+        bound_by(&root).padding(50.0).strength(WEAK),
     ]);
     root.add_child(button);
 

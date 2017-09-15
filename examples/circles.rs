@@ -245,10 +245,14 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
 fn main() {
     let mut app = util::init_default("Limn circles demo");
     let mut root = app.ui.root.clone();
+    root.vbox();
 
     let mut circle_canvas = Widget::new();
     circle_canvas.no_container();
-    circle_canvas.layout().add(min_height(600.0));
+    circle_canvas.layout().add(constraints![
+        match_width(&root),
+        min_height(600.0)
+    ]);
     circle_canvas
         .set_debug_name("circle_canvas")
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))

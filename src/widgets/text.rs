@@ -31,9 +31,11 @@ struct TextUpdatedHandler {
 }
 impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
     fn handle(&mut self, _: &StyleUpdated, mut args: WidgetEventArgs) {
-        for constraint in self.size_constraints.drain(..) {
-            args.widget.layout().remove_constraint(constraint);
-        }
+        args.widget.update_layout(|layout| {
+            for constraint in self.size_constraints.drain(..) {
+                layout.remove_constraint(constraint);
+            }
+        });
         let text_size = {
             let drawable = args.widget.drawable();
             let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();

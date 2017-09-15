@@ -1,3 +1,5 @@
+pub use cassowary::strength::*;
+
 pub use util::{Point, PointExt, Rect, RectExt, Size, SizeExt};
 pub use event::{Target, WidgetEventHandler, WidgetEventArgs, UiEventHandler};
 pub use event::{event, event_global};

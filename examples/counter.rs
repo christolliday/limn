@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 #[macro_use]
 extern crate limn;
 #[macro_use]
@@ -7,11 +8,11 @@ mod util;
 
 use limn::prelude::*;
 
+use limn::widgets::text::TextBuilder;
 use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
-use limn::drawable::text::{TextDrawable, TextStyleable};
+use limn::drawable::text::TextDrawable;
 
-struct CounterEvent;
-struct CountEvent(u32);
+struct CountEvent;
 
 fn main() {
     let app = util::init_default("Limn counter demo");
@@ -23,33 +24,27 @@ fn main() {
     left_spacer.layout().add(width(50.0));
     root.add_child(left_spacer);
 
-    struct CountHandler;
+    #[derive(Default)]
+    struct CountHandler {
+        count: u32,
+    }
     impl WidgetEventHandler<CountEvent> for CountHandler {
-        fn handle(&mut self, event: &CountEvent, mut args: WidgetEventArgs) {
-            let &CountEvent(count) = event;
-            args.widget.update(|state: &mut TextDrawable| state.text = format!("{}", count));
+        fn handle(&mut self, _: &CountEvent, mut args: WidgetEventArgs) {
+            self.count += 1;
+            args.widget.update(|state: &mut TextDrawable| state.text = format!("{}", self.count));
         }
     }
 
-    let text_style = style!(TextStyleable::BackgroundColor: WHITE);
-    let text_drawable = TextDrawable::new("0");
-    let text_dims = text_drawable.measure();
-    let mut text_widget = Widget::new();
-    text_widget
-        .set_drawable_with_style(text_drawable, text_style)
-        .add_handler(CountHandler);
-    text_widget.layout().add(constraints![
-        width(80.0),
-        height(text_dims.height),
-        center_vertical(&root),
-    ]);
+    let mut text_widget = TextBuilder::new("0");
+    text_widget.add_handler(CountHandler::default());
+    text_widget.layout().add(center_vertical(&root));
 
     let mut button_container = Widget::new();
-    let root_id = root.clone();
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");
+    let text_widget_ref = text_widget.clone();
     button_widget.on_click(move |_, _| {
-        root_id.event(CounterEvent);
+        text_widget_ref.event(CountEvent);
     });
     button_widget.layout().add(constraints![
         center(&button_container),
@@ -59,22 +54,6 @@ fn main() {
     root
         .add_child(text_widget)
         .add_child(button_container);
-
-    struct CounterHandler {
-        count: u32,
-    }
-    impl CounterHandler {
-        fn new() -> Self {
-            CounterHandler { count: 0 }
-        }
-    }
-    impl WidgetEventHandler<CounterEvent> for CounterHandler {
-        fn handle(&mut self, _: &CounterEvent, args: WidgetEventArgs) {
-            self.count += 1;
-            args.widget.event_subtree(CountEvent(self.count));
-        }
-    }
-    root.add_handler(CounterHandler::new());
 
     app.main_loop();
 }
