@@ -416,23 +416,11 @@ impl LayoutManager {
     }
 
     pub fn fmt_edit_variable(&self, edit_var: &EditVariable) -> String {
-        format!("{} {} == {}", edit_var.strength, self.fmt_variable(edit_var.var), edit_var.val)
+        format!("{} {} == {}", strength_desc(edit_var.strength), self.fmt_variable(edit_var.var), edit_var.val)
     }
 
     pub fn fmt_constraint(&self, constraint: &Constraint) -> String {
-        let strength_desc = {
-            let stren = constraint.strength();
-            if stren < strength::WEAK { "WEAK-" }
-            else if stren == strength::WEAK { "WEAK " }
-            else if stren < strength::MEDIUM { "WEAK+" }
-            else if stren == strength::MEDIUM { "MED  " }
-            else if stren < strength::STRONG { "MED+ " }
-            else if stren == strength::STRONG { "STR  " }
-            else if stren < strength::REQUIRED { "STR+ " }
-            else if stren == strength::REQUIRED { "REQD " }
-            else { "REQD+" }
-        };
-        format!("{} {}", strength_desc, self.fmt_expression(&constraint.expr(), constraint.op()))
+        format!("{} {}", strength_desc(constraint.strength()), self.fmt_expression(&constraint.expr(), constraint.op()))
     }
 
     fn fmt_expression(&self, expression: &Expression, op: cassowary::RelationalOperator) -> String {
@@ -473,4 +461,16 @@ impl LayoutManager {
         }
         out
     }
+}
+
+fn strength_desc(strength: f64) -> &'static str {
+    if strength < strength::WEAK { "WEAK-" }
+    else if strength == strength::WEAK { "WEAK " }
+    else if strength < strength::MEDIUM { "WEAK+" }
+    else if strength == strength::MEDIUM { "MED  " }
+    else if strength < strength::STRONG { "MED+ " }
+    else if strength == strength::STRONG { "STR  " }
+    else if strength < strength::REQUIRED { "STR+ " }
+    else if strength == strength::REQUIRED { "REQD " }
+    else { "REQD+" }
 }
