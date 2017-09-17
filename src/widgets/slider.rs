@@ -3,7 +3,7 @@ use cassowary::strength::*;
 use layout::constraint::*;
 use input::mouse::ClickEvent;
 use event::{WidgetEventHandler, WidgetEventArgs};
-use widget::Widget;
+use widget::{WidgetBuilder, Widget, BuildWidget};
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
@@ -30,8 +30,8 @@ pub enum BarStyle {
 }
 
 pub struct SliderBuilder {
-    pub widget: Widget,
-    pub slider_handle: Widget,
+    pub widget: WidgetBuilder,
+    pub slider_handle: WidgetBuilder,
     pub orientation: Orientation,
     pub init_value: f32,
     pub variable_handle_size: bool,
@@ -46,12 +46,10 @@ pub struct SliderBuilder {
 
 impl SliderBuilder {
     pub fn new() -> Self {
-        let mut slider = Widget::new();
-        slider.set_debug_name("slider");
+        let slider = WidgetBuilder::new("slider");
 
-        let mut slider_handle = Widget::new();
+        let mut slider_handle = WidgetBuilder::new("slider_handle");
         slider_handle
-            .set_debug_name("slider_handle")
             .add_handler_fn(|event: &WidgetDrag, args| {
                 args.widget.event(SliderHandleInput::WidgetDrag(event.clone()));
             })
@@ -111,10 +109,14 @@ impl SliderBuilder {
         });
         self
     }
-    pub fn build(self) -> Widget {
+}
+
+widget_builder!(SliderBuilder);
+impl BuildWidget for SliderBuilder {
+    fn build(self) -> WidgetBuilder {
         let (mut slider, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
 
-        slider_handle.add_handler(DragHandler::new(orientation, slider.clone()));
+        slider_handle.add_handler(DragHandler::new(orientation, slider.widget_ref()));
 
         match self.handle_style {
             HandleStyle::Round => {
@@ -145,15 +147,11 @@ impl SliderBuilder {
         } else {
             bar_style.clone()
         };
-        let mut slider_bar_pre = Widget::new();
-        slider_bar_pre
-            .set_debug_name("slider_bar_pre")
-            .set_drawable_with_style(RectDrawable::new(), pre_style);
+        let mut slider_bar_pre = WidgetBuilder::new("slider_bar_pre");
+        slider_bar_pre.set_drawable_with_style(RectDrawable::new(), pre_style);
 
-        let mut slider_bar_post = Widget::new();
-        slider_bar_post
-            .set_debug_name("slider_bar_post")
-            .set_drawable_with_style(RectDrawable::new(), bar_style);
+        let mut slider_bar_post = WidgetBuilder::new("slider_bar_post");
+        slider_bar_post.set_drawable_with_style(RectDrawable::new(), bar_style);
 
         let (bar_width, bar_padding) = match self.bar_style {
             BarStyle::Wide => (self.width, 0.0),
@@ -210,13 +208,13 @@ impl SliderBuilder {
                 }
             }
         }
-        let handle_ref = slider_handle.clone();
+        let handle_ref = slider_handle.widget_ref();
         slider.add_handler_fn(move |event: &SetSliderValue, args| {
             let bounds = args.widget.bounds();
             let event = SliderHandleInput::SetValue((event.0, bounds));
             handle_ref.event(event);
         });
-        let handle_ref = slider_handle.clone();
+        let handle_ref = slider_handle.widget_ref();
         slider.add_handler_fn(move |event: &ClickEvent, args| {
             let bounds = args.widget.bounds();
             let position = if let Orientation::Horizontal = orientation {
@@ -240,8 +238,6 @@ impl SliderBuilder {
         slider
     }
 }
-
-widget_builder!(SliderBuilder);
 
 struct MovedSliderWidgetEvent {
     orientation: Orientation,

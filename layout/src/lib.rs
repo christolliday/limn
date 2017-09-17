@@ -149,7 +149,7 @@ impl Layout {
         let var = self.vars.height;
         VariableEditable::new(self, var)
     }
-    pub fn create_constraint<B: ConstraintBuilder>(&mut self, builder: B) -> Vec<Constraint> {
+    pub fn create_constraint<B: ConstraintBuilder>(&self, builder: B) -> Vec<Constraint> {
         builder.build(&self.vars)
     }
     pub fn add<B: ConstraintBuilder>(&mut self, builder: B) {

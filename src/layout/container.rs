@@ -25,9 +25,11 @@ impl LayoutContainer for Frame {
         self.padding = padding;
     }
     fn add_child(&mut self, parent: Widget, mut child: Widget) {
-        child.layout().add(constraints![
-            bound_by(&parent).padding(self.padding),
-            match_layout(&parent).strength(STRONG),
-        ]);
+        child.update_layout(|layout| {
+            layout.add(constraints![
+                bound_by(&parent).padding(self.padding),
+                match_layout(&parent).strength(STRONG),
+            ]);
+        });
     }
 }

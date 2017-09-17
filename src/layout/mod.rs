@@ -6,7 +6,7 @@ use resources::WidgetId;
 use app::App;
 use event::Target;
 
-use widget::Widget;
+use widget::{Widget, WidgetBuilder};
 
 use self::container::LayoutContainer;
 
@@ -22,7 +22,9 @@ impl LayoutContainer for LinearLayoutHandler {
     fn add_child(&mut self, mut parent: Widget, mut child: Widget) {
         let child_id = child.id();
         parent.update_layout(|layout| {
-            self.add_child_layout(&layout.vars, &mut child.layout(), child_id.0);
+            child.update_layout(|child_layout| {
+                self.add_child_layout(&layout.vars, child_layout, child_id.0);
+            });
         });
     }
     fn remove_child(&mut self, mut parent: Widget, child_id: WidgetId) {
@@ -35,12 +37,14 @@ impl LayoutContainer for LinearLayoutHandler {
 impl LayoutContainer for GridLayout {
     fn add_child(&mut self, mut parent: Widget, mut child: Widget) {
         parent.update_layout(|layout| {
-            self.add_child_layout(layout, &mut child.layout());
+            child.update_layout(|child_layout| {
+                self.add_child_layout(layout, child_layout);
+            });
         });
     }
 }
 
-impl Widget {
+impl WidgetBuilder {
     pub fn vbox(&mut self) -> &mut Self {
         let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout().vars);
         self.set_container(handler)
@@ -97,8 +101,10 @@ impl App {
         });
         self.add_handler_fn(|event: &UpdateLayout, ui| {
             let event = event.clone();
-            let UpdateLayout(mut widget_ref) = event;
-            ui.layout.solver.update_layout(&mut widget_ref.layout());
+            let UpdateLayout(widget_ref) = event;
+            let mut widget_mut = widget_ref.widget_mut();
+            let layout = &mut widget_mut.layout;
+            ui.layout.solver.update_layout(layout);
             ui.layout.check_changes();
         });
         self.add_handler_fn(|event: &LayoutChanged, ui| {

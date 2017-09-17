@@ -5,7 +5,7 @@ use cassowary::strength::*;
 
 use layout::constraint::*;
 use event::WidgetEventArgs;
-use widget::Widget;
+use widget::WidgetBuilder;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widgets::text::TextBuilder;
@@ -73,13 +73,13 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: WidgetEventAr
 }
 
 pub struct ToggleButtonBuilder {
-    pub widget: Widget,
+    pub widget: WidgetBuilder,
 }
 widget_wrapper!(ToggleButtonBuilder);
 
 impl ToggleButtonBuilder {
     pub fn new() -> Self {
-        let mut widget = Widget::new_named("toggle_button");
+        let mut widget = WidgetBuilder::new("toggle_button");
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
@@ -119,13 +119,13 @@ impl ToggleButtonBuilder {
 }
 
 pub struct PushButtonBuilder {
-    pub widget: Widget,
+    pub widget: WidgetBuilder,
 }
 widget_wrapper!(PushButtonBuilder);
 
 impl PushButtonBuilder {
     pub fn new() -> Self {
-        let mut widget = Widget::new_named("push_button");
+        let mut widget = WidgetBuilder::new("push_button");
         widget
             .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
@@ -158,12 +158,8 @@ impl PushButtonBuilder {
     }
 }
 
-pub trait WidgetClickable {
-    fn on_click<F>(&mut self, on_click: F) -> &mut Self
-        where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static;
-}
-impl WidgetClickable for Widget {
-    fn on_click<F>(&mut self, on_click: F) -> &mut Self
+impl WidgetBuilder {
+    pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
         where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static
     {
         self.add_handler_fn(move |event, mut args| {

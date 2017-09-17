@@ -3,7 +3,7 @@ use cassowary::Constraint;
 use layout::constraint::ConstraintBuilder;
 use layout::constraint::*;
 use widget::style::StyleUpdated;
-use widget::{Widget, BuildWidget};
+use widget::{WidgetBuilder, BuildWidget};
 use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
@@ -47,8 +47,8 @@ pub fn text_change_handle(event: &TextUpdated, mut args: WidgetEventArgs) {
 }
 
 pub struct EditTextBuilder {
-    pub widget: Widget,
-    pub text_widget: Widget,
+    pub widget: WidgetBuilder,
+    pub text_widget: WidgetBuilder,
 }
 
 impl EditTextBuilder {
@@ -58,7 +58,7 @@ impl EditTextBuilder {
         let rect_style = style!(
             RectStyleable::Border: selector!(default_border, FOCUSED: focused_border),
             RectStyleable::CornerRadius: Some(3.0));
-        let mut widget = Widget::new_named("edit_text");
+        let mut widget = WidgetBuilder::new("edit_text");
         widget
             .set_drawable_with_style(RectDrawable::new(), rect_style)
             .add_handler_fn(|_: &WidgetAttachedEvent, args| {
@@ -69,7 +69,7 @@ impl EditTextBuilder {
             })
             .make_focusable();
 
-        let mut text_widget = Widget::new_named("edit_text_text");
+        let mut text_widget = WidgetBuilder::new("edit_text_text");
         text_widget
             .set_drawable(TextDrawable::default())
             .add_handler(TextUpdatedHandler::default())
@@ -98,7 +98,7 @@ impl EditTextBuilder {
 
 widget_builder!(EditTextBuilder);
 impl BuildWidget for EditTextBuilder {
-    fn build(mut self) -> Widget {
+    fn build(mut self) -> WidgetBuilder {
         self.widget.add_child(self.text_widget);
         self.widget
     }
@@ -110,15 +110,17 @@ struct TextUpdatedHandler {
 }
 impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
     fn handle(&mut self, _: &StyleUpdated, mut args: WidgetEventArgs) {
-        for constraint in self.size_constraints.drain(..) {
-            args.widget.layout().remove_constraint(constraint);
-        }
+        args.widget.update_layout(|layout| {
+            for constraint in self.size_constraints.drain(..) {
+                layout.remove_constraint(constraint);
+            }
+        });
         let line_height = {
             let drawable = args.widget.drawable();
             let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();
             text_drawable.line_height()
         };
-        let size_constraints = min_height(line_height).build(&args.widget.layout().vars);
+        let size_constraints = min_height(line_height).build(&args.widget.layout_vars());
         args.widget.update_layout(|layout| {
             layout.add(size_constraints.clone())
         });

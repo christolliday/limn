@@ -13,7 +13,7 @@ use text_layout::Align;
 
 use limn::prelude::*;
 
-use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
+use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::slider::{SliderBuilder, SetSliderValue};
 use limn::drawable::text::TextStyleable;
 use limn::drawable::rect::{RectDrawable, RectStyleable};
@@ -22,13 +22,11 @@ use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::TextBuilder;
 use limn::input::keyboard::KeyboardInput;
 
-fn create_slider_control() -> Widget {
+fn create_slider_control() -> WidgetBuilder {
 
     let text_style = style!(TextStyleable::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
-    let mut slider_container = Widget::new();
-    slider_container
-        .set_debug_name("slider_container")
-        .set_inactive();
+    let mut slider_container = WidgetBuilder::new("slider_container");
+    slider_container.set_inactive();
     let mut slider_title = TextBuilder::new_with_style(
         style!(parent: text_style, TextStyleable::Text: "Circle Size".to_owned()));
     slider_title.set_debug_name("slider_title");
@@ -48,18 +46,17 @@ fn create_slider_control() -> Widget {
         match_width(&slider_container),
     ]);
 
-    let slider_value_ref = slider_value.clone();
+    let slider_value_ref = slider_value.widget_ref();
     slider_widget.on_value_changed(move |size, _| {
         let size = size * 100.0;
         slider_value_ref.event(TextUpdated((size as i32).to_string()));
         event!(Target::Ui, CircleEvent::Resize(size));
     }).set_value(0.30);
-    let slider_widget = slider_widget.build();
-    let slider_ref = slider_widget.clone();
-    let slider_value_ref = slider_value.clone();
+    let slider_widget_ref = slider_widget.widget_ref();
+    let slider_value_ref = slider_value.widget_ref();
     slider_container.add_handler_fn(move |event: &SetSliderValue, _| {
         let size = event.0;
-        slider_ref.event(SetSliderValue(size / 100.0));
+        slider_widget_ref.event(SetSliderValue(size / 100.0));
         slider_value_ref.event(TextUpdated((size as i32).to_string()));
     });
     slider_container
@@ -68,12 +65,11 @@ fn create_slider_control() -> Widget {
         .add_child(slider_widget);
     slider_container
 }
-fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
+fn create_control_bar(root_widget: &mut WidgetBuilder) -> (Widget, Widget, Widget) {
     let control_color = GRAY_70;
-    let mut button_container = Widget::new();
+    let mut button_container = WidgetBuilder::new("button_container");
     let style = style!(RectStyleable::BackgroundColor: control_color);
     button_container
-        .set_debug_name("button_container")
         .set_drawable_with_style(RectDrawable::new(), style)
         .hbox()
         .set_padding(30.0);
@@ -95,29 +91,30 @@ fn create_control_bar(root_widget: &mut Widget) -> (Widget, Widget, Widget) {
         .on_click(|_, _| { event!(Target::Ui, CircleEvent::Redo); });
     redo_widget.layout().add(center_vertical(&button_container));
     let slider_container = create_slider_control().build();
-    let (undo_widget, redo_widget) = (undo_widget.build(), redo_widget.build());
+    let slider_container_ref = slider_container.widget_ref();
+    let (undo_widget_ref, redo_widget_ref) = (undo_widget.widget_ref(), redo_widget.widget_ref());
     button_container
-        .add_child(undo_widget.clone())
-        .add_child(redo_widget.clone())
-        .add_child(slider_container.clone());
+        .add_child(undo_widget.build())
+        .add_child(redo_widget.build())
+        .add_child(slider_container);
     root_widget.add_child(button_container);
-    (undo_widget, redo_widget, slider_container)
+    (undo_widget_ref, redo_widget_ref, slider_container_ref)
 }
 
 fn create_circle(center: &Point, mut parent_id: Widget, size: f32) -> Widget {
     let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyleable::Border: Some((2.0, BLACK)));
-    let mut widget = Widget::new();
-    widget.set_debug_name("circle");
+    let mut widget = WidgetBuilder::new("circle");
     widget.set_drawable_with_style(EllipseDrawable::new(), style);
     widget.add_handler(CircleHandler { center: *center });
-    let widget_ref = widget.clone();
+    let widget_ref = widget.widget_ref();
+    let widget_ref_clone = widget.widget_ref();
     widget_ref.event(ResizeEvent(size));
     widget.on_click(move |_, _| {
         event!(Target::Ui, CircleEvent::Select(Some(widget_ref.clone())));
     });
-    parent_id.add_child(widget.clone());
-    widget
+    parent_id.add_child(widget);
+    widget_ref_clone
 }
 
 struct ResizeEvent(f32);
@@ -244,23 +241,22 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
 
 fn main() {
     let mut app = util::init_default("Limn circles demo");
-    let mut root = app.ui.root.clone();
+    let mut root = WidgetBuilder::new("root");
     root.vbox();
 
-    let mut circle_canvas = Widget::new();
+    let mut circle_canvas = WidgetBuilder::new("circle_canvas");
     circle_canvas.no_container();
     circle_canvas.layout().add(constraints![
         match_width(&root),
         min_height(600.0)
     ]);
     circle_canvas
-        .set_debug_name("circle_canvas")
         .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))
         .on_click(|event, _| {
             let event = CircleEvent::Add(event.position);
             event!(Target::Ui, event);
         });
-    let circle_canvas_id = circle_canvas.clone();
+    let circle_canvas_id = circle_canvas.widget_ref();
     root.add_child(circle_canvas);
     let (undo_id, redo_id, slider_id) = create_control_bar(&mut root);
 
@@ -270,6 +266,6 @@ fn main() {
             event!(Target::Ui, CircleEvent::Delete);
         }
     });
-
+    app.ui.root.add_child(root);
     app.main_loop();
 }

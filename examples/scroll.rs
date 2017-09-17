@@ -16,13 +16,13 @@ fn main() {
     scroll_widget.add_scrollbar();
     scroll_widget.layout().add(match_layout(&root).padding(50.0));
 
-    let mut rect_container = Widget::new_named("rect_container");
+    let mut rect_container = WidgetBuilder::new("rect_container");
     rect_container.grid(3);
     rect_container.layout().add(size(Size::new(400.0, 400.0)));
 
     {
         let mut add_rect = |color| {
-            let mut rect = Widget::new_named(&format!("rect_{:?}", color));
+            let mut rect = WidgetBuilder::new(&format!("rect_{:?}", color));
             rect.set_drawable_with_style(RectDrawable::new(),
                 style!(RectStyleable::BackgroundColor: color));
             rect_container.add_child(rect);

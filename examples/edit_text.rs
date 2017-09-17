@@ -30,17 +30,17 @@ impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 }
 
 fn main() {
-    let app = util::init_default("Limn edit text demo");
-    let mut root = app.ui.root.clone();
+    let mut app = util::init_default("Limn edit text demo");
+    let mut root = WidgetBuilder::new("root");
 
-    let mut content_widget = Widget::new_named("content");
+    let mut content_widget = WidgetBuilder::new("content");
     root.layout().add(min_size(Size::new(500.0, 500.0)));
     content_widget.layout().add(match_layout(&root).padding(20.0));
 
     let mut edit_text_box = EditTextBuilder::new();
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
 
-    let edit_text_ref = edit_text_box.text_widget.clone();
+    let edit_text_ref = edit_text_box.text_widget.widget_ref();
     let mut h_align_button = ToggleButtonBuilder::new();
     h_align_button
         .set_text("Right Align", "Left Align")
@@ -55,7 +55,7 @@ fn main() {
             }
         });
 
-    let edit_text_ref = edit_text_box.text_widget.clone();
+    let edit_text_ref = edit_text_box.text_widget.widget_ref();
     let mut v_align_button = ToggleButtonBuilder::new();
     v_align_button
         .set_text("Wrap Word", "Wrap Char")
@@ -94,5 +94,6 @@ fn main() {
         .add_child(edit_text_box);
 
     root.add_child(content_widget);
+    app.ui.root.add_child(root);
     app.main_loop();
 }

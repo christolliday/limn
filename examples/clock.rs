@@ -74,7 +74,7 @@ fn rotation(fraction: f32) -> Radians {
 }
 
 struct ClockBuilder {
-    widget: Widget,
+    widget: WidgetBuilder,
 }
 impl ClockBuilder {
     fn new() -> Self {
@@ -82,26 +82,26 @@ impl ClockBuilder {
         let style = style!(
             EllipseStyleable::BackgroundColor: WHITE,
             EllipseStyleable::Border: Some((2.0, BLACK)));
-        let mut widget = Widget::new();
+        let mut widget = WidgetBuilder::new("clock");
         widget.set_drawable_with_style(EllipseDrawable::new(), style);
         widget.layout().add(size(Size::new(200.0, 200.0)));
 
         let hour_angle = || rotation((Local::now().hour() % 12) as f32 / 12.0);
         let minute_angle = || rotation(Local::now().minute() as f32 / 60.0);
         let second_angle = || rotation(Local::now().second() as f32 / 60.0);
-        let mut hour_widget = Widget::new();
+        let mut hour_widget = WidgetBuilder::new("hours");
         hour_widget
             .set_drawable(HandDrawable::new(BLACK, 4.0, 60.0, hour_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
                 state.rotation = hour_angle()
             }));
-        let mut minute_widget = Widget::new();
+        let mut minute_widget = WidgetBuilder::new("minutes");
         minute_widget
             .set_drawable(HandDrawable::new(BLACK, 3.0, 90.0, minute_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
                 state.rotation = minute_angle()
             }));
-        let mut second_widget = Widget::new();
+        let mut second_widget = WidgetBuilder::new("seconds");
         second_widget
             .set_drawable(HandDrawable::new(RED, 2.0, 80.0, second_angle()))
             .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
@@ -126,14 +126,15 @@ fn main() {
         center(&root),
         bound_by(&root).padding(50.0),
     ]);
-    root.add_child(clock.clone());
+    let clock_ref = clock.widget_ref();
+    root.add_child(clock);
 
     thread::spawn(move || loop {
         thread::sleep(time::Duration::from_millis(1000));
         event_global(ClockTick);
     });
     app.add_handler_fn(move |_: &ClockTick, _| {
-        clock.event_subtree(ClockTick);
+        clock_ref.event_subtree(ClockTick);
     });
     app.main_loop();
 }

@@ -4,7 +4,7 @@ use cassowary::WeightedRelation::*;
 
 use layout::constraint::*;
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::{BuildWidget, Widget};
+use widget::{BuildWidget, WidgetBuilder, Widget};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
@@ -13,16 +13,16 @@ use drawable::rect::{RectDrawable, RectStyleable};
 use color::*;
 
 pub struct ScrollBuilder {
-    widget: Widget,
-    content_holder: Widget,
-    content: Option<Widget>,
-    scrollbars: Option<(Widget, SliderBuilder, SliderBuilder)>,
+    widget: WidgetBuilder,
+    content_holder: WidgetBuilder,
+    content: Option<WidgetBuilder>,
+    scrollbars: Option<(WidgetBuilder, SliderBuilder, SliderBuilder)>,
 }
 impl ScrollBuilder {
     pub fn new() -> Self {
-        let widget = Widget::new_named("scroll");
+        let widget = WidgetBuilder::new("scroll");
 
-        let mut content_holder = Widget::new_named("content_holder");
+        let mut content_holder = WidgetBuilder::new("content_holder");
         content_holder.no_container();
 
         ScrollBuilder {
@@ -54,16 +54,16 @@ impl ScrollBuilder {
             to_right_of(&self.content_holder),
         ]);
 
-        let widget_ref = self.content_holder.clone();
+        let widget_ref = self.content_holder.widget_ref();
         scrollbar_h.on_value_changed(move |value, _| {
             widget_ref.event(ScrollParentEvent::ScrollBarMovedX(value));
         });
-        let widget_ref = self.content_holder.clone();
+        let widget_ref = self.content_holder.widget_ref();
         scrollbar_v.on_value_changed(move |value, _| {
             widget_ref.event(ScrollParentEvent::ScrollBarMovedY(value));
         });
         let corner_style = style!(RectStyleable::BackgroundColor: GRAY_70);
-        let mut corner = Widget::new_named("corner");
+        let mut corner = WidgetBuilder::new("corner");
         corner.set_drawable_with_style(RectDrawable::new(), corner_style);
         corner.layout().add(constraints![
             align_bottom(&self.widget),
@@ -79,13 +79,13 @@ impl ScrollBuilder {
     }
 }
 impl BuildWidget for ScrollBuilder {
-    fn build(mut self) -> Widget {
-        let widget_ref = self.content_holder.clone();
+    fn build(mut self) -> WidgetBuilder {
+        let widget_ref = self.content_holder.widget_ref();
         self.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
             widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
         });
         let mut content = self.content.expect("Scroll bar has no content");
-        let widget_ref = self.content_holder.clone();
+        let widget_ref = self.content_holder.widget_ref();
         content.add_handler_fn(move |_: &LayoutUpdated, args| {
             widget_ref.event(ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
         });
@@ -104,9 +104,9 @@ impl BuildWidget for ScrollBuilder {
             ]);
         }
 
-        let mut scroll_parent_handler = ScrollParent::new(&mut content);
+        let mut scroll_parent_handler = ScrollParent::new(&mut content.widget_ref());
         if let Some((ref mut corner, ref mut scrollbar_h, ref mut scrollbar_v)) = self.scrollbars {
-            scroll_parent_handler.scrollbars = Some(ScrollBars::new(scrollbar_h, scrollbar_v, corner.clone()));
+            scroll_parent_handler.scrollbars = Some(ScrollBars::new(scrollbar_h, scrollbar_v, corner.widget_ref()));
         }
         self.content_holder.add_handler(scroll_parent_handler);
         self.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
@@ -145,11 +145,11 @@ struct ScrollBars {
 impl ScrollBars {
     fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner: Widget) -> Self {
         ScrollBars {
-            scrollbar_h: scrollbar_h.widget.clone(),
-            scrollbar_v: scrollbar_v.widget.clone(),
+            scrollbar_h: scrollbar_h.widget_ref(),
+            scrollbar_v: scrollbar_v.widget_ref(),
             corner: corner,
-            h_handle: scrollbar_h.slider_handle.clone(),
-            v_handle: scrollbar_v.slider_handle.clone(),
+            h_handle: scrollbar_h.slider_handle.widget_ref(),
+            v_handle: scrollbar_v.slider_handle.widget_ref(),
         }
     }
 }

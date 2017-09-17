@@ -9,18 +9,17 @@ mod util;
 use limn::prelude::*;
 
 use limn::widgets::text::TextBuilder;
-use limn::widgets::button::{PushButtonBuilder, WidgetClickable};
+use limn::widgets::button::PushButtonBuilder;
 use limn::drawable::text::TextDrawable;
 
 struct CountEvent;
 
 fn main() {
-    let app = util::init_default("Limn counter demo");
-    let mut root = app.ui.root.clone();
-
+    let mut app = util::init_default("Limn counter demo");
+    let mut root = WidgetBuilder::new("root");
     root.hbox();
 
-    let mut left_spacer = Widget::new();
+    let mut left_spacer = WidgetBuilder::new("spacer");
     left_spacer.layout().add(width(50.0));
     root.add_child(left_spacer);
 
@@ -39,10 +38,10 @@ fn main() {
     text_widget.add_handler(CountHandler::default());
     text_widget.layout().add(center_vertical(&root));
 
-    let mut button_container = Widget::new();
+    let mut button_container = WidgetBuilder::new("button_container");
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");
-    let text_widget_ref = text_widget.clone();
+    let text_widget_ref = text_widget.widget_ref();
     button_widget.on_click(move |_, _| {
         text_widget_ref.event(CountEvent);
     });
@@ -55,5 +54,6 @@ fn main() {
         .add_child(text_widget)
         .add_child(button_container);
 
+    app.ui.root.add_child(root);
     app.main_loop();
 }

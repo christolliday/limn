@@ -1,5 +1,5 @@
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::Widget;
+use widget::{WidgetBuilder, Widget};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widgets::text::TextBuilder;
@@ -72,13 +72,13 @@ impl WidgetEventHandler<ClickEvent> for ListItemHandler {
 }
 
 pub struct ListBuilder {
-    pub widget: Widget,
+    pub widget: WidgetBuilder,
 }
 widget_wrapper!(ListBuilder);
 
 impl ListBuilder {
     pub fn new() -> Self {
-        let mut widget = Widget::new();
+        let mut widget = WidgetBuilder::new("list");
         widget.add_handler(ListHandler::new())
               .add_handler_fn(list_handle_deselect)
               .vbox();
@@ -96,30 +96,30 @@ impl ListBuilder {
     }
     pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
         where C: Iterator<Item=I>,
-              F: Fn(I, &mut ListBuilder) -> Widget,
+              F: Fn(I, &mut ListBuilder) -> WidgetBuilder,
     {
         for item in contents {
             let mut widget = build(item, self);
             widget
-                .set_debug_name("item")
-                .list_item(&self.widget);
+                .set_debug_name("list_item")
+                .list_item(&self.widget.widget_ref());
             self.widget.add_child(widget);
         }
     }
 }
 
-impl Widget {
+impl WidgetBuilder {
     pub fn list_item(&mut self, parent_list: &Widget) -> &mut Self {
         self.add_handler(ListItemHandler::new(parent_list.clone()))
     }
 }
 
-pub fn default_text_adapter(item: String, list: &mut ListBuilder) -> Widget {
+pub fn default_text_adapter(item: String, list: &mut ListBuilder) -> WidgetBuilder {
     let text = (*item).to_owned();
     let style = style!(parent: STYLE_LIST_TEXT, TextStyleable::Text: text);
     let mut text_widget = TextBuilder::new_with_style(style);
 
-    let mut item_widget = Widget::new();
+    let mut item_widget = WidgetBuilder::new("list_item");
     item_widget
         .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
         .enable_hover();

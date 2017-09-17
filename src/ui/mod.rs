@@ -10,7 +10,7 @@ use glutin;
 
 use window::Window;
 use app::App;
-use widget::Widget;
+use widget::{Widget, WidgetBuilder};
 use layout::{LayoutManager, LayoutVars};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
@@ -37,7 +37,7 @@ pub struct Ui {
 impl Ui {
     pub fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
         let mut layout = LayoutManager::new();
-        let mut root = Widget::new_named("root");
+        let mut root = WidgetBuilder::new("root");
         root.layout().add(top_left(Point::zero()));
         if !WINDOW_CONSTRAINT_REQUIRED {
             let ref root_vars = root.layout().vars;
@@ -52,7 +52,7 @@ impl Ui {
         let render = WebRenderContext::new(&mut window, events_loop);
         Ui {
             widget_map: HashMap::new(),
-            root: root,
+            root: root.widget,
             layout: layout,
             render: render,
             needs_redraw: true,

@@ -1,7 +1,7 @@
 use glutin;
 
 use event::{Target, UiEventHandler};
-use widget::Widget;
+use widget::{WidgetBuilder, Widget};
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use util::Point;
 use ui::Ui;
@@ -72,7 +72,7 @@ enum DragInputEvent {
     MouseReleased,
 }
 
-impl Widget {
+impl WidgetBuilder {
     pub fn make_draggable(&mut self) -> &mut Self {
         self.add_handler_fn(|event: &WidgetMouseButton, args| {
             if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
