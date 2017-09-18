@@ -23,7 +23,7 @@ use render::WebRenderContext;
 const WINDOW_CONSTRAINT_REQUIRED: bool = false;
 
 pub struct Ui {
-    pub root: WidgetRef,
+    pub(super) root: WidgetRef,
     widget_map: HashMap<WidgetId, WidgetRef>,
     pub layout: LayoutManager,
     pub render: WebRenderContext,
@@ -37,7 +37,7 @@ pub struct Ui {
 impl Ui {
     pub fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
         let mut layout = LayoutManager::new();
-        let mut root = WidgetBuilder::new("root");
+        let mut root = WidgetBuilder::new("window");
         root.layout().add(top_left(Point::zero()));
         if !WINDOW_CONSTRAINT_REQUIRED {
             let ref root_vars = root.layout().vars;

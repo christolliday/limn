@@ -15,7 +15,7 @@ use limn::drawable::text::TextDrawable;
 struct CountEvent;
 
 fn main() {
-    let mut app = util::init_default("Limn counter demo");
+    let app = util::init_default("Limn counter demo");
     let mut root = WidgetBuilder::new("root");
     root.hbox();
 
@@ -54,6 +54,5 @@ fn main() {
         .add_child(text_widget)
         .add_child(button_container);
 
-    app.ui.root.add_child(root);
-    app.main_loop();
+    app.main_loop(root);
 }

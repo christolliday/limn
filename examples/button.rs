@@ -9,7 +9,7 @@ use limn::widgets::button::ToggleButtonBuilder;
 
 fn main() {
     let app = util::init_default("Limn button demo");
-    let mut root = app.ui.root.clone();
+    let mut root = WidgetBuilder::new("root");
 
     let mut button = ToggleButtonBuilder::new();
     button.set_text("ON", "OFF");
@@ -20,5 +20,5 @@ fn main() {
     ]);
     root.add_child(button);
 
-    app.main_loop();
+    app.main_loop(root);
 }

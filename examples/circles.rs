@@ -266,6 +266,5 @@ fn main() {
             event!(Target::Ui, CircleEvent::Delete);
         }
     });
-    app.ui.root.add_child(root);
-    app.main_loop();
+    app.main_loop(root);
 }

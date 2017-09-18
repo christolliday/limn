@@ -271,6 +271,5 @@ fn main() {
 
     app.add_handler(PeopleHandler::new(ids));
 
-    app.ui.root.add_child(root);
-    app.main_loop();
+    app.main_loop(root);
 }

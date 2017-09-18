@@ -30,7 +30,7 @@ impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 }
 
 fn main() {
-    let mut app = util::init_default("Limn edit text demo");
+    let app = util::init_default("Limn edit text demo");
     let mut root = WidgetBuilder::new("root");
 
     let mut content_widget = WidgetBuilder::new("content");
@@ -94,6 +94,5 @@ fn main() {
         .add_child(edit_text_box);
 
     root.add_child(content_widget);
-    app.ui.root.add_child(root);
-    app.main_loop();
+    app.main_loop(root);
 }

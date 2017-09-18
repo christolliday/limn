@@ -11,7 +11,7 @@ use limn::widgets::image::ImageBuilder;
 
 fn main() {
     let app = util::init_default("Limn button demo");
-    let mut root = app.ui.root.clone();
+    let mut root = WidgetBuilder::new("root");
 
     let mut image_widget = ImageBuilder::new("rust.png");
     image_widget.layout().add(constraints![
@@ -20,5 +20,5 @@ fn main() {
     ]);
     root.add_child(image_widget);
 
-    app.main_loop();
+    app.main_loop(root);
 }

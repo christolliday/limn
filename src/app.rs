@@ -10,6 +10,7 @@ use window::Window;
 
 use ui::Ui;
 use input::InputEvent;
+use widget::WidgetBuilder;
 use event::{self, Target, UiHandlerWrapper, UiEventHandler};
 use util::Size;
 
@@ -64,7 +65,8 @@ impl App {
         }
     }
     /// Application main loop
-    pub fn main_loop(mut self) {
+    pub fn main_loop(mut self, root: WidgetBuilder) {
+        self.ui.root.add_child(root);
         let events_loop = self.events_loop.clone();
         let mut events_loop = events_loop.borrow_mut();
 

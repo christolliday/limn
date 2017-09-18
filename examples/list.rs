@@ -19,7 +19,7 @@ use limn::widgets::scroll::ScrollBuilder;
 
 fn main() {
     let app = util::init_default("Limn list demo");
-    let mut root = app.ui.root.clone();
+    let mut root = WidgetBuilder::new("root");
 
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.layout().add(constraints![
@@ -39,5 +39,5 @@ fn main() {
     scroll_widget.add_content(list_widget);
     root.add_child(scroll_widget);
 
-    app.main_loop();
+    app.main_loop(root);
 }

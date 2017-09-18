@@ -119,7 +119,7 @@ impl ClockBuilder {
 
 fn main() {
     let mut app = util::init_default("Limn clock demo");
-    let mut root = app.ui.root.clone();
+    let mut root = WidgetBuilder::new("root");
 
     let mut clock = ClockBuilder::new().widget;
     clock.layout().add(constraints![
@@ -136,5 +136,5 @@ fn main() {
     app.add_handler_fn(move |_: &ClockTick, _| {
         clock_ref.event_subtree(ClockTick);
     });
-    app.main_loop();
+    app.main_loop(root);
 }
