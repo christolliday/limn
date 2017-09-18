@@ -249,7 +249,7 @@ impl Iterator for CursorWidgetWalker {
     fn next(&mut self) -> Option<WidgetRef> {
         for widget_ref in self.dfs.by_ref() {
             let widget = &widget_ref.widget();
-            if widget.is_mouse_over(self.point) {
+            if widget.is_under_cursor(self.point) {
                 return Some(widget_ref.clone());
             }
         }

@@ -92,16 +92,6 @@ impl SizeExt<f32> for Size {
     }
 }
 
-pub fn mouse_inside_ellipse(mouse: Point, bounds: Rect) -> bool {
-    let radius = Size::new(bounds.width() / 2.0, bounds.height() / 2.0);
-    let center = Point::new(bounds.left() + radius.width, bounds.top() + radius.height);
-    point_inside_ellipse(mouse, center, radius)
-}
-pub fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
-    (point.x - center.x).powi(2) / radius.width.powi(2) +
-    (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
-}
-
 pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut RenderBuilder) {
     let widths = BorderWidths { left: 1.0, right: 1.0, top: 1.0, bottom: 1.0 };
     let side = BorderSide { color: color.into(), style: BorderStyle::Solid };

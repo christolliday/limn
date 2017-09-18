@@ -470,8 +470,12 @@ impl Widget {
         }
     }
 
-    pub fn is_mouse_over(&self, mouse: Point) -> bool {
-        self.bounds.contains(&mouse)
+    pub fn is_under_cursor(&self, cursor: Point) -> bool {
+        if let Some(ref drawable) = self.drawable {
+            drawable.is_under_cursor(self.bounds, cursor)
+        } else {
+            false
+        }
     }
     pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)

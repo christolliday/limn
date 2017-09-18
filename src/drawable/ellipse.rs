@@ -4,7 +4,7 @@ use render::RenderBuilder;
 use widget::drawable::Drawable;
 use widget::property::PropSet;
 use widget::style::{Styleable, Value};
-use util::{Rect, RectExt};
+use util::{Rect, RectExt, Point, Size};
 use color::*;
 
 pub struct EllipseDrawable {
@@ -46,8 +46,17 @@ impl Drawable for EllipseDrawable {
             renderer.builder.push_rect(bounds.typed(), Some(outer_clip), self.background_color.into());
         };
     }
+    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
+        let radius = Size::new(bounds.width() / 2.0, bounds.height() / 2.0);
+        let center = Point::new(bounds.left() + radius.width, bounds.top() + radius.height);
+        point_inside_ellipse(cursor, center, radius)
+    }
 }
 
+fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
+    (point.x - center.x).powi(2) / radius.width.powi(2) +
+    (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
+}
 
 #[derive(Clone)]
 pub enum EllipseStyleable {

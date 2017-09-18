@@ -8,11 +8,14 @@ use event::{WidgetEventHandler, WidgetEventArgs};
 use widget::property::PropSet;
 use widget::style::Style;
 
-use util::Rect;
+use util::{Rect, Point};
 
 
 pub trait Drawable: Downcast {
     fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder);
+    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
+        bounds.contains(&cursor)
+    }
 }
 impl_downcast!(Drawable);
 
@@ -57,6 +60,9 @@ impl DrawableWrapper {
         } else {
             false
         }
+    }
+    pub fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
+        self.drawable.is_under_cursor(bounds, cursor)
     }
 }
 
