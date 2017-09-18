@@ -98,7 +98,7 @@ macro_rules! widget_builder {
 }
 
 pub struct LayoutGuard<'a> {
-    guard: Ref<'a, WidgetInner>
+    guard: Ref<'a, Widget>
 }
 impl<'b> Deref for LayoutGuard<'b> {
     type Target = Layout;
@@ -108,7 +108,7 @@ impl<'b> Deref for LayoutGuard<'b> {
 }
 
 pub struct LayoutGuardMut<'a> {
-    guard: RefMut<'a, WidgetInner>
+    guard: RefMut<'a, Widget>
 }
 impl<'b> Deref for LayoutGuardMut<'b> {
     type Target = Layout;
@@ -123,7 +123,7 @@ impl<'b> DerefMut for LayoutGuardMut<'b> {
 }
 
 pub struct PropsGuard<'a> {
-    guard: RefMut<'a, WidgetInner>
+    guard: RefMut<'a, Widget>
 }
 impl<'b> Deref for PropsGuard<'b> {
     type Target = PropSet;
@@ -138,7 +138,7 @@ impl<'b> DerefMut for PropsGuard<'b> {
 }
 
 pub struct DrawableGuard<'a> {
-    guard: RefMut<'a, WidgetInner>
+    guard: RefMut<'a, Widget>
 }
 impl<'a> DrawableGuard<'a> {
     pub fn downcast_ref<T: Drawable>(&self) -> Option<&T> {
@@ -157,7 +157,7 @@ pub struct WidgetBuilder {
 impl WidgetBuilder {
     pub fn new(name: &str) -> Self {
         let mut widget = WidgetBuilder {
-            widget: WidgetRef::new_named(name),
+            widget: WidgetRef::new(Widget::new(name.to_owned())),
         };
         widget.add_handler_fn(property::prop_change_handle);
         widget
@@ -217,16 +217,17 @@ impl WidgetBuilder {
         self.widget.add_child(child);
         self
     }
-    pub fn set_debug_name(&mut self, name: &str) -> &mut Self {
-        self.widget.set_debug_name(name);
+    pub fn set_name(&mut self, name: &str) -> &mut Self {
+        self.widget.widget_mut().name = name.to_owned();
+        self.widget.widget_mut().layout.name = Some(name.to_owned());
         self
     }
 }
 
 #[derive(Clone)]
-pub struct WidgetRef(pub Rc<RefCell<WidgetInner>>);
+pub struct WidgetRef(pub Rc<RefCell<Widget>>);
 #[derive(Clone)]
-pub struct WidgetWeak(pub Weak<RefCell<WidgetInner>>);
+pub struct WidgetWeak(pub Weak<RefCell<Widget>>);
 
 impl PartialEq for WidgetRef {
     fn eq(&self, other: &WidgetRef) -> bool {
@@ -242,23 +243,20 @@ impl Hash for WidgetRef {
 use std::fmt;
 impl fmt::Debug for WidgetRef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.widget().debug_name.clone().unwrap_or_else(|| "None".to_owned()))
+        write!(f, "{}", self.widget().name)
     }
 }
 
 impl WidgetRef {
-    fn new_named(name: &str) -> Self {
-        WidgetRef::new_widget(WidgetInner::new(Some(name.to_owned())))
-    }
-    fn new_widget(widget: WidgetInner) -> Self {
+    fn new(widget: Widget) -> Self {
         let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
         event!(Target::Ui, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
-    pub fn widget_mut(&self) -> RefMut<WidgetInner> {
+    pub fn widget_mut(&self) -> RefMut<Widget> {
         self.0.borrow_mut()
     }
-    pub fn widget(&self) -> Ref<WidgetInner> {
+    pub fn widget(&self) -> Ref<Widget> {
         self.0.borrow()
     }
     pub fn layout(&mut self) -> LayoutGuard {
@@ -279,8 +277,8 @@ impl WidgetRef {
     pub fn id(&self) -> WidgetId {
         self.0.borrow().id
     }
-    pub fn set_debug_name(&mut self, name: &str) -> &mut Self {
-        self.widget_mut().debug_name = Some(name.to_owned());
+    pub fn set_name(&mut self, name: &str) -> &mut Self {
+        self.widget_mut().name = name.to_owned();
         self.widget_mut().layout.name = Some(name.to_owned());
         event!(Target::Ui, UpdateLayout(self.clone()));
         self
@@ -289,8 +287,8 @@ impl WidgetRef {
         self.widget_mut().debug_color = Some(color);
         self
     }
-    pub fn debug_name(&self) -> Option<String> {
-        self.0.borrow().debug_name.clone()
+    pub fn name(&self) -> String {
+        self.0.borrow().name.clone()
     }
     pub fn debug_color(&self) -> Option<Color> {
         self.0.borrow().debug_color
@@ -412,14 +410,14 @@ impl WidgetWeak {
     }
 }
 
-pub struct WidgetInner {
+pub struct Widget {
     pub id: WidgetId,
     pub drawable: Option<DrawableWrapper>,
     pub props: PropSet,
     pub has_updated: bool,
     pub layout: Layout,
     pub bounds: Rect,
-    pub debug_name: Option<String>,
+    pub name: String,
     pub debug_color: Option<Color>,
     pub children: Vec<WidgetRef>,
     pub parent: Option<WidgetWeak>,
@@ -427,17 +425,17 @@ pub struct WidgetInner {
     pub handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
 }
 
-impl WidgetInner {
-    fn new(name: Option<String>) -> Self {
+impl Widget {
+    fn new(name: String) -> Self {
         let id = resources().widget_id();
-        WidgetInner {
+        Widget {
             id: id,
             drawable: None,
             props: PropSet::new(),
-            layout: Layout::new(id.0, name.clone()),
+            layout: Layout::new(id.0, Some(name.clone())),
             has_updated: false,
             bounds: Rect::zero(),
-            debug_name: name,
+            name: name,
             debug_color: None,
             children: Vec::new(),
             parent: None,

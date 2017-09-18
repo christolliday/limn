@@ -112,6 +112,4 @@ pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut R
 
 pub fn draw_horizontal_line<C: Into<ColorF>>(baseline: f32, start: f32, end: f32, color: C, renderer: &mut RenderBuilder) {
     draw_rect_outline(Rect::new(Point::new(start, baseline), Size::new(end - start, 0.0)), color, renderer);
-    //renderer.builder.push_line(
-    //    None, baseline, start, end, LineOrientation::Horizontal, 1.0, color.into(), LineStyle::Wavy);
 }

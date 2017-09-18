@@ -115,7 +115,7 @@ impl App {
                     {
                         let widget = &mut *widget.widget_mut();
                         let value = value as f32;
-                        debug!("{:?}: {:?} = {}", widget.debug_name, var, value);
+                        debug!("{:?}: {:?} = {}", widget.name, var, value);
                         match var {
                             VarType::Left => widget.bounds.origin.x = value,
                             VarType::Top => widget.bounds.origin.y = value,

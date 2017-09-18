@@ -29,16 +29,16 @@ fn create_slider_control() -> WidgetBuilder {
     slider_container.set_inactive();
     let mut slider_title = TextBuilder::new_with_style(
         style!(parent: text_style, TextStyleable::Text: "Circle Size".to_owned()));
-    slider_title.set_debug_name("slider_title");
+    slider_title.set_name("slider_title");
     slider_title.layout().add(align_left(&slider_container));
     let mut slider_value = TextBuilder::new_with_style(
         style!(parent: text_style, TextStyleable::Align: Align::End, TextStyleable::Text: "30".to_owned()));
     slider_value
-        .set_debug_name("slider_value")
+        .set_name("slider_value")
         .add_handler_fn(edit_text::text_change_handle);
     slider_value.layout().add(align_right(&slider_container));
     let mut slider_widget = SliderBuilder::new();
-    slider_widget.set_debug_name("slider_widget");
+    slider_widget.set_name("slider_widget");
     slider_widget.layout().add(constraints![
         min_width(300.0),
         below(&slider_title).padding(10.0),

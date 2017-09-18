@@ -13,7 +13,7 @@ fn main() {
 
     let mut button = ToggleButtonBuilder::new();
     button.set_text("ON", "OFF");
-    button.set_debug_name("button");
+    button.set_name("button");
     button.layout().add(constraints![
         center(&root),
         bound_by(&root).padding(50.0).strength(WEAK),

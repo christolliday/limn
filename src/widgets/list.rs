@@ -101,7 +101,7 @@ impl ListBuilder {
         for item in contents {
             let mut widget = build(item, self);
             widget
-                .set_debug_name("list_item")
+                .set_name("list_item")
                 .list_item(&self.widget.widget_ref());
             self.widget.add_child(widget);
         }

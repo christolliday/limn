@@ -198,7 +198,7 @@ impl Ui {
         println!("WIDGET POSITIONS");
         for widget_ref in self.bfs() {
             let bounds = widget_ref.bounds();
-            let name = widget_ref.debug_name().clone();
+            let name = widget_ref.name();
             println!("{:?} {:?}", name, bounds);
         }
     }

@@ -38,7 +38,7 @@ impl ScrollBuilder {
     }
     pub fn add_scrollbar(&mut self) -> &mut Self {
         let mut scrollbar_h = SliderBuilder::new();
-        scrollbar_h.set_debug_name("scrollbar_h");
+        scrollbar_h.set_name("scrollbar_h");
         scrollbar_h.scrollbar_style();
         scrollbar_h.layout().add(constraints![
             align_bottom(&self.widget),
@@ -46,7 +46,7 @@ impl ScrollBuilder {
             below(&self.content_holder),
         ]);
         let mut scrollbar_v = SliderBuilder::new();
-        scrollbar_v.set_debug_name("scrollbar_v");
+        scrollbar_v.set_name("scrollbar_v");
         scrollbar_v.make_vertical().scrollbar_style();
         scrollbar_v.layout().add(constraints![
             align_right(&self.widget),
