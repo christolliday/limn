@@ -65,7 +65,7 @@ fn create_slider_control() -> WidgetBuilder {
         .add_child(slider_widget);
     slider_container
 }
-fn create_control_bar(root_widget: &mut WidgetBuilder) -> (Widget, Widget, Widget) {
+fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetRef, WidgetRef, WidgetRef) {
     let control_color = GRAY_70;
     let mut button_container = WidgetBuilder::new("button_container");
     let style = style!(RectStyleable::BackgroundColor: control_color);
@@ -101,7 +101,7 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (Widget, Widget, Widge
     (undo_widget_ref, redo_widget_ref, slider_container_ref)
 }
 
-fn create_circle(center: &Point, mut parent_id: Widget, size: f32) -> Widget {
+fn create_circle(center: &Point, mut parent_id: WidgetRef, size: f32) -> WidgetRef {
     let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyleable::Border: Some((2.0, BLACK)));
     let mut widget = WidgetBuilder::new("circle");
@@ -137,27 +137,27 @@ enum CircleEvent {
     Add(Point),
     Undo,
     Redo,
-    Select(Option<Widget>),
+    Select(Option<WidgetRef>),
     Delete,
     Resize(f32),
 }
 
 struct CircleEventHandler {
-    circle_canvas_id: Widget,
-    undo_id: Widget,
-    redo_id: Widget,
-    slider_id: Widget,
+    circle_canvas_id: WidgetRef,
+    undo_id: WidgetRef,
+    redo_id: WidgetRef,
+    slider_id: WidgetRef,
 
-    circles: HashMap<Widget, (Point, f32)>,
-    undo_queue: Vec<Widget>,
+    circles: HashMap<WidgetRef, (Point, f32)>,
+    undo_queue: Vec<WidgetRef>,
     redo_queue: Vec<(Point, f32)>,
-    selected: Option<Widget>,
+    selected: Option<WidgetRef>,
 }
 impl CircleEventHandler {
-    fn new(circle_canvas_id: Widget,
-           undo_id: Widget,
-           redo_id: Widget,
-           slider_id: Widget)
+    fn new(circle_canvas_id: WidgetRef,
+           undo_id: WidgetRef,
+           redo_id: WidgetRef,
+           slider_id: WidgetRef)
            -> Self {
         CircleEventHandler {
             circles: HashMap::new(),

@@ -43,24 +43,24 @@ enum PeopleEvent {
     Add,
     Update,
     Delete,
-    PersonSelected(Option<Widget>),
+    PersonSelected(Option<WidgetRef>),
     ChangeFirstName(String),
     ChangeLastName(String),
 }
 
 struct Ids {
-    list_widget: Widget,
-    first_name_box: Widget,
-    last_name_box: Widget,
-    create_button: Widget,
-    update_button: Widget,
-    delete_button: Widget,
+    list_widget: WidgetRef,
+    first_name_box: WidgetRef,
+    last_name_box: WidgetRef,
+    create_button: WidgetRef,
+    update_button: WidgetRef,
+    delete_button: WidgetRef,
 }
 struct PeopleHandler {
     ids: Ids,
-    selected_item: Option<Widget>,
+    selected_item: Option<WidgetRef>,
     person: Person,
-    people: HashMap<Widget, Person>,
+    people: HashMap<WidgetRef, Person>,
 }
 impl PeopleHandler {
     fn new(ids: Ids) -> Self {
@@ -143,7 +143,7 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
 }
 
 use limn::widgets::edit_text;
-pub fn add_person(person: &Person, mut list_widget_id: Widget) -> Widget {
+pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
     let list_item_widget = {
         let text_style = style!(TextStyleable::TextColor: WHITE);
         let text_drawable = TextDrawable::new(&person.name());

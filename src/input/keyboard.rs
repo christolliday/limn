@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use stable_bst::map::TreeMap;
 use stable_bst::Bound::{Excluded, Unbounded};
 
-use widget::{Widget, WidgetBuilder};
+use widget::{WidgetRef, WidgetBuilder};
 use widget::property::{PropChange, Property};
 use input::mouse::ClickEvent;
 use event::{Target, UiEventHandler};
@@ -30,10 +30,10 @@ Later on maybe it should be based on the relative positioning of widgets (could 
 ugly updating the treemap as widgets change position), or some user defined ordering.
 */
 pub struct FocusHandler {
-    focusable_map: HashMap<Widget, usize>,
+    focusable_map: HashMap<WidgetRef, usize>,
      // can replace TreeMap with std BTreeMap once the range API or similar is stable
-    focusable: TreeMap<usize, Widget>,
-    focused: Option<Widget>,
+    focusable: TreeMap<usize, WidgetRef>,
+    focused: Option<WidgetRef>,
     focus_index_max: usize,
 }
 impl FocusHandler {
@@ -45,7 +45,7 @@ impl FocusHandler {
             focus_index_max: 0,
         }
     }
-    fn set_focus(&mut self, new_focus: Option<Widget>) {
+    fn set_focus(&mut self, new_focus: Option<WidgetRef>) {
         if new_focus != self.focused {
             if let Some(ref focused) = self.focused {
                 focused.event_subtree(PropChange::Remove(Property::Focused));
@@ -109,9 +109,9 @@ impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
 }
 
 pub enum KeyboardInputEvent {
-    AddFocusable(Widget),
-    RemoveFocusable(Widget),
-    FocusChange(Option<Widget>),
+    AddFocusable(WidgetRef),
+    RemoveFocusable(WidgetRef),
+    FocusChange(Option<WidgetRef>),
     KeyboardInput(KeyboardInput),
     ReceivedCharacter(ReceivedCharacter),
 }

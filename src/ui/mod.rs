@@ -10,7 +10,7 @@ use glutin;
 
 use window::Window;
 use app::App;
-use widget::{Widget, WidgetBuilder};
+use widget::{WidgetRef, WidgetBuilder};
 use layout::{LayoutManager, LayoutVars};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
@@ -23,8 +23,8 @@ use render::WebRenderContext;
 const WINDOW_CONSTRAINT_REQUIRED: bool = false;
 
 pub struct Ui {
-    pub root: Widget,
-    widget_map: HashMap<WidgetId, Widget>,
+    pub root: WidgetRef,
+    widget_map: HashMap<WidgetId, WidgetRef>,
     pub layout: LayoutManager,
     pub render: WebRenderContext,
     pub needs_redraw: bool,
@@ -62,10 +62,10 @@ impl Ui {
             window_constraints: Vec::new(),
         }
     }
-    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<Widget> {
+    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<WidgetRef> {
         self.widget_map.get(&widget_id).map(|widget| widget.clone())
     }
-    pub fn get_root(&mut self) -> Widget {
+    pub fn get_root(&mut self) -> WidgetRef {
         self.root.clone()
     }
 
@@ -150,7 +150,7 @@ impl Ui {
         window.swap_buffers();
     }
 
-    pub fn widget_under_cursor(&mut self, point: Point) -> Option<Widget> {
+    pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetRef> {
         // first widget found is the deepest, later will need to have z order as ordering
         self.widgets_under_cursor(point).next()
     }
@@ -158,7 +158,7 @@ impl Ui {
         Bfs::new(self.get_root())
     }
 
-    fn handle_widget_event(&mut self, widget_ref: Widget, type_id: TypeId, data: &Any) -> bool {
+    fn handle_widget_event(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Any) -> bool {
         let handled = widget_ref.trigger_event(type_id, data);
         if widget_ref.has_updated() {
             self.needs_redraw = true;
@@ -187,7 +187,7 @@ impl Ui {
             _ => ()
         }
     }
-    fn handle_event_subtree(&mut self, widget_ref: Widget, type_id: TypeId, data: &Any) {
+    fn handle_event_subtree(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Any) {
         self.handle_widget_event(widget_ref.clone(), type_id, data);
         let children = &widget_ref.widget().children;
         for child in children {
@@ -205,9 +205,9 @@ impl Ui {
 }
 
 #[derive(Clone)]
-pub struct RegisterWidget(pub Widget);
+pub struct RegisterWidget(pub WidgetRef);
 #[derive(Clone)]
-pub struct RemoveWidget(pub Widget);
+pub struct RemoveWidget(pub WidgetRef);
 
 impl App {
     pub fn add_ui_handlers(&mut self) {
@@ -236,7 +236,7 @@ pub struct CursorWidgetWalker {
     dfs: DfsPostReverse,
 }
 impl CursorWidgetWalker {
-    fn new(point: Point, root: Widget) -> Self {
+    fn new(point: Point, root: WidgetRef) -> Self {
         CursorWidgetWalker {
             point: point,
             dfs: DfsPostReverse::new(root),
@@ -245,8 +245,8 @@ impl CursorWidgetWalker {
 }
 
 impl Iterator for CursorWidgetWalker {
-    type Item = Widget;
-    fn next(&mut self) -> Option<Widget> {
+    type Item = WidgetRef;
+    fn next(&mut self) -> Option<WidgetRef> {
         for widget_ref in self.dfs.by_ref() {
             let widget = &widget_ref.widget();
             if widget.is_mouse_over(self.point) {
@@ -260,13 +260,13 @@ impl Iterator for CursorWidgetWalker {
 // iterates in reverse of draw order, that is, depth first post order,
 // with siblings in reverse of insertion order
 pub struct DfsPostReverse {
-    stack: Vec<Widget>,
-    discovered: HashSet<Widget>,
-    finished: HashSet<Widget>,
+    stack: Vec<WidgetRef>,
+    discovered: HashSet<WidgetRef>,
+    finished: HashSet<WidgetRef>,
 }
 
 impl DfsPostReverse {
-    fn new(root: Widget) -> Self {
+    fn new(root: WidgetRef) -> Self {
         DfsPostReverse {
             stack: vec![root],
             discovered: HashSet::new(),
@@ -276,8 +276,8 @@ impl DfsPostReverse {
 }
 
 impl Iterator for DfsPostReverse {
-    type Item = Widget;
-    fn next(&mut self) -> Option<Widget> {
+    type Item = WidgetRef;
+    fn next(&mut self) -> Option<WidgetRef> {
         while let Some(widget_ref) = self.stack.last().cloned() {
             if self.discovered.insert(widget_ref.clone()) {
                 for child in &widget_ref.widget().children {
@@ -295,11 +295,11 @@ impl Iterator for DfsPostReverse {
 }
 
 pub struct Bfs {
-    queue: VecDeque<Widget>,
+    queue: VecDeque<WidgetRef>,
 }
 
 impl Bfs {
-    fn new(root: Widget) -> Self {
+    fn new(root: WidgetRef) -> Self {
         let mut queue = VecDeque::new();
         queue.push_front(root);
         Bfs { queue: queue }
@@ -307,8 +307,8 @@ impl Bfs {
 }
 
 impl Iterator for Bfs {
-    type Item = Widget;
-    fn next(&mut self) -> Option<Widget> {
+    type Item = WidgetRef;
+    fn next(&mut self) -> Option<WidgetRef> {
         if let Some(widget_ref) = self.queue.pop_front() {
             for child in &widget_ref.widget().children {
                 self.queue.push_back(child.clone());

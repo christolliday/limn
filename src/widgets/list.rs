@@ -1,5 +1,5 @@
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::{WidgetBuilder, Widget};
+use widget::{WidgetBuilder, WidgetRef};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widgets::text::TextBuilder;
@@ -10,7 +10,7 @@ use layout::constraint::*;
 use color::*;
 
 pub struct ListItemSelected {
-    widget: Option<Widget>,
+    widget: Option<WidgetRef>,
 }
 
 static COLOR_LIST_ITEM_DEFAULT: Color = GRAY_30;
@@ -29,7 +29,7 @@ lazy_static! {
 }
 
 pub struct ListHandler {
-    selected: Option<Widget>,
+    selected: Option<WidgetRef>,
 }
 impl ListHandler {
     pub fn new() -> Self {
@@ -53,10 +53,10 @@ fn list_handle_deselect(_: &ClickEvent, args: WidgetEventArgs) {
 }
 
 pub struct ListItemHandler {
-    list_id: Widget,
+    list_id: WidgetRef,
 }
 impl ListItemHandler {
-    pub fn new(list_id: Widget) -> Self {
+    pub fn new(list_id: WidgetRef) -> Self {
         ListItemHandler { list_id: list_id }
     }
 }
@@ -87,7 +87,7 @@ impl ListBuilder {
         }
     }
     pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
-        where F: Fn(Option<Widget>, WidgetEventArgs) + 'static
+        where F: Fn(Option<WidgetRef>, WidgetEventArgs) + 'static
     {
         self.widget.add_handler_fn(move |event: &ListItemSelected, args| {
             on_item_selected(event.widget.clone(), args);
@@ -109,7 +109,7 @@ impl ListBuilder {
 }
 
 impl WidgetBuilder {
-    pub fn list_item(&mut self, parent_list: &Widget) -> &mut Self {
+    pub fn list_item(&mut self, parent_list: &WidgetRef) -> &mut Self {
         self.add_handler(ListItemHandler::new(parent_list.clone()))
     }
 }

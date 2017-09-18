@@ -6,7 +6,7 @@ use resources::WidgetId;
 use app::App;
 use event::Target;
 
-use widget::{Widget, WidgetBuilder};
+use widget::{WidgetRef, WidgetBuilder};
 
 use self::container::LayoutContainer;
 
@@ -19,7 +19,7 @@ impl LayoutContainer for LinearLayoutHandler {
     fn set_padding(&mut self, padding: f32) {
         self.padding = padding;
     }
-    fn add_child(&mut self, mut parent: Widget, mut child: Widget) {
+    fn add_child(&mut self, mut parent: WidgetRef, mut child: WidgetRef) {
         let child_id = child.id();
         parent.update_layout(|layout| {
             child.update_layout(|child_layout| {
@@ -27,7 +27,7 @@ impl LayoutContainer for LinearLayoutHandler {
             });
         });
     }
-    fn remove_child(&mut self, mut parent: Widget, child_id: WidgetId) {
+    fn remove_child(&mut self, mut parent: WidgetRef, child_id: WidgetId) {
         parent.update_layout(|layout| {
             self.remove_child_layout(layout, child_id.0);
         });
@@ -35,7 +35,7 @@ impl LayoutContainer for LinearLayoutHandler {
 }
 
 impl LayoutContainer for GridLayout {
-    fn add_child(&mut self, mut parent: Widget, mut child: Widget) {
+    fn add_child(&mut self, mut parent: WidgetRef, mut child: WidgetRef) {
         parent.update_layout(|layout| {
             child.update_layout(|child_layout| {
                 self.add_child_layout(layout, child_layout);
@@ -89,7 +89,7 @@ impl LayoutManager {
 }
 
 #[derive(Clone)]
-pub struct UpdateLayout(pub Widget);
+pub struct UpdateLayout(pub WidgetRef);
 pub struct ResizeWindow;
 pub struct LayoutChanged(Vec<(usize, VarType, f64)>);
 pub struct LayoutUpdated;

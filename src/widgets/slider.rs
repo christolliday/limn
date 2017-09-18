@@ -3,7 +3,7 @@ use cassowary::strength::*;
 use layout::constraint::*;
 use input::mouse::ClickEvent;
 use event::{WidgetEventHandler, WidgetEventArgs};
-use widget::{WidgetBuilder, Widget, BuildWidget};
+use widget::{WidgetBuilder, WidgetRef, BuildWidget};
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
@@ -253,11 +253,11 @@ pub enum SliderHandleInput {
 }
 struct DragHandler {
     orientation: Orientation,
-    container: Widget,
+    container: WidgetRef,
     start_pos: f32,
 }
 impl DragHandler {
-    pub fn new(orientation: Orientation, container: Widget) -> Self {
+    pub fn new(orientation: Orientation, container: WidgetRef) -> Self {
         DragHandler {
             orientation: orientation,
             container: container,

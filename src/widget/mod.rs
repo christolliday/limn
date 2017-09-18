@@ -24,13 +24,13 @@ use self::property::{PropSet, Property};
 use self::drawable::{Drawable, DrawableWrapper};
 use self::style::Style;
 
-impl AsMut<Widget> for Widget {
-    fn as_mut(&mut self) -> &mut Widget {
+impl AsMut<WidgetRef> for WidgetRef {
+    fn as_mut(&mut self) -> &mut WidgetRef {
         self
     }
 }
-impl AsRef<Widget> for Widget {
-    fn as_ref(&self) -> &Widget {
+impl AsRef<WidgetRef> for WidgetRef {
+    fn as_ref(&self) -> &WidgetRef {
         self
     }
 }
@@ -47,7 +47,7 @@ impl LayoutRef for WidgetBuilder {
         self.widget.widget_mut().layout.vars.clone()
     }
 }
-impl LayoutRef for Widget {
+impl LayoutRef for WidgetRef {
     fn layout_ref(&self) -> LayoutVars {
         self.widget_mut().layout.vars.clone()
     }
@@ -151,18 +151,18 @@ impl<'a> DrawableGuard<'a> {
 }
 
 pub struct WidgetBuilder {
-    pub widget: Widget,
+    pub widget: WidgetRef,
 }
 
 impl WidgetBuilder {
     pub fn new(name: &str) -> Self {
         let mut widget = WidgetBuilder {
-            widget: Widget::new_named(name),
+            widget: WidgetRef::new_named(name),
         };
         widget.add_handler_fn(property::prop_change_handle);
         widget
     }
-    pub fn widget_ref(&self) -> Widget {
+    pub fn widget_ref(&self) -> WidgetRef {
         self.widget.clone()
     }
     pub fn id(&self) -> WidgetId {
@@ -224,34 +224,34 @@ impl WidgetBuilder {
 }
 
 #[derive(Clone)]
-pub struct Widget(pub Rc<RefCell<WidgetInner>>);
+pub struct WidgetRef(pub Rc<RefCell<WidgetInner>>);
 #[derive(Clone)]
 pub struct WidgetWeak(pub Weak<RefCell<WidgetInner>>);
 
-impl PartialEq for Widget {
-    fn eq(&self, other: &Widget) -> bool {
+impl PartialEq for WidgetRef {
+    fn eq(&self, other: &WidgetRef) -> bool {
         self.id() == other.id()
     }
 }
-impl Eq for Widget {}
-impl Hash for Widget {
+impl Eq for WidgetRef {}
+impl Hash for WidgetRef {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
 }
 use std::fmt;
-impl fmt::Debug for Widget {
+impl fmt::Debug for WidgetRef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.widget().debug_name.clone().unwrap_or_else(|| "None".to_owned()))
     }
 }
 
-impl Widget {
+impl WidgetRef {
     fn new_named(name: &str) -> Self {
-        Widget::new_widget(WidgetInner::new(Some(name.to_owned())))
+        WidgetRef::new_widget(WidgetInner::new(Some(name.to_owned())))
     }
     fn new_widget(widget: WidgetInner) -> Self {
-        let widget_ref = Widget(Rc::new(RefCell::new(widget)));
+        let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
         event!(Target::Ui, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
@@ -341,7 +341,7 @@ impl Widget {
         self
     }
 
-    pub fn remove_child(&mut self, child_ref: Widget) {
+    pub fn remove_child(&mut self, child_ref: WidgetRef) {
         let child_id = child_ref.id();
         let mut container = self.widget_mut().container.clone();
         if let Some(ref mut container) = container {
@@ -363,7 +363,7 @@ impl Widget {
         }
     }
 
-    pub fn parent(&mut self) -> Option<Widget> {
+    pub fn parent(&mut self) -> Option<WidgetRef> {
         let parent = self.widget().parent.clone();
         parent.unwrap().upgrade()
     }
@@ -403,9 +403,9 @@ impl Widget {
     }
 }
 impl WidgetWeak {
-    pub fn upgrade(&self) -> Option<Widget> {
+    pub fn upgrade(&self) -> Option<WidgetRef> {
         if let Some(widget_ref) = self.0.upgrade() {
-            Some(Widget(widget_ref))
+            Some(WidgetRef(widget_ref))
         } else {
             None
         }
@@ -421,7 +421,7 @@ pub struct WidgetInner {
     pub bounds: Rect,
     pub debug_name: Option<String>,
     pub debug_color: Option<Color>,
-    pub children: Vec<Widget>,
+    pub children: Vec<WidgetRef>,
     pub parent: Option<WidgetWeak>,
     pub container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
     pub handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,

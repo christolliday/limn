@@ -4,7 +4,7 @@ use cassowary::WeightedRelation::*;
 
 use layout::constraint::*;
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::{BuildWidget, WidgetBuilder, Widget};
+use widget::{BuildWidget, WidgetBuilder, WidgetRef};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
@@ -136,14 +136,14 @@ widget_builder!(ScrollBuilder);
 
 #[allow(dead_code)]
 struct ScrollBars {
-    scrollbar_h: Widget,
-    scrollbar_v: Widget,
-    corner: Widget,
-    h_handle: Widget,
-    v_handle: Widget,
+    scrollbar_h: WidgetRef,
+    scrollbar_v: WidgetRef,
+    corner: WidgetRef,
+    h_handle: WidgetRef,
+    v_handle: WidgetRef,
 }
 impl ScrollBars {
-    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner: Widget) -> Self {
+    fn new(scrollbar_h: &mut SliderBuilder, scrollbar_v: &mut SliderBuilder, corner: WidgetRef) -> Self {
         ScrollBars {
             scrollbar_h: scrollbar_h.widget_ref(),
             scrollbar_v: scrollbar_v.widget_ref(),
@@ -162,7 +162,7 @@ enum ScrollParentEvent {
     ScrollBarMovedY(f32),
 }
 struct ScrollParent {
-    scrollable: Widget,
+    scrollable: WidgetRef,
     content_rect: Rect,
     container_rect: Rect,
     width_ratio: f32,
@@ -172,7 +172,7 @@ struct ScrollParent {
     pub scrollbars: Option<ScrollBars>,
 }
 impl ScrollParent {
-    fn new(scrollable: &mut Widget) -> Self {
+    fn new(scrollable: &mut WidgetRef) -> Self {
         ScrollParent {
             scrollable: scrollable.clone(),
             content_rect: Rect::zero(),
