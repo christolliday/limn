@@ -22,7 +22,7 @@ use util::Size;
 /// are used in a typical desktop app. This set of handlers
 /// could be configured differently for a mobile app, for example.
 pub struct App {
-    pub ui: Ui,
+    ui: Ui,
     handlers: HashMap<TypeId, Vec<UiHandlerWrapper>>,
     next_frame_time: Instant,
     events_loop: Rc<RefCell<glutin::EventsLoop>>,
@@ -91,7 +91,7 @@ impl App {
             }
             self.ui.update();
 
-            if !self.ui.needs_redraw && !self.ui.render.frame_ready() {
+            if !self.ui.needs_redraw() && !self.ui.render.frame_ready() {
                 let mut events = Vec::new();
                 events_loop.run_forever(|window_event| {
                     events.push(window_event);
@@ -105,7 +105,7 @@ impl App {
     }
 
     /// Handle all the pending events in the event queue
-    pub fn handle_events(&mut self) {
+    fn handle_events(&mut self) {
         while let Some((event_address, type_id, data)) = event::queue_next() {
             match event_address {
                 Target::Ui => {

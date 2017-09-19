@@ -23,7 +23,7 @@ pub enum Target {
     Ui,
 }
 
-pub struct Queue {
+struct Queue {
     queue: VecDeque<(Target, TypeId, Box<Any>)>,
     events_loop_proxy: Option<EventsLoopProxy>,
 }
@@ -35,11 +35,11 @@ impl Queue {
             events_loop_proxy: None,
         }
     }
-    pub fn set_events_loop(&mut self, events_loop: EventsLoopProxy) {
+    fn set_events_loop(&mut self, events_loop: EventsLoopProxy) {
         self.events_loop_proxy = Some(events_loop);
     }
     /// Push a new event on the queue and wake the window up if it is asleep
-    pub fn push<T: 'static>(&mut self, address: Target, data: T) {
+    fn push<T: 'static>(&mut self, address: Target, data: T) {
         let type_id = TypeId::of::<T>();
         self.queue.push_back((address, type_id, Box::new(data)));
         if let Some(ref events_loop_proxy) = self.events_loop_proxy {
@@ -73,7 +73,7 @@ pub trait UiEventHandler<T> {
 }
 
 /// Non-generic `WidgetEventHandler` or Widget callback wrapper.
-pub struct WidgetHandlerWrapper {
+pub(super) struct WidgetHandlerWrapper {
     handler: Box<Any>,
     handle_fn: Box<Fn(&mut Any, &Any, WidgetEventArgs)>,
 }
@@ -117,7 +117,7 @@ impl WidgetHandlerWrapper {
 }
 
 /// Non-generic `UiEventHandler` or Ui callback wrapper.
-pub struct UiHandlerWrapper {
+pub(super) struct UiHandlerWrapper {
     handler: Box<Any>,
     handle_fn: Box<Fn(&mut Any, &Any, &mut Ui)>,
 }
@@ -163,7 +163,7 @@ lazy_static! {
 use std::cell::{Cell, RefCell};
 
 thread_local! {
-    pub static LOCAL_QUEUE: Option<RefCell<Queue>> = {
+    static LOCAL_QUEUE: Option<RefCell<Queue>> = {
         let first = FIRST_THREAD.lock().unwrap();
         if first.get() {
             first.set(false);
@@ -174,7 +174,7 @@ thread_local! {
     }
 }
 
-pub fn queue_next() -> Option<(Target, TypeId, Box<Any>)> {
+pub(super) fn queue_next() -> Option<(Target, TypeId, Box<Any>)> {
     if let Some(next) = GLOBAL_QUEUE.lock().unwrap().next() {
         Some((Target::Ui, next.0, next.1))
     } else {
@@ -183,11 +183,12 @@ pub fn queue_next() -> Option<(Target, TypeId, Box<Any>)> {
         next.unwrap()
     }
 }
-pub fn queue_set_events_loop(events_loop: &EventsLoop) {
+pub(super) fn queue_set_events_loop(events_loop: &EventsLoop) {
     GLOBAL_QUEUE.lock().unwrap().set_events_loop(events_loop.create_proxy());
     LOCAL_QUEUE.with(|queue| queue.as_ref().unwrap().borrow_mut().set_events_loop(events_loop.create_proxy()));
 }
 
+/// Send message to target address, must be sent from main UI thread.
 pub fn event<T: 'static>(address: Target, data: T) {
     LOCAL_QUEUE.with(|queue| {
         if let Some(queue) = queue.as_ref() {
@@ -198,6 +199,7 @@ pub fn event<T: 'static>(address: Target, data: T) {
         }
     });
 }
+/// Send message to UI from any thread.
 pub fn event_global<T: 'static + Send>(data: T) {
     GLOBAL_QUEUE.lock().unwrap().push(data);
 }
@@ -211,7 +213,7 @@ macro_rules! event {
     };
 }
 
-pub struct GlobalQueue {
+struct GlobalQueue {
     queue: VecDeque<(TypeId, Box<Any + Send>)>,
     events_loop_proxy: Option<EventsLoopProxy>,
 }
@@ -237,7 +239,6 @@ impl GlobalQueue {
 }
 impl Iterator for GlobalQueue {
     type Item = (TypeId, Box<Any + Send>);
-    /// Take the next event off the Queue, should only be called by App
     fn next(&mut self) -> Option<(TypeId, Box<Any + Send>)> {
         self.queue.pop_front()
     }

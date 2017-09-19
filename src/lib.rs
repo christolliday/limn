@@ -1,3 +1,5 @@
+//! Limn is a cross platform, event driven, component based GUI library.
+
 #![cfg_attr(feature="nightly", feature(core_intrinsics))]
 
 extern crate text_layout;

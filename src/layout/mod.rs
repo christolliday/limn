@@ -62,7 +62,7 @@ impl WidgetBuilder {
 
 
 /// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
-pub struct LayoutManager {
+pub(super) struct LayoutManager {
     pub solver: LimnSolver,
 }
 
@@ -72,13 +72,6 @@ impl LayoutManager {
             solver: LimnSolver::new(),
         }
     }
-    pub fn update_solver<F>(&mut self, f: F)
-        where F: Fn(&mut LimnSolver)
-    {
-        f(&mut self.solver);
-        self.check_changes();
-    }
-
     pub fn check_changes(&mut self) {
         let changes = self.solver.fetch_changes();
         debug!("layout has {} changes", changes.len());
@@ -115,7 +108,7 @@ impl App {
                     {
                         let widget = &mut *widget.widget_mut();
                         let value = value as f32;
-                        debug!("{:?}: {:?} = {}", widget.name, var, value);
+                        debug!("{:?}: {:?} = {}", widget.name(), var, value);
                         match var {
                             VarType::Left => widget.bounds.origin.x = value,
                             VarType::Top => widget.bounds.origin.y = value,

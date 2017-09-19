@@ -3,6 +3,7 @@ use glutin;
 use glutin::GlContext;
 use webrender::api::{DeviceUintSize, LayoutSize};
 
+/// A simple wrapper around a glutin GlWindow
 pub struct Window {
     window: glutin::GlWindow
 }

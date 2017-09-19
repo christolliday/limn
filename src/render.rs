@@ -10,7 +10,8 @@ use window::Window;
 use euclid::TypedPoint2D;
 use resources;
 
-pub struct WebRenderContext {
+// Provides access to the WebRender context and API
+pub(super) struct WebRenderContext {
     pub renderer: webrender::Renderer,
     pub render_api: RenderApi,
     pub epoch: Epoch,
@@ -23,8 +24,8 @@ pub struct WebRenderContext {
     pub frame_ready: Arc<AtomicBool>,
 }
 
-pub struct RenderBuilder<'a> {
-    pub render: &'a mut WebRenderContext,
+// Context needed for widgets to draw or update resources in a particular frame
+pub struct RenderBuilder {
     pub builder: DisplayListBuilder,
     pub resources: ResourceUpdates,
 }
@@ -72,7 +73,6 @@ impl WebRenderContext {
     pub fn render_builder(&mut self, window_size: LayoutSize) -> RenderBuilder {
         let builder = DisplayListBuilder::new(self.pipeline_id, window_size);
         RenderBuilder {
-            render: self,
             builder: builder,
             resources: ResourceUpdates::new(),
         }

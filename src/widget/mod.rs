@@ -361,9 +361,13 @@ impl WidgetRef {
         }
     }
 
-    pub fn parent(&mut self) -> Option<WidgetRef> {
+    pub fn parent(&self) -> Option<WidgetRef> {
         let parent = self.widget().parent.clone();
         parent.unwrap().upgrade()
+    }
+
+    pub fn children(&self) -> Vec<WidgetRef> {
+        self.widget().children.clone()
     }
 
     pub fn event<T: 'static>(&self, data: T) {
@@ -411,18 +415,18 @@ impl WidgetWeak {
 }
 
 pub struct Widget {
-    pub id: WidgetId,
-    pub drawable: Option<DrawableWrapper>,
-    pub props: PropSet,
-    pub has_updated: bool,
-    pub layout: Layout,
-    pub bounds: Rect,
-    pub name: String,
-    pub debug_color: Option<Color>,
-    pub children: Vec<WidgetRef>,
-    pub parent: Option<WidgetWeak>,
-    pub container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
-    pub handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
+    id: WidgetId,
+    drawable: Option<DrawableWrapper>,
+    props: PropSet,
+    has_updated: bool,
+    pub(super) layout: Layout,
+    pub(super) bounds: Rect,
+    name: String,
+    debug_color: Option<Color>,
+    children: Vec<WidgetRef>,
+    parent: Option<WidgetWeak>,
+    container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
+    handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
 }
 
 impl Widget {
@@ -443,7 +447,9 @@ impl Widget {
             handlers: HashMap::new(),
         }
     }
-
+    pub fn name(&self) -> &str {
+        &self.name
+    }
     pub fn layout(&mut self) -> &mut Layout {
         &mut self.layout
     }

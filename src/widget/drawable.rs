@@ -21,11 +21,11 @@ impl_downcast!(Drawable);
 
 type StyleFn = Fn(&mut Drawable, &Any, &PropSet);
 
-pub struct DrawableStyle {
+pub(super) struct DrawableStyle {
     pub style: Box<Any>,
     pub style_fn: Box<StyleFn>,
 }
-pub struct DrawableWrapper {
+pub(super) struct DrawableWrapper {
     pub drawable: Box<Drawable>,
     pub style: Option<DrawableStyle>,
 }

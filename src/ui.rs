@@ -23,19 +23,19 @@ use render::WebRenderContext;
 const WINDOW_CONSTRAINT_REQUIRED: bool = false;
 
 pub struct Ui {
-    pub(super) root: WidgetRef,
+    pub(crate) root: WidgetRef,
     widget_map: HashMap<WidgetId, WidgetRef>,
-    pub layout: LayoutManager,
-    pub render: WebRenderContext,
-    pub needs_redraw: bool,
+    pub(crate) layout: LayoutManager,
+    pub(crate) render: WebRenderContext,
+    needs_redraw: bool,
     should_close: bool,
     debug_draw_bounds: bool,
-    pub window: Rc<RefCell<Window>>,
+    window: Rc<RefCell<Window>>,
     window_constraints: Vec<Constraint>,
 }
 
 impl Ui {
-    pub fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
+    pub(super) fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
         let mut layout = LayoutManager::new();
         let mut root = WidgetBuilder::new("window");
         root.layout().add(top_left(Point::zero()));
@@ -62,31 +62,29 @@ impl Ui {
             window_constraints: Vec::new(),
         }
     }
-    pub fn get_widget(&mut self, widget_id: WidgetId) -> Option<WidgetRef> {
+
+    pub fn get_widget(&self, widget_id: WidgetId) -> Option<WidgetRef> {
         self.widget_map.get(&widget_id).map(|widget| widget.clone())
     }
-    pub fn get_root(&mut self) -> WidgetRef {
+
+    pub fn get_root(&self) -> WidgetRef {
         self.root.clone()
     }
 
-    pub fn widgets_under_cursor(&mut self, point: Point) -> CursorWidgetWalker {
-        CursorWidgetWalker::new(point, self.get_root())
-    }
     pub fn close(&mut self) {
         self.should_close = true;
     }
-    pub fn should_close(&self) -> bool {
+
+    pub(super) fn should_close(&self) -> bool {
         self.should_close
     }
-    pub fn set_debug_draw_bounds(&mut self, debug_draw_bounds: bool) {
-        self.debug_draw_bounds = debug_draw_bounds;
-        self.redraw();
-    }
-    pub fn resize_window_to_fit(&mut self) {
+
+    pub(super) fn resize_window_to_fit(&mut self) {
         let window_dims = self.get_root_dims();
         self.window.borrow_mut().resize(window_dims.width as u32, window_dims.height as u32);
     }
-    pub fn get_root_dims(&mut self) -> Size {
+
+    pub fn get_root_dims(&self) -> Size {
         let root = self.get_root();
         let mut dims = root.bounds().size;
         // use min size to prevent window size from being set to 0 (X crashes)
@@ -94,7 +92,8 @@ impl Ui {
         dims.height = f32::max(100.0, dims.height);
         dims
     }
-    pub fn window_resized(&mut self, window_dims: Size) {
+
+    pub(super) fn window_resized(&mut self, window_dims: Size) {
         let window_size = self.window.borrow_mut().size_u32();
         self.render.window_resized(window_size);
         let mut root = self.get_root();
@@ -123,14 +122,19 @@ impl Ui {
     pub fn redraw(&mut self) {
         self.needs_redraw = true;
     }
-    pub fn draw_if_needed(&mut self) {
+
+    pub fn needs_redraw(&self) -> bool {
+        self.needs_redraw
+    }
+
+    pub(super) fn draw_if_needed(&mut self) {
         if self.needs_redraw {
             self.draw();
             self.needs_redraw = false;
         }
     }
 
-    pub fn draw(&mut self) {
+    fn draw(&mut self) {
         let window_size = self.window.borrow_mut().size_f32();
         let (builder, resources) = {
             let mut renderer = self.render.render_builder(window_size);
@@ -144,18 +148,25 @@ impl Ui {
         self.render.set_display_list(builder, resources, window_size);
         self.render.generate_frame();
     }
-    pub fn update(&mut self) {
+
+    // Call after drawing
+    pub(super) fn update(&mut self) {
         self.render.update(self.window.borrow_mut().size_u32());
         let window = self.window.borrow_mut();
         window.swap_buffers();
     }
 
-    pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetRef> {
-        // first widget found is the deepest, later will need to have z order as ordering
-        self.widgets_under_cursor(point).next()
+    pub fn widgets_bfs(&self) -> WidgetsBfs {
+        WidgetsBfs::new(self.get_root())
     }
-    pub fn bfs(&mut self) -> Bfs {
-        Bfs::new(self.get_root())
+
+    pub fn widgets_under_cursor(&mut self, point: Point) -> WidgetsUnderCursor {
+        WidgetsUnderCursor::new(point, self.get_root())
+    }
+
+    /// Find the first widget under the cursor, ie. the last to be drawn that is under the cursor
+    pub fn widget_under_cursor(&mut self, point: Point) -> Option<WidgetRef> {
+        self.widgets_under_cursor(point).next()
     }
 
     fn handle_widget_event(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Any) -> bool {
@@ -167,7 +178,7 @@ impl Ui {
         handled
     }
 
-    pub fn handle_event(&mut self, address: Target, type_id: TypeId, data: &Any) {
+    pub(super) fn handle_event(&mut self, address: Target, type_id: TypeId, data: &Any) {
         match address {
             Target::Widget(widget_ref) => {
                 self.handle_widget_event(widget_ref, type_id, data);
@@ -181,22 +192,29 @@ impl Ui {
                     if self.handle_widget_event(widget_ref.clone(), type_id, data) {
                         break;
                     }
-                    maybe_widget_ref = widget_ref.widget().parent.as_ref().and_then(|parent| parent.upgrade());
+                    maybe_widget_ref = widget_ref.parent();
                 }
             }
             _ => ()
         }
     }
+
     fn handle_event_subtree(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Any) {
         self.handle_widget_event(widget_ref.clone(), type_id, data);
-        let children = &widget_ref.widget().children;
+        let children = &widget_ref.children();
         for child in children {
             self.handle_event_subtree(child.clone(), type_id, data);
         }
     }
-    pub fn debug_widget_positions(&mut self) {
+
+    pub fn set_debug_draw_bounds(&mut self, debug_draw_bounds: bool) {
+        self.debug_draw_bounds = debug_draw_bounds;
+        self.redraw();
+    }
+
+    pub fn debug_widget_positions(&self) {
         println!("WIDGET POSITIONS");
-        for widget_ref in self.bfs() {
+        for widget_ref in self.widgets_bfs() {
             let bounds = widget_ref.bounds();
             let name = widget_ref.name();
             println!("{:?} {:?}", name, bounds);
@@ -231,20 +249,20 @@ pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
 
 
 
-pub struct CursorWidgetWalker {
+pub struct WidgetsUnderCursor {
     point: Point,
-    dfs: DfsPostReverse,
+    dfs: WidgetsDfsPostReverse,
 }
-impl CursorWidgetWalker {
+impl WidgetsUnderCursor {
     fn new(point: Point, root: WidgetRef) -> Self {
-        CursorWidgetWalker {
+        WidgetsUnderCursor {
             point: point,
-            dfs: DfsPostReverse::new(root),
+            dfs: WidgetsDfsPostReverse::new(root),
         }
     }
 }
 
-impl Iterator for CursorWidgetWalker {
+impl Iterator for WidgetsUnderCursor {
     type Item = WidgetRef;
     fn next(&mut self) -> Option<WidgetRef> {
         for widget_ref in self.dfs.by_ref() {
@@ -257,17 +275,17 @@ impl Iterator for CursorWidgetWalker {
     }
 }
 
-// iterates in reverse of draw order, that is, depth first post order,
+// Iterates in reverse of draw order, that is, depth first post order,
 // with siblings in reverse of insertion order
-pub struct DfsPostReverse {
+struct WidgetsDfsPostReverse {
     stack: Vec<WidgetRef>,
     discovered: HashSet<WidgetRef>,
     finished: HashSet<WidgetRef>,
 }
 
-impl DfsPostReverse {
+impl WidgetsDfsPostReverse {
     fn new(root: WidgetRef) -> Self {
-        DfsPostReverse {
+        WidgetsDfsPostReverse {
             stack: vec![root],
             discovered: HashSet::new(),
             finished: HashSet::new(),
@@ -275,12 +293,12 @@ impl DfsPostReverse {
     }
 }
 
-impl Iterator for DfsPostReverse {
+impl Iterator for WidgetsDfsPostReverse {
     type Item = WidgetRef;
     fn next(&mut self) -> Option<WidgetRef> {
         while let Some(widget_ref) = self.stack.last().cloned() {
             if self.discovered.insert(widget_ref.clone()) {
-                for child in &widget_ref.widget().children {
+                for child in &widget_ref.children() {
                     self.stack.push(child.clone());
                 }
             } else {
@@ -294,23 +312,23 @@ impl Iterator for DfsPostReverse {
     }
 }
 
-pub struct Bfs {
+pub struct WidgetsBfs {
     queue: VecDeque<WidgetRef>,
 }
 
-impl Bfs {
+impl WidgetsBfs {
     fn new(root: WidgetRef) -> Self {
         let mut queue = VecDeque::new();
         queue.push_front(root);
-        Bfs { queue: queue }
+        WidgetsBfs { queue: queue }
     }
 }
 
-impl Iterator for Bfs {
+impl Iterator for WidgetsBfs {
     type Item = WidgetRef;
     fn next(&mut self) -> Option<WidgetRef> {
         if let Some(widget_ref) = self.queue.pop_front() {
-            for child in &widget_ref.widget().children {
+            for child in &widget_ref.children() {
                 self.queue.push_back(child.clone());
             }
             Some(widget_ref)
