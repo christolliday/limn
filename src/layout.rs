@@ -86,27 +86,6 @@ impl EventHandler<ChildrenUpdatedEvent> for Frame {
     }
 }
 
-
-/// wrapper around cassowary solver that keeps widgets positions in sync, sends events when layout changes happen
-pub(super) struct LayoutManager {
-    pub solver: LimnSolver,
-}
-
-impl LayoutManager {
-    pub fn new() -> Self {
-        LayoutManager {
-            solver: LimnSolver::new(),
-        }
-    }
-    /* pub fn check_changes(&mut self) {
-        let changes = self.solver.fetch_changes();
-        debug!("layout has {} changes", changes.len());
-        if !changes.is_empty() {
-            ui.event(LayoutChanged(changes));
-        }
-    } */
-}
-
 pub struct ExactFrame;
 impl EventHandler<ChildrenUpdatedEvent> for ExactFrame {
     fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
@@ -134,7 +113,7 @@ impl App {
             let UpdateLayout(widget_ref) = event;
             let mut widget_mut = widget_ref.widget_mut();
             let layout = &mut widget_mut.layout;
-            args.ui.layout.solver.update_layout(layout);
+            args.ui.solver.update_layout(layout);
             args.ui.check_layout_changes();
         });
         self.add_handler_fn(|event: &LayoutChanged, args| {

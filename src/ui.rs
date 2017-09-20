@@ -11,7 +11,7 @@ use glutin;
 use window::Window;
 use app::App;
 use widget::{WidgetRef, WidgetBuilder};
-use layout::{LayoutChanged, LayoutManager, LayoutVars, ExactFrame};
+use layout::{LimnSolver, LayoutChanged, LayoutVars, ExactFrame};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
 use resources::WidgetId;
@@ -25,7 +25,7 @@ const WINDOW_CONSTRAINT_REQUIRED: bool = false;
 pub struct Ui {
     pub(crate) root: WidgetRef,
     widget_map: HashMap<WidgetId, WidgetRef>,
-    pub(crate) layout: LayoutManager,
+    pub(crate) solver: LimnSolver,
     pub(crate) render: WebRenderContext,
     needs_redraw: bool,
     should_close: bool,
@@ -36,16 +36,13 @@ pub struct Ui {
 
 impl Ui {
     pub(super) fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
-        let mut layout = LayoutManager::new();
         let mut root = WidgetBuilder::new("window");
         root.set_container(ExactFrame);
         root.layout().add(top_left(Point::zero()));
         if !WINDOW_CONSTRAINT_REQUIRED {
-            let ref root_vars = root.layout().vars;
-            layout.solver.update_solver(|solver| {
-                solver.add_edit_variable(root_vars.right, REQUIRED - 1.0).unwrap();
-                solver.add_edit_variable(root_vars.bottom, REQUIRED - 1.0).unwrap();
-            });
+            let mut root_layout = root.layout();
+            root_layout.edit_right().strength(REQUIRED - 1.0);
+            root_layout.edit_bottom().strength(REQUIRED - 1.0);
         }
         root.add_handler_fn(|_: &::layout::LayoutUpdated, args| {
             args.ui.event(::layout::ResizeWindow);
@@ -54,7 +51,7 @@ impl Ui {
         Ui {
             widget_map: HashMap::new(),
             root: root.into(),
-            layout: layout,
+            solver: LimnSolver::new(),
             render: render,
             needs_redraw: true,
             should_close: false,
@@ -126,7 +123,7 @@ impl Ui {
 
     pub fn check_layout_changes(&mut self) {
 
-        let changes = self.layout.solver.fetch_changes();
+        let changes = self.solver.fetch_changes();
         debug!("layout has {} changes", changes.len());
         if !changes.is_empty() {
             self.event(LayoutChanged(changes));
@@ -254,7 +251,7 @@ impl App {
         self.add_handler_fn(|event: &RemoveWidget, args| {
             let event = event.clone();
             let RemoveWidget(widget_ref) = event;
-            args.ui.layout.solver.remove_layout(widget_ref.id().0);
+            args.ui.solver.remove_layout(widget_ref.id().0);
             args.ui.check_layout_changes();
             args.ui.widget_map.remove(&widget_ref.id());
         });
