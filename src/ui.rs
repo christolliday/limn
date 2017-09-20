@@ -11,7 +11,7 @@ use glutin;
 use window::Window;
 use app::App;
 use widget::{WidgetRef, WidgetBuilder};
-use layout::{LayoutChanged, LayoutManager, LayoutVars};
+use layout::{LayoutChanged, LayoutManager, LayoutVars, ExactFrame};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
 use resources::WidgetId;
@@ -38,6 +38,7 @@ impl Ui {
     pub(super) fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
         let mut layout = LayoutManager::new();
         let mut root = WidgetBuilder::new("window");
+        root.set_container(ExactFrame);
         root.layout().add(top_left(Point::zero()));
         if !WINDOW_CONSTRAINT_REQUIRED {
             let ref root_vars = root.layout().vars;

@@ -107,6 +107,17 @@ impl LayoutManager {
     } */
 }
 
+pub struct ExactFrame;
+impl EventHandler<ChildrenUpdatedEvent> for ExactFrame {
+    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
+        if let &ChildrenUpdatedEvent::Added(ref child) = event {
+            child.update_layout(|layout| {
+                layout.add(match_layout(&args.widget));
+            });
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct UpdateLayout(pub WidgetRef);
 pub struct ResizeWindow;
