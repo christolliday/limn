@@ -27,8 +27,8 @@ fn main() {
     struct CountHandler {
         count: u32,
     }
-    impl WidgetEventHandler<CountEvent> for CountHandler {
-        fn handle(&mut self, _: &CountEvent, mut args: WidgetEventArgs) {
+    impl EventHandler<CountEvent> for CountHandler {
+        fn handle(&mut self, _: &CountEvent, mut args: EventArgs) {
             self.count += 1;
             args.widget.update(|state: &mut TextState| state.text = format!("{}", self.count));
         }

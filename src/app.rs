@@ -9,7 +9,7 @@ use window::Window;
 use ui::Ui;
 use input::InputEvent;
 use widget::WidgetBuilder;
-use event::{self, WidgetEventHandler, WidgetEventArgs};
+use event::{self, EventHandler, EventArgs};
 use util::Size;
 
 /// This is contains the core of a Limn application,
@@ -108,12 +108,12 @@ impl App {
     }
 
     /// Add a new stateful global event handler
-    pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.ui.get_root().add_handler(handler);
         self
     }
     /// Add a new stateless global event handler
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
         self.ui.get_root().add_handler_fn(handler);
         self
     }

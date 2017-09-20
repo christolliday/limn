@@ -120,8 +120,8 @@ struct ResizeEvent(f32);
 struct CircleHandler {
     center: Point,
 }
-impl WidgetEventHandler<ResizeEvent> for CircleHandler {
-    fn handle(&mut self, event: &ResizeEvent, args: WidgetEventArgs) {
+impl EventHandler<ResizeEvent> for CircleHandler {
+    fn handle(&mut self, event: &ResizeEvent, args: EventArgs) {
         let radius = event.0 / 2.0;
         args.widget.update_layout(|layout| {
             layout.edit_top().set(self.center.y - radius);
@@ -170,8 +170,8 @@ impl CircleEventHandler {
         }
     }
 }
-impl WidgetEventHandler<CircleEvent> for CircleEventHandler {
-    fn handle(&mut self, event: &CircleEvent, args: WidgetEventArgs) {
+impl EventHandler<CircleEvent> for CircleEventHandler {
+    fn handle(&mut self, event: &CircleEvent, args: EventArgs) {
         match *event {
             CircleEvent::Add(point) => {
                 let size = 30.0;

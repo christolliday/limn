@@ -6,7 +6,7 @@ use stable_bst::Bound::{Excluded, Unbounded};
 use widget::{WidgetRef, WidgetBuilder};
 use widget::property::{PropChange, Property};
 use input::mouse::ClickEvent;
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use app::App;
 
 use glutin;
@@ -56,8 +56,8 @@ impl FocusHandler {
         }
     }
 }
-impl WidgetEventHandler<KeyboardInputEvent> for FocusHandler {
-    fn handle(&mut self, event: &KeyboardInputEvent, _: WidgetEventArgs) {
+impl EventHandler<KeyboardInputEvent> for FocusHandler {
+    fn handle(&mut self, event: &KeyboardInputEvent, _: EventArgs) {
         match *event {
             KeyboardInputEvent::AddFocusable(ref widget_id) => {
                 self.focusable.insert(self.focus_index_max, widget_id.clone());

@@ -1,6 +1,6 @@
 use glutin;
 
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use util::Point;
 use widget::{WidgetRef, WidgetBuilder};
 use widget::property::{Property, PropChange};
@@ -39,8 +39,8 @@ impl MouseController {
         }
     }
 }
-impl WidgetEventHandler<MouseInputEvent> for MouseController {
-    fn handle(&mut self, event: &MouseInputEvent, args: WidgetEventArgs) {
+impl EventHandler<MouseInputEvent> for MouseController {
+    fn handle(&mut self, event: &MouseInputEvent, args: EventArgs) {
 
         match *event {
             MouseInputEvent::LayoutChanged => {

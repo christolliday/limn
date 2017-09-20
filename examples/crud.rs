@@ -87,8 +87,8 @@ impl PeopleHandler {
         }
     }
 }
-impl WidgetEventHandler<PeopleEvent> for PeopleHandler {
-    fn handle(&mut self, event: &PeopleEvent, _: WidgetEventArgs) {
+impl EventHandler<PeopleEvent> for PeopleHandler {
+    fn handle(&mut self, event: &PeopleEvent, _: EventArgs) {
 
         let was_valid = self.person.is_valid();
         match event.clone() {

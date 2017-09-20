@@ -4,7 +4,7 @@ use text_layout::Align;
 use cassowary::strength::*;
 
 use layout::constraint::*;
-use event::WidgetEventArgs;
+use event::EventArgs;
 use widget::WidgetBuilder;
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
@@ -45,7 +45,7 @@ lazy_static! {
 }
 
 // show whether button is held down or not
-fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: WidgetEventArgs) {
+fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: EventArgs) {
     if !args.widget.props().contains(&Property::Inactive) {
         let &WidgetMouseButton(state, _) = event;
         let event = match state {
@@ -61,7 +61,7 @@ pub enum ToggleEvent {
     Off,
 }
 // show whether toggle button is activated
-fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: WidgetEventArgs) {
+fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
     if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
         let (toggle_event, prop_event) = match args.widget.props().contains(&Property::Activated) {
             true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
@@ -111,7 +111,7 @@ impl ToggleButtonBuilder {
         self
     }
     pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&ToggleEvent, WidgetEventArgs) + 'static
+        where F: Fn(&ToggleEvent, EventArgs) + 'static
     {
         self.widget.add_handler_fn(callback);
         self
@@ -160,7 +160,7 @@ impl PushButtonBuilder {
 
 impl WidgetBuilder {
     pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
-        where F: Fn(&ClickEvent, &mut WidgetEventArgs) + 'static
+        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
     {
         self.add_handler_fn(move |event, mut args| {
             (on_click)(event, &mut args);

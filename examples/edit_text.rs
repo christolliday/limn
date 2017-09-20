@@ -18,8 +18,8 @@ enum EditTextSettingsEvent {
     Wrap(Wrap),
 }
 struct EditTextSettingsHandler;
-impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
-    fn handle(&mut self, event: &EditTextSettingsEvent, mut args: WidgetEventArgs) {
+impl EventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
+    fn handle(&mut self, event: &EditTextSettingsEvent, mut args: EventArgs) {
         args.widget.update(|draw_state: &mut TextState| {
             match *event {
                 EditTextSettingsEvent::Align(align) => draw_state.align = align,

@@ -1,6 +1,6 @@
 use glutin;
 
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use util::Point;
@@ -31,8 +31,8 @@ impl DragInputHandler {
         }
     }
 }
-impl WidgetEventHandler<DragInputEvent> for DragInputHandler {
-    fn handle(&mut self, event: &DragInputEvent, _: WidgetEventArgs) {
+impl EventHandler<DragInputEvent> for DragInputHandler {
+    fn handle(&mut self, event: &DragInputEvent, _: EventArgs) {
         match *event {
             DragInputEvent::WidgetPressed(ref widget) => {
                 self.widget = Some(widget.clone());

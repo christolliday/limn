@@ -9,12 +9,12 @@ use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use draw::rect::{RectState, RectStyle};
 use draw::text::TextState;
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use color::*;
 
 const BACKSPACE: char = '\u{8}';
 
-fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: WidgetEventArgs) {
+fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: EventArgs) {
     let &WidgetReceivedCharacter(char) = event;
     let text = {
         let bounds = args.widget.bounds();
@@ -42,7 +42,7 @@ fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: WidgetEventA
 
 pub struct TextUpdated(pub String);
 
-pub fn text_change_handle(event: &TextUpdated, mut args: WidgetEventArgs) {
+pub fn text_change_handle(event: &TextUpdated, mut args: EventArgs) {
     args.widget.update(|state: &mut TextState| state.text = event.0.clone());
 }
 
@@ -89,7 +89,7 @@ impl EditTextBuilder {
     }
 
     pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&TextUpdated, WidgetEventArgs) + 'static
+        where F: Fn(&TextUpdated, EventArgs) + 'static
     {
         self.text_widget.add_handler_fn(callback);
         self
@@ -108,8 +108,8 @@ impl Into<WidgetBuilder> for EditTextBuilder {
 struct TextUpdatedHandler {
     size_constraints: Vec<Constraint>,
 }
-impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
-    fn handle(&mut self, _: &StyleUpdated, mut args: WidgetEventArgs) {
+impl EventHandler<StyleUpdated> for TextUpdatedHandler {
+    fn handle(&mut self, _: &StyleUpdated, mut args: EventArgs) {
         args.widget.update_layout(|layout| {
             for constraint in self.size_constraints.drain(..) {
                 layout.remove_constraint(constraint);

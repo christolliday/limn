@@ -12,7 +12,7 @@ use std::ops::{Deref, DerefMut};
 use std::fmt;
 
 use render::RenderBuilder;
-use event::{self, WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
+use event::{self, EventHandler, EventArgs, EventHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef, Frame};
 use ui::{Ui, ChildrenUpdatedEvent};
 use resources::{resources, WidgetId};
@@ -32,7 +32,7 @@ pub struct WidgetRef(pub Rc<RefCell<Widget>>);
 impl WidgetRef {
     fn new(widget: Widget) -> Self {
         let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
-        event::event(Target::Ui, ::ui::RegisterWidget(widget_ref.clone()));
+        event::event(Target::Root, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
     pub fn widget_mut(&self) -> RefMut<Widget> {
@@ -41,13 +41,13 @@ impl WidgetRef {
     pub fn widget(&self) -> Ref<Widget> {
         self.0.borrow()
     }
-    pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new(handler))
+    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+        self.add_handler_wrapper(TypeId::of::<E>(), EventHandlerWrapper::new(handler))
     }
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
-        self.add_handler_wrapper(TypeId::of::<E>(), WidgetHandlerWrapper::new_from_fn(handler))
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+        self.add_handler_wrapper(TypeId::of::<E>(), EventHandlerWrapper::new_from_fn(handler))
     }
-    fn add_handler_wrapper(&mut self, type_id: TypeId, handler: WidgetHandlerWrapper) -> &mut Self {
+    fn add_handler_wrapper(&mut self, type_id: TypeId, handler: EventHandlerWrapper) -> &mut Self {
         self.widget_mut().handlers.entry(type_id).or_insert_with(Vec::new)
             .push(Rc::new(RefCell::new(handler)));
         self
@@ -73,7 +73,7 @@ impl WidgetRef {
     pub fn set_name(&mut self, name: &str) -> &mut Self {
         self.widget_mut().name = name.to_owned();
         self.widget_mut().layout.name = Some(name.to_owned());
-        event::event(Target::Ui, UpdateLayout(self.clone()));
+        event::event(Target::Root, UpdateLayout(self.clone()));
         self
     }
     pub fn set_debug_color(&mut self, color: Color) -> &mut Self {
@@ -107,7 +107,7 @@ impl WidgetRef {
     {
         let layout = &mut self.0.borrow_mut().layout;
         f(layout);
-        event::event(Target::Ui, UpdateLayout(self.clone()));
+        event::event(Target::Root, UpdateLayout(self.clone()));
     }
 
     pub fn apply_style(&mut self) {
@@ -117,7 +117,7 @@ impl WidgetRef {
 
     pub fn add_child<U: Into<WidgetRef>>(&mut self, child: U) -> &mut Self {
         let mut child = child.into();
-        event::event(Target::Ui, ::layout::UpdateLayout(child.clone()));
+        event::event(Target::Root, ::layout::UpdateLayout(child.clone()));
         child.widget_mut().parent = Some(self.downgrade());
         child.apply_style();
         self.widget_mut().children.push(child.clone());
@@ -137,7 +137,7 @@ impl WidgetRef {
         }
         self.event(::ui::ChildrenUpdatedEvent::Removed(child_ref.clone()));
         child_ref.event(::ui::WidgetDetachedEvent);
-        event::event(Target::Ui, ::ui::RemoveWidget(child_ref.clone()));
+        event::event(Target::Root, ::ui::RemoveWidget(child_ref.clone()));
     }
 
     pub fn remove_widget(&mut self) {
@@ -166,7 +166,7 @@ impl WidgetRef {
     pub fn trigger_event(&self, ui: &mut Ui, type_id: TypeId, event: &Any) -> bool {
         let handlers = {
             let mut widget = self.0.borrow_mut();
-            let mut handlers: Vec<Rc<RefCell<WidgetHandlerWrapper>>> = Vec::new();
+            let mut handlers: Vec<Rc<RefCell<EventHandlerWrapper>>> = Vec::new();
             if let Some(event_handlers) = widget.handlers.get_mut(&type_id) {
                 for handler in event_handlers {
                     handlers.push(handler.clone());
@@ -179,7 +179,7 @@ impl WidgetRef {
         for event_handler in handlers {
             // will panic in the case of circular handler calls
             let mut handler = event_handler.borrow_mut();
-            let event_args = WidgetEventArgs {
+            let event_args = EventArgs {
                 widget: self.clone(),
                 ui: ui,
                 handled: &mut handled,
@@ -300,7 +300,7 @@ pub struct Widget {
     debug_color: Option<Color>,
     children: Vec<WidgetRef>,
     parent: Option<WidgetWeak>,
-    handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
+    handlers: HashMap<TypeId, Vec<Rc<RefCell<EventHandlerWrapper>>>>,
 }
 
 impl Widget {
@@ -384,14 +384,14 @@ impl Widget {
 /// Used to initialize and modify a Widget before it's been added to a parent Widget
 pub struct WidgetBuilder {
     pub widget: WidgetRef,
-    container: Option<WidgetHandlerWrapper>,
+    container: Option<EventHandlerWrapper>,
 }
 
 impl WidgetBuilder {
     pub fn new(name: &str) -> Self {
         let mut widget = WidgetBuilder {
             widget: WidgetRef::new(Widget::new(name.to_owned())),
-            container: Some(WidgetHandlerWrapper::new(Frame::default())),
+            container: Some(EventHandlerWrapper::new(Frame::default())),
         };
         widget.add_handler_fn(property::prop_change_handle);
         widget
@@ -411,11 +411,11 @@ impl WidgetBuilder {
         self.widget.apply_style();
         self
     }
-    pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.widget.add_handler(handler);
         self
     }
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
         self.widget.add_handler_fn(handler);
         self
     }
@@ -430,8 +430,8 @@ impl WidgetBuilder {
         self.container = None;
         self
     }
-    pub fn set_container<T: WidgetEventHandler<ChildrenUpdatedEvent> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.container = Some(WidgetHandlerWrapper::new(handler));
+    pub fn set_container<T: EventHandler<ChildrenUpdatedEvent> + 'static>(&mut self, handler: T) -> &mut Self {
+        self.container = Some(EventHandlerWrapper::new(handler));
         self
     }
     pub fn layout(&mut self) -> LayoutGuardMut {

@@ -5,7 +5,7 @@ use glutin;
 use glutin::ElementState;
 use webrender;
 
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use input::mouse::{MouseMoved, MouseButton, MouseWheel};
 use input::keyboard::{KeyboardInput, ReceivedCharacter};
 use util::Point;
@@ -46,8 +46,8 @@ impl App {
 }
 
 pub struct EscKeyCloseHandler;
-impl WidgetEventHandler<KeyboardInput> for EscKeyCloseHandler {
-    fn handle(&mut self, event: &KeyboardInput, args: WidgetEventArgs) {
+impl EventHandler<KeyboardInput> for EscKeyCloseHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: EventArgs) {
         if let KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = *event {
             args.ui.close();
         }
@@ -63,8 +63,8 @@ impl DebugSettingsHandler {
         }
     }
 }
-impl WidgetEventHandler<KeyboardInput> for DebugSettingsHandler {
-    fn handle(&mut self, event: &KeyboardInput, args: WidgetEventArgs) {
+impl EventHandler<KeyboardInput> for DebugSettingsHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: EventArgs) {
         let ui = args.ui;
         if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = *event {
             self.debug_on = !self.debug_on;

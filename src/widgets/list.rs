@@ -1,4 +1,4 @@
-use event::{WidgetEventArgs, WidgetEventHandler};
+use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
@@ -36,8 +36,8 @@ impl ListHandler {
         ListHandler { selected: None }
     }
 }
-impl WidgetEventHandler<ListItemSelected> for ListHandler {
-    fn handle(&mut self, event: &ListItemSelected, _: WidgetEventArgs) {
+impl EventHandler<ListItemSelected> for ListHandler {
+    fn handle(&mut self, event: &ListItemSelected, _: EventArgs) {
         let selected = event.widget.clone();
         if selected != self.selected {
             if let Some(ref old_selected) = self.selected {
@@ -48,7 +48,7 @@ impl WidgetEventHandler<ListItemSelected> for ListHandler {
     }
 }
 
-fn list_handle_deselect(_: &ClickEvent, args: WidgetEventArgs) {
+fn list_handle_deselect(_: &ClickEvent, args: EventArgs) {
     args.widget.event(ListItemSelected { widget: None });
 }
 
@@ -60,8 +60,8 @@ impl ListItemHandler {
         ListItemHandler { list_id: list_id }
     }
 }
-impl WidgetEventHandler<ClickEvent> for ListItemHandler {
-    fn handle(&mut self, _: &ClickEvent, mut args: WidgetEventArgs) {
+impl EventHandler<ClickEvent> for ListItemHandler {
+    fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
         if !args.widget.props().contains(&Property::Selected) {
             args.widget.event_subtree(PropChange::Add(Property::Selected));
             let event = ListItemSelected { widget: Some(args.widget) };
@@ -87,7 +87,7 @@ impl ListBuilder {
         }
     }
     pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
-        where F: Fn(Option<WidgetRef>, WidgetEventArgs) + 'static
+        where F: Fn(Option<WidgetRef>, EventArgs) + 'static
     {
         self.widget.add_handler_fn(move |event: &ListItemSelected, args| {
             on_item_selected(event.widget.clone(), args);

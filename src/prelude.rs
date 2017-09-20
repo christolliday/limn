@@ -1,7 +1,7 @@
 pub use cassowary::strength::*;
 
 pub use util::{Point, PointExt, Rect, RectExt, Size, SizeExt};
-pub use event::{Target, WidgetEventHandler, WidgetEventArgs};
+pub use event::{Target, EventHandler, EventArgs};
 pub use event::{event, event_global};
 pub use widget::{WidgetRef, WidgetBuilder};
 pub use widget::draw::{Draw, DrawEventHandler};

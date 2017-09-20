@@ -3,7 +3,7 @@ use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
 use layout::constraint::*;
-use event::{WidgetEventArgs, WidgetEventHandler};
+use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Size, Vector, Rect, RectExt};
@@ -209,8 +209,8 @@ impl ScrollParent {
         }
     }
 }
-impl WidgetEventHandler<ScrollParentEvent> for ScrollParent {
-    fn handle(&mut self, event: &ScrollParentEvent, args: WidgetEventArgs) {
+impl EventHandler<ScrollParentEvent> for ScrollParent {
+    fn handle(&mut self, event: &ScrollParentEvent, args: EventArgs) {
         match *event {
             ScrollParentEvent::ContainerLayoutUpdated | ScrollParentEvent::ContentLayoutUpdated(_) => {
 

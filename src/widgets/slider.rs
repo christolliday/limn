@@ -2,7 +2,7 @@ use cassowary::strength::*;
 
 use layout::constraint::*;
 use input::mouse::ClickEvent;
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widget::property::states::*;
@@ -93,7 +93,7 @@ impl SliderBuilder {
         self
     }
     pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
-        where F: Fn(f32, &mut WidgetEventArgs) + 'static
+        where F: Fn(f32, &mut EventArgs) + 'static
     {
         self.widget.add_handler_fn(move |event: &MovedSliderWidgetEvent, mut args| {
             let bounds = args.widget.bounds();
@@ -265,8 +265,8 @@ impl DragHandler {
         }
     }
 }
-impl WidgetEventHandler<SliderHandleInput> for DragHandler {
-    fn handle(&mut self, event: &SliderHandleInput, mut args: WidgetEventArgs) {
+impl EventHandler<SliderHandleInput> for DragHandler {
+    fn handle(&mut self, event: &SliderHandleInput, mut args: EventArgs) {
         let bounds = args.widget.bounds();
         let handle_radius = if let Orientation::Horizontal = self.orientation {
             bounds.width() / 2.0

@@ -20,8 +20,8 @@ pub enum Target {
     /// Sends an event to a widget and continues sending to it's
     /// ancestors until an event handler marks the event as handled
     BubbleUp(WidgetRef),
-    /// Sends an event to a UiEventHandler registered for the entire application
-    Ui,
+    /// Sends an event to the root widget
+    Root,
 }
 
 struct Queue {
@@ -56,56 +56,56 @@ impl Iterator for Queue {
     }
 }
 
-/// Context passed to a `WidgetEventHandler`, allows modification
+/// Context passed to a `EventHandler`, allows modification
 /// to a widget and it's layout, and posting events to the Queue.
-pub struct WidgetEventArgs<'a> {
+pub struct EventArgs<'a> {
     pub widget: WidgetRef,
     pub ui: &'a mut Ui,
     pub handled: &'a mut bool,
 }
 
 /// Used to create a stateful event handler for widgets.
-pub trait WidgetEventHandler<T> {
-    fn handle(&mut self, event: &T, args: WidgetEventArgs);
+pub trait EventHandler<T> {
+    fn handle(&mut self, event: &T, args: EventArgs);
 }
 
-/// Non-generic `WidgetEventHandler` or Widget callback wrapper.
-pub(super) struct WidgetHandlerWrapper {
+/// Non-generic `EventHandler` or Widget callback wrapper.
+pub(super) struct EventHandlerWrapper {
     handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Any, &Any, WidgetEventArgs)>,
+    handle_fn: Box<Fn(&mut Any, &Any, EventArgs)>,
 }
 
-impl WidgetHandlerWrapper {
+impl EventHandlerWrapper {
     pub fn new<H, E>(handler: H) -> Self
-        where H: WidgetEventHandler<E> + 'static,
+        where H: EventHandler<E> + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Any, event: &Any, args: WidgetEventArgs| {
+        let handle_fn = |handler: &mut Any, event: &Any, args: EventArgs| {
             let event: &E = event.downcast_ref().unwrap();
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler.handle(event, args);
         };
-        WidgetHandlerWrapper {
+        EventHandlerWrapper {
             handler: Box::new(handler),
             handle_fn: Box::new(handle_fn),
         }
     }
     pub fn new_from_fn<H, E>(handler: H) -> Self
-        where H: Fn(&E, WidgetEventArgs) + 'static,
+        where H: Fn(&E, EventArgs) + 'static,
               E: 'static
     {
-        let handle_fn = |handler: &mut Any, event: &Any, args: WidgetEventArgs| {
+        let handle_fn = |handler: &mut Any, event: &Any, args: EventArgs| {
             let event: &E = event.downcast_ref().unwrap();
             debug!("widget handle {}", ::type_name::<E>());
             let handler: &mut H = handler.downcast_mut().unwrap();
             handler(event, args);
         };
-        WidgetHandlerWrapper {
+        EventHandlerWrapper {
             handler: Box::new(handler),
             handle_fn: Box::new(handle_fn),
         }
     }
-    pub fn handle(&mut self, event: &Any, args: WidgetEventArgs) {
+    pub fn handle(&mut self, event: &Any, args: EventArgs) {
         (self.handle_fn)(self.handler.as_mut(), event, args);
     }
 }
@@ -129,7 +129,7 @@ thread_local! {
 
 pub(super) fn queue_next() -> Option<(Target, TypeId, Box<Any>)> {
     if let Some(next) = GLOBAL_QUEUE.lock().unwrap().next() {
-        Some((Target::Ui, next.0, next.1))
+        Some((Target::Root, next.0, next.1))
     } else {
         let mut next = None;
         LOCAL_QUEUE.with(|queue| next = Some(queue.as_ref().unwrap().borrow_mut().next()));

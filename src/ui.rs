@@ -193,7 +193,7 @@ impl Ui {
 
     pub(super) fn handle_event(&mut self, address: Target, type_id: TypeId, data: &Any) {
         match address {
-            Target::Ui => {
+            Target::Root => {
                 let root = self.get_root();
                 self.handle_widget_event(root, type_id, data);
             }

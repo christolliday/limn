@@ -3,7 +3,7 @@ use cassowary::Constraint;
 use widget::WidgetBuilder;
 use widget::style::StyleUpdated;
 use draw::text::{TextState, TextStyle};
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use layout::constraint::*;
 
 pub struct TextBuilder;
@@ -29,8 +29,8 @@ impl TextBuilder {
 struct TextUpdatedHandler {
     size_constraints: Vec<Constraint>,
 }
-impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
-    fn handle(&mut self, _: &StyleUpdated, mut args: WidgetEventArgs) {
+impl EventHandler<StyleUpdated> for TextUpdatedHandler {
+    fn handle(&mut self, _: &StyleUpdated, mut args: EventArgs) {
         args.widget.update_layout(|layout| {
             for constraint in self.size_constraints.drain(..) {
                 layout.remove_constraint(constraint);

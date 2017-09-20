@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use downcast_rs::Downcast;
 
 use render::RenderBuilder;
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use widget::property::PropSet;
 use widget::style::Style;
 
@@ -80,8 +80,8 @@ impl<T: 'static, E> DrawEventHandler<T, E> {
     }
 }
 
-impl<T: Draw + 'static, E> WidgetEventHandler<E> for DrawEventHandler<T, E> {
-    fn handle(&mut self, _: &E, mut args: WidgetEventArgs) {
+impl<T: Draw + 'static, E> EventHandler<E> for DrawEventHandler<T, E> {
+    fn handle(&mut self, _: &E, mut args: EventArgs) {
         args.widget.update(|state: &mut T| {
             (self.draw_callback)(state);
         });

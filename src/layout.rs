@@ -9,14 +9,14 @@ use resources::WidgetId;
 use app::App;
 
 use widget::{WidgetRef, WidgetBuilder};
-use event::{WidgetEventHandler, WidgetEventArgs};
+use event::{EventHandler, EventArgs};
 use ui::ChildrenUpdatedEvent;
 
 pub use self::solver::LimnSolver;
 pub use limn_layout::*;
 
-impl WidgetEventHandler<ChildrenUpdatedEvent> for LinearLayoutHandler {
-    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: WidgetEventArgs) {
+impl EventHandler<ChildrenUpdatedEvent> for LinearLayoutHandler {
+    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
         args.widget.update_layout(|layout| {
             match *event {
                 ChildrenUpdatedEvent::Added(ref child) => {
@@ -33,8 +33,8 @@ impl WidgetEventHandler<ChildrenUpdatedEvent> for LinearLayoutHandler {
     }
 }
 
-impl WidgetEventHandler<ChildrenUpdatedEvent> for GridLayout {
-    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: WidgetEventArgs) {
+impl EventHandler<ChildrenUpdatedEvent> for GridLayout {
+    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
         args.widget.update_layout(|layout| {
             match *event {
                 ChildrenUpdatedEvent::Added(ref child) => {
@@ -70,8 +70,8 @@ pub struct Frame {
     padding: f32,
 }
 
-impl WidgetEventHandler<ChildrenUpdatedEvent> for Frame {
-    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: WidgetEventArgs) {
+impl EventHandler<ChildrenUpdatedEvent> for Frame {
+    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
         match *event {
             ChildrenUpdatedEvent::Added(ref child) => {
                 child.update_layout(|layout| {
