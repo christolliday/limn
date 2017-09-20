@@ -4,8 +4,6 @@ use euclid;
 use rusttype;
 use webrender_api::*;
 
-use render::RenderBuilder;
-
 pub type Size = euclid::Size2D<f32>;
 pub type Point = euclid::Point2D<f32>;
 pub type Vector = euclid::Vector2D<f32>;
@@ -90,16 +88,4 @@ impl SizeExt<f32> for Size {
     fn typed(&self) -> LayoutSize {
         LayoutSize::from_untyped(self)
     }
-}
-
-pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut RenderBuilder) {
-    let widths = BorderWidths { left: 1.0, right: 1.0, top: 1.0, bottom: 1.0 };
-    let side = BorderSide { color: color.into(), style: BorderStyle::Solid };
-    let border = NormalBorder { left: side, right: side, top: side, bottom: side, radius: BorderRadius::zero() };
-    let details = BorderDetails::Normal(border);
-    renderer.builder.push_border(rect.typed(), None, widths, details);
-}
-
-pub fn draw_horizontal_line<C: Into<ColorF>>(baseline: f32, start: f32, end: f32, color: C, renderer: &mut RenderBuilder) {
-    draw_rect_outline(Rect::new(Point::new(start, baseline), Size::new(end - start, 0.0)), color, renderer);
 }

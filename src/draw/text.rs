@@ -5,7 +5,8 @@ use rusttype::{Scale, GlyphId, VMetrics};
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::resources;
-use util::{self, Size, Rect, RectExt, Vector};
+use util::{Size, Rect, RectExt, Vector};
+use render;
 use widget::draw::Draw;
 use widget::property::PropSet;
 use widget::style::{Value, Style};
@@ -125,10 +126,10 @@ impl Draw for TextState {
             let mut resources = resources();
             let font = resources.get_font(&self.font);
             for mut rect in line_rects {
-                util::draw_rect_outline(rect, CYAN, renderer);
+                render::draw_rect_outline(rect, CYAN, renderer);
                 rect.origin.y = rect.bottom() + v_metrics.descent;
                 rect.size.height = 1.0;
-                util::draw_rect_outline(rect, RED, renderer);
+                render::draw_rect_outline(rect, RED, renderer);
             }
             let scale = Scale::uniform(self.font_size);
             for glyph in &glyphs {
@@ -136,7 +137,7 @@ impl Draw for TextState {
                 if let Some(rect) = scaled_glyph.exact_bounding_box() {
                     let origin = glyph.point.to_vector().to_untyped() + Vector::new(0.0, -1.0);
                     let rect = Rect::from_rusttype(rect).translate(&origin);
-                    util::draw_rect_outline(rect, BLUE, renderer);
+                    render::draw_rect_outline(rect, BLUE, renderer);
                 }
             }
         }

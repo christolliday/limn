@@ -16,7 +16,8 @@ use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef, Frame};
 use ui::ChildrenUpdatedEvent;
 use resources::{resources, WidgetId};
-use util::{self, Point, Rect, RectExt};
+use util::{Point, Rect, RectExt};
+use render;
 use color::Color;
 use event::Target;
 use layout::UpdateLayout;
@@ -330,7 +331,7 @@ impl Widget {
     }
     pub fn draw_debug(&mut self, renderer: &mut RenderBuilder) {
         let color = self.debug_color.unwrap_or(::color::GREEN);
-        util::draw_rect_outline(self.bounds, color, renderer);
+        render::draw_rect_outline(self.bounds, color, renderer);
         for child in &self.children {
             child.widget_mut().draw_debug(renderer);
         }
