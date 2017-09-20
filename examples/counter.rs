@@ -17,7 +17,7 @@ struct CountEvent;
 fn main() {
     let app = util::init_default("Limn counter demo");
     let mut root = WidgetBuilder::new("root");
-    root.hbox();
+    root.hbox(0.0);
 
     let mut left_spacer = WidgetBuilder::new("spacer");
     left_spacer.layout().add(width(50.0));

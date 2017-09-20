@@ -12,8 +12,8 @@ use std::ops::{Deref, DerefMut};
 
 use render::RenderBuilder;
 use event::{WidgetEventHandler, WidgetEventArgs, WidgetHandlerWrapper};
-use layout::{Layout, LayoutVars, LayoutRef};
-use layout::container::{LayoutContainer, Frame};
+use layout::{Layout, LayoutVars, LayoutRef, Frame};
+use ui::ChildrenUpdatedEvent;
 use resources::{resources, WidgetId};
 use util::{self, Point, Rect, RectExt};
 use color::Color;
@@ -37,11 +37,6 @@ impl AsRef<WidgetRef> for WidgetRef {
 pub trait BuildWidget {
     fn build(self) -> WidgetBuilder;
 }
-impl BuildWidget for WidgetBuilder {
-    fn build(self) -> WidgetBuilder {
-        self
-    }
-}
 impl LayoutRef for WidgetBuilder {
     fn layout_ref(&self) -> LayoutVars {
         self.widget.widget_mut().layout.vars.clone()
@@ -59,7 +54,7 @@ macro_rules! widget_wrapper {
         widget_builder!($builder_type);
         impl $crate::widget::BuildWidget for $builder_type {
             fn build(self) -> WidgetBuilder {
-                self.widget
+                self.widget.build()
             }
         }
     }
@@ -152,12 +147,14 @@ impl<'a> DrawStateGuard<'a> {
 
 pub struct WidgetBuilder {
     pub widget: WidgetRef,
+    container: Option<WidgetHandlerWrapper>,
 }
 
 impl WidgetBuilder {
     pub fn new(name: &str) -> Self {
         let mut widget = WidgetBuilder {
             widget: WidgetRef::new(Widget::new(name.to_owned())),
+            container: Some(WidgetHandlerWrapper::new(Frame::default())),
         };
         widget.add_handler_fn(property::prop_change_handle);
         widget
@@ -196,18 +193,11 @@ impl WidgetBuilder {
         self
     }
     pub fn no_container(&mut self) -> &mut Self {
-        self.widget.widget_mut().container = None;
+        self.container = None;
         self
     }
-    pub fn set_container<C: LayoutContainer + 'static>(&mut self, container: C) -> &mut Self {
-        self.widget.widget_mut().container = Some(Rc::new(RefCell::new(Box::new(container))));
-        self
-    }
-    pub fn set_padding(&mut self, padding: f32) -> &mut Self {
-        {
-            let mut widget = self.widget.widget_mut();
-            widget.container.as_mut().unwrap().borrow_mut().set_padding(padding);
-        }
+    pub fn set_container<T: WidgetEventHandler<ChildrenUpdatedEvent> + 'static>(&mut self, handler: T) -> &mut Self {
+        self.container = Some(WidgetHandlerWrapper::new(handler));
         self
     }
     pub fn layout(&mut self) -> LayoutGuardMut {
@@ -220,6 +210,15 @@ impl WidgetBuilder {
     pub fn set_name(&mut self, name: &str) -> &mut Self {
         self.widget.widget_mut().name = name.to_owned();
         self.widget.widget_mut().layout.name = Some(name.to_owned());
+        self
+    }
+}
+
+impl BuildWidget for WidgetBuilder {
+    fn build(mut self) -> WidgetBuilder {
+        if let Some(container) = self.container.take() {
+            self.add_handler_wrapper(TypeId::of::<ChildrenUpdatedEvent>(), container);
+        }
         self
     }
 }
@@ -309,7 +308,7 @@ impl WidgetRef {
         self.0.borrow_mut().update(f);
         self.event(self::style::StyleUpdated);
     }
-    pub fn update_layout<F>(&mut self, f: F)
+    pub fn update_layout<F>(&self, f: F)
         where F: FnOnce(&mut Layout)
     {
         let layout = &mut self.0.borrow_mut().layout;
@@ -328,29 +327,21 @@ impl WidgetRef {
         child.widget.widget_mut().parent = Some(self.downgrade());
         child.widget.apply_style();
         self.widget_mut().children.push(child.widget_ref());
-        let mut container = self.widget_mut().container.clone();
-        if let Some(ref mut container) = container {
-            let mut container = container.borrow_mut();
-            container.add_child(self.clone(), child.widget_ref());
-        }
         self.update_layout(|layout| layout.add_child(child.id().0));
         self.event(::ui::WidgetAttachedEvent);
         self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars.clone()));
+        self.event(::ui::ChildrenUpdatedEvent::Added(child.widget_ref()));
         self
     }
 
     pub fn remove_child(&mut self, child_ref: WidgetRef) {
         let child_id = child_ref.id();
-        let mut container = self.widget_mut().container.clone();
-        if let Some(ref mut container) = container {
-            let mut container = container.borrow_mut();
-            container.remove_child(self.clone(), child_id);
-        }
         self.update_layout(|layout| layout.remove_child(child_id.0));
         let mut widget = self.widget_mut();
         if let Some(index) = widget.children.iter().position(|widget| widget.id() == child_id) {
             widget.children.remove(index);
         }
+        self.event(::ui::ChildrenUpdatedEvent::Removed(child_ref.clone()));
         child_ref.event(::ui::WidgetDetachedEvent);
         event!(Target::Ui, ::ui::RemoveWidget(child_ref.clone()));
     }
@@ -424,7 +415,6 @@ pub struct Widget {
     debug_color: Option<Color>,
     children: Vec<WidgetRef>,
     parent: Option<WidgetWeak>,
-    container: Option<Rc<RefCell<Box<LayoutContainer>>>>,
     handlers: HashMap<TypeId, Vec<Rc<RefCell<WidgetHandlerWrapper>>>>,
 }
 
@@ -442,7 +432,6 @@ impl Widget {
             debug_color: None,
             children: Vec::new(),
             parent: None,
-            container: Some(Rc::new(RefCell::new(Box::new(Frame::new())))),
             handlers: HashMap::new(),
         }
     }

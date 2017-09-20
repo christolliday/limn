@@ -114,7 +114,7 @@ impl SliderBuilder {
 widget_builder!(SliderBuilder);
 impl BuildWidget for SliderBuilder {
     fn build(self) -> WidgetBuilder {
-        let (mut slider, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
+        let (mut slider, mut slider_handle, orientation) = (self.widget.build(), self.slider_handle, self.orientation);
 
         slider_handle.add_handler(DragHandler::new(orientation, slider.widget_ref()));
 

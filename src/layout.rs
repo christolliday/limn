@@ -1,5 +1,8 @@
+use cassowary::strength::*;
+
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
 use limn_layout::grid_layout::GridLayout;
+use limn_layout::constraint::*;
 
 use resources::WidgetId;
 
@@ -7,39 +10,41 @@ use app::App;
 use event::Target;
 
 use widget::{WidgetRef, WidgetBuilder};
-
-use self::container::LayoutContainer;
-
-pub mod container;
+use event::{WidgetEventHandler, WidgetEventArgs};
+use ui::ChildrenUpdatedEvent;
 
 pub use self::solver::LimnSolver;
 pub use limn_layout::*;
 
-impl LayoutContainer for LinearLayoutHandler {
-    fn set_padding(&mut self, padding: f32) {
-        self.padding = padding;
-    }
-    fn add_child(&mut self, mut parent: WidgetRef, mut child: WidgetRef) {
-        let child_id = child.id();
-        parent.update_layout(|layout| {
-            child.update_layout(|child_layout| {
-                self.add_child_layout(&layout.vars, child_layout, child_id.0);
-            });
-        });
-    }
-    fn remove_child(&mut self, mut parent: WidgetRef, child_id: WidgetId) {
-        parent.update_layout(|layout| {
-            self.remove_child_layout(layout, child_id.0);
+impl WidgetEventHandler<ChildrenUpdatedEvent> for LinearLayoutHandler {
+    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: WidgetEventArgs) {
+        args.widget.update_layout(|layout| {
+            match *event {
+                ChildrenUpdatedEvent::Added(ref child) => {
+                    let child_id = child.id().0;
+                    child.update_layout(|child_layout| {
+                        self.add_child_layout(&layout.vars, child_layout, child_id);
+                    });
+                },
+                ChildrenUpdatedEvent::Removed(ref child) => {
+                    self.remove_child_layout(layout, child.id().0);
+                },
+            }
         });
     }
 }
 
-impl LayoutContainer for GridLayout {
-    fn add_child(&mut self, mut parent: WidgetRef, mut child: WidgetRef) {
-        parent.update_layout(|layout| {
-            child.update_layout(|child_layout| {
-                self.add_child_layout(layout, child_layout);
-            });
+impl WidgetEventHandler<ChildrenUpdatedEvent> for GridLayout {
+    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: WidgetEventArgs) {
+        args.widget.update_layout(|layout| {
+            match *event {
+                ChildrenUpdatedEvent::Added(ref child) => {
+                    child.update_layout(|child_layout| {
+                        self.add_child_layout(layout, child_layout);
+                    });
+                },
+                ChildrenUpdatedEvent::Removed(_) => (),
+            }
         });
     }
 }
@@ -49,14 +54,36 @@ impl WidgetBuilder {
         let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout().vars);
         self.set_container(handler)
     }
-    pub fn hbox(&mut self) -> &mut Self {
-        let handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout().vars);
+    pub fn hbox(&mut self, padding: f32) -> &mut Self {
+        let mut handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout().vars);
+        handler.padding = padding;
         self.set_container(handler)
     }
     pub fn grid(&mut self, num_columns: usize) {
         use std::ops::DerefMut;
         let container = GridLayout::new(self.layout().deref_mut(), num_columns);
         self.set_container(container);
+    }
+}
+
+#[derive(Default)]
+pub struct Frame {
+    padding: f32,
+}
+
+impl WidgetEventHandler<ChildrenUpdatedEvent> for Frame {
+    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: WidgetEventArgs) {
+        match *event {
+            ChildrenUpdatedEvent::Added(ref child) => {
+                child.update_layout(|layout| {
+                    layout.add(constraints![
+                        bound_by(&args.widget).padding(self.padding),
+                        match_layout(&args.widget).strength(STRONG),
+                    ]);
+                });
+            },
+            ChildrenUpdatedEvent::Removed(_) => (),
+        }
     }
 }
 

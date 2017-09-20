@@ -71,8 +71,7 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetRef, WidgetRef,
     let style = style!(RectStyle::BackgroundColor: control_color);
     button_container
         .set_draw_state_with_style(RectState::new(), style)
-        .hbox()
-        .set_padding(30.0);
+        .hbox(30.0);
     button_container.layout().add(constraints![
         match_width(root_widget),
         align_bottom(root_widget),
@@ -122,7 +121,7 @@ struct CircleHandler {
     center: Point,
 }
 impl WidgetEventHandler<ResizeEvent> for CircleHandler {
-    fn handle(&mut self, event: &ResizeEvent, mut args: WidgetEventArgs) {
+    fn handle(&mut self, event: &ResizeEvent, args: WidgetEventArgs) {
         let radius = event.0 / 2.0;
         args.widget.update_layout(|layout| {
             layout.edit_top().set(self.center.y - radius);

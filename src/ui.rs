@@ -10,7 +10,7 @@ use glutin;
 
 use window::Window;
 use app::App;
-use widget::{WidgetRef, WidgetBuilder};
+use widget::{WidgetRef, WidgetBuilder, BuildWidget};
 use layout::{LayoutManager, LayoutVars};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
@@ -52,7 +52,7 @@ impl Ui {
         let render = WebRenderContext::new(&mut window, events_loop);
         Ui {
             widget_map: HashMap::new(),
-            root: root.widget,
+            root: root.build().widget,
             layout: layout,
             render: render,
             needs_redraw: true,
@@ -247,6 +247,10 @@ pub struct WidgetAttachedEvent;
 pub struct WidgetDetachedEvent;
 pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
 
+pub enum ChildrenUpdatedEvent {
+    Added(WidgetRef),
+    Removed(WidgetRef),
+}
 
 
 pub struct WidgetsUnderCursor {
