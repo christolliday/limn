@@ -11,7 +11,7 @@ use glutin;
 use window::Window;
 use app::App;
 use widget::{WidgetRef, WidgetBuilder};
-use layout::{LayoutManager, LayoutVars};
+use layout::{LayoutChanged, LayoutManager, LayoutVars};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
 use resources::WidgetId;
@@ -46,8 +46,8 @@ impl Ui {
                 solver.add_edit_variable(root_vars.bottom, REQUIRED - 1.0).unwrap();
             });
         }
-        root.add_handler_fn(|_: &::layout::LayoutUpdated, _| {
-            event!(Target::Ui, ::layout::ResizeWindow);
+        root.add_handler_fn(|_: &::layout::LayoutUpdated, args| {
+            args.ui.event(::layout::ResizeWindow);
         });
         let render = WebRenderContext::new(&mut window, events_loop);
         Ui {
@@ -69,6 +69,10 @@ impl Ui {
 
     pub fn get_root(&self) -> WidgetRef {
         self.root.clone()
+    }
+
+    pub fn event<T: 'static>(&self, data: T) {
+        self.get_root().event(data);
     }
 
     pub fn close(&mut self) {
@@ -117,6 +121,15 @@ impl Ui {
             });
         }
         self.needs_redraw = true;
+    }
+
+    pub fn check_layout_changes(&mut self) {
+
+        let changes = self.layout.solver.fetch_changes();
+        debug!("layout has {} changes", changes.len());
+        if !changes.is_empty() {
+            self.event(LayoutChanged(changes));
+        }
     }
 
     pub fn redraw(&mut self) {
@@ -170,7 +183,7 @@ impl Ui {
     }
 
     fn handle_widget_event(&mut self, widget_ref: WidgetRef, type_id: TypeId, data: &Any) -> bool {
-        let handled = widget_ref.trigger_event(type_id, data);
+        let handled = widget_ref.trigger_event(self, type_id, data);
         if widget_ref.has_updated() {
             self.needs_redraw = true;
             widget_ref.set_updated(false);
@@ -180,6 +193,10 @@ impl Ui {
 
     pub(super) fn handle_event(&mut self, address: Target, type_id: TypeId, data: &Any) {
         match address {
+            Target::Ui => {
+                let root = self.get_root();
+                self.handle_widget_event(root, type_id, data);
+            }
             Target::Widget(widget_ref) => {
                 self.handle_widget_event(widget_ref, type_id, data);
             }
@@ -195,7 +212,6 @@ impl Ui {
                     maybe_widget_ref = widget_ref.parent();
                 }
             }
-            _ => ()
         }
     }
 
@@ -229,17 +245,17 @@ pub struct RemoveWidget(pub WidgetRef);
 
 impl App {
     pub fn add_ui_handlers(&mut self) {
-        self.add_handler_fn(|event: &RegisterWidget, ui| {
+        self.add_handler_fn(|event: &RegisterWidget, args| {
             let event = event.clone();
             let RegisterWidget(widget_ref) = event;
-            ui.widget_map.insert(widget_ref.id(), widget_ref.clone());
+            args.ui.widget_map.insert(widget_ref.id(), widget_ref.clone());
         });
-        self.add_handler_fn(|event: &RemoveWidget, ui| {
+        self.add_handler_fn(|event: &RemoveWidget, args| {
             let event = event.clone();
             let RemoveWidget(widget_ref) = event;
-            ui.layout.solver.remove_layout(widget_ref.id().0);
-            ui.layout.check_changes();
-            ui.widget_map.remove(&widget_ref.id());
+            args.ui.layout.solver.remove_layout(widget_ref.id().0);
+            args.ui.check_layout_changes();
+            args.ui.widget_map.remove(&widget_ref.id());
         });
     }
 }

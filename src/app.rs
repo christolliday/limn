@@ -1,5 +1,3 @@
-use std::any::TypeId;
-use std::collections::HashMap;
 use std::time::{Instant, Duration};
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -11,7 +9,7 @@ use window::Window;
 use ui::Ui;
 use input::InputEvent;
 use widget::WidgetBuilder;
-use event::{self, Target, UiHandlerWrapper, UiEventHandler};
+use event::{self, WidgetEventHandler, WidgetEventArgs};
 use util::Size;
 
 /// This is contains the core of a Limn application,
@@ -23,7 +21,6 @@ use util::Size;
 /// could be configured differently for a mobile app, for example.
 pub struct App {
     ui: Ui,
-    handlers: HashMap<TypeId, Vec<UiHandlerWrapper>>,
     next_frame_time: Instant,
     events_loop: Rc<RefCell<glutin::EventsLoop>>,
 }
@@ -34,7 +31,6 @@ impl App {
         let ui = Ui::new(window, &events_loop);
         let mut app = App {
             ui: ui,
-            handlers: HashMap::new(),
             next_frame_time: Instant::now(),
             events_loop: Rc::new(RefCell::new(events_loop)),
         };
@@ -60,7 +56,7 @@ impl App {
             if let glutin::WindowEvent::Resized(width, height) = event {
                 self.ui.window_resized(Size::new(width as f32, height as f32));
             } else {
-                event!(Target::Ui, InputEvent(event));
+                self.ui.event(InputEvent(event));
             }
         }
     }
@@ -107,32 +103,18 @@ impl App {
     /// Handle all the pending events in the event queue
     fn handle_events(&mut self) {
         while let Some((event_address, type_id, data)) = event::queue_next() {
-            match event_address {
-                Target::Ui => {
-                    if let Some(handlers) = self.handlers.get_mut(&type_id) {
-                        for event_handler in handlers.iter_mut() {
-                            event_handler.handle(data.as_ref(), &mut self.ui);
-                        }
-                    } else {
-                        println!("no handler found for type");
-                    }
-                }
-                _ => {
-                    self.ui.handle_event(event_address, type_id, data.as_ref());
-                }
-            }
+            self.ui.handle_event(event_address, type_id, data.as_ref());
         }
     }
 
     /// Add a new stateful global event handler
-    pub fn add_handler<H: UiEventHandler<E> + 'static, E: 'static>(&mut self, handler: H) {
-        self.handlers.entry(TypeId::of::<E>()).or_insert_with(Vec::new)
-            .push(UiHandlerWrapper::new(handler));
+    pub fn add_handler<E: 'static, T: WidgetEventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
+        self.ui.get_root().add_handler(handler);
+        self
     }
     /// Add a new stateless global event handler
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, &mut Ui) + 'static>(&mut self, handler: T) -> &mut Self {
-        self.handlers.entry(TypeId::of::<E>()).or_insert_with(Vec::new)
-            .push(UiHandlerWrapper::new_from_fn(handler));
+    pub fn add_handler_fn<E: 'static, T: Fn(&E, WidgetEventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+        self.ui.get_root().add_handler_fn(handler);
         self
     }
 }

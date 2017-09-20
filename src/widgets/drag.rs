@@ -1,10 +1,9 @@
 use glutin;
 
-use event::{Target, UiEventHandler};
+use event::{WidgetEventHandler, WidgetEventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use util::Point;
-use ui::Ui;
 use app::App;
 
 #[derive(Clone)]
@@ -32,8 +31,8 @@ impl DragInputHandler {
         }
     }
 }
-impl UiEventHandler<DragInputEvent> for DragInputHandler {
-    fn handle(&mut self, event: &DragInputEvent, _: &mut Ui) {
+impl WidgetEventHandler<DragInputEvent> for DragInputHandler {
+    fn handle(&mut self, event: &DragInputEvent, _: WidgetEventArgs) {
         match *event {
             DragInputEvent::WidgetPressed(ref widget) => {
                 self.widget = Some(widget.clone());
@@ -77,7 +76,7 @@ impl WidgetBuilder {
         self.add_handler_fn(|event: &WidgetMouseButton, args| {
             if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
                 let event = DragInputEvent::WidgetPressed(args.widget);
-                event!(Target::Ui, event);
+                args.ui.get_root().event(event);
             }
         });
         self
@@ -87,12 +86,12 @@ impl WidgetBuilder {
 impl App {
     pub fn add_drag_handlers(&mut self) {
         self.add_handler(DragInputHandler::new());
-        self.add_handler_fn(|event: &MouseMoved, _| {
-            event!(Target::Ui, DragInputEvent::MouseMoved(event.0));
+        self.add_handler_fn(|event: &MouseMoved, args| {
+            args.widget.event(DragInputEvent::MouseMoved(event.0));
         });
-        self.add_handler_fn(|event: &MouseButton, _| {
+        self.add_handler_fn(|event: &MouseButton, args| {
             if let &MouseButton(glutin::ElementState::Released, _) = event {
-                event!(Target::Ui, DragInputEvent::MouseReleased);
+                args.widget.event(DragInputEvent::MouseReleased);
             }
         });
     }

@@ -5,11 +5,10 @@ use glutin;
 use glutin::ElementState;
 use webrender;
 
-use event::{Target, UiEventHandler};
+use event::{WidgetEventHandler, WidgetEventArgs};
 use input::mouse::{MouseMoved, MouseButton, MouseWheel};
 use input::keyboard::{KeyboardInput, ReceivedCharacter};
 use util::Point;
-use ui::Ui;
 use app::App;
 
 #[derive(Clone)]
@@ -17,28 +16,28 @@ pub struct InputEvent(pub glutin::WindowEvent);
 
 impl App {
     pub fn add_input_handlers(&mut self) {
-        self.add_handler_fn(|event: &InputEvent, ui| {
+        self.add_handler_fn(|event: &InputEvent, args| {
             let InputEvent(event) = event.clone();
             match event {
                 glutin::WindowEvent::Closed => {
-                    ui.close();
+                    args.ui.close();
                 }
                 glutin::WindowEvent::MouseWheel { delta, .. } => {
-                    event!(Target::Ui, MouseWheel(delta));
+                    args.widget.event(MouseWheel(delta));
                 }
                 glutin::WindowEvent::MouseInput { state, button, .. } => {
-                    event!(Target::Ui, MouseButton(state, button));
+                    args.widget.event(MouseButton(state, button));
                 }
                 glutin::WindowEvent::MouseMoved { position, .. } => {
                     let point = Point::new(position.0 as f32, position.1 as f32);
-                    event!(Target::Ui, MouseMoved(point));
+                    args.widget.event(MouseMoved(point));
                 }
                 glutin::WindowEvent::KeyboardInput { input, .. } => {
                     let key_input = KeyboardInput(input.state, input.scancode, input.virtual_keycode);
-                    event!(Target::Ui, key_input);
+                    args.widget.event(key_input);
                 }
                 glutin::WindowEvent::ReceivedCharacter(char) => {
-                    event!(Target::Ui, ReceivedCharacter(char));
+                    args.widget.event(ReceivedCharacter(char));
                 }
                 _ => (),
             }
@@ -47,10 +46,10 @@ impl App {
 }
 
 pub struct EscKeyCloseHandler;
-impl UiEventHandler<KeyboardInput> for EscKeyCloseHandler {
-    fn handle(&mut self, event: &KeyboardInput, ui: &mut Ui) {
+impl WidgetEventHandler<KeyboardInput> for EscKeyCloseHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: WidgetEventArgs) {
         if let KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = *event {
-            ui.close();
+            args.ui.close();
         }
     }
 }
@@ -64,8 +63,9 @@ impl DebugSettingsHandler {
         }
     }
 }
-impl UiEventHandler<KeyboardInput> for DebugSettingsHandler {
-    fn handle(&mut self, event: &KeyboardInput, ui: &mut Ui) {
+impl WidgetEventHandler<KeyboardInput> for DebugSettingsHandler {
+    fn handle(&mut self, event: &KeyboardInput, args: WidgetEventArgs) {
+        let ui = args.ui;
         if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = *event {
             self.debug_on = !self.debug_on;
             ui.set_debug_draw_bounds(self.debug_on);

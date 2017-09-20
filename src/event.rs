@@ -1,4 +1,5 @@
 use std::any::{Any, TypeId};
+use std::cell::{Cell, RefCell};
 use std::sync::Mutex;
 use std::collections::VecDeque;
 
@@ -59,6 +60,7 @@ impl Iterator for Queue {
 /// to a widget and it's layout, and posting events to the Queue.
 pub struct WidgetEventArgs<'a> {
     pub widget: WidgetRef,
+    pub ui: &'a mut Ui,
     pub handled: &'a mut bool,
 }
 
@@ -67,20 +69,12 @@ pub trait WidgetEventHandler<T> {
     fn handle(&mut self, event: &T, args: WidgetEventArgs);
 }
 
-/// Used to create a stateful global event handler, capable of modifying the Ui graph
-pub trait UiEventHandler<T> {
-    fn handle(&mut self, event: &T, ui: &mut Ui);
-}
-
 /// Non-generic `WidgetEventHandler` or Widget callback wrapper.
 pub(super) struct WidgetHandlerWrapper {
     handler: Box<Any>,
     handle_fn: Box<Fn(&mut Any, &Any, WidgetEventArgs)>,
 }
-// implementation for WidgetHandlerWrapper and UiHandlerWrapper can probably only be shared
-// by a macro, to make it generic over the *EventHandler and *EventArgs requires
-// making *EventHandler generic over args, which is complicated by the lifetime specifier,
-// could be worth revisiting if trait aliasing lands (RFC #1733)
+
 impl WidgetHandlerWrapper {
     pub fn new<H, E>(handler: H) -> Self
         where H: WidgetEventHandler<E> + 'static,
@@ -116,51 +110,10 @@ impl WidgetHandlerWrapper {
     }
 }
 
-/// Non-generic `UiEventHandler` or Ui callback wrapper.
-pub(super) struct UiHandlerWrapper {
-    handler: Box<Any>,
-    handle_fn: Box<Fn(&mut Any, &Any, &mut Ui)>,
-}
-impl UiHandlerWrapper {
-    pub fn new<H, E>(handler: H) -> Self
-        where H: UiEventHandler<E> + 'static,
-              E: 'static
-    {
-        let handle_fn = |handler: &mut Any, event: &Any, ui: &mut Ui| {
-            let event: &E = event.downcast_ref().unwrap();
-            debug!("ui handle {}", ::type_name::<E>());
-            let handler: &mut H = handler.downcast_mut().unwrap();
-            handler.handle(event, ui);
-        };
-        UiHandlerWrapper {
-            handler: Box::new(handler),
-            handle_fn: Box::new(handle_fn),
-        }
-    }
-    pub fn new_from_fn<H, E>(handler: H) -> Self
-        where H: Fn(&E, &mut Ui) + 'static,
-              E: 'static
-    {
-        let handle_fn = |handler: &mut Any, event: &Any, ui: &mut Ui| {
-            let event: &E = event.downcast_ref().unwrap();
-            let handler: &H = handler.downcast_ref().unwrap();
-            handler(event, ui);
-        };
-        UiHandlerWrapper {
-            handler: Box::new(handler),
-            handle_fn: Box::new(handle_fn),
-        }
-    }
-    pub fn handle(&mut self, event: &Any, ui: &mut Ui) {
-        (self.handle_fn)(self.handler.as_mut(), event, ui);
-    }
-}
-
 lazy_static! {
     static ref FIRST_THREAD: Mutex<Cell<bool>> = Mutex::new(Cell::new(true));
     static ref GLOBAL_QUEUE: Mutex<GlobalQueue> = Mutex::new(GlobalQueue::new());
 }
-use std::cell::{Cell, RefCell};
 
 thread_local! {
     static LOCAL_QUEUE: Option<RefCell<Queue>> = {
@@ -183,6 +136,7 @@ pub(super) fn queue_next() -> Option<(Target, TypeId, Box<Any>)> {
         next.unwrap()
     }
 }
+
 pub(super) fn queue_set_events_loop(events_loop: &EventsLoop) {
     GLOBAL_QUEUE.lock().unwrap().set_events_loop(events_loop.create_proxy());
     LOCAL_QUEUE.with(|queue| queue.as_ref().unwrap().borrow_mut().set_events_loop(events_loop.create_proxy()));
@@ -199,18 +153,10 @@ pub fn event<T: 'static>(address: Target, data: T) {
         }
     });
 }
+
 /// Send message to UI from any thread.
 pub fn event_global<T: 'static + Send>(data: T) {
     GLOBAL_QUEUE.lock().unwrap().push(data);
-}
-
-#[macro_export]
-macro_rules! event {
-    ($address:expr, $data:expr) => {
-        {
-            $crate::event::event($address, $data);
-        }
-    };
 }
 
 struct GlobalQueue {

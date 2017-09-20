@@ -47,10 +47,10 @@ fn create_slider_control() -> WidgetBuilder {
     ]);
 
     let slider_value_ref = slider_value.widget_ref();
-    slider_widget.on_value_changed(move |size, _| {
+    slider_widget.on_value_changed(move |size, args| {
         let size = size * 100.0;
         slider_value_ref.event(TextUpdated((size as i32).to_string()));
-        event!(Target::Ui, CircleEvent::Resize(size));
+        args.ui.event(CircleEvent::Resize(size));
     }).set_value(0.30);
     let slider_widget_ref = slider_widget.widget_ref();
     let slider_value_ref = slider_value.widget_ref();
@@ -81,13 +81,13 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetRef, WidgetRef,
     undo_widget
         .set_text("Undo")
         .set_inactive()
-        .on_click(|_, _| { event!(Target::Ui, CircleEvent::Undo); });
+        .on_click(|_, args| { args.ui.event(CircleEvent::Undo); });
     undo_widget.layout().add(center_vertical(&button_container));
     let mut redo_widget = PushButtonBuilder::new();
     redo_widget
         .set_text("Redo")
         .set_inactive()
-        .on_click(|_, _| { event!(Target::Ui, CircleEvent::Redo); });
+        .on_click(|_, args| { args.ui.event(CircleEvent::Redo); });
     redo_widget.layout().add(center_vertical(&button_container));
     let slider_container = create_slider_control();
     let slider_container_ref = slider_container.widget_ref();
@@ -109,8 +109,8 @@ fn create_circle(center: &Point, mut parent_id: WidgetRef, size: f32) -> WidgetR
     let widget_ref = widget.widget_ref();
     let widget_ref_clone = widget.widget_ref();
     widget_ref.event(ResizeEvent(size));
-    widget.on_click(move |_, _| {
-        event!(Target::Ui, CircleEvent::Select(Some(widget_ref.clone())));
+    widget.on_click(move |_, args| {
+        args.ui.event(CircleEvent::Select(Some(widget_ref.clone())));
     });
     parent_id.add_child(widget);
     widget_ref_clone
@@ -170,8 +170,8 @@ impl CircleEventHandler {
         }
     }
 }
-impl UiEventHandler<CircleEvent> for CircleEventHandler {
-    fn handle(&mut self, event: &CircleEvent, _: &mut Ui) {
+impl WidgetEventHandler<CircleEvent> for CircleEventHandler {
+    fn handle(&mut self, event: &CircleEvent, args: WidgetEventArgs) {
         match *event {
             CircleEvent::Add(point) => {
                 let size = 30.0;
@@ -182,7 +182,7 @@ impl UiEventHandler<CircleEvent> for CircleEventHandler {
 
                 self.undo_id.event_subtree(PropChange::Remove(Property::Inactive));
                 self.redo_id.event_subtree(PropChange::Add(Property::Inactive));
-                event!(Target::Ui, CircleEvent::Select(Some(circle_id)));
+                args.ui.event(CircleEvent::Select(Some(circle_id)));
             }
             CircleEvent::Undo => {
                 if !self.circles.is_empty() {
@@ -251,18 +251,18 @@ fn main() {
     ]);
     circle_canvas
         .set_draw_state_with_style(RectState::new(), style!(RectStyle::BackgroundColor: WHITE))
-        .on_click(|event, _| {
+        .on_click(|event, args| {
             let event = CircleEvent::Add(event.position);
-            event!(Target::Ui, event);
+            args.ui.event(event);
         });
     let circle_canvas_id = circle_canvas.widget_ref();
     root.add_child(circle_canvas);
     let (undo_id, redo_id, slider_id) = create_control_bar(&mut root);
 
     app.add_handler(CircleEventHandler::new(circle_canvas_id, undo_id, redo_id, slider_id));
-    app.add_handler_fn(|event: &KeyboardInput, _| {
+    app.add_handler_fn(|event: &KeyboardInput, args| {
         if let KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Delete)) = *event {
-            event!(Target::Ui, CircleEvent::Delete);
+            args.ui.event(CircleEvent::Delete);
         }
     });
     app.main_loop(root);

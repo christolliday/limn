@@ -9,7 +9,7 @@ use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use draw::rect::{RectState, RectStyle};
 use draw::text::TextState;
-use event::{Target, WidgetEventHandler, WidgetEventArgs};
+use event::{WidgetEventHandler, WidgetEventArgs};
 use color::*;
 
 const BACKSPACE: char = '\u{8}';
@@ -62,10 +62,10 @@ impl EditTextBuilder {
         widget
             .set_draw_state_with_style(RectState::new(), rect_style)
             .add_handler_fn(|_: &WidgetAttachedEvent, args| {
-                event!(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget));
+                args.ui.event(KeyboardInputEvent::AddFocusable(args.widget));
             })
             .add_handler_fn(|_: &WidgetDetachedEvent, args| {
-                event!(Target::Ui, KeyboardInputEvent::RemoveFocusable(args.widget));
+                args.ui.event(KeyboardInputEvent::RemoveFocusable(args.widget));
             })
             .make_focusable();
 

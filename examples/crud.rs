@@ -87,8 +87,8 @@ impl PeopleHandler {
         }
     }
 }
-impl UiEventHandler<PeopleEvent> for PeopleHandler {
-    fn handle(&mut self, event: &PeopleEvent, _: &mut Ui) {
+impl WidgetEventHandler<PeopleEvent> for PeopleHandler {
+    fn handle(&mut self, event: &PeopleEvent, _: WidgetEventArgs) {
 
         let was_valid = self.person.is_valid();
         match event.clone() {
@@ -201,11 +201,11 @@ fn main() {
 
     first_name_container.layout().add(align_top(&container));
     last_name_container.layout().add(below(&first_name_container).padding(20.0));
-    first_name_box.on_text_changed(|text, _| {
-        event!(Target::Ui, PeopleEvent::ChangeFirstName(text.0.clone()));
+    first_name_box.on_text_changed(|text, args| {
+        args.ui.event(PeopleEvent::ChangeFirstName(text.0.clone()));
     });
-    last_name_box.on_text_changed(|text, _| {
-        event!(Target::Ui, PeopleEvent::ChangeLastName(text.0.clone()));
+    last_name_box.on_text_changed(|text, args| {
+        args.ui.event(PeopleEvent::ChangeLastName(text.0.clone()));
     });
 
     let mut button_container = WidgetBuilder::new("button_container");
@@ -217,14 +217,14 @@ fn main() {
     let mut update_button = PushButtonBuilder::new();
     update_button.set_text("Update");
     update_button.set_inactive();
-    update_button.on_click(|_, _| {
-        event!(Target::Ui, PeopleEvent::Update);
+    update_button.on_click(|_, args| {
+        args.ui.event(PeopleEvent::Update);
     });
     let mut delete_button = PushButtonBuilder::new();
     delete_button.set_text("Delete");
     delete_button.set_inactive();
-    delete_button.on_click(|_, _| {
-        event!(Target::Ui, PeopleEvent::Delete);
+    delete_button.on_click(|_, args| {
+        args.ui.event(PeopleEvent::Delete);
     });
     update_button.layout().add(to_right_of(&create_button).padding(20.0));
     delete_button.layout().add(to_right_of(&update_button).padding(20.0));
@@ -238,13 +238,13 @@ fn main() {
     ]);
 
     let mut list_widget = ListBuilder::new();
-    list_widget.on_item_selected(|selected, _| {
-        event!(Target::Ui, PeopleEvent::PersonSelected(selected));
+    list_widget.on_item_selected(|selected, args| {
+        args.ui.event(PeopleEvent::PersonSelected(selected));
     });
     list_widget.layout().add(match_width(&scroll_container));
 
-    create_button.on_click(|_, _| {
-        event!(Target::Ui, PeopleEvent::Add);
+    create_button.on_click(|_, args| {
+        args.ui.event(PeopleEvent::Add);
     });
     let ids = Ids {
         list_widget: list_widget.widget_ref(),

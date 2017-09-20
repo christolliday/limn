@@ -6,8 +6,7 @@ use stable_bst::Bound::{Excluded, Unbounded};
 use widget::{WidgetRef, WidgetBuilder};
 use widget::property::{PropChange, Property};
 use input::mouse::ClickEvent;
-use event::{Target, UiEventHandler};
-use ui::Ui;
+use event::{WidgetEventHandler, WidgetEventArgs};
 use app::App;
 
 use glutin;
@@ -57,8 +56,8 @@ impl FocusHandler {
         }
     }
 }
-impl UiEventHandler<KeyboardInputEvent> for FocusHandler {
-    fn handle(&mut self, event: &KeyboardInputEvent, _: &mut Ui) {
+impl WidgetEventHandler<KeyboardInputEvent> for FocusHandler {
+    fn handle(&mut self, event: &KeyboardInputEvent, _: WidgetEventArgs) {
         match *event {
             KeyboardInputEvent::AddFocusable(ref widget_id) => {
                 self.focusable.insert(self.focus_index_max, widget_id.clone());
@@ -119,18 +118,18 @@ pub enum KeyboardInputEvent {
 impl WidgetBuilder {
     pub fn make_focusable(&mut self) -> &mut Self {
         self.add_handler_fn(|_: &ClickEvent, args| {
-            event!(Target::Ui, KeyboardInputEvent::FocusChange(Some(args.widget)));
+            args.ui.get_root().event(KeyboardInputEvent::FocusChange(Some(args.widget)));
         })
     }
 }
 
 impl App {
     pub fn add_keyboard_handlers(&mut self) {
-        self.add_handler_fn(|event: &KeyboardInput, _| {
-            event!(Target::Ui, KeyboardInputEvent::KeyboardInput(event.clone()));
+        self.add_handler_fn(|event: &KeyboardInput, args| {
+            args.widget.event(KeyboardInputEvent::KeyboardInput(event.clone()));
         });
-        self.add_handler_fn(|event: &ReceivedCharacter, _| {
-            event!(Target::Ui, KeyboardInputEvent::ReceivedCharacter(event.clone()));
+        self.add_handler_fn(|event: &ReceivedCharacter, args| {
+            args.widget.event(KeyboardInputEvent::ReceivedCharacter(event.clone()));
         });
         self.add_handler(FocusHandler::new());
     }

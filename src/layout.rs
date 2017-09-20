@@ -7,7 +7,6 @@ use limn_layout::constraint::*;
 use resources::WidgetId;
 
 use app::App;
-use event::Target;
 
 use widget::{WidgetRef, WidgetBuilder};
 use event::{WidgetEventHandler, WidgetEventArgs};
@@ -99,39 +98,39 @@ impl LayoutManager {
             solver: LimnSolver::new(),
         }
     }
-    pub fn check_changes(&mut self) {
+    /* pub fn check_changes(&mut self) {
         let changes = self.solver.fetch_changes();
         debug!("layout has {} changes", changes.len());
         if !changes.is_empty() {
-            event!(Target::Ui, LayoutChanged(changes));
+            ui.event(LayoutChanged(changes));
         }
-    }
+    } */
 }
 
 #[derive(Clone)]
 pub struct UpdateLayout(pub WidgetRef);
 pub struct ResizeWindow;
-pub struct LayoutChanged(Vec<(usize, VarType, f64)>);
+pub struct LayoutChanged(pub Vec<(usize, VarType, f64)>);
 pub struct LayoutUpdated;
 
 impl App {
     pub fn add_layout_handlers(&mut self) {
-        self.add_handler_fn(|_: &ResizeWindow, ui| {
-            ui.resize_window_to_fit();
+        self.add_handler_fn(|_: &ResizeWindow, args| {
+            args.ui.resize_window_to_fit();
         });
-        self.add_handler_fn(|event: &UpdateLayout, ui| {
+        self.add_handler_fn(|event: &UpdateLayout, args| {
             let event = event.clone();
             let UpdateLayout(widget_ref) = event;
             let mut widget_mut = widget_ref.widget_mut();
             let layout = &mut widget_mut.layout;
-            ui.layout.solver.update_layout(layout);
-            ui.layout.check_changes();
+            args.ui.layout.solver.update_layout(layout);
+            args.ui.check_layout_changes();
         });
-        self.add_handler_fn(|event: &LayoutChanged, ui| {
+        self.add_handler_fn(|event: &LayoutChanged, args| {
             let changes = &event.0;
             for &(widget_id, var, value) in changes {
                 let widget_id = WidgetId(widget_id);
-                if let Some(widget) = ui.get_widget(widget_id) {
+                if let Some(widget) = args.ui.get_widget(widget_id) {
                     {
                         let widget = &mut *widget.widget_mut();
                         let value = value as f32;
@@ -148,7 +147,7 @@ impl App {
                 }
             }
             // redraw everything when layout changes, for now
-            ui.redraw();
+            args.ui.redraw();
         });
     }
 }
