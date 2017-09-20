@@ -10,7 +10,7 @@ use glutin;
 
 use window::Window;
 use app::App;
-use widget::{WidgetRef, WidgetBuilder, BuildWidget};
+use widget::{WidgetRef, WidgetBuilder};
 use layout::{LayoutManager, LayoutVars};
 use layout::constraint::*;
 use util::{Point, Rect, Size};
@@ -52,7 +52,7 @@ impl Ui {
         let render = WebRenderContext::new(&mut window, events_loop);
         Ui {
             widget_map: HashMap::new(),
-            root: root.build().widget,
+            root: root.into(),
             layout: layout,
             render: render,
             needs_redraw: true,

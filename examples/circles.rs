@@ -89,12 +89,12 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetRef, WidgetRef,
         .set_inactive()
         .on_click(|_, _| { event!(Target::Ui, CircleEvent::Redo); });
     redo_widget.layout().add(center_vertical(&button_container));
-    let slider_container = create_slider_control().build();
+    let slider_container = create_slider_control();
     let slider_container_ref = slider_container.widget_ref();
     let (undo_widget_ref, redo_widget_ref) = (undo_widget.widget_ref(), redo_widget.widget_ref());
     button_container
-        .add_child(undo_widget.build())
-        .add_child(redo_widget.build())
+        .add_child(undo_widget)
+        .add_child(redo_widget)
         .add_child(slider_container);
     root_widget.add_child(button_container);
     (undo_widget_ref, redo_widget_ref, slider_container_ref)

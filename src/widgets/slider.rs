@@ -3,7 +3,7 @@ use cassowary::strength::*;
 use layout::constraint::*;
 use input::mouse::ClickEvent;
 use event::{WidgetEventHandler, WidgetEventArgs};
-use widget::{WidgetBuilder, WidgetRef, BuildWidget};
+use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
@@ -112,9 +112,9 @@ impl SliderBuilder {
 }
 
 widget_builder!(SliderBuilder);
-impl BuildWidget for SliderBuilder {
-    fn build(self) -> WidgetBuilder {
-        let (mut slider, mut slider_handle, orientation) = (self.widget.build(), self.slider_handle, self.orientation);
+impl Into<WidgetBuilder> for SliderBuilder {
+    fn into(self) -> WidgetBuilder {
+        let (mut slider, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
 
         slider_handle.add_handler(DragHandler::new(orientation, slider.widget_ref()));
 

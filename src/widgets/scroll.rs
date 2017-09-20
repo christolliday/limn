@@ -4,7 +4,7 @@ use cassowary::WeightedRelation::*;
 
 use layout::constraint::*;
 use event::{WidgetEventArgs, WidgetEventHandler};
-use widget::{BuildWidget, WidgetBuilder, WidgetRef};
+use widget::{WidgetBuilder, WidgetRef};
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
@@ -32,8 +32,8 @@ impl ScrollBuilder {
             scrollbars: None,
         }
     }
-    pub fn add_content<C: BuildWidget>(&mut self, widget: C) -> &mut Self {
-        self.content = Some(widget.build());
+    pub fn add_content<C: Into<WidgetBuilder>>(&mut self, widget: C) -> &mut Self {
+        self.content = Some(widget.into());
         self
     }
     pub fn add_scrollbar(&mut self) -> &mut Self {
@@ -78,8 +78,8 @@ impl ScrollBuilder {
         self
     }
 }
-impl BuildWidget for ScrollBuilder {
-    fn build(mut self) -> WidgetBuilder {
+impl Into<WidgetBuilder> for ScrollBuilder {
+    fn into(mut self) -> WidgetBuilder {
         let widget_ref = self.content_holder.widget_ref();
         self.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
             widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
@@ -126,8 +126,8 @@ impl BuildWidget for ScrollBuilder {
         self.widget.add_child(self.content_holder);
         if let Some((corner, scrollbar_h, scrollbar_v)) = self.scrollbars {
             self.widget.add_child(corner);
-            self.widget.add_child(scrollbar_h.build());
-            self.widget.add_child(scrollbar_v.build());
+            self.widget.add_child(scrollbar_h);
+            self.widget.add_child(scrollbar_v);
         }
         self.widget
     }

@@ -3,7 +3,7 @@ use cassowary::Constraint;
 use layout::constraint::ConstraintBuilder;
 use layout::constraint::*;
 use widget::style::StyleUpdated;
-use widget::{WidgetBuilder, BuildWidget};
+use widget::WidgetBuilder;
 use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
@@ -97,8 +97,8 @@ impl EditTextBuilder {
 }
 
 widget_builder!(EditTextBuilder);
-impl BuildWidget for EditTextBuilder {
-    fn build(mut self) -> WidgetBuilder {
+impl Into<WidgetBuilder> for EditTextBuilder {
+    fn into(mut self) -> WidgetBuilder {
         self.widget.add_child(self.text_widget);
         self.widget
     }
