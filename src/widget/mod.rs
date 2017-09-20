@@ -362,8 +362,7 @@ impl WidgetRef {
     }
 
     pub fn parent(&self) -> Option<WidgetRef> {
-        let parent = self.widget().parent.clone();
-        parent.unwrap().upgrade()
+        self.widget().parent.as_ref().and_then(|parent| parent.upgrade())
     }
 
     pub fn children(&self) -> Vec<WidgetRef> {
