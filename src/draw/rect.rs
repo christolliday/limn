@@ -1,29 +1,29 @@
 use webrender_api::{LocalClip, BorderRadius, ComplexClipRegion};
 
 use render::RenderBuilder;
-use widget::drawable::Drawable;
+use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{Value, Styleable};
+use widget::style::{Value, Style};
 use util::{Rect, RectExt};
 use color::*;
 
-pub struct RectDrawable {
+pub struct RectState {
     pub background_color: Color,
     pub corner_radius: Option<f32>,
     pub border: Option<(f32, Color)>,
 }
-impl Default for RectDrawable {
+impl Default for RectState {
     fn default() -> Self {
-        RectDrawable {
+        RectState {
             background_color: WHITE,
             corner_radius: None,
             border: None,
         }
     }
 }
-impl RectDrawable {
+impl RectState {
     pub fn new() -> Self {
-        RectDrawable::default()
+        RectState::default()
     }
 }
 fn clip_rounded(rect: Rect, radius: Option<f32>) -> Option<LocalClip> {
@@ -35,7 +35,7 @@ fn clip_rounded(rect: Rect, radius: Option<f32>) -> Option<LocalClip> {
         None
     }
 }
-impl Drawable for RectDrawable {
+impl Draw for RectState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         // rounding is a hack to prevent bug in webrender that produces artifacts around the corners
         let bounds = bounds.round();
@@ -52,20 +52,20 @@ impl Drawable for RectDrawable {
 }
 
 #[derive(Clone)]
-pub enum RectStyleable {
+pub enum RectStyle {
     BackgroundColor(Value<Color>),
     CornerRadius(Value<Option<f32>>),
     Border(Value<Option<(f32, Color)>>),
 }
 
-impl Styleable<RectDrawable> for RectStyleable {
-    fn apply(&self, drawable: &mut RectDrawable, props: &PropSet) {
+impl Style<RectState> for RectStyle {
+    fn apply(&self, draw_state: &mut RectState, props: &PropSet) {
         match *self {
-            RectStyleable::BackgroundColor(ref val) => {
-                drawable.background_color = val.get(props)
+            RectStyle::BackgroundColor(ref val) => {
+                draw_state.background_color = val.get(props)
             }
-            RectStyleable::CornerRadius(ref val) => drawable.corner_radius = val.get(props),
-            RectStyleable::Border(ref val) => drawable.border = val.get(props),
+            RectStyle::CornerRadius(ref val) => draw_state.corner_radius = val.get(props),
+            RectStyle::Border(ref val) => draw_state.border = val.get(props),
         }
     }
 }

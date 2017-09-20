@@ -10,8 +10,8 @@ use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widgets::text::TextBuilder;
 use input::mouse::{WidgetMouseButton, ClickEvent};
-use drawable::rect::{RectDrawable, RectStyleable};
-use drawable::text::TextStyleable;
+use draw::rect::{RectState, RectStyle};
+use draw::text::TextStyle;
 use util::Size;
 use color::*;
 
@@ -27,20 +27,20 @@ static BUTTON_BORDER_INACTIVE: (f32, Color) = (1.0, GRAY_70);
 
 
 lazy_static! {
-    pub static ref STYLE_BUTTON: Vec<RectStyleable> = {
+    pub static ref STYLE_BUTTON: Vec<RectStyle> = {
         style!(
-            RectStyleable::BackgroundColor: selector!(COLOR_BUTTON_DEFAULT,
+            RectStyle::BackgroundColor: selector!(COLOR_BUTTON_DEFAULT,
                 ACTIVATED_PRESSED: COLOR_BUTTON_ACTIVATED_PRESSED,
                 ACTIVATED: COLOR_BUTTON_ACTIVATED,
                 PRESSED: COLOR_BUTTON_PRESSED,
                 INACTIVE: COLOR_BUTTON_INACTIVE),
-            RectStyleable::CornerRadius: Some(5.0),
-            RectStyleable::Border: selector!(Some(BUTTON_BORDER),
+            RectStyle::CornerRadius: Some(5.0),
+            RectStyle::Border: selector!(Some(BUTTON_BORDER),
                 INACTIVE: Some(BUTTON_BORDER_INACTIVE))
         )
     };
-    pub static ref STYLE_BUTTON_TEXT: Vec<TextStyleable> = {
-        style!(TextStyleable::TextColor: selector!(BLACK, INACTIVE: COLOR_BUTTON_TEXT_INACTIVE))
+    pub static ref STYLE_BUTTON_TEXT: Vec<TextStyle> = {
+        style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: COLOR_BUTTON_TEXT_INACTIVE))
     };
 }
 
@@ -81,7 +81,7 @@ impl ToggleButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new("toggle_button");
         widget
-            .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
+            .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
             .add_handler_fn(toggle_button_handle_mouse);
         widget.layout().add(constraints![
@@ -94,9 +94,9 @@ impl ToggleButtonBuilder {
     pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
 
         let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyleable::Text: selector!(off_text.to_owned(),
+            TextStyle::Text: selector!(off_text.to_owned(),
                 ACTIVATED: on_text.to_owned()),
-            TextStyleable::Align: Align::Middle);
+            TextStyle::Align: Align::Middle);
         let mut button_text_widget = TextBuilder::new_with_style(style);
         button_text_widget.set_name("button_text");
         button_text_widget.layout().add(constraints![
@@ -127,7 +127,7 @@ impl PushButtonBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new("push_button");
         widget
-            .set_drawable_with_style(RectDrawable::new(), STYLE_BUTTON.clone())
+            .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down);
 
         widget.layout().add(constraints![
@@ -140,8 +140,8 @@ impl PushButtonBuilder {
     pub fn set_text(&mut self, text: &'static str) -> &mut Self {
 
         let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyleable::Text: text.to_owned(),
-            TextStyleable::Align: Align::Middle);
+            TextStyle::Text: text.to_owned(),
+            TextStyle::Align: Align::Middle);
 
         let mut button_text_widget = TextBuilder::new_with_style(style);
         button_text_widget.set_name("button_text");

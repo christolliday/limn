@@ -3,8 +3,8 @@ use widget::{WidgetBuilder, WidgetRef};
 use widget::property::{Property, PropChange};
 use widget::property::states::*;
 use widgets::text::TextBuilder;
-use drawable::rect::{RectDrawable, RectStyleable};
-use drawable::text::TextStyleable;
+use draw::rect::{RectState, RectStyle};
+use draw::text::TextStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
 use color::*;
@@ -18,13 +18,13 @@ static COLOR_LIST_ITEM_MOUSEOVER: Color = GRAY_60;
 static COLOR_LIST_ITEM_SELECTED: Color = BLUE_HIGHLIGHT;
 
 lazy_static! {
-    pub static ref STYLE_LIST_ITEM: Vec<RectStyleable> = {
-        style!(RectStyleable::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
+    pub static ref STYLE_LIST_ITEM: Vec<RectStyle> = {
+        style!(RectStyle::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
             SELECTED: COLOR_LIST_ITEM_SELECTED,
             MOUSEOVER: COLOR_LIST_ITEM_MOUSEOVER))
     };
-    pub static ref STYLE_LIST_TEXT: Vec<TextStyleable> = {
-        style!(TextStyleable::TextColor: WHITE)
+    pub static ref STYLE_LIST_TEXT: Vec<TextStyle> = {
+        style!(TextStyle::TextColor: WHITE)
     };
 }
 
@@ -116,12 +116,12 @@ impl WidgetBuilder {
 
 pub fn default_text_adapter(item: String, list: &mut ListBuilder) -> WidgetBuilder {
     let text = (*item).to_owned();
-    let style = style!(parent: STYLE_LIST_TEXT, TextStyleable::Text: text);
+    let style = style!(parent: STYLE_LIST_TEXT, TextStyle::Text: text);
     let mut text_widget = TextBuilder::new_with_style(style);
 
     let mut item_widget = WidgetBuilder::new("list_item");
     item_widget
-        .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
+        .set_draw_state_with_style(RectState::new(), STYLE_LIST_ITEM.clone())
         .enable_hover();
 
     text_widget.layout().add(align_left(&item_widget));

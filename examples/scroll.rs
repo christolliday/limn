@@ -6,7 +6,7 @@ mod util;
 use limn::prelude::*;
 
 use limn::widgets::scroll::ScrollBuilder;
-use limn::drawable::rect::{RectDrawable, RectStyleable};
+use limn::draw::rect::{RectState, RectStyle};
 
 fn main() {
     let app = util::init_default_min_size("Limn scroll demo", Size::new(300.0, 300.0));
@@ -23,8 +23,8 @@ fn main() {
     {
         let mut add_rect = |color| {
             let mut rect = WidgetBuilder::new(&format!("rect_{:?}", color));
-            rect.set_drawable_with_style(RectDrawable::new(),
-                style!(RectStyleable::BackgroundColor: color));
+            rect.set_draw_state_with_style(RectState::new(),
+                style!(RectStyle::BackgroundColor: color));
             rect_container.add_child(rect);
         };
         add_rect(GREEN);

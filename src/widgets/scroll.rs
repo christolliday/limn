@@ -9,7 +9,7 @@ use widgets::slider::{SliderBuilder, SetSliderValue};
 use util::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
 use input::mouse::WidgetMouseWheel;
-use drawable::rect::{RectDrawable, RectStyleable};
+use draw::rect::{RectState, RectStyle};
 use color::*;
 
 pub struct ScrollBuilder {
@@ -62,9 +62,9 @@ impl ScrollBuilder {
         scrollbar_v.on_value_changed(move |value, _| {
             widget_ref.event(ScrollParentEvent::ScrollBarMovedY(value));
         });
-        let corner_style = style!(RectStyleable::BackgroundColor: GRAY_70);
+        let corner_style = style!(RectStyle::BackgroundColor: GRAY_70);
         let mut corner = WidgetBuilder::new("corner");
-        corner.set_drawable_with_style(RectDrawable::new(), corner_style);
+        corner.set_draw_state_with_style(RectState::new(), corner_style);
         corner.layout().add(constraints![
             align_bottom(&self.widget),
             align_right(&self.widget),

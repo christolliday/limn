@@ -15,8 +15,8 @@ use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::widgets::text::TextBuilder;
-use limn::drawable::text::{TextDrawable, TextStyleable};
-use limn::drawable::rect::RectDrawable;
+use limn::draw::text::{TextState, TextStyle};
+use limn::draw::rect::RectState;
 
 #[derive(Clone, Debug)]
 pub struct Person {
@@ -145,12 +145,12 @@ impl UiEventHandler<PeopleEvent> for PeopleHandler {
 use limn::widgets::edit_text;
 pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
     let list_item_widget = {
-        let text_style = style!(TextStyleable::TextColor: WHITE);
-        let text_drawable = TextDrawable::new(&person.name());
-        let text_size = text_drawable.measure();
+        let text_style = style!(TextStyle::TextColor: WHITE);
+        let text_draw_state = TextState::new(&person.name());
+        let text_size = text_draw_state.measure();
         let mut list_item_widget = WidgetBuilder::new("list_item");
         list_item_widget
-            .set_drawable_with_style(RectDrawable::new(), STYLE_LIST_ITEM.clone())
+            .set_draw_state_with_style(RectState::new(), STYLE_LIST_ITEM.clone())
             .list_item(&list_widget_id)
             .enable_hover();
         list_item_widget.layout().add(constraints![
@@ -159,7 +159,7 @@ pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
         ]);
         let mut list_text_widget = WidgetBuilder::new("list_text");
         list_text_widget
-            .set_drawable_with_style(text_drawable, text_style)
+            .set_draw_state_with_style(text_draw_state, text_style)
             .add_handler_fn(edit_text::text_change_handle);
         list_text_widget.layout().add(center(&list_item_widget));
         list_item_widget.add_child(list_text_widget);
@@ -231,7 +231,7 @@ fn main() {
 
     let mut scroll_container = ScrollBuilder::new();
     scroll_container
-        .set_drawable(RectDrawable::new());
+        .set_draw_state(RectState::new());
     scroll_container.layout().add(constraints![
         below(&button_container).padding(20.0),
         min_height(260.0),

@@ -11,7 +11,7 @@ use limn::prelude::*;
 
 use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
-use limn::drawable::text::TextDrawable;
+use limn::draw::text::TextState;
 
 enum EditTextSettingsEvent {
     Align(Align),
@@ -20,10 +20,10 @@ enum EditTextSettingsEvent {
 struct EditTextSettingsHandler;
 impl WidgetEventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
     fn handle(&mut self, event: &EditTextSettingsEvent, mut args: WidgetEventArgs) {
-        args.widget.update(|drawable: &mut TextDrawable| {
+        args.widget.update(|draw_state: &mut TextState| {
             match *event {
-                EditTextSettingsEvent::Align(align) => drawable.align = align,
-                EditTextSettingsEvent::Wrap(wrap) => drawable.wrap = wrap,
+                EditTextSettingsEvent::Align(align) => draw_state.align = align,
+                EditTextSettingsEvent::Wrap(wrap) => draw_state.wrap = wrap,
             }
         });
     }

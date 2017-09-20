@@ -1,17 +1,17 @@
 use webrender_api::*;
 
 use render::RenderBuilder;
-use widget::drawable::Drawable;
+use widget::draw::Draw;
 use resources::resources;
 use util::{Rect, RectExt, Size, SizeExt};
 
-pub struct ImageDrawable {
+pub struct ImageState {
     pub image: String,
     pub scale: Size,
 }
-impl ImageDrawable {
+impl ImageState {
     pub fn new(image: &str) -> Self {
-        ImageDrawable {
+        ImageState {
             image: image.to_owned(),
             scale: Size::new(1.0, 1.0),
         }
@@ -25,7 +25,7 @@ impl ImageDrawable {
         self.scale = scale;
     }
 }
-impl Drawable for ImageDrawable {
+impl Draw for ImageState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let key = resources().get_image(&self.image).key;
         renderer.builder.push_image(

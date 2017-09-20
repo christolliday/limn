@@ -33,7 +33,7 @@ pub mod widget;
 #[macro_use]
 pub mod layout;
 pub mod widgets;
-pub mod drawable;
+pub mod draw;
 pub mod ui;
 pub mod util;
 pub mod resources;

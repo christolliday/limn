@@ -7,8 +7,8 @@ use widget::{WidgetBuilder, WidgetRef, BuildWidget};
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::drag::{DragEvent, WidgetDrag};
-use drawable::rect::{RectDrawable, RectStyleable};
-use drawable::ellipse::{EllipseDrawable, EllipseStyleable};
+use draw::rect::{RectState, RectStyle};
+use draw::ellipse::{EllipseState, EllipseStyle};
 use ui::ChildAttachedEvent;
 use util::{Rect, RectExt};
 use color::*;
@@ -120,14 +120,14 @@ impl BuildWidget for SliderBuilder {
 
         match self.handle_style {
             HandleStyle::Round => {
-                slider_handle.set_drawable_with_style(EllipseDrawable::new(), style!(
-                    EllipseStyleable::BackgroundColor: self.handle_color,
-                    EllipseStyleable::Border: self.border))
+                slider_handle.set_draw_state_with_style(EllipseState::new(), style!(
+                    EllipseStyle::BackgroundColor: self.handle_color,
+                    EllipseStyle::Border: self.border))
             }
             HandleStyle::Square => {
-                slider_handle.set_drawable_with_style(RectDrawable::new(), style!(
-                    RectStyleable::BackgroundColor: self.handle_color,
-                    RectStyleable::Border: self.border))
+                slider_handle.set_draw_state_with_style(RectState::new(), style!(
+                    RectStyle::BackgroundColor: self.handle_color,
+                    RectStyle::Border: self.border))
             }
         };
 
@@ -136,22 +136,22 @@ impl BuildWidget for SliderBuilder {
             BarStyle::Wide => None,
         };
         let bar_style = style!(
-            RectStyleable::BackgroundColor: self.bar_color,
-            RectStyleable::CornerRadius: Some(3.0),
-            RectStyleable::Border: self.border,
-            RectStyleable::CornerRadius: corner_radius);
+            RectStyle::BackgroundColor: self.bar_color,
+            RectStyle::CornerRadius: Some(3.0),
+            RectStyle::Border: self.border,
+            RectStyle::CornerRadius: corner_radius);
 
         let pre_style = if let Some(highlight) = self.highlight {
-            style!(parent: bar_style, RectStyleable::BackgroundColor:
+            style!(parent: bar_style, RectStyle::BackgroundColor:
                 selector!(highlight, INACTIVE: self.bar_color))
         } else {
             bar_style.clone()
         };
         let mut slider_bar_pre = WidgetBuilder::new("slider_bar_pre");
-        slider_bar_pre.set_drawable_with_style(RectDrawable::new(), pre_style);
+        slider_bar_pre.set_draw_state_with_style(RectState::new(), pre_style);
 
         let mut slider_bar_post = WidgetBuilder::new("slider_bar_post");
-        slider_bar_post.set_drawable_with_style(RectDrawable::new(), bar_style);
+        slider_bar_post.set_draw_state_with_style(RectState::new(), bar_style);
 
         let (bar_width, bar_padding) = match self.bar_style {
             BarStyle::Wide => (self.width, 0.0),

@@ -1,7 +1,7 @@
 #[macro_use]
 pub mod style;
 pub mod property;
-pub mod drawable;
+pub mod draw;
 
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
@@ -21,7 +21,7 @@ use event::Target;
 use layout::UpdateLayout;
 
 use self::property::{PropSet, Property};
-use self::drawable::{Drawable, DrawableWrapper};
+use self::draw::{Draw, DrawWrapper};
 use self::style::Style;
 
 impl AsMut<WidgetRef> for WidgetRef {
@@ -137,13 +137,13 @@ impl<'b> DerefMut for PropsGuard<'b> {
     }
 }
 
-pub struct DrawableGuard<'a> {
+pub struct DrawStateGuard<'a> {
     guard: RefMut<'a, Widget>
 }
-impl<'a> DrawableGuard<'a> {
-    pub fn downcast_ref<T: Drawable>(&self) -> Option<&T> {
-        if let Some(ref drawable) = self.guard.drawable {
-            drawable.drawable.as_ref().downcast_ref::<T>()
+impl<'a> DrawStateGuard<'a> {
+    pub fn downcast_ref<T: Draw>(&self) -> Option<&T> {
+        if let Some(ref draw_state) = self.guard.draw_state {
+            draw_state.state.as_ref().downcast_ref::<T>()
         } else {
             None
         }
@@ -168,12 +168,12 @@ impl WidgetBuilder {
     pub fn id(&self) -> WidgetId {
         self.widget.id()
     }
-    pub fn set_drawable<T: Drawable + 'static>(&mut self, drawable: T) -> &mut Self {
-        self.widget.widget_mut().drawable = Some(DrawableWrapper::new(drawable));
+    pub fn set_draw_state<T: Draw + 'static>(&mut self, draw_state: T) -> &mut Self {
+        self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
         self
     }
-    pub fn set_drawable_with_style<T: Drawable + 'static, S: Style<T> + 'static>(&mut self, drawable: T, style: S) -> &mut Self {
-        self.widget.widget_mut().drawable = Some(DrawableWrapper::new_with_style(drawable, style));
+    pub fn set_draw_state_with_style<T: Draw + 'static, S: Style<T> + 'static>(&mut self, draw_state: T, style: S) -> &mut Self {
+        self.widget.widget_mut().draw_state = Some(DrawWrapper::new_with_style(draw_state, style));
         self.widget.apply_style();
         self
     }
@@ -268,8 +268,8 @@ impl WidgetRef {
     pub fn props(&mut self) -> PropsGuard {
         PropsGuard { guard: self.0.borrow_mut() }
     }
-    pub fn drawable(&mut self) -> DrawableGuard {
-        DrawableGuard { guard: self.0.borrow_mut() }
+    pub fn draw_state(&mut self) -> DrawStateGuard {
+        DrawStateGuard { guard: self.0.borrow_mut() }
     }
     pub fn downgrade(&self) -> WidgetWeak {
         WidgetWeak(Rc::downgrade(&self.0))
@@ -303,7 +303,7 @@ impl WidgetRef {
         self.0.borrow().bounds
     }
 
-    pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
+    pub fn update<F, T: Draw + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
         self.0.borrow_mut().update(f);
@@ -416,7 +416,7 @@ impl WidgetWeak {
 
 pub struct Widget {
     id: WidgetId,
-    drawable: Option<DrawableWrapper>,
+    draw_state: Option<DrawWrapper>,
     props: PropSet,
     has_updated: bool,
     pub(super) layout: Layout,
@@ -434,7 +434,7 @@ impl Widget {
         let id = resources().widget_id();
         Widget {
             id: id,
-            drawable: None,
+            draw_state: None,
             props: PropSet::new(),
             layout: Layout::new(id.0, Some(name.clone())),
             has_updated: false,
@@ -457,8 +457,8 @@ impl Widget {
         let bounds = self.bounds;
         let clip_id = renderer.builder.define_clip(None, bounds.typed(), vec![], None);
         renderer.builder.push_clip_id(clip_id);
-        if let Some(drawable) = self.drawable.as_mut() {
-            drawable.drawable.draw(bounds, crop_to, renderer);
+        if let Some(draw_state) = self.draw_state.as_mut() {
+            draw_state.state.draw(bounds, crop_to, renderer);
         }
         if let Some(crop_to) = crop_to.intersection(&bounds) {
             for child in &self.children {
@@ -477,31 +477,31 @@ impl Widget {
     }
 
     pub fn is_under_cursor(&self, cursor: Point) -> bool {
-        if let Some(ref drawable) = self.drawable {
-            drawable.is_under_cursor(self.bounds, cursor)
+        if let Some(ref draw_state) = self.draw_state {
+            draw_state.is_under_cursor(self.bounds, cursor)
         } else {
             false
         }
     }
-    pub fn update<F, T: Drawable + 'static>(&mut self, f: F)
+    pub fn update<F, T: Draw + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
-        if let Some(ref mut drawable) = self.drawable {
+        if let Some(ref mut draw_state) = self.draw_state {
             self.has_updated = true;
-            let state = drawable.drawable.as_mut().downcast_mut::<T>().expect("Called update on widget with wrong drawable type");
+            let state = draw_state.state.as_mut().downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
             f(state);
         }
     }
     pub fn apply_style(&mut self) {
-        if let Some(ref mut drawable) = self.drawable {
-            if drawable.apply_style(&self.props) {
+        if let Some(ref mut draw_state) = self.draw_state {
+            if draw_state.apply_style(&self.props) {
                 self.has_updated = true;
             }
         }
     }
-    pub fn drawable<T: Drawable>(&self) -> Option<&T> {
-        if let Some(ref drawable) = self.drawable {
-            drawable.drawable.as_ref().downcast_ref::<T>()
+    pub fn draw_state<T: Draw>(&self) -> Option<&T> {
+        if let Some(ref draw_state) = self.draw_state {
+            draw_state.state.as_ref().downcast_ref::<T>()
         } else {
             None
         }

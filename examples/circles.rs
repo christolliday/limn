@@ -15,24 +15,24 @@ use limn::prelude::*;
 
 use limn::widgets::button::PushButtonBuilder;
 use limn::widgets::slider::{SliderBuilder, SetSliderValue};
-use limn::drawable::text::TextStyleable;
-use limn::drawable::rect::{RectDrawable, RectStyleable};
-use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
+use limn::draw::text::TextStyle;
+use limn::draw::rect::{RectState, RectStyle};
+use limn::draw::ellipse::{EllipseState, EllipseStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::TextBuilder;
 use limn::input::keyboard::KeyboardInput;
 
 fn create_slider_control() -> WidgetBuilder {
 
-    let text_style = style!(TextStyleable::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
+    let text_style = style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
     let mut slider_container = WidgetBuilder::new("slider_container");
     slider_container.set_inactive();
     let mut slider_title = TextBuilder::new_with_style(
-        style!(parent: text_style, TextStyleable::Text: "Circle Size".to_owned()));
+        style!(parent: text_style, TextStyle::Text: "Circle Size".to_owned()));
     slider_title.set_name("slider_title");
     slider_title.layout().add(align_left(&slider_container));
     let mut slider_value = TextBuilder::new_with_style(
-        style!(parent: text_style, TextStyleable::Align: Align::End, TextStyleable::Text: "30".to_owned()));
+        style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "30".to_owned()));
     slider_value
         .set_name("slider_value")
         .add_handler_fn(edit_text::text_change_handle);
@@ -68,9 +68,9 @@ fn create_slider_control() -> WidgetBuilder {
 fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetRef, WidgetRef, WidgetRef) {
     let control_color = GRAY_70;
     let mut button_container = WidgetBuilder::new("button_container");
-    let style = style!(RectStyleable::BackgroundColor: control_color);
+    let style = style!(RectStyle::BackgroundColor: control_color);
     button_container
-        .set_drawable_with_style(RectDrawable::new(), style)
+        .set_draw_state_with_style(RectState::new(), style)
         .hbox()
         .set_padding(30.0);
     button_container.layout().add(constraints![
@@ -102,10 +102,10 @@ fn create_control_bar(root_widget: &mut WidgetBuilder) -> (WidgetRef, WidgetRef,
 }
 
 fn create_circle(center: &Point, mut parent_id: WidgetRef, size: f32) -> WidgetRef {
-    let style = style!(EllipseStyleable::BackgroundColor: selector!(WHITE, SELECTED: RED),
-                       EllipseStyleable::Border: Some((2.0, BLACK)));
+    let style = style!(EllipseStyle::BackgroundColor: selector!(WHITE, SELECTED: RED),
+                       EllipseStyle::Border: Some((2.0, BLACK)));
     let mut widget = WidgetBuilder::new("circle");
-    widget.set_drawable_with_style(EllipseDrawable::new(), style);
+    widget.set_draw_state_with_style(EllipseState::new(), style);
     widget.add_handler(CircleHandler { center: *center });
     let widget_ref = widget.widget_ref();
     let widget_ref_clone = widget.widget_ref();
@@ -251,7 +251,7 @@ fn main() {
         min_height(600.0)
     ]);
     circle_canvas
-        .set_drawable_with_style(RectDrawable::new(), style!(RectStyleable::BackgroundColor: WHITE))
+        .set_draw_state_with_style(RectState::new(), style!(RectStyle::BackgroundColor: WHITE))
         .on_click(|event, _| {
             let event = CircleEvent::Add(event.position);
             event!(Target::Ui, event);

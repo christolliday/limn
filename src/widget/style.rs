@@ -3,12 +3,10 @@ use std::ops::Deref;
 use linked_hash_map::LinkedHashMap;
 
 use widget::PropSet;
-use widget::drawable::Drawable;
+use widget::draw::Draw;
 
 #[derive(Clone, Debug)]
-pub enum Value<T>
-    where T: Clone
-{
+pub enum Value<T: Clone> {
     Single(T),
     Selector(Selector<T>),
 }
@@ -68,22 +66,22 @@ impl<T: Clone> Value<T> {
     }
 }
 
-pub trait Style<D: Drawable> {
-    fn apply(&self, drawable: &mut D, props: &PropSet);
-}
-impl<D: Drawable, S: Styleable<D>> Style<D> for Vec<S> {
-    fn apply(&self, drawable: &mut D, props: &PropSet) {
+/* pub trait Style<D: Draw> {
+    fn apply(&self, draw_state: &mut D, props: &PropSet);
+} */
+impl<D: Draw, S: Style<D>> Style<D> for Vec<S> {
+    fn apply(&self, draw_state: &mut D, props: &PropSet) {
         for field in self.iter() {
-            field.apply(drawable, props);
+            field.apply(draw_state, props);
         }
     }
 }
 
-pub trait Styleable<D> {
+pub trait Style<D> {
     fn apply(&self, state: &mut D, props: &PropSet);
 }
 
-pub fn apply_style<D, S: Styleable<D>>(state: &mut D, style: &[S], props: &PropSet) {
+pub fn apply_style<D, S: Style<D>>(state: &mut D, style: &[S], props: &PropSet) {
     for field in style.iter() {
         field.apply(state, props);
     }

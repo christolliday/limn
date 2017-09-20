@@ -6,14 +6,14 @@ use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::resources;
 use util::{self, Size, Rect, RectExt, Vector};
-use widget::drawable::Drawable;
+use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{Value, Styleable};
+use widget::style::{Value, Style};
 use color::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 
-pub struct TextDrawable {
+pub struct TextState {
     pub text: String,
     pub font: String,
     pub font_size: f32,
@@ -22,9 +22,9 @@ pub struct TextDrawable {
     pub wrap: Wrap,
     pub align: Align,
 }
-impl Default for TextDrawable {
+impl Default for TextState {
     fn default() -> Self {
-        TextDrawable {
+        TextState {
             text: "".to_owned(),
             font: "NotoSans/NotoSans-Regular".to_owned(),
             font_size: 24.0,
@@ -36,11 +36,11 @@ impl Default for TextDrawable {
     }
 }
 
-impl TextDrawable {
+impl TextState {
     pub fn new(text: &str) -> Self {
-        let mut drawable = TextDrawable::default();
-        drawable.text = text.to_owned();
-        drawable
+        let mut draw_state = TextState::default();
+        draw_state.text = text.to_owned();
+        draw_state
     }
     pub fn measure(&self) -> Size {
         let line_height = self.line_height();
@@ -116,7 +116,7 @@ impl TextDrawable {
     }
 }
 
-impl Drawable for TextDrawable {
+impl Draw for TextState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let glyphs = self.position_glyphs(bounds);
         if DEBUG_LINE_BOUNDS {
@@ -155,7 +155,7 @@ impl Drawable for TextDrawable {
 }
 
 #[derive(Debug, Clone)]
-pub enum TextStyleable {
+pub enum TextStyle {
     Text(Value<String>),
     Font(Value<String>),
     FontSize(Value<f32>),
@@ -165,16 +165,16 @@ pub enum TextStyleable {
     Align(Value<Align>),
 }
 
-impl Styleable<TextDrawable> for TextStyleable {
-    fn apply(&self, state: &mut TextDrawable, props: &PropSet) {
+impl Style<TextState> for TextStyle {
+    fn apply(&self, state: &mut TextState, props: &PropSet) {
         match *self {
-            TextStyleable::Text(ref val) => state.text = val.get(props),
-            TextStyleable::Font(ref val) => state.font = val.get(props),
-            TextStyleable::FontSize(ref val) => state.font_size = val.get(props),
-            TextStyleable::TextColor(ref val) => state.text_color = val.get(props),
-            TextStyleable::BackgroundColor(ref val) => state.background_color = val.get(props),
-            TextStyleable::Wrap(ref val) => state.wrap = val.get(props),
-            TextStyleable::Align(ref val) => state.align = val.get(props),
+            TextStyle::Text(ref val) => state.text = val.get(props),
+            TextStyle::Font(ref val) => state.font = val.get(props),
+            TextStyle::FontSize(ref val) => state.font_size = val.get(props),
+            TextStyle::TextColor(ref val) => state.text_color = val.get(props),
+            TextStyle::BackgroundColor(ref val) => state.background_color = val.get(props),
+            TextStyle::Wrap(ref val) => state.wrap = val.get(props),
+            TextStyle::Align(ref val) => state.align = val.get(props),
         }
     }
 }

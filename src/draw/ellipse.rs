@@ -1,28 +1,28 @@
 use webrender_api::{ComplexClipRegion, BorderRadius, LocalClip};
 
 use render::RenderBuilder;
-use widget::drawable::Drawable;
+use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{Styleable, Value};
+use widget::style::{Style, Value};
 use util::{Rect, RectExt, Point, Size};
 use color::*;
 
-pub struct EllipseDrawable {
+pub struct EllipseState {
     pub background_color: Color,
     pub border: Option<(f32, Color)>,
 }
-impl Default for EllipseDrawable {
+impl Default for EllipseState {
     fn default() -> Self {
-        EllipseDrawable {
+        EllipseState {
             background_color: WHITE,
             border: None,
         }
     }
 }
 
-impl EllipseDrawable {
+impl EllipseState {
     pub fn new() -> Self {
-        EllipseDrawable::default()
+        EllipseState::default()
     }
 }
 
@@ -32,7 +32,7 @@ fn clip_ellipse(rect: Rect) -> LocalClip {
     LocalClip::RoundedRect(rect, clip_region)
 }
 
-impl Drawable for EllipseDrawable {
+impl Draw for EllipseState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         // rounding is a hack to prevent bug in webrender that produces artifacts around the corners
         let bounds = bounds.round();
@@ -59,18 +59,18 @@ fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
 }
 
 #[derive(Clone)]
-pub enum EllipseStyleable {
+pub enum EllipseStyle {
     BackgroundColor(Value<Color>),
     Border(Value<Option<(f32, Color)>>),
 }
 
-impl Styleable<EllipseDrawable> for EllipseStyleable {
-    fn apply(&self, drawable: &mut EllipseDrawable, props: &PropSet) {
+impl Style<EllipseState> for EllipseStyle {
+    fn apply(&self, draw_state: &mut EllipseState, props: &PropSet) {
         match *self {
-            EllipseStyleable::BackgroundColor(ref val) => {
-                drawable.background_color = val.get(props)
+            EllipseStyle::BackgroundColor(ref val) => {
+                draw_state.background_color = val.get(props)
             },
-            EllipseStyleable::Border(ref val) => drawable.border = val.get(props),
+            EllipseStyle::Border(ref val) => draw_state.border = val.get(props),
         }
     }
 }

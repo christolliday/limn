@@ -10,7 +10,7 @@ use limn::prelude::*;
 
 use limn::widgets::text::TextBuilder;
 use limn::widgets::button::PushButtonBuilder;
-use limn::drawable::text::TextDrawable;
+use limn::draw::text::TextState;
 
 struct CountEvent;
 
@@ -30,7 +30,7 @@ fn main() {
     impl WidgetEventHandler<CountEvent> for CountHandler {
         fn handle(&mut self, _: &CountEvent, mut args: WidgetEventArgs) {
             self.count += 1;
-            args.widget.update(|state: &mut TextDrawable| state.text = format!("{}", self.count));
+            args.widget.update(|state: &mut TextState| state.text = format!("{}", self.count));
         }
     }
 

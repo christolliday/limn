@@ -16,21 +16,21 @@ use chrono::{Local, Timelike};
 use webrender_api::*;
 
 use limn::prelude::*;
-use limn::drawable::ellipse::{EllipseDrawable, EllipseStyleable};
+use limn::draw::ellipse::{EllipseState, EllipseStyle};
 
 type Radians = euclid::Radians<f32>;
 
 struct ClockTick;
 
-pub struct HandDrawable {
+pub struct ClockHand {
     color: Color,
     width: f32,
     length: f32,
     rotation: Radians,
 }
-impl HandDrawable {
+impl ClockHand {
     pub fn new(color: Color, width: f32, length: f32, rotation: Radians) -> Self {
-        HandDrawable {
+        ClockHand {
             color: color,
             width: width,
             length: length,
@@ -39,7 +39,7 @@ impl HandDrawable {
     }
 }
 
-impl Drawable for HandDrawable {
+impl Draw for ClockHand {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let transform = rotation_transform(&bounds.center().typed(),
             self.rotation + Radians::new(f32::consts::PI));
@@ -80,10 +80,10 @@ impl ClockBuilder {
     fn new() -> Self {
 
         let style = style!(
-            EllipseStyleable::BackgroundColor: WHITE,
-            EllipseStyleable::Border: Some((2.0, BLACK)));
+            EllipseStyle::BackgroundColor: WHITE,
+            EllipseStyle::Border: Some((2.0, BLACK)));
         let mut widget = WidgetBuilder::new("clock");
-        widget.set_drawable_with_style(EllipseDrawable::new(), style);
+        widget.set_draw_state_with_style(EllipseState::new(), style);
         widget.layout().add(size(Size::new(200.0, 200.0)));
 
         let hour_angle = || rotation((Local::now().hour() % 12) as f32 / 12.0);
@@ -91,20 +91,20 @@ impl ClockBuilder {
         let second_angle = || rotation(Local::now().second() as f32 / 60.0);
         let mut hour_widget = WidgetBuilder::new("hours");
         hour_widget
-            .set_drawable(HandDrawable::new(BLACK, 4.0, 60.0, hour_angle()))
-            .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
+            .set_draw_state(ClockHand::new(BLACK, 4.0, 60.0, hour_angle()))
+            .add_handler(DrawEventHandler::new(ClockTick, move |state: &mut ClockHand| {
                 state.rotation = hour_angle()
             }));
         let mut minute_widget = WidgetBuilder::new("minutes");
         minute_widget
-            .set_drawable(HandDrawable::new(BLACK, 3.0, 90.0, minute_angle()))
-            .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
+            .set_draw_state(ClockHand::new(BLACK, 3.0, 90.0, minute_angle()))
+            .add_handler(DrawEventHandler::new(ClockTick, move |state: &mut ClockHand| {
                 state.rotation = minute_angle()
             }));
         let mut second_widget = WidgetBuilder::new("seconds");
         second_widget
-            .set_drawable(HandDrawable::new(RED, 2.0, 80.0, second_angle()))
-            .add_handler(DrawableEventHandler::new(ClockTick, move |state: &mut HandDrawable| {
+            .set_draw_state(ClockHand::new(RED, 2.0, 80.0, second_angle()))
+            .add_handler(DrawEventHandler::new(ClockTick, move |state: &mut ClockHand| {
                 state.rotation = second_angle()
             }));
 

@@ -7,8 +7,8 @@ use widget::{WidgetBuilder, BuildWidget};
 use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
-use drawable::rect::{RectDrawable, RectStyleable};
-use drawable::text::TextDrawable;
+use draw::rect::{RectState, RectStyle};
+use draw::text::TextState;
 use event::{Target, WidgetEventHandler, WidgetEventArgs};
 use color::*;
 
@@ -18,23 +18,23 @@ fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: WidgetEventA
     let &WidgetReceivedCharacter(char) = event;
     let text = {
         let bounds = args.widget.bounds();
-        let drawable = args.widget.drawable();
-        let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();
-        let mut text = text_drawable.text.clone();
+        let draw_state = args.widget.draw_state();
+        let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
+        let mut text = text_draw_state.text.clone();
         match char {
             BACKSPACE => {
                 text.pop();
             }
             _ => {
                 text.push(char);
-                if !text_drawable.text_fits(&text, bounds) {
+                if !text_draw_state.text_fits(&text, bounds) {
                     text.pop();
                 }
             }
         }
         text
     };
-    args.widget.update(|state: &mut TextDrawable| {
+    args.widget.update(|state: &mut TextState| {
         state.text = text.clone()
     });
     args.widget.event(TextUpdated(text.clone()));
@@ -43,7 +43,7 @@ fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: WidgetEventA
 pub struct TextUpdated(pub String);
 
 pub fn text_change_handle(event: &TextUpdated, mut args: WidgetEventArgs) {
-    args.widget.update(|state: &mut TextDrawable| state.text = event.0.clone());
+    args.widget.update(|state: &mut TextState| state.text = event.0.clone());
 }
 
 pub struct EditTextBuilder {
@@ -56,11 +56,11 @@ impl EditTextBuilder {
         let default_border = Some((1.0, GRAY_70));
         let focused_border = Some((1.0, BLUE));
         let rect_style = style!(
-            RectStyleable::Border: selector!(default_border, FOCUSED: focused_border),
-            RectStyleable::CornerRadius: Some(3.0));
+            RectStyle::Border: selector!(default_border, FOCUSED: focused_border),
+            RectStyle::CornerRadius: Some(3.0));
         let mut widget = WidgetBuilder::new("edit_text");
         widget
-            .set_drawable_with_style(RectDrawable::new(), rect_style)
+            .set_draw_state_with_style(RectState::new(), rect_style)
             .add_handler_fn(|_: &WidgetAttachedEvent, args| {
                 event!(Target::Ui, KeyboardInputEvent::AddFocusable(args.widget));
             })
@@ -71,7 +71,7 @@ impl EditTextBuilder {
 
         let mut text_widget = WidgetBuilder::new("edit_text_text");
         text_widget
-            .set_drawable(TextDrawable::default())
+            .set_draw_state(TextState::default())
             .add_handler(TextUpdatedHandler::default())
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);
@@ -116,9 +116,9 @@ impl WidgetEventHandler<StyleUpdated> for TextUpdatedHandler {
             }
         });
         let line_height = {
-            let drawable = args.widget.drawable();
-            let text_drawable = drawable.downcast_ref::<TextDrawable>().unwrap();
-            text_drawable.line_height()
+            let draw_state = args.widget.draw_state();
+            let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
+            text_draw_state.line_height()
         };
         let size_constraints = min_height(line_height).build(&args.widget.layout_vars());
         args.widget.update_layout(|layout| {
