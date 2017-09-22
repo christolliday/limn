@@ -119,6 +119,7 @@ impl WidgetRef {
         let mut child = child.into();
         event::event(Target::Root, ::layout::UpdateLayout(child.clone()));
         child.widget_mut().parent = Some(self.downgrade());
+        child.widget_mut().props.extend(self.props().iter().cloned());
         child.apply_style();
         self.widget_mut().children.push(child.clone());
         self.update_layout(|layout| layout.add_child(child.id().0));
@@ -419,10 +420,11 @@ impl WidgetBuilder {
         self.widget.add_handler_fn(handler);
         self
     }
-    pub fn set_inactive(&mut self) -> &mut Self {
-        self.widget.widget_mut().props.insert(Property::Inactive);
+    pub fn add_prop(&mut self, property: Property) -> &mut Self {
+        self.widget.widget_mut().props.insert(property);
         for child in &mut self.widget.widget_mut().children {
-            child.widget_mut().props.insert(Property::Inactive);
+            child.widget_mut().props.insert(property);
+            child.apply_style();
         }
         self
     }
@@ -453,6 +455,7 @@ impl Into<WidgetRef> for WidgetBuilder {
         if let Some(container) = self.container.take() {
             self.widget.add_handler_wrapper(TypeId::of::<ChildrenUpdatedEvent>(), container);
         }
+        self.widget.apply_style();
         self.widget
     }
 }

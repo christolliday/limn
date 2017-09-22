@@ -51,7 +51,7 @@ impl Draw for RectState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum RectStyle {
     BackgroundColor(Value<Color>),
     CornerRadius(Value<Option<f32>>),

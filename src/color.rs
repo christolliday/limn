@@ -1,3 +1,4 @@
+use std::fmt;
 use webrender::api::ColorF;
 
 fn rgba(color: u32) -> ColorF {
@@ -6,8 +7,14 @@ fn rgba(color: u32) -> ColorF {
 }
 
 // needed to declare const val colors, when const fns are stable, can use rgba to construct ColorF directly
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Color(u32);
+
+impl ::std::fmt::Debug for Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "Color(0x{:08X})", self.0)
+    }
+}
 
 impl Into<ColorF> for Color {
     fn into(self) -> ColorF {

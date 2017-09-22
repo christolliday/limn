@@ -66,9 +66,6 @@ impl<T: Clone> Value<T> {
     }
 }
 
-/* pub trait Style<D: Draw> {
-    fn apply(&self, draw_state: &mut D, props: &PropSet);
-} */
 impl<D: Draw, S: Style<D>> Style<D> for Vec<S> {
     fn apply(&self, draw_state: &mut D, props: &PropSet) {
         for field in self.iter() {

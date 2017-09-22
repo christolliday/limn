@@ -8,7 +8,7 @@ pub enum PropChange {
     Remove(Property),
 }
 
-#[derive(Hash, PartialEq, Eq, Clone, PartialOrd, Ord, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Debug)]
 pub enum Property {
     MouseOver,
     Activated,

@@ -30,7 +30,7 @@ impl SliderControl {
     fn new() -> Self {
         let text_style = style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
         let mut widget = WidgetBuilder::new("slider_container");
-        widget.set_inactive();
+        widget.add_prop(Property::Inactive);
         let mut slider_title = TextBuilder::new_with_style(
             style!(parent: text_style, TextStyle::Text: "Circle Size".to_owned()));
         slider_title.set_name("slider_title");
@@ -92,13 +92,13 @@ impl ControlBar {
         let mut undo_widget = PushButtonBuilder::new();
         undo_widget
             .set_text("Undo")
-            .set_inactive()
+            .add_prop(Property::Inactive)
             .on_click(|_, args| { args.ui.event(CircleEvent::Undo); });
         undo_widget.layout().add(center_vertical(&widget));
         let mut redo_widget = PushButtonBuilder::new();
         redo_widget
             .set_text("Redo")
-            .set_inactive()
+            .add_prop(Property::Inactive)
             .on_click(|_, args| { args.ui.event(CircleEvent::Redo); });
         redo_widget.layout().add(center_vertical(&widget));
         let slider_container = SliderControl::new();

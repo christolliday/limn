@@ -58,7 +58,7 @@ fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum EllipseStyle {
     BackgroundColor(Value<Color>),
     Border(Value<Option<(f32, Color)>>),
