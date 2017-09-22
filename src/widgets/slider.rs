@@ -6,7 +6,7 @@ use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widget::property::states::*;
-use widgets::drag::{DragEvent, WidgetDrag};
+use widgets::drag::{DragEvent, DragState};
 use draw::rect::{RectState, RectStyle};
 use draw::ellipse::{EllipseState, EllipseStyle};
 use ui::ChildAttachedEvent;
@@ -50,8 +50,8 @@ impl SliderBuilder {
 
         let mut slider_handle = WidgetBuilder::new("slider_handle");
         slider_handle
-            .add_handler_fn(|event: &WidgetDrag, args| {
-                args.widget.event(SliderHandleInput::WidgetDrag(event.clone()));
+            .add_handler_fn(|event: &DragEvent, args| {
+                args.widget.event(SliderHandleInput::Drag(event.clone()));
             })
             .make_draggable();
         SliderBuilder {
@@ -116,7 +116,7 @@ impl Into<WidgetBuilder> for SliderBuilder {
     fn into(self) -> WidgetBuilder {
         let (mut slider, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
 
-        slider_handle.add_handler(DragHandler::new(orientation, slider.widget_ref()));
+        slider_handle.add_handler(HandleEventHandler::new(orientation, slider.widget_ref()));
 
         match self.handle_style {
             HandleStyle::Round => {
@@ -247,25 +247,25 @@ struct MovedSliderWidgetEvent {
 
 pub struct SetSliderValue(pub f32);
 pub enum SliderHandleInput {
-    WidgetDrag(WidgetDrag),
+    Drag(DragEvent),
     SetValue((f32, Rect)),
     SliderClicked((f32, Rect)),
 }
-struct DragHandler {
+struct HandleEventHandler {
     orientation: Orientation,
     container: WidgetRef,
     start_pos: f32,
 }
-impl DragHandler {
+impl HandleEventHandler {
     pub fn new(orientation: Orientation, container: WidgetRef) -> Self {
-        DragHandler {
+        HandleEventHandler {
             orientation: orientation,
             container: container,
             start_pos: 0.0
         }
     }
 }
-impl EventHandler<SliderHandleInput> for DragHandler {
+impl EventHandler<SliderHandleInput> for HandleEventHandler {
     fn handle(&mut self, event: &SliderHandleInput, mut args: EventArgs) {
         let bounds = args.widget.bounds();
         let handle_radius = if let Orientation::Horizontal = self.orientation {
@@ -274,18 +274,18 @@ impl EventHandler<SliderHandleInput> for DragHandler {
             bounds.height() / 2.0
         };
         match *event {
-            SliderHandleInput::WidgetDrag(ref event) => {
+            SliderHandleInput::Drag(ref event) => {
                 if args.widget.props().contains(&Property::Inactive) {
                     return;
                 }
-                let &WidgetDrag { ref drag_type, position } = event;
+                let &DragEvent { ref state, position, .. } = event;
                 let (drag_pos, bounds_start, bounds_end) = if let Orientation::Horizontal = self.orientation {
                     (position.x, bounds.left(), bounds.right())
                 } else {
                     (position.y, bounds.top(), bounds.bottom())
                 };
-                match *drag_type {
-                    DragEvent::DragStart => {
+                match *state {
+                    DragState::Start => {
                         self.start_pos = drag_pos - bounds_start;
                     }
                     _ => {
