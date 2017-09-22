@@ -37,13 +37,15 @@ impl SliderControl {
         slider_title.set_name("slider_title");
         slider_title.layout().add(align_left(&widget));
         let mut slider_value = TextBuilder::new_with_style(
-            style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "30".to_owned()));
+            style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "--".to_owned()));
         slider_value
             .set_name("slider_value")
             .add_handler_fn(edit_text::text_change_handle);
         slider_value.layout().add(align_right(&widget));
         let mut slider_widget = SliderBuilder::new();
-        slider_widget.set_name("slider_widget");
+        slider_widget
+            .set_range(10.0..500.0)
+            .set_name("slider_widget");
         slider_widget.layout().add(constraints![
             min_width(300.0),
             below(&slider_title).padding(10.0),
@@ -53,7 +55,6 @@ impl SliderControl {
 
         let slider_value_ref = slider_value.widget_ref();
         slider_widget.on_value_changed(move |size, args| {
-            let size = size * 100.0;
             slider_value_ref.event(TextUpdated((size as i32).to_string()));
             args.ui.event(AppEvent::Resize(size));
         }).set_value(0.30);
@@ -61,7 +62,7 @@ impl SliderControl {
         let slider_value_ref = slider_value.widget_ref();
         widget.add_handler_fn(move |event: &SetSliderValue, _| {
             let size = event.0;
-            slider_widget_ref.event(SetSliderValue(size / 100.0));
+            slider_widget_ref.event(SetSliderValue(size));
             slider_value_ref.event(TextUpdated((size as i32).to_string()));
         });
         widget

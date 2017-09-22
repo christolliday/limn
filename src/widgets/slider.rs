@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use cassowary::strength::*;
 
 use layout::constraint::*;
@@ -33,6 +35,7 @@ pub struct SliderBuilder {
     pub widget: WidgetBuilder,
     pub slider_handle: WidgetBuilder,
     pub orientation: Orientation,
+    pub range: Range<f32>,
     pub init_value: f32,
     pub variable_handle_size: bool,
     pub handle_style: HandleStyle,
@@ -42,11 +45,12 @@ pub struct SliderBuilder {
     pub handle_color: Color,
     pub highlight: Option<Color>,
     pub width: f32,
+    pub value_changed_handlers: Vec<Box<Fn(f32, &mut EventArgs)>>,
 }
 
 impl SliderBuilder {
     pub fn new() -> Self {
-        let slider = WidgetBuilder::new("slider");
+        let widget = WidgetBuilder::new("slider");
 
         let mut slider_handle = WidgetBuilder::new("slider_handle");
         slider_handle
@@ -55,9 +59,10 @@ impl SliderBuilder {
             })
             .make_draggable();
         SliderBuilder {
-            widget: slider,
+            widget: widget,
             slider_handle: slider_handle,
             orientation: Orientation::Horizontal,
+            range: 0.0..1.0,
             init_value: 0.0,
             variable_handle_size: false,
             handle_style: HandleStyle::Round,
@@ -67,6 +72,7 @@ impl SliderBuilder {
             handle_color: GRAY_80,
             highlight: Some(BLUE_HIGHLIGHT),
             width: 30.0,
+            value_changed_handlers: Vec::new(),
         }
     }
     pub fn make_vertical(&mut self) -> &mut Self {
@@ -92,21 +98,14 @@ impl SliderBuilder {
         self.init_value = value;
         self
     }
+    pub fn set_range(&mut self, range: Range<f32>) -> &mut Self {
+        self.range = range;
+        self
+    }
     pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
         where F: Fn(f32, &mut EventArgs) + 'static
     {
-        self.widget.add_handler_fn(move |event: &MovedSliderWidgetEvent, mut args| {
-            let bounds = args.widget.bounds();
-            let (slider_start, slider_size) = if let Orientation::Horizontal = event.orientation {
-                (bounds.left(), bounds.width())
-            } else {
-                (bounds.top(), bounds.height())
-            };
-            let range = slider_size - (event.handle_size * 2.0);
-            let val = (event.slider_pos - event.handle_size - slider_start) / range;
-            on_value_changed(val, &mut args);
-            *args.handled = true;
-        });
+        self.value_changed_handlers.push(Box::new(on_value_changed));
         self
     }
 }
@@ -114,9 +113,9 @@ impl SliderBuilder {
 widget_builder!(SliderBuilder);
 impl Into<WidgetBuilder> for SliderBuilder {
     fn into(self) -> WidgetBuilder {
-        let (mut slider, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
+        let (mut widget, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
 
-        slider_handle.add_handler(HandleEventHandler::new(orientation, slider.widget_ref()));
+        slider_handle.add_handler(HandleEventHandler::new(orientation, widget.widget_ref()));
 
         match self.handle_style {
             HandleStyle::Round => {
@@ -163,20 +162,20 @@ impl Into<WidgetBuilder> for SliderBuilder {
         }
         match orientation {
             Orientation::Horizontal => {
-                slider.layout().add(height(self.width));
+                widget.layout().add(height(self.width));
                 slider_bar_pre.layout().add(constraints![
                     height(bar_width),
-                    center_vertical(&slider),
-                    align_left(&slider).padding(bar_padding),
+                    center_vertical(&widget),
+                    align_left(&widget).padding(bar_padding),
                     to_left_of(&slider_handle).padding(-bar_padding),
                 ]);
                 slider_bar_post.layout().add(constraints![
                     height(bar_width),
-                    center_vertical(&slider),
-                    align_right(&slider).padding(bar_padding),
+                    center_vertical(&widget),
+                    align_right(&widget).padding(bar_padding),
                     to_right_of(&slider_handle).padding(-bar_padding),
                 ]);
-                slider_handle.layout().add(match_height(&slider));
+                slider_handle.layout().add(match_height(&widget));
 
                 if self.variable_handle_size {
                     // STRONG + 1.0 for higher strength than handle position
@@ -185,21 +184,21 @@ impl Into<WidgetBuilder> for SliderBuilder {
                 }
             }
             Orientation::Vertical => {
-                slider.layout().add(width(self.width));
+                widget.layout().add(width(self.width));
                 slider_bar_pre.layout().add(constraints![
                     width(bar_width),
-                    center_horizontal(&slider),
-                    align_top(&slider).padding(bar_padding),
+                    center_horizontal(&widget),
+                    align_top(&widget).padding(bar_padding),
                     above(&slider_handle).padding(-bar_padding),
                 ]);
                 slider_bar_post.layout().add(constraints![
                     width(bar_width),
-                    center_horizontal(&slider),
-                    align_bottom(&slider).padding(bar_padding),
+                    center_horizontal(&widget),
+                    align_bottom(&widget).padding(bar_padding),
                     below(&slider_handle).padding(-bar_padding),
                 ]);
 
-                slider_handle.layout().add(match_width(&slider));
+                slider_handle.layout().add(match_width(&widget));
 
                 if self.variable_handle_size {
                     // STRONG + 1.0 for higher strength than handle position
@@ -209,13 +208,15 @@ impl Into<WidgetBuilder> for SliderBuilder {
             }
         }
         let handle_ref = slider_handle.widget_ref();
-        slider.add_handler_fn(move |event: &SetSliderValue, args| {
+        let range = self.range.clone();
+        widget.add_handler_fn(move |event: &SetSliderValue, args| {
             let bounds = args.widget.bounds();
-            let event = SliderHandleInput::SetValue((event.0, bounds));
+            let val = (event.0 - range.start) / (range.end - range.start);
+            let event = SliderHandleInput::SetValue((val, bounds));
             handle_ref.event(event);
         });
         let handle_ref = slider_handle.widget_ref();
-        slider.add_handler_fn(move |event: &ClickEvent, args| {
+        widget.add_handler_fn(move |event: &ClickEvent, args| {
             let bounds = args.widget.bounds();
             let position = if let Orientation::Horizontal = orientation {
                 event.position.x
@@ -225,17 +226,45 @@ impl Into<WidgetBuilder> for SliderBuilder {
             let event = SliderHandleInput::SliderClicked((position, bounds));
             handle_ref.event(event);
         });
-        slider.add_child(slider_bar_pre);
-        slider.add_child(slider_bar_post);
-        slider.add_child(slider_handle);
+        widget.add_child(slider_bar_pre);
+        widget.add_child(slider_bar_post);
+        widget.add_child(slider_handle);
 
         // need to update position after widget is created because the slider position
         // depends on the measured width of the slider and slider handle
         let init_value = self.init_value;
-        slider.add_handler_fn(move |_: &ChildAttachedEvent, args| {
+        widget.add_handler_fn(move |_: &ChildAttachedEvent, args| {
             args.widget.event(SetSliderValue(init_value));
         });
-        slider
+
+        widget.add_handler(NotifyValueHandler{
+            handlers: self.value_changed_handlers,
+            range: self.range,
+        });
+        widget
+    }
+}
+
+struct NotifyValueHandler {
+    handlers: Vec<Box<Fn(f32, &mut EventArgs)>>,
+    range: Range<f32>,
+}
+
+impl EventHandler<MovedSliderWidgetEvent> for NotifyValueHandler {
+    fn handle(&mut self, event: &MovedSliderWidgetEvent, mut args: EventArgs) {
+        let bounds = args.widget.bounds();
+        let (slider_start, slider_size) = if let Orientation::Horizontal = event.orientation {
+            (bounds.left(), bounds.width())
+        } else {
+            (bounds.top(), bounds.height())
+        };
+        let handle_pos_range = slider_size - (event.handle_size * 2.0);
+        let val = (event.slider_pos - event.handle_size - slider_start) / handle_pos_range;
+        let val = val * (self.range.end - self.range.start) + self.range.start;
+        for handler in &self.handlers {
+            handler(val, &mut args);
+        }
+        *args.handled = true;
     }
 }
 
@@ -261,7 +290,7 @@ impl HandleEventHandler {
         HandleEventHandler {
             orientation: orientation,
             container: container,
-            start_pos: 0.0
+            start_pos: 0.0,
         }
     }
 }
