@@ -23,6 +23,7 @@ use limn::draw::ellipse::{EllipseState, EllipseStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::TextBuilder;
 use limn::input::keyboard::KeyboardInput;
+use limn::resources::id::{Id, IdGen};
 
 struct SliderControl {
     widget: WidgetBuilder,
@@ -134,7 +135,7 @@ impl ControlBar {
 }
 widget_wrapper!(ControlBar);
 
-fn create_circle(circle: Circle, mut parent_ref: WidgetRef) -> WidgetRef {
+fn create_circle(id: CircleId, circle: Circle, mut parent_ref: WidgetRef) -> WidgetRef {
     let style = style!(EllipseStyle::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyle::Border: Some((2.0, BLACK)));
     let mut widget = WidgetBuilder::new("circle");
@@ -144,13 +145,13 @@ fn create_circle(circle: Circle, mut parent_ref: WidgetRef) -> WidgetRef {
         .add_handler_fn(|event: &DragEvent, args| {
             args.widget.event(CircleEvent::Drag(event.clone()));
         })
-        .add_handler(CircleHandler);
+        .add_handler(CircleHandler(id));
     let widget_ref = widget.widget_ref();
     let widget_ref_clone = widget.widget_ref();
     widget_ref.event(CircleEvent::Update(circle.center, circle.size));
     widget.add_handler_fn(move |event: &WidgetMouseButton, args| {
         if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
-            args.ui.event(AppEvent::Select(Some(widget_ref.clone())));
+            args.ui.event(AppEvent::Select(Some(id)));
         }
     });
     widget.on_click(|_, args| *args.handled = true);
@@ -162,7 +163,7 @@ enum CircleEvent {
     Update(Point, f32),
     Drag(DragEvent),
 }
-struct CircleHandler;
+struct CircleHandler(CircleId);
 impl EventHandler<CircleEvent> for CircleHandler {
     fn handle(&mut self, event: &CircleEvent, args: EventArgs) {
         match *event {
@@ -175,17 +176,17 @@ impl EventHandler<CircleEvent> for CircleHandler {
                 });
             }
             CircleEvent::Drag(ref event) => {
-                args.ui.event(AppEvent::Move(args.widget, event.change));
+                args.ui.event(AppEvent::Move(self.0, event.change));
             }
         }
     }
 }
 
 enum Change {
-    Create(Circle),
-    Delete(WidgetRef),
-    Resize(WidgetRef, f32),
-    Move(WidgetRef, Vector),
+    Create(CircleId, Circle),
+    Delete(CircleId),
+    Resize(CircleId, f32),
+    Move(CircleId, Vector),
     None,
 }
 
@@ -194,10 +195,10 @@ enum AppEvent {
     ClickCanvas(Point),
     Undo,
     Redo,
-    Select(Option<WidgetRef>),
+    Select(Option<CircleId>),
     Delete,
     Resize(SliderEvent),
-    Move(WidgetRef, Vector),
+    Move(CircleId, Vector),
 }
 
 #[derive(Clone)]
@@ -206,6 +207,8 @@ struct Circle {
     size: f32,
 }
 
+named_id!(CircleId);
+
 struct AppEventHandler {
     circle_canvas_ref: WidgetRef,
     create_ref: WidgetRef,
@@ -213,11 +216,13 @@ struct AppEventHandler {
     redo_ref: WidgetRef,
     slider_ref: WidgetRef,
 
+    id_gen: IdGen<CircleId>,
+    circle_widgets: HashMap<CircleId, WidgetRef>,
     create_mode: bool,
-    circles: HashMap<WidgetRef, Circle>,
+    circles: HashMap<CircleId, Circle>,
     undo_queue: Vec<Change>,
     redo_queue: Vec<Change>,
-    selected: Option<WidgetRef>,
+    selected: Option<CircleId>,
 }
 
 impl AppEventHandler {
@@ -229,6 +234,8 @@ impl AppEventHandler {
             redo_ref: control_bar.redo.clone(),
             slider_ref: control_bar.slider.clone(),
 
+            id_gen: IdGen::new(),
+            circle_widgets: HashMap::new(),
             create_mode: true,
             circles: HashMap::new(),
             undo_queue: Vec::new(),
@@ -241,15 +248,15 @@ impl AppEventHandler {
         handler.slider_ref.event_subtree(PropChange::Add(Property::Inactive));
         handler
     }
-    fn update_selected(&mut self, new_selected: Option<WidgetRef>) {
+    fn update_selected(&mut self, new_selected: Option<CircleId>) {
         if let Some(ref selected) = self.selected {
-            selected.event_subtree(PropChange::Remove(Property::Selected));
+            self.circle_widgets[selected].event_subtree(PropChange::Remove(Property::Selected));
         }
         self.selected = new_selected.clone();
         if let Some(ref selected) = self.selected {
             let size = self.circles[selected].size;
             self.slider_ref.event(SetSliderValue(size));
-            selected.event_subtree(PropChange::Add(Property::Selected));
+            self.circle_widgets[selected].event_subtree(PropChange::Add(Property::Selected));
             self.slider_ref.event_subtree(PropChange::Remove(Property::Inactive));
         } else {
             self.slider_ref.event_subtree(PropChange::Add(Property::Inactive));
@@ -257,30 +264,32 @@ impl AppEventHandler {
     }
     fn apply_change(&mut self, change: Change) -> Change {
         match change {
-            Change::Create(circle) => {
-                let widget_ref = create_circle(circle.clone(), self.circle_canvas_ref.clone());
-                self.circles.insert(widget_ref.clone(), circle);
-                self.update_selected(Some(widget_ref.clone()));
-                Change::Delete(widget_ref)
+            Change::Create(circle_id, circle) => {
+                self.circles.insert(circle_id, circle.clone());
+                let widget_ref = create_circle(circle_id, circle, self.circle_canvas_ref.clone());
+                self.circle_widgets.insert(circle_id, widget_ref.clone());
+                self.update_selected(Some(circle_id));
+                Change::Delete(circle_id)
             },
-            Change::Delete(mut widget_ref) => {
+            Change::Delete(circle_id) => {
                 self.update_selected(None);
+                let mut widget_ref = self.circle_widgets.remove(&circle_id).unwrap();
                 widget_ref.remove_widget();
-                let circle = self.circles.remove(&widget_ref).unwrap();
-                Change::Create(circle)
+                let circle = self.circles.remove(&circle_id).unwrap();
+                Change::Create(circle_id, circle)
             }
-            Change::Resize(widget_ref, size_change) => {
-                let circle = self.circles.get_mut(&widget_ref).unwrap();
+            Change::Resize(circle_id, size_change) => {
+                let circle = self.circles.get_mut(&circle_id).unwrap();
                 circle.size += size_change;
-                widget_ref.event(CircleEvent::Update(circle.center, circle.size));
+                self.circle_widgets[&circle_id].event(CircleEvent::Update(circle.center, circle.size));
                 self.slider_ref.event(SetSliderValue(circle.size));
-                Change::Resize(widget_ref, -size_change)
+                Change::Resize(circle_id, -size_change)
             }
-            Change::Move(widget_ref, pos_change) => {
-                let circle = self.circles.get_mut(&widget_ref).unwrap();
+            Change::Move(circle_id, pos_change) => {
+                let circle = self.circles.get_mut(&circle_id).unwrap();
                 circle.center += pos_change;
-                widget_ref.event(CircleEvent::Update(circle.center, circle.size));
-                Change::Move(widget_ref, -pos_change)
+                self.circle_widgets[&circle_id].event(CircleEvent::Update(circle.center, circle.size));
+                Change::Move(circle_id, -pos_change)
             }
             _ => Change::None
         }
@@ -322,7 +331,8 @@ impl EventHandler<AppEvent> for AppEventHandler {
             AppEvent::ClickCanvas(point) => {
                 if self.create_mode {
                     let circle = Circle { center: point, size: 100.0 };
-                    self.new_change(Change::Create(circle));
+                    let circle_id = self.id_gen.next();
+                    self.new_change(Change::Create(circle_id, circle));
                 } else {
                     self.update_selected(None);
                 }
@@ -345,7 +355,7 @@ impl EventHandler<AppEvent> for AppEventHandler {
                 if let Some(selected) = self.selected.clone() {
                     if event.dragging {
                         let circle = &self.circles[&selected];
-                        selected.event(CircleEvent::Update(circle.center, event.value));
+                        self.circle_widgets[&selected].event(CircleEvent::Update(circle.center, event.value));
                     } else {
                         self.new_change(Change::Resize(selected, event.offset));
                     }
