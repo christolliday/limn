@@ -367,7 +367,7 @@ impl Widget {
             f(state);
         }
     }
-    pub fn apply_style(&mut self) -> bool {
+    fn apply_style(&mut self) -> bool {
         if let Some(ref mut draw_state) = self.draw_state {
             if draw_state.apply_style(&self.props) {
                 self.has_updated = true;
@@ -408,11 +408,14 @@ impl WidgetBuilder {
     }
     pub fn set_draw_state<T: Draw + 'static>(&mut self, draw_state: T) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
+        self.widget.widget_mut().apply_style();
+        self.widget.event(self::style::StyleUpdated);
         self
     }
     pub fn set_draw_state_with_style<T: Draw + 'static, S: Style<T> + 'static>(&mut self, draw_state: T, style: S) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new_with_style(draw_state, style));
-        self.widget.apply_style();
+        self.widget.widget_mut().apply_style();
+        self.widget.event(self::style::StyleUpdated);
         self
     }
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
