@@ -9,7 +9,7 @@ use util::{Size, Rect, RectExt, Vector};
 use render;
 use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{Value, Style};
+use widget::style::{self, Value, Style};
 use color::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
@@ -167,15 +167,15 @@ pub enum TextStyle {
 }
 
 impl Style<TextState> for TextStyle {
-    fn apply(&self, state: &mut TextState, props: &PropSet) {
+    fn apply(&self, state: &mut TextState, props: &PropSet) -> bool {
         match *self {
-            TextStyle::Text(ref val) => state.text = val.get(props),
-            TextStyle::Font(ref val) => state.font = val.get(props),
-            TextStyle::FontSize(ref val) => state.font_size = val.get(props),
-            TextStyle::TextColor(ref val) => state.text_color = val.get(props),
-            TextStyle::BackgroundColor(ref val) => state.background_color = val.get(props),
-            TextStyle::Wrap(ref val) => state.wrap = val.get(props),
-            TextStyle::Align(ref val) => state.align = val.get(props),
+            TextStyle::Text(ref val) => style::update(&mut state.text, val.get(props)),
+            TextStyle::Font(ref val) => style::update(&mut state.font, val.get(props)),
+            TextStyle::FontSize(ref val) => style::update(&mut state.font_size, val.get(props)),
+            TextStyle::TextColor(ref val) => style::update(&mut state.text_color, val.get(props)),
+            TextStyle::BackgroundColor(ref val) => style::update(&mut state.background_color, val.get(props)),
+            TextStyle::Wrap(ref val) => style::update(&mut state.wrap, val.get(props)),
+            TextStyle::Align(ref val) => style::update(&mut state.align, val.get(props)),
         }
     }
 }

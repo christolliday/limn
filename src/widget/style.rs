@@ -67,20 +67,33 @@ impl<T: Clone> Value<T> {
 }
 
 impl<D: Draw, S: Style<D>> Style<D> for Vec<S> {
-    fn apply(&self, draw_state: &mut D, props: &PropSet) {
+    fn apply(&self, draw_state: &mut D, props: &PropSet) -> bool {
+        let mut updated = false;
         for field in self.iter() {
-            field.apply(draw_state, props);
+            updated |= field.apply(draw_state, props);
         }
+        updated
     }
 }
 
 pub trait Style<D> {
-    fn apply(&self, state: &mut D, props: &PropSet);
+    fn apply(&self, state: &mut D, props: &PropSet) -> bool ;
 }
 
-pub fn apply_style<D, S: Style<D>>(state: &mut D, style: &[S], props: &PropSet) {
+pub fn apply_style<D, S: Style<D>>(state: &mut D, style: &[S], props: &PropSet) -> bool {
+    let mut updated = false;
     for field in style.iter() {
-        field.apply(state, props);
+        updated |= field.apply(state, props);
+    }
+    updated
+}
+
+pub fn update<A: PartialEq>(val: &mut A, new_val: A) -> bool {
+    if val != &new_val {
+        *val = new_val;
+        true
+    } else {
+        false
     }
 }
 

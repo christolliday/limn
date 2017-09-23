@@ -3,7 +3,7 @@ use webrender_api::{ComplexClipRegion, BorderRadius, LocalClip};
 use render::RenderBuilder;
 use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{Style, Value};
+use widget::style::{self, Style, Value};
 use util::{Rect, RectExt, Point, Size};
 use color::*;
 
@@ -65,12 +65,12 @@ pub enum EllipseStyle {
 }
 
 impl Style<EllipseState> for EllipseStyle {
-    fn apply(&self, draw_state: &mut EllipseState, props: &PropSet) {
+    fn apply(&self, state: &mut EllipseState, props: &PropSet) -> bool {
         match *self {
             EllipseStyle::BackgroundColor(ref val) => {
-                draw_state.background_color = val.get(props)
+                style::update(&mut state.background_color, val.get(props))
             },
-            EllipseStyle::Border(ref val) => draw_state.border = val.get(props),
+            EllipseStyle::Border(ref val) => style::update(&mut state.border, val.get(props)),
         }
     }
 }

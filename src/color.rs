@@ -7,7 +7,7 @@ fn rgba(color: u32) -> ColorF {
 }
 
 // needed to declare const val colors, when const fns are stable, can use rgba to construct ColorF directly
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Color(u32);
 
 impl ::std::fmt::Debug for Color {

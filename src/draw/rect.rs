@@ -3,7 +3,7 @@ use webrender_api::{LocalClip, BorderRadius, ComplexClipRegion};
 use render::RenderBuilder;
 use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{Value, Style};
+use widget::style::{self, Style, Value};
 use util::{Rect, RectExt};
 use color::*;
 
@@ -59,13 +59,13 @@ pub enum RectStyle {
 }
 
 impl Style<RectState> for RectStyle {
-    fn apply(&self, draw_state: &mut RectState, props: &PropSet) {
+    fn apply(&self, state: &mut RectState, props: &PropSet) -> bool {
         match *self {
             RectStyle::BackgroundColor(ref val) => {
-                draw_state.background_color = val.get(props)
+                style::update(&mut state.background_color, val.get(props))
             }
-            RectStyle::CornerRadius(ref val) => draw_state.corner_radius = val.get(props),
-            RectStyle::Border(ref val) => draw_state.border = val.get(props),
+            RectStyle::CornerRadius(ref val) => style::update(&mut state.corner_radius, val.get(props)),
+            RectStyle::Border(ref val) => style::update(&mut state.border, val.get(props)),
         }
     }
 }

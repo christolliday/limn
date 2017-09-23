@@ -19,7 +19,7 @@ pub trait Draw: Downcast {
 }
 impl_downcast!(Draw);
 
-type StyleFn = Fn(&mut Draw, &Any, &PropSet);
+type StyleFn = Fn(&mut Draw, &Any, &PropSet) -> bool;
 
 pub(super) struct DrawStyle {
     pub style: Box<Any>,
@@ -39,10 +39,10 @@ impl DrawWrapper {
     }
     pub fn new_with_style<T: Draw + 'static, S: Style<T> + 'static>(draw_state: T, style: S) -> Self
     {
-        let style_fn = |draw_state: &mut Draw, style: &Any, props: &PropSet| {
+        let style_fn = |draw_state: &mut Draw, style: &Any, props: &PropSet| -> bool {
             let draw_state: &mut T = draw_state.downcast_mut().unwrap();
             let style: &S = style.downcast_ref().unwrap();
-            style.apply(draw_state, props);
+            style.apply(draw_state, props)
         };
         let style = Some(DrawStyle {
             style: Box::new(style),
@@ -55,8 +55,7 @@ impl DrawWrapper {
     }
     pub fn apply_style(&mut self, props: &PropSet) -> bool {
         if let Some(ref style) = self.style {
-            (style.style_fn)(self.state.as_mut(), style.style.as_ref(), props);
-            true
+            (style.style_fn)(self.state.as_mut(), style.style.as_ref(), props)
         } else {
             false
         }

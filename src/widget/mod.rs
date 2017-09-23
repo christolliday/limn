@@ -111,8 +111,9 @@ impl WidgetRef {
     }
 
     pub fn apply_style(&mut self) {
-        self.0.borrow_mut().apply_style();
-        self.event(self::style::StyleUpdated);
+        if self.0.borrow_mut().apply_style() {
+            self.event(self::style::StyleUpdated);
+        }
     }
 
     pub fn add_child<U: Into<WidgetRef>>(&mut self, child: U) -> &mut Self {
@@ -366,12 +367,14 @@ impl Widget {
             f(state);
         }
     }
-    pub fn apply_style(&mut self) {
+    pub fn apply_style(&mut self) -> bool {
         if let Some(ref mut draw_state) = self.draw_state {
             if draw_state.apply_style(&self.props) {
                 self.has_updated = true;
+                return true;
             }
         }
+        false
     }
     pub fn draw_state<T: Draw>(&self) -> Option<&T> {
         if let Some(ref draw_state) = self.draw_state {
