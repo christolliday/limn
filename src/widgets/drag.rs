@@ -6,7 +6,7 @@ use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use util::{Point, Vector};
 use app::App;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct DragEvent {
     pub state: DragState,
     /// mouse position
@@ -17,7 +17,7 @@ pub struct DragEvent {
     pub change: Vector,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DragState {
     Start,
     Moved,

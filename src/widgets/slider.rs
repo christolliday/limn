@@ -11,8 +11,7 @@ use widget::property::states::*;
 use widgets::drag::{DragEvent, DragState};
 use draw::rect::{RectState, RectStyle};
 use draw::ellipse::{EllipseState, EllipseStyle};
-use ui::ChildAttachedEvent;
-use util::{Rect, RectExt};
+use util::{RectExt, Point};
 use color::*;
 
 #[derive(Clone, Copy)]
@@ -45,19 +44,13 @@ pub struct SliderBuilder {
     pub handle_color: Color,
     pub highlight: Option<Color>,
     pub width: f32,
-    pub value_changed_handlers: Vec<Box<Fn(f32, &mut EventArgs)>>,
 }
 
 impl SliderBuilder {
     pub fn new() -> Self {
         let widget = WidgetBuilder::new("slider");
 
-        let mut slider_handle = WidgetBuilder::new("slider_handle");
-        slider_handle
-            .add_handler_fn(|event: &DragEvent, args| {
-                args.widget.event(SliderHandleInput::Drag(event.clone()));
-            })
-            .make_draggable();
+        let slider_handle = WidgetBuilder::new("slider_handle");
         SliderBuilder {
             widget: widget,
             slider_handle: slider_handle,
@@ -72,7 +65,6 @@ impl SliderBuilder {
             handle_color: GRAY_80,
             highlight: Some(BLUE_HIGHLIGHT),
             width: 30.0,
-            value_changed_handlers: Vec::new(),
         }
     }
     pub fn make_vertical(&mut self) -> &mut Self {
@@ -105,7 +97,9 @@ impl SliderBuilder {
     pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
         where F: Fn(f32, &mut EventArgs) + 'static
     {
-        self.value_changed_handlers.push(Box::new(on_value_changed));
+        self.add_handler_fn(move |event: &SliderEvent, mut args| {
+            on_value_changed(event.value, &mut args);
+        });
         self
     }
 }
@@ -114,8 +108,6 @@ widget_builder!(SliderBuilder);
 impl Into<WidgetBuilder> for SliderBuilder {
     fn into(self) -> WidgetBuilder {
         let (mut widget, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
-
-        slider_handle.add_handler(HandleEventHandler::new(orientation, widget.widget_ref()));
 
         match self.handle_style {
             HandleStyle::Round => {
@@ -207,176 +199,193 @@ impl Into<WidgetBuilder> for SliderBuilder {
                 }
             }
         }
-        let handle_ref = slider_handle.widget_ref();
-        let range = self.range.clone();
+
+        let widget_ref = widget.widget_ref();
+        slider_handle
+            .add_handler_fn(move |event: &DragEvent, _| {
+                widget_ref.event(SliderInputEvent::Drag(event.clone()));
+            })
+            .make_draggable();
+
+        let widget_ref = widget.widget_ref();
+        slider_bar_pre.add_handler_fn(move |event: &ClickEvent, _| {
+            widget_ref.event(SliderInputEvent::Click(event.position));
+        });
+        let widget_ref = widget.widget_ref();
+        slider_bar_post.add_handler_fn(move |event: &ClickEvent, _| {
+            widget_ref.event(SliderInputEvent::Click(event.position));
+        });
         widget.add_handler_fn(move |event: &SetSliderValue, args| {
-            let bounds = args.widget.bounds();
-            let val = (event.0 - range.start) / (range.end - range.start);
-            let event = SliderHandleInput::SetValue((val, bounds));
-            handle_ref.event(event);
+            args.widget.event(SliderInputEvent::SetValue(event.0));
         });
-        let handle_ref = slider_handle.widget_ref();
-        widget.add_handler_fn(move |event: &ClickEvent, args| {
-            let bounds = args.widget.bounds();
-            let position = if let Orientation::Horizontal = orientation {
-                event.position.x
-            } else {
-                event.position.y
-            };
-            let event = SliderHandleInput::SliderClicked((position, bounds));
-            handle_ref.event(event);
-        });
+        let widget_ref = widget.widget_ref();
+        widget.add_handler(SliderHandler::new(orientation, self.range, widget_ref.clone(), slider_handle.widget_ref()));
+
         widget.add_child(slider_bar_pre);
         widget.add_child(slider_bar_post);
         widget.add_child(slider_handle);
 
-        // need to update position after widget is created because the slider position
-        // depends on the measured width of the slider and slider handle
-        let init_value = self.init_value;
-        widget.add_handler_fn(move |_: &ChildAttachedEvent, args| {
-            args.widget.event(SetSliderValue(init_value));
-        });
-
-        widget.add_handler(NotifyValueHandler{
-            handlers: self.value_changed_handlers,
-            range: self.range,
-        });
+        // TODO: make sure slider position updates as slider is resized
+        widget_ref.event(SetSliderValue(self.init_value));
         widget
     }
 }
 
-struct NotifyValueHandler {
-    handlers: Vec<Box<Fn(f32, &mut EventArgs)>>,
-    range: Range<f32>,
-}
-
-impl EventHandler<MovedSliderWidgetEvent> for NotifyValueHandler {
-    fn handle(&mut self, event: &MovedSliderWidgetEvent, mut args: EventArgs) {
-        let bounds = args.widget.bounds();
-        let (slider_start, slider_size) = if let Orientation::Horizontal = event.orientation {
-            (bounds.left(), bounds.width())
-        } else {
-            (bounds.top(), bounds.height())
-        };
-        let handle_pos_range = slider_size - (event.handle_size * 2.0);
-        let val = (event.slider_pos - event.handle_size - slider_start) / handle_pos_range;
-        let val = val * (self.range.end - self.range.start) + self.range.start;
-        for handler in &self.handlers {
-            handler(val, &mut args);
-        }
-        *args.handled = true;
-    }
-}
-
-struct MovedSliderWidgetEvent {
-    orientation: Orientation,
-    slider_pos: f32,
-    handle_size: f32,
+#[derive(Debug, Clone)]
+pub struct SliderEvent {
+    pub value: f32,
+    pub offset: f32,
+    pub dragging: bool,
 }
 
 pub struct SetSliderValue(pub f32);
-pub enum SliderHandleInput {
+
+#[derive(Debug)]
+enum SliderInputEvent {
     Drag(DragEvent),
-    SetValue((f32, Rect)),
-    SliderClicked((f32, Rect)),
+    Click(Point),
+    SetValue(f32),
 }
-struct HandleEventHandler {
+
+struct SliderHandler {
     orientation: Orientation,
-    container: WidgetRef,
-    start_pos: f32,
+    range: Range<f32>,
+    slider_ref: WidgetRef,
+    handle_ref: WidgetRef,
+    drag_start_pos: f32,
+    drag_start_val: f32,
+    last_val: f32,
 }
-impl HandleEventHandler {
-    pub fn new(orientation: Orientation, container: WidgetRef) -> Self {
-        HandleEventHandler {
+impl SliderHandler {
+    fn new(orientation: Orientation, range: Range<f32>, slider_ref: WidgetRef, handle_ref: WidgetRef) -> Self {
+        let start = range.start;
+        SliderHandler {
             orientation: orientation,
-            container: container,
-            start_pos: 0.0,
+            range: range,
+            slider_ref: slider_ref,
+            handle_ref: handle_ref,
+            drag_start_pos: 0.0,
+            drag_start_val: 0.0,
+            last_val: start,
         }
     }
-}
-impl EventHandler<SliderHandleInput> for HandleEventHandler {
-    fn handle(&mut self, event: &SliderHandleInput, mut args: EventArgs) {
-        let bounds = args.widget.bounds();
-        let handle_radius = if let Orientation::Horizontal = self.orientation {
-            bounds.width() / 2.0
+    fn get_value(&self, handle_pos: f32) -> f32 {
+        let handle_size = self.handle_size();
+        let handle_pos_range = self.slider_size() - handle_size;
+        let slider_range = self.slider_range();
+        let val = (handle_pos - handle_size / 2.0 - slider_range.start) / handle_pos_range;
+        val * (self.range.end - self.range.start) + self.range.start
+    }
+    fn slider_size(&self) -> f32 {
+        if let Orientation::Horizontal = self.orientation {
+            self.slider_ref.bounds().width()
         } else {
-            bounds.height() / 2.0
-        };
+            self.slider_ref.bounds().height()
+        }
+    }
+    fn slider_range(&self) -> Range<f32> {
+        let bounds = self.slider_ref.bounds();
+        if let Orientation::Horizontal = self.orientation {
+            (bounds.left()..bounds.right())
+        } else {
+            (bounds.top()..bounds.bottom())
+        }
+    }
+    fn handle_size(&self) -> f32 {
+        if let Orientation::Horizontal = self.orientation {
+            self.handle_ref.bounds().width()
+        } else {
+            self.handle_ref.bounds().height()
+        }
+    }
+    fn handle_range(&self) -> Range<f32> {
+        let bounds = self.handle_ref.bounds();
+        if let Orientation::Horizontal = self.orientation {
+            (bounds.left()..bounds.right())
+        } else {
+            (bounds.top()..bounds.bottom())
+        }
+    }
+    fn clamp_position(&self, handle_pos: f32) -> f32 {
+        let handle_size = self.handle_size();
+        let slider_range = self.slider_range();
+        let min = slider_range.start + handle_size / 2.0;
+        let max = slider_range.end - handle_size / 2.0;
+        f32::min(f32::max(handle_pos, min), max)
+    }
+    fn move_handle_to(&self, handle_start: f32) {
+        self.handle_ref.update_layout(|layout| {
+            if let Orientation::Horizontal = self.orientation {
+                layout.edit_left().set(handle_start);
+            } else {
+                layout.edit_top().set(handle_start);
+            }
+        });
+    }
+}
+
+impl EventHandler<SliderInputEvent> for SliderHandler {
+    fn handle(&mut self, event: &SliderInputEvent, mut args: EventArgs) {
         match *event {
-            SliderHandleInput::Drag(ref event) => {
+            SliderInputEvent::Drag(ref event) => {
                 if args.widget.props().contains(&Property::Inactive) {
                     return;
                 }
-                let &DragEvent { ref state, position, .. } = event;
-                let (drag_pos, bounds_start, bounds_end) = if let Orientation::Horizontal = self.orientation {
-                    (position.x, bounds.left(), bounds.right())
+                let &DragEvent { ref state, offset, .. } = event;
+                let offset = if let Orientation::Horizontal = self.orientation {
+                    offset.x
                 } else {
-                    (position.y, bounds.top(), bounds.bottom())
+                    offset.y
                 };
-                match *state {
-                    DragState::Start => {
-                        self.start_pos = drag_pos - bounds_start;
-                    }
-                    _ => {
-                        let drag_to = drag_pos - self.start_pos;
-                        args.widget.update_layout(|layout| {
-                            if let Orientation::Horizontal = self.orientation {
-                                layout.edit_left().set(drag_to);
-                            } else {
-                                layout.edit_top().set(drag_to);
-                            }
-                        });
-                        let event = MovedSliderWidgetEvent {
-                            orientation: self.orientation,
-                            slider_pos: (bounds_start + bounds_end) / 2.0,
-                            handle_size: handle_radius
-                        };
-                        self.container.event(event);
+                if *state == DragState::Start {
+                    self.drag_start_pos = self.handle_range().start;
+                    self.drag_start_val = self.get_value(self.handle_range().start + self.handle_size() / 2.0);
+                } else {
+                    let handle_start = self.drag_start_pos + offset;
+                    self.move_handle_to(handle_start);
+                    let position = self.clamp_position(handle_start + self.handle_size() / 2.0);
+                    let value = self.get_value(position);
+                    let dragging = *state != DragState::End;
+                    let event = SliderEvent {
+                        value: value,
+                        offset: value - self.drag_start_val,
+                        dragging: dragging,
+                    };
+                    self.slider_ref.event(event);
+                    if !dragging {
+                        self.last_val = value;
                     }
                 }
             }
-            SliderHandleInput::SetValue((value, parent_bounds)) => {
-                if value.is_finite() {
-                    if let Orientation::Horizontal = self.orientation {
-                        let pos = parent_bounds.left() + value * (parent_bounds.width() - bounds.width());
-                        args.widget.update_layout(|layout| {
-                            layout.edit_left().set(pos);
-                        });
-                    } else {
-                        let pos = parent_bounds.top() + value * (parent_bounds.height() - bounds.height());
-                        args.widget.update_layout(|layout| {
-                            layout.edit_top().set(pos);
-                        });
-                    }
-                }
-            }
-            SliderHandleInput::SliderClicked((position, parent_bounds)) => {
+            SliderInputEvent::Click(point) => {
                 if args.widget.props().contains(&Property::Inactive) {
                     return;
                 }
                 let position = if let Orientation::Horizontal = self.orientation {
-                    let min = parent_bounds.left() + handle_radius;
-                    let max = parent_bounds.left() + parent_bounds.width() - handle_radius;
-                    let position = f32::min(f32::max(position, min), max);
-                    args.widget.update_layout(|layout| {
-                        layout.edit_left().set(position - handle_radius);
-                    });
-                    position
+                    point.x
                 } else {
-                    let min = parent_bounds.top() + handle_radius;
-                    let max = parent_bounds.top() + parent_bounds.height() - handle_radius;
-                    let position = f32::min(f32::max(position, min), max);
-                    args.widget.update_layout(|layout| {
-                        layout.edit_top().set(position - handle_radius);
-                    });
-                    position
+                    point.y
                 };
-                let event = MovedSliderWidgetEvent {
-                    orientation: self.orientation,
-                    slider_pos: position,
-                    handle_size: handle_radius
+                let position = self.clamp_position(position);
+                let handle_start = position - self.handle_size() / 2.0;
+                self.move_handle_to(handle_start);
+                let value = self.get_value(position);
+                let event = SliderEvent {
+                    value: value,
+                    offset: value - self.last_val,
+                    dragging: false,
                 };
-                self.container.event(event);
+                self.slider_ref.event(event);
+                self.last_val = value;
+            }
+            SliderInputEvent::SetValue(value) => {
+                if value.is_finite() {
+                    self.last_val = value;
+                    let value = (value - self.range.start) / (self.range.end - self.range.start);
+                    let range_of_motion = self.slider_size() - self.handle_size();
+                    let handle_start = self.slider_range().start + value * range_of_motion;
+                    self.move_handle_to(handle_start);
+                }
             }
         }
     }
