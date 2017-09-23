@@ -134,7 +134,7 @@ impl ControlBar {
 }
 widget_wrapper!(ControlBar);
 
-fn create_circle(center: &Point, mut parent_ref: WidgetRef, size: f32) -> WidgetRef {
+fn create_circle(circle: Circle, mut parent_ref: WidgetRef) -> WidgetRef {
     let style = style!(EllipseStyle::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyle::Border: Some((2.0, BLACK)));
     let mut widget = WidgetBuilder::new("circle");
@@ -147,7 +147,7 @@ fn create_circle(center: &Point, mut parent_ref: WidgetRef, size: f32) -> Widget
         .add_handler(CircleHandler);
     let widget_ref = widget.widget_ref();
     let widget_ref_clone = widget.widget_ref();
-    widget_ref.event(CircleEvent::Update((*center, size)));
+    widget_ref.event(CircleEvent::Update(circle));
     widget.add_handler_fn(move |event: &WidgetMouseButton, args| {
         if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
             args.ui.event(AppEvent::Select(Some(widget_ref.clone())));
@@ -159,20 +159,19 @@ fn create_circle(center: &Point, mut parent_ref: WidgetRef, size: f32) -> Widget
 }
 
 enum CircleEvent {
-    Update((Point, f32)),
+    Update(Circle),
     Drag(DragEvent),
 }
 struct CircleHandler;
 impl EventHandler<CircleEvent> for CircleHandler {
     fn handle(&mut self, event: &CircleEvent, args: EventArgs) {
         match *event {
-            CircleEvent::Update((center, size)) => {
-                let radius = size / 2.0;
+            CircleEvent::Update(Circle { center, size }) => {
                 args.widget.update_layout(|layout| {
-                    layout.edit_top().set(center.y - radius);
-                    layout.edit_left().set(center.x - radius);
-                    layout.edit_width().set(radius * 2.0);
-                    layout.edit_height().set(radius * 2.0);
+                    layout.edit_top().set(center.y - size / 2.0);
+                    layout.edit_left().set(center.x - size / 2.0);
+                    layout.edit_width().set(size);
+                    layout.edit_height().set(size);
                 });
             }
             CircleEvent::Drag(ref event) => {
@@ -183,10 +182,11 @@ impl EventHandler<CircleEvent> for CircleHandler {
 }
 
 enum Change {
-    Create(Point),
+    Create(Circle),
     Delete(WidgetRef),
-    Resize(f32),
-    Move(Vector),
+    Resize(WidgetRef, f32),
+    Move(WidgetRef, Vector),
+    None,
 }
 
 enum AppEvent {
@@ -200,6 +200,11 @@ enum AppEvent {
     Move((WidgetRef, Vector)),
 }
 
+#[derive(Clone)]
+struct Circle {
+    center: Point,
+    size: f32,
+}
 struct AppEventHandler {
     circle_canvas_ref: WidgetRef,
     create_ref: WidgetRef,
@@ -208,9 +213,9 @@ struct AppEventHandler {
     slider_ref: WidgetRef,
 
     create_mode: bool,
-    circles: HashMap<WidgetRef, (Point, f32)>,
-    undo_queue: Vec<WidgetRef>,
-    redo_queue: Vec<(Point, f32)>,
+    circles: HashMap<WidgetRef, Circle>,
+    undo_queue: Vec<Change>,
+    redo_queue: Vec<Change>,
     selected: Option<WidgetRef>,
 }
 
@@ -241,12 +246,70 @@ impl AppEventHandler {
         }
         self.selected = new_selected.clone();
         if let Some(ref selected) = self.selected {
-            let size = self.circles.get_mut(selected).unwrap().1;
+            let size = self.circles[selected].size;
             self.slider_ref.event(SetSliderValue(size));
             selected.event_subtree(PropChange::Add(Property::Selected));
             self.slider_ref.event_subtree(PropChange::Remove(Property::Inactive));
         } else {
             self.slider_ref.event_subtree(PropChange::Add(Property::Inactive));
+        }
+    }
+    fn apply_change(&mut self, change: Change) -> Change {
+        match change {
+            Change::Create(circle) => {
+                let widget_ref = create_circle(circle.clone(), self.circle_canvas_ref.clone());
+                self.circles.insert(widget_ref.clone(), circle);
+                self.update_selected(Some(widget_ref.clone()));
+                Change::Delete(widget_ref)
+            },
+            Change::Delete(mut widget_ref) => {
+                self.update_selected(None);
+                widget_ref.remove_widget();
+                let circle = self.circles.remove(&widget_ref).unwrap();
+                Change::Create(circle)
+            }
+            Change::Resize(widget_ref, size_change) => {
+                let circle = self.circles.get_mut(&widget_ref).unwrap();
+                circle.size += size_change;
+                widget_ref.event(CircleEvent::Update(circle.clone()));
+                println!("slider value {}", circle.size);
+                self.slider_ref.event(SetSliderValue(circle.size));
+                Change::Resize(widget_ref, -size_change)
+            }
+            Change::Move(widget_ref, pos_change) => {
+                let circle = self.circles.get_mut(&widget_ref).unwrap();
+                circle.center += pos_change;
+                widget_ref.event(CircleEvent::Update(circle.clone()));
+                Change::Move(widget_ref, -pos_change)
+            }
+            _ => Change::None
+        }
+    }
+    fn new_change(&mut self, change: Change) {
+        let change = self.apply_change(change);
+        self.undo_queue.push(change);
+        self.redo_queue.clear();
+        self.undo_ref.event_subtree(PropChange::Remove(Property::Inactive));
+        self.redo_ref.event_subtree(PropChange::Add(Property::Inactive));
+    }
+    fn undo(&mut self) {
+        if let Some(change) = self.undo_queue.pop() {
+            let change = self.apply_change(change);
+            self.redo_queue.push(change);
+            self.redo_ref.event_subtree(PropChange::Remove(Property::Inactive));
+            if self.undo_queue.is_empty() {
+                self.undo_ref.event_subtree(PropChange::Add(Property::Inactive));
+            }
+        }
+    }
+    fn redo(&mut self) {
+        if let Some(change) = self.redo_queue.pop() {
+            let change = self.apply_change(change);
+            self.undo_queue.push(change);
+            self.undo_ref.event_subtree(PropChange::Remove(Property::Inactive));
+            if self.redo_queue.is_empty() {
+                self.redo_ref.event_subtree(PropChange::Add(Property::Inactive));
+            }
         }
     }
 }
@@ -258,64 +321,34 @@ impl EventHandler<AppEvent> for AppEventHandler {
             }
             AppEvent::ClickCanvas(point) => {
                 if self.create_mode {
-                    let size = 30.0;
-                    let circle_ref = create_circle(&point, self.circle_canvas_ref.clone(), size);
-                    self.circles.insert(circle_ref.clone(), (point, size));
-                    self.undo_queue.push(circle_ref.clone());
-                    self.redo_queue.clear();
-
-                    self.undo_ref.event_subtree(PropChange::Remove(Property::Inactive));
-                    self.redo_ref.event_subtree(PropChange::Add(Property::Inactive));
-
-                    self.update_selected(Some(circle_ref));
+                    let circle = Circle { center: point, size: 100.0 };
+                    self.new_change(Change::Create(circle));
                 } else {
                     self.update_selected(None);
                 }
             }
             AppEvent::Undo => {
-                if !self.circles.is_empty() {
-                    let mut widget_ref = self.undo_queue.pop().unwrap();
-                    let (point, size) = self.circles.remove(&widget_ref).unwrap();
-                    widget_ref.remove_widget();
-                    self.redo_queue.push((point, size));
-
-                    self.redo_ref.event_subtree(PropChange::Remove(Property::Inactive));
-                    if self.circles.is_empty() {
-                        self.undo_ref.event_subtree(PropChange::Add(Property::Inactive));
-                    }
-                }
+                self.undo();
             }
             AppEvent::Redo => {
-                if !self.redo_queue.is_empty() {
-                    let (point, size) = self.redo_queue.pop().unwrap();
-                    let circle_ref = create_circle(&point, self.circle_canvas_ref.clone(), size);
-                    self.circles.insert(circle_ref.clone(), (point, size));
-                    self.undo_queue.push(circle_ref);
-                    if self.redo_queue.is_empty() {
-                        self.redo_ref.event_subtree(PropChange::Add(Property::Inactive));
-                    }
-                }
+                self.redo();
             }
             AppEvent::Select(ref new_selected) => {
                 self.update_selected(new_selected.clone());
             }
             AppEvent::Delete => {
-                if let Some(mut selected) = self.selected.take() {
-                    selected.remove_widget();
-                    self.slider_ref.event_subtree(PropChange::Add(Property::Inactive));
+                if let Some(selected) = self.selected.take() {
+                    self.new_change(Change::Delete(selected));
                 }
             }
             AppEvent::Resize(size) => {
-                if let Some(ref selected) = self.selected {
-                    let circle = self.circles.get_mut(selected).unwrap();
-                    circle.1 = size;
-                    selected.event(CircleEvent::Update(*circle));
+                if let Some(ref selected) = self.selected.clone() {
+                    let size_change = size - self.circles[&selected].size;
+                    self.new_change(Change::Resize(selected.clone(), size_change));
                 }
             }
             AppEvent::Move((ref widget_ref, change)) => {
-                let circle = self.circles.get_mut(widget_ref).unwrap();
-                circle.0 += change;
-                widget_ref.event(CircleEvent::Update(*circle));
+                self.new_change(Change::Move(widget_ref.clone(), change));
             }
         }
     }
