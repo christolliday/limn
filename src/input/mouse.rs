@@ -3,7 +3,7 @@ use glutin;
 use event::{EventHandler, EventArgs};
 use util::Point;
 use widget::{WidgetRef, WidgetBuilder};
-use widget::property::{Property, PropChange};
+use widget::property::Property;
 use layout::LayoutChanged;
 use app::App;
 
@@ -108,12 +108,11 @@ pub enum MouseOverEvent {
 
 impl WidgetBuilder {
     pub fn enable_hover(&mut self) -> &mut Self {
-        self.add_handler_fn(|event: &MouseOverEvent, args| {
-            let event = match *event {
-                MouseOverEvent::Over => PropChange::Add(Property::MouseOver),
-                MouseOverEvent::Out => PropChange::Remove(Property::MouseOver),
-            };
-            args.widget.event_subtree(event);
+        self.add_handler_fn(|event: &MouseOverEvent, mut args| {
+            match *event {
+                MouseOverEvent::Over => args.widget.add_prop(Property::MouseOver),
+                MouseOverEvent::Out => args.widget.remove_prop(Property::MouseOver),
+            }
         })
     }
 }

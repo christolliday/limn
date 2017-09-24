@@ -227,7 +227,7 @@ struct AppEventHandler {
 
 impl AppEventHandler {
     fn new(circle_canvas_ref: WidgetRef, control_bar: &ControlBar) -> Self {
-        let handler = AppEventHandler {
+        let mut handler = AppEventHandler {
             circle_canvas_ref: circle_canvas_ref,
             create_ref: control_bar.create.clone(),
             undo_ref: control_bar.undo.clone(),
@@ -242,24 +242,24 @@ impl AppEventHandler {
             redo_queue: Vec::new(),
             selected: None,
         };
-        handler.create_ref.event_subtree(PropChange::Add(Property::Activated));
-        handler.undo_ref.event_subtree(PropChange::Add(Property::Inactive));
-        handler.redo_ref.event_subtree(PropChange::Add(Property::Inactive));
-        handler.slider_ref.event_subtree(PropChange::Add(Property::Inactive));
+        handler.create_ref.add_prop(Property::Activated);
+        handler.undo_ref.add_prop(Property::Inactive);
+        handler.redo_ref.add_prop(Property::Inactive);
+        handler.slider_ref.add_prop(Property::Inactive);
         handler
     }
     fn update_selected(&mut self, new_selected: Option<CircleId>) {
         if let Some(ref selected) = self.selected {
-            self.circle_widgets[selected].event_subtree(PropChange::Remove(Property::Selected));
+            self.circle_widgets.get_mut(selected).unwrap().remove_prop(Property::Selected);
         }
         self.selected = new_selected.clone();
         if let Some(ref selected) = self.selected {
             let size = self.circles[selected].size;
             self.slider_ref.event(SetSliderValue(size));
-            self.circle_widgets[selected].event_subtree(PropChange::Add(Property::Selected));
-            self.slider_ref.event_subtree(PropChange::Remove(Property::Inactive));
+            self.circle_widgets.get_mut(selected).unwrap().add_prop(Property::Selected);
+            self.slider_ref.remove_prop(Property::Inactive);
         } else {
-            self.slider_ref.event_subtree(PropChange::Add(Property::Inactive));
+            self.slider_ref.add_prop(Property::Inactive);
         }
     }
     fn apply_change(&mut self, change: Change) -> Change {
@@ -298,16 +298,16 @@ impl AppEventHandler {
         let change = self.apply_change(change);
         self.undo_queue.push(change);
         self.redo_queue.clear();
-        self.undo_ref.event_subtree(PropChange::Remove(Property::Inactive));
-        self.redo_ref.event_subtree(PropChange::Add(Property::Inactive));
+        self.undo_ref.remove_prop(Property::Inactive);
+        self.redo_ref.add_prop(Property::Inactive);
     }
     fn undo(&mut self) {
         if let Some(change) = self.undo_queue.pop() {
             let change = self.apply_change(change);
             self.redo_queue.push(change);
-            self.redo_ref.event_subtree(PropChange::Remove(Property::Inactive));
+            self.redo_ref.remove_prop(Property::Inactive);
             if self.undo_queue.is_empty() {
-                self.undo_ref.event_subtree(PropChange::Add(Property::Inactive));
+                self.undo_ref.add_prop(Property::Inactive);
             }
         }
     }
@@ -315,9 +315,9 @@ impl AppEventHandler {
         if let Some(change) = self.redo_queue.pop() {
             let change = self.apply_change(change);
             self.undo_queue.push(change);
-            self.undo_ref.event_subtree(PropChange::Remove(Property::Inactive));
+            self.undo_ref.remove_prop(Property::Inactive);
             if self.redo_queue.is_empty() {
-                self.redo_ref.event_subtree(PropChange::Add(Property::Inactive));
+                self.redo_ref.add_prop(Property::Inactive);
             }
         }
     }

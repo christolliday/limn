@@ -6,7 +6,7 @@ use cassowary::strength::*;
 use layout::constraint::*;
 use event::EventArgs;
 use widget::WidgetBuilder;
-use widget::property::{Property, PropChange};
+use widget::property::Property;
 use widget::property::states::*;
 use widgets::text::TextBuilder;
 use input::mouse::{WidgetMouseButton, ClickEvent};
@@ -48,11 +48,10 @@ lazy_static! {
 fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: EventArgs) {
     if !args.widget.props().contains(&Property::Inactive) {
         let &WidgetMouseButton(state, _) = event;
-        let event = match state {
-            glutin::ElementState::Pressed => PropChange::Add(Property::Pressed),
-            glutin::ElementState::Released => PropChange::Remove(Property::Pressed),
-        };
-        args.widget.event_subtree(event);
+        match state {
+            glutin::ElementState::Pressed => args.widget.add_prop(Property::Pressed),
+            glutin::ElementState::Released => args.widget.remove_prop(Property::Pressed),
+        }
     }
 }
 
@@ -63,12 +62,14 @@ pub enum ToggleEvent {
 // show whether toggle button is activated
 fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
     if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
-        let (toggle_event, prop_event) = match args.widget.props().contains(&Property::Activated) {
-            true => (ToggleEvent::Off, PropChange::Remove(Property::Activated)),
-            false => (ToggleEvent::On, PropChange::Add(Property::Activated)),
-        };
-        args.widget.event(toggle_event);
-        args.widget.event_subtree(prop_event);
+        let activated = args.widget.props().contains(&Property::Activated);
+        if activated {
+            args.widget.event(ToggleEvent::Off);
+            args.widget.remove_prop(Property::Activated);
+        } else {
+            args.widget.event(ToggleEvent::On);
+            args.widget.add_prop(Property::Activated);
+        }
     }
 }
 

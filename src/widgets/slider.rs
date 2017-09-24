@@ -325,7 +325,7 @@ impl SliderHandler {
 }
 
 impl EventHandler<SliderInputEvent> for SliderHandler {
-    fn handle(&mut self, event: &SliderInputEvent, mut args: EventArgs) {
+    fn handle(&mut self, event: &SliderInputEvent, args: EventArgs) {
         match *event {
             SliderInputEvent::Drag(ref event) => {
                 if args.widget.props().contains(&Property::Inactive) {

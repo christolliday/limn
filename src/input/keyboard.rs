@@ -4,7 +4,7 @@ use stable_bst::map::TreeMap;
 use stable_bst::Bound::{Excluded, Unbounded};
 
 use widget::{WidgetRef, WidgetBuilder};
-use widget::property::{PropChange, Property};
+use widget::property::Property;
 use input::mouse::ClickEvent;
 use event::{EventHandler, EventArgs};
 use app::App;
@@ -46,12 +46,12 @@ impl FocusHandler {
     }
     fn set_focus(&mut self, new_focus: Option<WidgetRef>) {
         if new_focus != self.focused {
-            if let Some(ref focused) = self.focused {
-                focused.event_subtree(PropChange::Remove(Property::Focused));
+            if let Some(ref mut focused) = self.focused {
+                focused.remove_prop(Property::Focused);
             }
             self.focused = new_focus;
-            if let Some(ref focused) = self.focused {
-                focused.event_subtree(PropChange::Add(Property::Focused));
+            if let Some(ref mut focused) = self.focused {
+                focused.add_prop(Property::Focused);
             }
         }
     }

@@ -1,13 +1,5 @@
 use std::collections::BTreeSet;
 
-use event::EventArgs;
-
-#[derive(Debug)]
-pub enum PropChange {
-    Add(Property),
-    Remove(Property),
-}
-
 #[derive(Hash, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Debug)]
 pub enum Property {
     MouseOver,
@@ -30,12 +22,4 @@ pub mod states {
         pub static ref INACTIVE: PropSet = btreeset!{Property::Inactive};
         pub static ref FOCUSED: PropSet = btreeset!{Property::Focused};
     }
-}
-
-pub fn prop_change_handle(event: &PropChange, mut args: EventArgs) {
-    match *event {
-        PropChange::Add(ref property) => args.widget.props().insert(property.clone()),
-        PropChange::Remove(ref property) => args.widget.props().remove(property),
-    };
-    args.widget.apply_style();
 }

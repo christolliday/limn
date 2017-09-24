@@ -81,15 +81,15 @@ impl PeopleHandler {
 
 impl PeopleHandler {
     fn update_selected(&mut self) {
-        let widgets = &self.widgets;
+        let widgets = &mut self.widgets;
         widgets.first_name_box.event_subtree(TextUpdated(self.person.first_name.clone()));
         widgets.last_name_box.event_subtree(TextUpdated(self.person.last_name.clone()));
         if self.selected_item.is_some() {
-            widgets.update_button.event_subtree(PropChange::Remove(Property::Inactive));
-            widgets.delete_button.event_subtree(PropChange::Remove(Property::Inactive));
+            widgets.update_button.remove_prop(Property::Inactive);
+            widgets.delete_button.remove_prop(Property::Inactive);
         } else {
-            widgets.update_button.event_subtree(PropChange::Add(Property::Inactive));
-            widgets.delete_button.event_subtree(PropChange::Add(Property::Inactive));
+            widgets.update_button.add_prop(Property::Inactive);
+            widgets.delete_button.add_prop(Property::Inactive);
         }
     }
     fn add_person(&mut self) {
@@ -168,9 +168,9 @@ impl EventHandler<PeopleEvent> for PeopleHandler {
         let is_valid = self.person.is_valid();
         if was_valid != is_valid {
             if is_valid {
-                self.widgets.create_button.event_subtree(PropChange::Remove(Property::Inactive));
+                self.widgets.create_button.remove_prop(Property::Inactive);
             } else {
-                self.widgets.create_button.event_subtree(PropChange::Add(Property::Inactive));
+                self.widgets.create_button.add_prop(Property::Inactive);
             }
         }
     }

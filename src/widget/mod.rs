@@ -58,8 +58,22 @@ impl WidgetRef {
     pub fn layout_vars(&self) -> LayoutVars {
         self.0.borrow().layout.vars.clone()
     }
-    pub fn props(&mut self) -> PropsGuard {
-        PropsGuard { guard: self.0.borrow_mut() }
+    pub fn props(&self) -> PropsGuard {
+        PropsGuard { guard: self.0.borrow() }
+    }
+    pub fn add_prop(&mut self, property: Property) {
+        self.0.borrow_mut().props.insert(property);
+        for mut child in self.children() {
+            child.add_prop(property);
+        }
+        self.apply_style();
+    }
+    pub fn remove_prop(&mut self, property: Property) {
+        self.0.borrow_mut().props.remove(&property);
+        for mut child in self.children() {
+            child.remove_prop(property);
+        }
+        self.apply_style();
     }
     pub fn draw_state(&mut self) -> DrawStateGuard {
         DrawStateGuard { guard: self.0.borrow_mut() }
@@ -247,19 +261,13 @@ impl<'b> DerefMut for LayoutGuardMut<'b> {
 }
 
 pub struct PropsGuard<'a> {
-    guard: RefMut<'a, Widget>
+    guard: Ref<'a, Widget>
 }
 
 impl<'b> Deref for PropsGuard<'b> {
     type Target = PropSet;
     fn deref(&self) -> &PropSet {
         &self.guard.props
-    }
-}
-
-impl<'b> DerefMut for PropsGuard<'b> {
-    fn deref_mut(&mut self) -> &mut PropSet {
-        &mut self.guard.props
     }
 }
 
@@ -393,12 +401,10 @@ pub struct WidgetBuilder {
 
 impl WidgetBuilder {
     pub fn new(name: &str) -> Self {
-        let mut widget = WidgetBuilder {
+        WidgetBuilder {
             widget: WidgetRef::new(Widget::new(name.to_owned())),
             container: Some(EventHandlerWrapper::new(Frame::default())),
-        };
-        widget.add_handler_fn(property::prop_change_handle);
-        widget
+        }
     }
     pub fn widget_ref(&self) -> WidgetRef {
         self.widget.clone()

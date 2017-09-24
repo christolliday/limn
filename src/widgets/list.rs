@@ -1,6 +1,6 @@
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
-use widget::property::{Property, PropChange};
+use widget::property::Property;
 use widget::property::states::*;
 use widgets::text::TextBuilder;
 use draw::rect::{RectState, RectStyle};
@@ -41,8 +41,8 @@ impl EventHandler<ListItemSelected> for ListHandler {
     fn handle(&mut self, event: &ListItemSelected, _: EventArgs) {
         let selected = event.widget.clone();
         if selected != self.selected {
-            if let Some(ref old_selected) = self.selected {
-                old_selected.event_subtree(PropChange::Remove(Property::Selected));
+            if let Some(ref mut old_selected) = self.selected {
+                old_selected.remove_prop(Property::Selected);
             }
         }
         self.selected = selected;
@@ -64,7 +64,7 @@ impl ListItemHandler {
 impl EventHandler<ClickEvent> for ListItemHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
         if !args.widget.props().contains(&Property::Selected) {
-            args.widget.event_subtree(PropChange::Add(Property::Selected));
+            args.widget.add_prop(Property::Selected);
             let event = ListItemSelected { widget: Some(args.widget) };
             self.list_id.event(event);
             *args.handled = true;
