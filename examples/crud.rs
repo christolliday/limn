@@ -5,18 +5,20 @@ extern crate limn_layout;
 
 mod util;
 
-use std::mem;
 use std::collections::HashMap;
 
 use limn::prelude::*;
 
 use limn::widgets::button::PushButtonBuilder;
-use limn::widgets::edit_text::{EditTextBuilder, TextUpdated};
+use limn::widgets::edit_text::{self, EditTextBuilder, TextUpdated};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::widgets::text::TextBuilder;
 use limn::draw::text::{TextState, TextStyle};
 use limn::draw::rect::RectState;
+use limn::resources::id::{Id, IdGen};
+
+named_id!(PersonId);
 
 #[derive(Clone, Debug)]
 pub struct Person {
@@ -43,12 +45,12 @@ enum PeopleEvent {
     Add,
     Update,
     Delete,
-    PersonSelected(Option<WidgetRef>),
+    PersonSelected(Option<PersonId>),
     ChangeFirstName(String),
     ChangeLastName(String),
 }
 
-struct Ids {
+struct Widgets {
     list_widget: WidgetRef,
     first_name_box: WidgetRef,
     last_name_box: WidgetRef,
@@ -57,34 +59,68 @@ struct Ids {
     delete_button: WidgetRef,
 }
 struct PeopleHandler {
-    ids: Ids,
-    selected_item: Option<WidgetRef>,
+    widgets: Widgets,
+    selected_item: Option<PersonId>,
+    id_gen: IdGen<PersonId>,
     person: Person,
-    people: HashMap<WidgetRef, Person>,
+    people: HashMap<PersonId, Person>,
+    people_widgets: HashMap<PersonId, WidgetRef>,
 }
 impl PeopleHandler {
-    fn new(ids: Ids) -> Self {
+    fn new(widgets: Widgets) -> Self {
         PeopleHandler {
-            ids: ids,
+            widgets: widgets,
             selected_item: None,
+            id_gen: IdGen::new(),
             person: Person::new(),
             people: HashMap::new(),
+            people_widgets: HashMap::new(),
         }
     }
 }
 
 impl PeopleHandler {
     fn update_selected(&mut self) {
-        let ids = &self.ids;
-        ids.first_name_box.event_subtree(TextUpdated(self.person.first_name.clone()));
-        ids.last_name_box.event_subtree(TextUpdated(self.person.last_name.clone()));
+        let widgets = &self.widgets;
+        widgets.first_name_box.event_subtree(TextUpdated(self.person.first_name.clone()));
+        widgets.last_name_box.event_subtree(TextUpdated(self.person.last_name.clone()));
         if self.selected_item.is_some() {
-            ids.update_button.event_subtree(PropChange::Remove(Property::Inactive));
-            ids.delete_button.event_subtree(PropChange::Remove(Property::Inactive));
+            widgets.update_button.event_subtree(PropChange::Remove(Property::Inactive));
+            widgets.delete_button.event_subtree(PropChange::Remove(Property::Inactive));
         } else {
-            ids.update_button.event_subtree(PropChange::Add(Property::Inactive));
-            ids.delete_button.event_subtree(PropChange::Add(Property::Inactive));
+            widgets.update_button.event_subtree(PropChange::Add(Property::Inactive));
+            widgets.delete_button.event_subtree(PropChange::Add(Property::Inactive));
         }
+    }
+    fn add_person(&mut self) {
+        let id = self.id_gen.next();
+        self.people.insert(id, self.person.clone());
+        let list_item_widget = {
+            let text_style = style!(TextStyle::TextColor: WHITE);
+            let text_draw_state = TextState::new(&self.person.name());
+            let text_size = text_draw_state.measure();
+            let mut list_item_widget = WidgetBuilder::new("list_item");
+            list_item_widget
+                .set_draw_state_with_style(RectState::new(), STYLE_LIST_ITEM.clone())
+                .list_item(&self.widgets.list_widget)
+                .on_item_selected(move |args| {
+                    args.ui.event(PeopleEvent::PersonSelected(Some(id)));
+                })
+                .enable_hover();
+            list_item_widget.layout().add(constraints![
+                height(text_size.height),
+                match_width(&self.widgets.list_widget),
+            ]);
+            let mut list_text_widget = WidgetBuilder::new("list_text");
+            list_text_widget
+                .set_draw_state_with_style(text_draw_state, text_style)
+                .add_handler_fn(edit_text::text_change_handle);
+            list_text_widget.layout().add(center(&list_item_widget));
+            list_item_widget.add_child(list_text_widget);
+            list_item_widget
+        };
+        self.people_widgets.insert(id, list_item_widget.widget_ref());
+        self.widgets.list_widget.add_child(list_item_widget);
     }
 }
 impl EventHandler<PeopleEvent> for PeopleHandler {
@@ -94,31 +130,29 @@ impl EventHandler<PeopleEvent> for PeopleHandler {
         match event.clone() {
             PeopleEvent::Add => {
                 if was_valid {
-                    let person = mem::replace(&mut self.person, Person::new());
-                    let id = add_person(&person, self.ids.list_widget.clone());
-                    self.people.insert(id, person);
-
+                    self.add_person();
                     self.selected_item = None;
                     self.update_selected();
                 }
             },
             PeopleEvent::Update => {
-                if let Some(ref selected_widget_id) = self.selected_item {
-                    self.people.insert(selected_widget_id.clone(), self.person.clone());
-                    selected_widget_id.event_subtree(TextUpdated(self.person.name()));
+                if let Some(ref selected_id) = self.selected_item {
+                    self.people.insert(selected_id.clone(), self.person.clone());
+                    self.people_widgets[&selected_id].event_subtree(TextUpdated(self.person.name()));
                 }
             },
             PeopleEvent::Delete => {
-                if let Some(mut selected_widget_id) = self.selected_item.clone() {
-                    self.people.remove(&selected_widget_id);
-                    selected_widget_id.remove_widget();
+                if let Some(selected_id) = self.selected_item.clone() {
+                    self.people.remove(&selected_id);
+                    let mut widget = self.people_widgets.remove(&selected_id).unwrap();
+                    widget.remove_widget();
                 }
                 self.selected_item = None;
             }
-            PeopleEvent::PersonSelected(widget_id) => {
-                self.selected_item = widget_id.clone();
-                if let Some(widget_id) = widget_id {
-                    self.person = self.people[&widget_id].clone();
+            PeopleEvent::PersonSelected(person_id) => {
+                self.selected_item = person_id;
+                if let Some(person_id) = person_id {
+                    self.person = self.people[&person_id].clone();
                 } else {
                     self.person = Person::new();
                 }
@@ -134,40 +168,12 @@ impl EventHandler<PeopleEvent> for PeopleHandler {
         let is_valid = self.person.is_valid();
         if was_valid != is_valid {
             if is_valid {
-                self.ids.create_button.event_subtree(PropChange::Remove(Property::Inactive));
+                self.widgets.create_button.event_subtree(PropChange::Remove(Property::Inactive));
             } else {
-                self.ids.create_button.event_subtree(PropChange::Add(Property::Inactive));
+                self.widgets.create_button.event_subtree(PropChange::Add(Property::Inactive));
             }
         }
     }
-}
-
-use limn::widgets::edit_text;
-pub fn add_person(person: &Person, mut list_widget_id: WidgetRef) -> WidgetRef {
-    let list_item_widget = {
-        let text_style = style!(TextStyle::TextColor: WHITE);
-        let text_draw_state = TextState::new(&person.name());
-        let text_size = text_draw_state.measure();
-        let mut list_item_widget = WidgetBuilder::new("list_item");
-        list_item_widget
-            .set_draw_state_with_style(RectState::new(), STYLE_LIST_ITEM.clone())
-            .list_item(&list_widget_id)
-            .enable_hover();
-        list_item_widget.layout().add(constraints![
-            height(text_size.height),
-            match_width(&list_widget_id),
-        ]);
-        let mut list_text_widget = WidgetBuilder::new("list_text");
-        list_text_widget
-            .set_draw_state_with_style(text_draw_state, text_style)
-            .add_handler_fn(edit_text::text_change_handle);
-        list_text_widget.layout().add(center(&list_item_widget));
-        list_item_widget.add_child(list_text_widget);
-        list_item_widget
-    };
-    let list_item_ref = list_item_widget.widget_ref();
-    list_widget_id.add_child(list_item_widget);
-    list_item_ref
 }
 
 fn main() {
@@ -239,14 +245,16 @@ fn main() {
 
     let mut list_widget = ListBuilder::new();
     list_widget.on_item_selected(|selected, args| {
-        args.ui.event(PeopleEvent::PersonSelected(selected));
+        if selected.is_none() {
+            args.ui.event(PeopleEvent::PersonSelected(None));
+        }
     });
     list_widget.layout().add(match_width(&scroll_container));
 
     create_button.on_click(|_, args| {
         args.ui.event(PeopleEvent::Add);
     });
-    let ids = Ids {
+    let widgets = Widgets {
         list_widget: list_widget.widget_ref(),
         first_name_box: first_name_box.widget_ref(),
         last_name_box: last_name_box.widget_ref(),
@@ -269,7 +277,7 @@ fn main() {
         .add_child(scroll_container);
     root.add_child(container);
 
-    app.add_handler(PeopleHandler::new(ids));
+    app.add_handler(PeopleHandler::new(widgets));
 
     app.main_loop(root);
 }

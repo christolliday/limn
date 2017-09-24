@@ -12,6 +12,7 @@ use color::*;
 pub struct ListItemSelected {
     widget: Option<WidgetRef>,
 }
+pub struct ItemSelected;
 
 static COLOR_LIST_ITEM_DEFAULT: Color = GRAY_30;
 static COLOR_LIST_ITEM_MOUSEOVER: Color = GRAY_60;
@@ -91,6 +92,9 @@ impl ListBuilder {
     {
         self.widget.add_handler_fn(move |event: &ListItemSelected, args| {
             on_item_selected(event.widget.clone(), args);
+            if let &Some(ref widget) = &event.widget {
+                widget.event(ItemSelected);
+            }
         });
         self
     }
@@ -111,6 +115,14 @@ impl ListBuilder {
 impl WidgetBuilder {
     pub fn list_item(&mut self, parent_list: &WidgetRef) -> &mut Self {
         self.add_handler(ListItemHandler::new(parent_list.clone()))
+    }
+    pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
+        where F: Fn(EventArgs) + 'static
+    {
+        self.add_handler_fn(move |_: &ItemSelected, args| {
+            on_item_selected(args);
+        });
+        self
     }
 }
 
