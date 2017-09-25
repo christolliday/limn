@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
-use cassowary::Variable;
+use cassowary::{Variable, Constraint};
 
 use super::{LayoutId, LayoutVars, Layout};
 use super::constraint::*;
@@ -26,23 +26,25 @@ pub struct LinearLayoutHandler {
     orientation: Orientation,
     top: Variable,
     bottom: Variable,
+    end: Option<Constraint>,
 
     widgets: HashMap<LayoutId, WidgetData>,
     last_widget: Option<LayoutId>,
 }
 
 impl LinearLayoutHandler {
-    pub fn new(orientation: Orientation, parent: &LayoutVars) -> Self {
+    pub fn new(orientation: Orientation, parent: &Layout) -> Self {
         LinearLayoutHandler {
             padding: 0.0,
             orientation: orientation,
-            top: beginning(orientation, parent),
-            bottom: ending(orientation, parent),
+            top: beginning(orientation, &parent.vars),
+            bottom: ending(orientation, &parent.vars),
+            end: None,
             widgets: HashMap::new(),
             last_widget: None,
         }
     }
-    pub fn add_child_layout(&mut self, parent: &LayoutVars, child: &mut Layout, child_id: LayoutId) {
+    pub fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
         match self.orientation {
             Orientation::Horizontal => {
                 child.add(constraints![
@@ -61,31 +63,35 @@ impl LinearLayoutHandler {
         let child_end = ending(self.orientation, &child.vars);
         let end = if let Some(last_widget) = self.last_widget {
             let last_widget = self.widgets.get_mut(&last_widget).unwrap();
-            last_widget.succ = Some(child_id);
+            last_widget.succ = Some(child.id);
             last_widget.end
         } else {
             self.top
         };
         let constraint = child_start - end | EQ(REQUIRED) | self.padding;
-        child.add(constraint);
-        let constraint = self.bottom - child_end | GE(REQUIRED) | self.padding;
-        child.add(constraint);
+        parent.add(constraint);
+        if let Some(end) = self.end.take() {
+            parent.remove_constraint(end);
+        }
+        let constraint = self.bottom - child_end | EQ(REQUIRED) | self.padding;
+        self.end = Some(constraint.clone());
+        parent.add(constraint);
         if let Some(last_widget_id) = self.last_widget {
-            self.widgets.insert(child_id, WidgetData {
+            self.widgets.insert(child.id, WidgetData {
                 start: child_start,
                 end: child_end,
                 pred: Some(last_widget_id),
                 succ: None,
             });
         } else {
-            self.widgets.insert(child_id, WidgetData {
+            self.widgets.insert(child.id, WidgetData {
                 start: child_start,
                 end: child_end,
                 pred: None,
                 succ: None,
             });
         }
-        self.last_widget = Some(child_id);
+        self.last_widget = Some(child.id);
     }
     pub fn remove_child_layout(&mut self, parent: &mut Layout, child_id: LayoutId) {
         if let Some(widget_data) = self.widgets.remove(&child_id) {

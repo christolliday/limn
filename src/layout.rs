@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use cassowary::strength::*;
 
 use limn_layout::linear_layout::{LinearLayoutHandler, Orientation};
@@ -20,9 +22,8 @@ impl EventHandler<ChildrenUpdatedEvent> for LinearLayoutHandler {
         args.widget.update_layout(|layout| {
             match *event {
                 ChildrenUpdatedEvent::Added(ref child) => {
-                    let child_id = child.id().0;
                     child.update_layout(|child_layout| {
-                        self.add_child_layout(&layout.vars, child_layout, child_id);
+                        self.add_child_layout(layout, child_layout);
                     });
                 },
                 ChildrenUpdatedEvent::Removed(ref child) => {
@@ -50,16 +51,15 @@ impl EventHandler<ChildrenUpdatedEvent> for GridLayout {
 
 impl WidgetBuilder {
     pub fn vbox(&mut self) -> &mut Self {
-        let handler = LinearLayoutHandler::new(Orientation::Vertical, &self.layout().vars);
+        let handler = LinearLayoutHandler::new(Orientation::Vertical, self.layout().deref());
         self.set_container(handler)
     }
     pub fn hbox(&mut self, padding: f32) -> &mut Self {
-        let mut handler = LinearLayoutHandler::new(Orientation::Horizontal, &self.layout().vars);
+        let mut handler = LinearLayoutHandler::new(Orientation::Horizontal, self.layout().deref());
         handler.padding = padding;
         self.set_container(handler)
     }
     pub fn grid(&mut self, num_columns: usize) {
-        use std::ops::DerefMut;
         let container = GridLayout::new(self.layout().deref_mut(), num_columns);
         self.set_container(container);
     }
