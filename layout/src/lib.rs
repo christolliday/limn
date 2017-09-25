@@ -267,13 +267,9 @@ impl EditVariable {
     }
 }
 
-pub fn change_strength(constraints: &Vec<Constraint>, strength: f64) -> Vec<Constraint> {
-    let mut new_constraints = Vec::new();
-    for cons in constraints {
-        let cons = Constraint::new(cons.expr().clone(), cons.op(), strength);
-        new_constraints.push(cons);
-    }
-    new_constraints
+pub trait LayoutContainer {
+    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout);
+    fn remove_child_layout(&mut self, _: &mut Layout, _: &mut Layout) {}
 }
 
 /// Used to specify a list of constraints.

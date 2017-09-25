@@ -1,7 +1,7 @@
 use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
-use super::{LayoutVars, Layout, Constraint};
+use super::{LayoutVars, Layout, Constraint, LayoutContainer};
 use super::constraint::*;
 
 pub struct GridLayout {
@@ -46,7 +46,9 @@ impl GridLayout {
             row_end: None,
         }
     }
-    pub fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+}
+impl LayoutContainer for GridLayout {
+    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
         if self.column == self.num_columns || self.rows.len() == 0 {
             let row = LayoutVars::new();
             let mut constraints = vec![

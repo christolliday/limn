@@ -17,7 +17,7 @@ use ui::ChildrenUpdatedEvent;
 pub use self::solver::LimnSolver;
 pub use limn_layout::*;
 
-impl EventHandler<ChildrenUpdatedEvent> for LinearLayoutHandler {
+impl<T> EventHandler<ChildrenUpdatedEvent> for T where T: LayoutContainer {
     fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
         args.widget.update_layout(|layout| {
             match *event {
@@ -27,23 +27,10 @@ impl EventHandler<ChildrenUpdatedEvent> for LinearLayoutHandler {
                     });
                 },
                 ChildrenUpdatedEvent::Removed(ref child) => {
-                    self.remove_child_layout(layout, child.id().0);
-                },
-            }
-        });
-    }
-}
-
-impl EventHandler<ChildrenUpdatedEvent> for GridLayout {
-    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
-        args.widget.update_layout(|layout| {
-            match *event {
-                ChildrenUpdatedEvent::Added(ref child) => {
                     child.update_layout(|child_layout| {
-                        self.add_child_layout(layout, child_layout);
+                        self.remove_child_layout(layout, child_layout);
                     });
                 },
-                ChildrenUpdatedEvent::Removed(_) => (),
             }
         });
     }
@@ -70,30 +57,20 @@ pub struct Frame {
     padding: f32,
 }
 
-impl EventHandler<ChildrenUpdatedEvent> for Frame {
-    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
-        match *event {
-            ChildrenUpdatedEvent::Added(ref child) => {
-                child.update_layout(|layout| {
-                    layout.add(constraints![
-                        bound_by(&args.widget).padding(self.padding),
-                        match_layout(&args.widget).strength(STRONG),
-                    ]);
-                });
-            },
-            ChildrenUpdatedEvent::Removed(_) => (),
-        }
+impl LayoutContainer for Frame {
+    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+        child.add(constraints![
+            bound_by(&parent).padding(self.padding),
+            match_layout(&parent).strength(STRONG),
+        ]);
     }
 }
 
 pub struct ExactFrame;
-impl EventHandler<ChildrenUpdatedEvent> for ExactFrame {
-    fn handle(&mut self, event: &ChildrenUpdatedEvent, args: EventArgs) {
-        if let &ChildrenUpdatedEvent::Added(ref child) = event {
-            child.update_layout(|layout| {
-                layout.add(match_layout(&args.widget));
-            });
-        }
+
+impl LayoutContainer for ExactFrame {
+    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+        child.add(match_layout(&parent));
     }
 }
 

@@ -4,7 +4,7 @@ use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 use cassowary::{Variable, Constraint};
 
-use super::{LayoutId, LayoutVars, Layout};
+use super::{LayoutId, LayoutVars, Layout, LayoutContainer};
 use super::constraint::*;
 
 #[derive(Copy, Clone)]
@@ -44,7 +44,10 @@ impl LinearLayoutHandler {
             last_widget: None,
         }
     }
-    pub fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+}
+
+impl LayoutContainer for LinearLayoutHandler {
+    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
         match self.orientation {
             Orientation::Horizontal => {
                 child.add(constraints![
@@ -93,10 +96,10 @@ impl LinearLayoutHandler {
         }
         self.last_widget = Some(child.id);
     }
-    pub fn remove_child_layout(&mut self, parent: &mut Layout, child_id: LayoutId) {
-        if let Some(widget_data) = self.widgets.remove(&child_id) {
+    fn remove_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+        if let Some(widget_data) = self.widgets.remove(&child.id) {
             if let Some(last_widget_id) = self.last_widget {
-                if last_widget_id == child_id {
+                if last_widget_id == child.id {
                     self.last_widget = widget_data.pred;
                 }
             }
