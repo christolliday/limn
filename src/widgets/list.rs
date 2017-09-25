@@ -82,7 +82,7 @@ impl ListBuilder {
         let mut widget = WidgetBuilder::new("list");
         widget.add_handler(ListHandler::new())
               .add_handler_fn(list_handle_deselect)
-              .vbox();
+              .vbox(0.0, false);
         ListBuilder {
             widget: widget,
         }

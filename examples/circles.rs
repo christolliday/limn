@@ -92,7 +92,7 @@ impl ControlBar {
         let style = style!(RectStyle::BackgroundColor: control_color);
         widget
             .set_draw_state_with_style(RectState::new(), style)
-            .hbox(30.0);
+            .hbox(30.0, true);
         let mut create_button = ToggleButtonBuilder::new();
         create_button
             .set_text("Create Circle", "Create Circle")
@@ -371,13 +371,13 @@ impl EventHandler<AppEvent> for AppEventHandler {
 fn main() {
     let mut app = util::init_default("Limn circles demo");
     let mut root = WidgetBuilder::new("root");
-    root.vbox();
+    root.vbox(0.0, false);
 
     let mut circle_canvas = WidgetBuilder::new("circle_canvas");
     circle_canvas.no_container();
     circle_canvas.layout().add(constraints![
         match_width(&root),
-        min_height(600.0)
+        min_height(600.0),
     ]);
     circle_canvas
         .set_draw_state_with_style(RectState::new(), style!(RectStyle::BackgroundColor: WHITE))

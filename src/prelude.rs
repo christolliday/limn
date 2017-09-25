@@ -1,4 +1,5 @@
 pub use cassowary::strength::*;
+pub use cassowary::WeightedRelation::*;
 
 pub use util::{Point, PointExt, Rect, RectExt, Size, SizeExt, Vector};
 pub use event::{Target, EventHandler, EventArgs};
@@ -12,3 +13,4 @@ pub use resources::WidgetId;
 pub use ui::Ui;
 pub use color::*;
 pub use layout::constraint::*;
+pub use layout::LAYOUT;

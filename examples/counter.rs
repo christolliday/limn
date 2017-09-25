@@ -17,11 +17,8 @@ struct CountEvent;
 fn main() {
     let app = util::init_default("Limn counter demo");
     let mut root = WidgetBuilder::new("root");
-    root.hbox(0.0);
-
-    let mut left_spacer = WidgetBuilder::new("spacer");
-    left_spacer.layout().add(width(50.0));
-    root.add_child(left_spacer);
+    root.layout().add(min_size(Size::new(200.0, 100.0)));
+    root.hbox(50.0, true);
 
     #[derive(Default)]
     struct CountHandler {
@@ -36,9 +33,10 @@ fn main() {
 
     let mut text_widget = TextBuilder::new("0");
     text_widget.add_handler(CountHandler::default());
-    text_widget.layout().add(center_vertical(&root));
+    text_widget.layout().add(constraints![
+        center_vertical(&root),
+    ]);
 
-    let mut button_container = WidgetBuilder::new("button_container");
     let mut button_widget = PushButtonBuilder::new();
     button_widget.set_text("Count");
     let text_widget_ref = text_widget.widget_ref();
@@ -46,13 +44,11 @@ fn main() {
         text_widget_ref.event(CountEvent);
     });
     button_widget.layout().add(constraints![
-        center(&button_container),
-        bound_by(&button_container).padding(50.0),
+        center_vertical(&root),
     ]);
-    button_container.add_child(button_widget);
     root
         .add_child(text_widget)
-        .add_child(button_container);
+        .add_child(button_widget);
 
     app.main_loop(root);
 }

@@ -210,6 +210,9 @@ impl Layout {
             self.associated_vars.push((*var, format!("{}.{}", name, var_type)));
         }
     }
+    pub fn add_associated_var(&mut self, var: Variable, name: &str) {
+        self.associated_vars.push((var, name.to_owned()));
+    }
     pub fn get_associated_vars(&mut self) -> Vec<(Variable, String)> {
         mem::replace(&mut self.associated_vars, Vec::new())
     }
