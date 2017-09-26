@@ -4,11 +4,14 @@ extern crate limn_layout as layout;
 #[macro_use]
 extern crate maplit;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::ops::{Deref, DerefMut};
 
 use cassowary::strength::*;
 
-use layout::{LimnSolver, LayoutId, Layout, VarType};
+use layout::{LimnSolver, LayoutId, Layout, VarType, LayoutRef, LayoutVars, LayoutContainer};
 use layout::{Size, Point, Rect};
 use layout::constraint::*;
 
@@ -21,10 +24,9 @@ fn one_widget() {
         top_left(Point::new(0.0, 0.0)),
         size(Size::new(200.0, 200.0))
     ]);
-    layout.solver.update_layout(&mut widget);
 
     layout.update();
-    assert!(layout.layout == hashmap!{
+    assert!(layout.layout_rects == hashmap!{
         widget.id => Rect::new(Point::new(0.0, 0.0), Size::new(200.0, 200.0)),
     });
 }
@@ -67,14 +69,9 @@ fn grid() {
         match_width(&widget_bl),
         match_height(&widget_tr),
     ]);
-    layout.solver.update_layout(&mut widget_o);
-    layout.solver.update_layout(&mut widget_tl);
-    layout.solver.update_layout(&mut widget_tr);
-    layout.solver.update_layout(&mut widget_bl);
-    layout.solver.update_layout(&mut widget_br);
 
     layout.update();
-    assert!(layout.layout == hashmap!{
+    assert!(layout.layout_rects == hashmap!{
         widget_o.id => Rect::new(Point::new(0.0, 0.0), Size::new(300.0, 300.0)),
         widget_tl.id => Rect::new(Point::new(0.0, 0.0), Size::new(150.0, 150.0)),
         widget_tr.id => Rect::new(Point::new(150.0, 0.0), Size::new(150.0, 150.0)),
@@ -102,16 +99,12 @@ fn grid_layout() {
 
     let mut grid_layout = GridLayout::new(&mut grid, 2);
     for ref mut widget in &mut widgets {
-        grid_layout.add_child_layout(&mut grid, widget);
+        grid_layout.add_child(&mut grid, widget);
     }
 
-    layout.solver.update_layout(&mut grid);
-    for ref mut widget in &mut widgets {
-        layout.solver.update_layout(widget);
-    }
     layout.update();
 
-    assert!(layout.layout == hashmap!{
+    assert!(layout.layout_rects == hashmap!{
         grid.id => Rect::new(Point::new(0.0, 0.0), Size::new(200.0, 200.0)),
         widgets[0].id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 100.0)),
         widgets[1].id => Rect::new(Point::new(100.0, 0.0), Size::new(100.0, 100.0)),
@@ -141,14 +134,9 @@ fn edit_var() {
     ]);
     slider_handle.add(bound_by(&slider));
 
-    let slider_handle_left = slider_handle.layout().vars.left;
+    let slider_handle_left = slider_handle.layout_ref().left;
 
-    layout.solver.update_layout(&mut root_widget);
     layout.update();
-
-    layout.solver.update_layout(&mut slider);
-    layout.solver.update_layout(&mut slider_bar_pre);
-    layout.solver.update_layout(&mut slider_handle);
 
     layout.solver.solver.add_edit_variable(slider_handle_left, STRONG).unwrap();
     layout.solver.solver.suggest_value(slider_handle_left, 50.0).unwrap();
@@ -156,12 +144,39 @@ fn edit_var() {
     layout.update();
 }
 
+#[derive(Clone)]
+struct SharedLayout(Rc<RefCell<Layout>>);
+impl SharedLayout {
+    fn new(layout: Layout) -> Self {
+        SharedLayout(Rc::new(RefCell::new(layout)))
+    }
+}
+impl LayoutRef for SharedLayout {
+    fn layout_ref(&self) -> LayoutVars {
+        self.0.borrow().vars.clone()
+    }
+}
+impl <'a> Deref for SharedLayout {
+    type Target = Layout;
+    #[inline]
+    fn deref(&self) -> &Layout {
+        unsafe {self.0.as_ptr().as_ref().unwrap()}
+    }
+}
+impl <'a> DerefMut for SharedLayout
+{   #[inline]
+    fn deref_mut(&mut self) -> &mut Layout {
+        unsafe {self.0.as_ptr().as_mut().unwrap()}
+    }
+}
+
 // code below is used to create a test harness for creating layouts outside of the widget graph
 struct TestLayout {
     id_gen: IdGen,
     solver: LimnSolver,
     widget_names: HashMap<LayoutId, String>,
-    layout: HashMap<LayoutId, Rect>,
+    layout_rects: HashMap<LayoutId, Rect>,
+    layouts: HashMap<LayoutId, SharedLayout>,
 }
 impl TestLayout {
     fn new() -> Self {
@@ -169,20 +184,26 @@ impl TestLayout {
             id_gen: IdGen::new(),
             solver: LimnSolver::new(),
             widget_names: HashMap::new(),
-            layout: HashMap::new(),
+            layout_rects: HashMap::new(),
+            layouts: HashMap::new(),
         }
     }
-    fn new_widget(&mut self, name: &str) -> Layout {
+    fn new_widget(&mut self, name: &str) -> SharedLayout {
         let id = self.id_gen.next();
-        let mut layout = Layout::new(id, Some(name.to_owned()));
+        let layout = Layout::new(id, Some(name.to_owned()));
         self.widget_names.insert(id, name.to_owned());
-        self.solver.register_widget(&mut layout);
+        let layout = SharedLayout::new(layout);
+        self.layouts.insert(id, layout.clone());
         layout
     }
     fn update(&mut self) {
-        for (widget_id, var, value) in self.solver.fetch_changes() {
-            let rect = self.layout.entry(widget_id).or_insert(Rect::zero());
-            let name = &self.widget_names[&widget_id];
+        for mut layout in self.layouts.clone() {
+            let layout = layout.1.deref_mut();
+            self.solver.update_layout(layout);
+        }
+        for (id, var, value) in self.solver.fetch_changes() {
+            let rect = self.layout_rects.entry(id).or_insert(Rect::zero());
+            let name = &self.widget_names[&id];
             println!("{}.{:?} = {}", name, var, value);
             match var {
                 VarType::Left => rect.origin.x = value as f32,
