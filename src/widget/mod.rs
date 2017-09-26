@@ -13,8 +13,8 @@ use std::fmt;
 
 use render::RenderBuilder;
 use event::{self, EventHandler, EventArgs, EventHandlerWrapper};
-use layout::{Layout, LayoutVars, LayoutRef, Frame};
-use ui::{Ui, ChildrenUpdatedEvent};
+use layout::{Layout, LayoutVars, LayoutRef};
+use ui::Ui;
 use resources::{resources, WidgetId};
 use util::{Point, Rect, RectExt};
 use render;
@@ -137,7 +137,11 @@ impl WidgetRef {
         child.widget_mut().props.extend(self.props().iter().cloned());
         child.apply_style();
         self.widget_mut().children.push(child.clone());
-        self.update_layout(|layout| layout.add_child(child.id().0));
+        self.update_layout(|layout| {
+            child.update_layout(|child_layout| {
+                layout.add_child(child_layout);
+            });
+        });
         self.event(::ui::WidgetAttachedEvent);
         self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars.clone()));
         self.event(::ui::ChildrenUpdatedEvent::Added(child));
@@ -146,7 +150,11 @@ impl WidgetRef {
 
     pub fn remove_child(&mut self, child_ref: WidgetRef) {
         let child_id = child_ref.id();
-        self.update_layout(|layout| layout.remove_child(child_id.0));
+        self.update_layout(|layout| {
+            child_ref.update_layout(|child_layout| {
+                layout.remove_child(child_layout);
+            });
+        });
         let mut widget = self.widget_mut();
         if let Some(index) = widget.children.iter().position(|widget| widget.id() == child_id) {
             widget.children.remove(index);
@@ -396,14 +404,12 @@ impl Widget {
 /// Used to initialize and modify a Widget before it's been added to a parent Widget
 pub struct WidgetBuilder {
     pub widget: WidgetRef,
-    container: Option<EventHandlerWrapper>,
 }
 
 impl WidgetBuilder {
     pub fn new(name: &str) -> Self {
         WidgetBuilder {
             widget: WidgetRef::new(Widget::new(name.to_owned())),
-            container: Some(EventHandlerWrapper::new(Frame::default())),
         }
     }
     pub fn widget_ref(&self) -> WidgetRef {
@@ -440,14 +446,6 @@ impl WidgetBuilder {
         }
         self
     }
-    pub fn no_container(&mut self) -> &mut Self {
-        self.container = None;
-        self
-    }
-    pub fn set_container<T: EventHandler<ChildrenUpdatedEvent> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.container = Some(EventHandlerWrapper::new(handler));
-        self
-    }
     pub fn layout(&mut self) -> LayoutGuardMut {
         LayoutGuardMut { guard: self.widget.0.borrow_mut() }
     }
@@ -464,9 +462,6 @@ impl WidgetBuilder {
 
 impl Into<WidgetRef> for WidgetBuilder {
     fn into(mut self) -> WidgetRef {
-        if let Some(container) = self.container.take() {
-            self.widget.add_handler_wrapper(TypeId::of::<ChildrenUpdatedEvent>(), container);
-        }
         self.widget.apply_style();
         self.widget
     }

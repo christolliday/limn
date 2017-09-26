@@ -66,7 +66,7 @@ impl LinearLayout {
 }
 
 impl LayoutContainer for LinearLayout {
-    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+    fn add_child(&mut self, parent: &mut Layout, child: &mut Layout) {
 
         let child_start = beginning(self.orientation, &child.vars);
         let child_end = ending(self.orientation, &child.vars);
@@ -110,7 +110,7 @@ impl LayoutContainer for LinearLayout {
             }
         }
     }
-    fn remove_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+    fn remove_child(&mut self, parent: &mut Layout, child: &mut Layout) {
         if let Some(widget_data) = self.widgets.remove(&child.id) {
             if let Some(last_widget_id) = self.last_widget {
                 if last_widget_id == child.id {

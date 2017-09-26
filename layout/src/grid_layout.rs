@@ -48,7 +48,7 @@ impl GridLayout {
     }
 }
 impl LayoutContainer for GridLayout {
-    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout) {
+    fn add_child(&mut self, parent: &mut Layout, child: &mut Layout) {
         if self.column == self.num_columns || self.rows.len() == 0 {
             let row = LayoutVars::new();
             let mut constraints = vec![

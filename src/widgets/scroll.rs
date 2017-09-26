@@ -23,7 +23,7 @@ impl ScrollBuilder {
         let widget = WidgetBuilder::new("scroll");
 
         let mut content_holder = WidgetBuilder::new("content_holder");
-        content_holder.no_container();
+        content_holder.layout().no_container();
 
         ScrollBuilder {
             widget: widget,

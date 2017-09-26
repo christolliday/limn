@@ -374,7 +374,7 @@ fn main() {
     root.vbox(0.0, false);
 
     let mut circle_canvas = WidgetBuilder::new("circle_canvas");
-    circle_canvas.no_container();
+    circle_canvas.layout().no_container();
     circle_canvas.layout().add(constraints![
         match_width(&root),
         min_height(600.0),

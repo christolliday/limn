@@ -37,7 +37,7 @@ pub struct Ui {
 impl Ui {
     pub(super) fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
         let mut root = WidgetBuilder::new("window");
-        root.set_container(ExactFrame);
+        root.layout().set_container(ExactFrame);
         root.layout().add(top_left(Point::zero()));
         if !WINDOW_CONSTRAINT_REQUIRED {
             let mut root_layout = root.layout();

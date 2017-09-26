@@ -8,6 +8,8 @@ extern crate lazy_static;
 use std::collections::HashSet;
 use std::ops::Drop;
 use std::mem;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use cassowary::{Variable, Constraint};
 use cassowary::WeightedRelation::*;
@@ -16,6 +18,7 @@ use cassowary::strength::*;
 use euclid::{Point2D, Size2D, UnknownUnit};
 
 use self::constraint::ConstraintBuilder;
+use self::constraint::*;
 
 pub type Length = euclid::Length<f32, UnknownUnit>;
 pub type Size = Size2D<f32>;
@@ -93,6 +96,7 @@ pub struct Layout {
     pub vars: LayoutVars,
     pub name: Option<String>,
     pub id: LayoutId,
+    container: Option<Rc<RefCell<LayoutContainer>>>,
     children: Vec<LayoutId>,
     edit_vars: Vec<EditVariable>,
     constraints: HashSet<Constraint>,
@@ -113,6 +117,7 @@ impl Layout {
             vars: vars,
             name: name,
             id: id,
+            container: Some(Rc::new(RefCell::new(Frame::default()))),
             children: Vec::new(),
             edit_vars: Vec::new(),
             constraints: HashSet::new(),
@@ -124,6 +129,12 @@ impl Layout {
     }
     pub fn layout(&mut self) -> &mut Self {
         self
+    }
+    pub fn no_container(&mut self) {
+        self.container = None;
+    }
+    pub fn set_container<T: LayoutContainer + 'static>(&mut self, container: T) {
+        self.container = Some(Rc::new(RefCell::new(container)));
     }
     pub fn edit_left(&mut self) -> VariableEditable {
         let var = self.vars.left;
@@ -193,11 +204,17 @@ impl Layout {
     pub fn get_edit_vars(&mut self) -> Vec<EditVariable> {
         mem::replace(&mut self.edit_vars, Vec::new())
     }
-    pub fn add_child(&mut self, child_id: LayoutId) {
-        self.children.push(child_id);
+    pub fn add_child(&mut self, child: &mut Layout) {
+        self.children.push(child.id);
+        if let Some(container) = self.container.clone() {
+            container.borrow_mut().add_child(self, child);
+        }
     }
-    pub fn remove_child(&mut self, child_id: LayoutId) {
-        if let Some(pos) = self.children.iter().position(|id| child_id == *id) {
+    pub fn remove_child(&mut self, child: &mut Layout) {
+        if let Some(container) = self.container.clone() {
+            container.borrow_mut().remove_child(self, child);
+        }
+        if let Some(pos) = self.children.iter().position(|id| child.id == *id) {
             self.children.remove(pos);
         }
     }
@@ -270,11 +287,6 @@ impl EditVariable {
     }
 }
 
-pub trait LayoutContainer {
-    fn add_child_layout(&mut self, parent: &mut Layout, child: &mut Layout);
-    fn remove_child_layout(&mut self, _: &mut Layout, _: &mut Layout) {}
-}
-
 /// Used to specify a list of constraints.
 // Needed to box different ConstraintBuilder impls,
 // can't be done without specifying Vec<Box<ConstraintBuilder>>.
@@ -293,6 +305,33 @@ macro_rules! constraints {
             vec
         }
     };
+}
+
+pub trait LayoutContainer {
+    fn add_child(&mut self, parent: &mut Layout, child: &mut Layout);
+    fn remove_child(&mut self, _: &mut Layout, _: &mut Layout) {}
+}
+
+#[derive(Default)]
+pub struct Frame {
+    padding: f32,
+}
+
+impl LayoutContainer for Frame {
+    fn add_child(&mut self, parent: &mut Layout, child: &mut Layout) {
+        child.add(constraints![
+            bound_by(&parent).padding(self.padding),
+            match_layout(&parent).strength(STRONG),
+        ]);
+    }
+}
+
+pub struct ExactFrame;
+
+impl LayoutContainer for ExactFrame {
+    fn add_child(&mut self, parent: &mut Layout, child: &mut Layout) {
+        child.add(match_layout(&parent));
+    }
 }
 
 pub mod solver;
