@@ -38,26 +38,29 @@ impl MouseController {
             widget_under_mouse: None,
         }
     }
+    fn check_widget_under_cursor(&mut self, args: EventArgs) {
+        let widget_under_cursor = args.ui.widget_under_cursor(self.mouse);
+        if widget_under_cursor != self.widget_under_mouse {
+            if let Some(ref old_widget) = self.widget_under_mouse {
+                old_widget.event_bubble_up(MouseOverEvent::Out);
+            }
+            if let Some(ref widget_under_cursor) = widget_under_cursor {
+                widget_under_cursor.event_bubble_up(MouseOverEvent::Over);
+            }
+        }
+        self.widget_under_mouse = widget_under_cursor;
+    }
 }
 impl EventHandler<MouseInputEvent> for MouseController {
     fn handle(&mut self, event: &MouseInputEvent, args: EventArgs) {
 
         match *event {
             MouseInputEvent::LayoutChanged => {
-                args.ui.get_root().event(MouseMoved(Point::new(self.mouse.x, self.mouse.y)));
+                self.check_widget_under_cursor(args);
             }
             MouseInputEvent::MouseMoved(mouse) => {
                 self.mouse = mouse;
-                let widget_under_cursor = args.ui.widget_under_cursor(mouse);
-                if widget_under_cursor != self.widget_under_mouse {
-                    if let Some(ref old_widget) = self.widget_under_mouse {
-                        old_widget.event_bubble_up(MouseOverEvent::Out);
-                    }
-                    if let Some(ref widget_under_cursor) = widget_under_cursor {
-                        widget_under_cursor.event_bubble_up(MouseOverEvent::Over);
-                    }
-                }
-                self.widget_under_mouse = widget_under_cursor;
+                self.check_widget_under_cursor(args);
             }
             MouseInputEvent::MouseButton(state, button) => {
                 if let Some(ref widget_under) = self.widget_under_mouse {
