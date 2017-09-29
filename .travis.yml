@@ -9,5 +9,6 @@ os:
   - osx
 
 script:
-  - cd layout && cargo test --verbose
+  - cargo test --verbose
+  - cd layout
   - cargo test --verbose
