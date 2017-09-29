@@ -1,5 +1,8 @@
 ## Limn GUI library.
 
+[![Build Status](https://travis-ci.org/christolliday/limn.svg?branch=master)](https://travis-ci.org/christolliday/limn)
+[![Build status](https://ci.appveyor.com/api/projects/status/jheej7tmkntqa8d4/branch/master?svg=true)](https://ci.appveyor.com/project/christolliday/limn/branch/master)
+
 WIP
 
 ## License

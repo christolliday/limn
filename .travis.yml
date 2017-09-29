@@ -1,0 +1,13 @@
+language: rust
+
+rust:
+  - nightly
+  - stable
+
+os:
+  - linux
+  - osx
+
+script:
+  - cd layout && cargo test --verbose
+  - cargo test --verbose
