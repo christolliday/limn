@@ -66,6 +66,9 @@ impl App {
         let events_loop = self.events_loop.clone();
         let mut events_loop = events_loop.borrow_mut();
 
+        // Handle set up events to allow layout to 'settle' and initialize the window size to the initial layout size
+        self.handle_events();
+        self.ui.resize_window_to_fit();
         loop {
             events_loop.poll_events(|event| {
                 self.handle_window_event(event);

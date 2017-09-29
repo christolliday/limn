@@ -44,9 +44,6 @@ impl Ui {
             root_layout.edit_right().strength(REQUIRED - 1.0);
             root_layout.edit_bottom().strength(REQUIRED - 1.0);
         }
-        root.add_handler_fn(|_: &::layout::LayoutUpdated, args| {
-            args.ui.event(::layout::ResizeWindow);
-        });
         let render = WebRenderContext::new(&mut window, events_loop);
         Ui {
             widget_map: HashMap::new(),
