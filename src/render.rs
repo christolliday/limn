@@ -15,9 +15,11 @@ use util::{Rect, RectExt, Point, Size};
 pub(super) struct WebRenderContext {
     pub renderer: webrender::Renderer,
     pub render_api: RenderApi,
+    sender: RenderApiSender,
     pub epoch: Epoch,
     pub pipeline_id: PipelineId,
     pub document_id: DocumentId,
+    pub device_pixel_ratio: f32,
     pub root_background_color: ColorF,
     // store frame ready event in case it is received after
     // update but before the event queue is waiting, otherwise
@@ -61,9 +63,11 @@ impl WebRenderContext {
         WebRenderContext {
             renderer: renderer,
             render_api: api,
+            sender: sender,
             epoch: epoch,
             pipeline_id: pipeline_id,
             document_id: document_id,
+            device_pixel_ratio: window.hidpi_factor(),
             root_background_color: root_background_color,
             frame_ready: frame_ready,
         }
@@ -99,7 +103,7 @@ impl WebRenderContext {
     pub fn update(&mut self, window_size: DeviceUintSize) {
         self.frame_ready.store(false, atomic::Ordering::Release);
         self.renderer.update();
-        self.renderer.render(window_size);
+        self.renderer.render(window_size).unwrap();
     }
     pub fn toggle_flags(&mut self, toggle_flags: webrender::DebugFlags) {
         let mut flags = self.renderer.get_debug_flags();
@@ -108,7 +112,7 @@ impl WebRenderContext {
     }
     pub fn window_resized(&mut self, size: DeviceUintSize) {
         let window_rect = DeviceUintRect::new(TypedPoint2D::zero(), size);
-        self.render_api.set_window_parameters(self.document_id, size, window_rect);
+        self.render_api.set_window_parameters(self.document_id, size, window_rect, self.device_pixel_ratio);
     }
 }
 
@@ -145,7 +149,8 @@ pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut R
     let side = BorderSide { color: color.into(), style: BorderStyle::Solid };
     let border = NormalBorder { left: side, right: side, top: side, bottom: side, radius: BorderRadius::zero() };
     let details = BorderDetails::Normal(border);
-    renderer.builder.push_border(rect.typed(), None, widths, details);
+    let info = PrimitiveInfo::new(rect.typed());
+    renderer.builder.push_border(&info, widths, details);
 }
 
 pub fn draw_horizontal_line<C: Into<ColorF>>(baseline: f32, start: f32, end: f32, color: C, renderer: &mut RenderBuilder) {

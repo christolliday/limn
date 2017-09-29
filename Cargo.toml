@@ -13,8 +13,8 @@ euclid = "0.15.1"
 log = "0.3"
 gleam = "0.4.7"
 
-webrender = { git = "https://github.com/servo/webrender", rev = "c3376c8049c01827872cc85a865b8e80a4532bdd" }
-webrender_api = { git = "https://github.com/servo/webrender", rev = "c3376c8049c01827872cc85a865b8e80a4532bdd" }
+webrender = { git = "https://github.com/servo/webrender", rev = "ba51d8d5892d7ff8a69a9657c882b620595de4f7" }
+webrender_api = { git = "https://github.com/servo/webrender", rev = "ba51d8d5892d7ff8a69a9657c882b620595de4f7" }
 
 stb_truetype = "0.2.1"
 app_units = "0.5"

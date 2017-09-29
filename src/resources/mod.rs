@@ -7,6 +7,9 @@ use std::collections::HashMap;
 use webrender::api::*;
 use image;
 use rusttype;
+use app_units;
+
+use text_layout;
 
 use self::id::{Id, IdGen};
 
@@ -64,6 +67,7 @@ impl<I: Id, T> Map<I, T> {
 pub struct Resources {
     pub render: Option<RenderApi>,
     pub fonts: HashMap<String, FontInfo>,
+    pub font_instances: HashMap<(String, app_units::Au), FontInstanceKey>,
     pub images: HashMap<String, ImageInfo>,
     pub widget_id: IdGen<WidgetId>,
 }
@@ -72,6 +76,7 @@ impl Resources {
         Resources {
             render: None,
             fonts: HashMap::new(),
+            font_instances: HashMap::new(),
             images: HashMap::new(),
             widget_id: IdGen::new(),
         }
@@ -92,6 +97,7 @@ impl Resources {
         }
         &self.images[name]
     }
+
     pub fn get_font(&mut self, name: &str) -> &FontInfo {
         if !self.fonts.contains_key(name) {
             let data = load_font_data(name).unwrap();
@@ -106,8 +112,20 @@ impl Resources {
         }
         &self.fonts[name]
     }
-}
 
+    pub fn get_font_instance(&mut self, name: &str, font_size: f32) -> &FontInstanceKey {
+        let font_key = self.get_font(name).key;
+        let size = app_units::Au::from_f32_px(text_layout::px_to_pt(font_size));
+        if !self.font_instances.contains_key(&(name.to_owned(), size)) {
+            let instance_key = self.render.as_ref().unwrap().generate_font_instance_key();
+            let mut resources = ResourceUpdates::new();
+            resources.add_font_instance(instance_key, font_key, size, None, None, Vec::new());
+            self.render.as_ref().unwrap().update_resources(resources);
+            self.font_instances.insert((name.to_owned(), size), instance_key);
+        }
+        &self.font_instances[&(name.to_owned(), size)]
+    }
+}
 fn load_image(file: &str) -> Result<(ImageData, ImageDescriptor), image::ImageError> {
     use image::GenericImage;
     let image = try!(image::open(format!("assets/images/{}", file)));

@@ -28,9 +28,9 @@ impl ImageState {
 impl Draw for ImageState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let key = resources().get_image(&self.image).key;
+        let info = PrimitiveInfo::new(bounds.typed());
         renderer.builder.push_image(
-            bounds.typed(),
-            None,
+            &info,
             bounds.size.typed(),
             LayoutSize::zero(),
             ImageRendering::Auto,

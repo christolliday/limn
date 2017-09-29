@@ -1,5 +1,4 @@
-use webrender_api::{LayoutPoint, GlyphInstance, FontKey};
-use app_units;
+use webrender_api::{LayoutPoint, GlyphInstance, PrimitiveInfo, FontInstanceKey};
 use rusttype::{Scale, GlyphId, VMetrics};
 
 use render::RenderBuilder;
@@ -107,8 +106,8 @@ impl TextState {
             }).collect();
         positions
     }
-    fn font_key(&self) -> FontKey {
-        resources().get_font(&self.font).key
+    fn font_instance_key(&self) -> FontInstanceKey {
+        *resources().get_font_instance(&self.font, self.font_size)
     }
     fn v_metrics(&self) -> VMetrics {
         let mut resources = resources();
@@ -141,16 +140,14 @@ impl Draw for TextState {
                 }
             }
         }
-        let size = app_units::Au::from_f32_px(text_layout::px_to_pt(self.font_size));
-        let key = self.font_key();
+        let key = self.font_instance_key();
+        let info = PrimitiveInfo::new(bounds.typed());
         renderer.builder.push_text(
-            bounds.typed(),
-            None,
+            &info,
             &glyphs,
             key,
             self.text_color.into(),
-            size,
-            None
+            None,
         );
     }
 }
