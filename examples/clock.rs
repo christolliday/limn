@@ -44,20 +44,21 @@ impl Draw for ClockHand {
         let transform = rotation_transform(&bounds.center().typed(),
             self.rotation + Radians::new(f32::consts::PI));
         renderer.builder.push_stacking_context(
+            &PrimitiveInfo::new(Rect::zero().typed()),
             ScrollPolicy::Fixed,
-            Rect::zero().typed(),
             Some(PropertyBinding::Value(transform)),
             TransformStyle::Flat,
             None,
             MixBlendMode::Normal,
             Vec::new(),
         );
+        let rect = Rect::new(
+            bounds.center() + Size::new(-self.width / 2.0, 0.0),
+            Size::new(self.width, self.length)
+        ).typed();
         renderer.builder.push_rect(
-            Rect::new(
-                bounds.center() + Size::new(-self.width / 2.0, 0.0),
-                Size::new(self.width, self.length)
-            ).typed(),
-            None, self.color.into());
+            &PrimitiveInfo::new(rect),
+            self.color.into());
         renderer.builder.pop_stacking_context();
     }
 }
