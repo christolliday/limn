@@ -362,9 +362,11 @@ struct TestLayout {
 }
 impl TestLayout {
     fn new() -> Self {
+        let mut solver = LimnSolver::new();
+        solver.strict = true;
         TestLayout {
             id_gen: IdGen::new(),
-            solver: LimnSolver::new(),
+            solver: solver,
             layout_rects: HashMap::new(),
             layouts: HashMap::new(),
         }

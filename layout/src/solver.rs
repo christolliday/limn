@@ -11,6 +11,7 @@ use super::{LayoutId, Layout, VarType, LayoutVars, EditVariable, Rect, Point, Si
 
 pub struct LimnSolver {
     pub solver: cassowary::Solver,
+    pub strict: bool,
     layouts: LayoutManager,
 }
 
@@ -18,6 +19,7 @@ impl LimnSolver {
     pub fn new() -> Self {
         LimnSolver {
             solver: cassowary::Solver::new(),
+            strict: false,
             layouts: LayoutManager::new(),
         }
     }
@@ -72,6 +74,9 @@ impl LimnSolver {
         if self.solver.add_constraint(constraint.clone()).is_err() {
             eprintln!("Failed to add constraint {}", self.layouts.fmt_constraint(&constraint));
             self.debug_associated_constraints(&constraint);
+            if self.strict {
+                panic!("Solver unsatisfiable");
+            }
         }
     }
 
