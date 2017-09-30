@@ -144,6 +144,189 @@ fn edit_var() {
     layout.update();
 }
 
+#[test]
+fn linear_layout_fill() {
+    use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment};
+
+    let mut layout = TestLayout::new();
+
+    let mut root = layout.new_widget("root");
+    let mut item_1 = layout.new_widget("item_1");
+    let mut item_2 = layout.new_widget("item_2");
+    let mut item_3 = layout.new_widget("item_3");
+
+    root.add(constraints![
+        top_left(Point::new(0.0, 0.0)),
+        size(Size::new(300.0, 10.0))
+    ]);
+    let mut settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    settings.fill_equal = true;
+    settings.item_align = ItemAlignment::Fill;
+    let linear_layout = LinearLayout::new(&mut *root, settings);
+    root.set_container(linear_layout);
+
+    root.add_child(&mut *item_1);
+    root.add_child(&mut *item_2);
+    root.add_child(&mut *item_3);
+
+    layout.update();
+    assert!(layout.layout_rects == hashmap!{
+        root.id => Rect::new(Point::new(0.0, 0.0), Size::new(300.0, 10.0)),
+        item_1.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
+        item_2.id => Rect::new(Point::new(100.0, 0.0), Size::new(100.0, 10.0)),
+        item_3.id => Rect::new(Point::new(200.0, 0.0), Size::new(100.0, 10.0)),
+    });
+}
+
+#[test]
+fn linear_layout_end_padding() {
+    use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment, Spacing};
+
+    let mut layout = TestLayout::new();
+
+    let mut root = layout.new_widget("root");
+    let mut item_1 = layout.new_widget("item_1");
+    let mut item_2 = layout.new_widget("item_2");
+    let mut item_3 = layout.new_widget("item_3");
+
+    root.add(constraints![
+        top_left(Point::new(0.0, 0.0)),
+        size(Size::new(100.0, 10.0))
+    ]);
+    item_1.add(width(20.0));
+    item_2.add(width(20.0));
+    item_3.add(width(20.0));
+    let mut settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    settings.padding = 10.0;
+    settings.item_align = ItemAlignment::Fill;
+    settings.spacing = Spacing::End;
+    let linear_layout = LinearLayout::new(&mut *root, settings);
+    root.set_container(linear_layout);
+
+    root.add_child(&mut *item_1);
+    root.add_child(&mut *item_2);
+    root.add_child(&mut *item_3);
+
+    layout.update();
+    assert!(layout.layout_rects == hashmap!{
+        root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
+        item_1.id => Rect::new(Point::new(0.0, 0.0), Size::new(20.0, 10.0)),
+        item_2.id => Rect::new(Point::new(30.0, 0.0), Size::new(20.0, 10.0)),
+        item_3.id => Rect::new(Point::new(60.0, 0.0), Size::new(20.0, 10.0)),
+    });
+}
+
+#[test]
+fn linear_layout_start() {
+    use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment, Spacing};
+
+    let mut layout = TestLayout::new();
+
+    let mut root = layout.new_widget("root");
+    let mut item_1 = layout.new_widget("item_1");
+    let mut item_2 = layout.new_widget("item_2");
+    let mut item_3 = layout.new_widget("item_3");
+
+    root.add(constraints![
+        top_left(Point::new(0.0, 0.0)),
+        size(Size::new(100.0, 10.0))
+    ]);
+    item_1.add(width(20.0));
+    item_2.add(width(20.0));
+    item_3.add(width(20.0));
+    let mut settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    settings.item_align = ItemAlignment::Fill;
+    settings.spacing = Spacing::Start;
+    let linear_layout = LinearLayout::new(&mut *root, settings);
+    root.set_container(linear_layout);
+
+    root.add_child(&mut *item_1);
+    root.add_child(&mut *item_2);
+    root.add_child(&mut *item_3);
+
+    layout.update();
+    assert!(layout.layout_rects == hashmap!{
+        root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
+        item_1.id => Rect::new(Point::new(40.0, 0.0), Size::new(20.0, 10.0)),
+        item_2.id => Rect::new(Point::new(60.0, 0.0), Size::new(20.0, 10.0)),
+        item_3.id => Rect::new(Point::new(80.0, 0.0), Size::new(20.0, 10.0)),
+    });
+}
+
+#[test]
+fn linear_layout_even() {
+    use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment, Spacing};
+
+    let mut layout = TestLayout::new();
+
+    let mut root = layout.new_widget("root");
+    let mut item_1 = layout.new_widget("item_1");
+    let mut item_2 = layout.new_widget("item_2");
+    let mut item_3 = layout.new_widget("item_3");
+
+    root.add(constraints![
+        top_left(Point::new(0.0, 0.0)),
+        size(Size::new(100.0, 10.0))
+    ]);
+    item_1.add(width(20.0));
+    item_2.add(width(20.0));
+    item_3.add(width(20.0));
+    let mut settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    settings.item_align = ItemAlignment::Fill;
+    settings.spacing = Spacing::Even;
+    let linear_layout = LinearLayout::new(&mut *root, settings);
+    root.set_container(linear_layout);
+
+    root.add_child(&mut *item_1);
+    root.add_child(&mut *item_2);
+    root.add_child(&mut *item_3);
+
+    layout.update();
+    assert!(layout.layout_rects == hashmap!{
+        root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
+        item_1.id => Rect::new(Point::new(10.0, 0.0), Size::new(20.0, 10.0)),
+        item_2.id => Rect::new(Point::new(40.0, 0.0), Size::new(20.0, 10.0)),
+        item_3.id => Rect::new(Point::new(70.0, 0.0), Size::new(20.0, 10.0)),
+    });
+}
+
+#[test]
+fn linear_layout_between() {
+    use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment, Spacing};
+
+    let mut layout = TestLayout::new();
+
+    let mut root = layout.new_widget("root");
+    let mut item_1 = layout.new_widget("item_1");
+    let mut item_2 = layout.new_widget("item_2");
+    let mut item_3 = layout.new_widget("item_3");
+
+    root.add(constraints![
+        top_left(Point::new(0.0, 0.0)),
+        size(Size::new(100.0, 10.0))
+    ]);
+    item_1.add(width(20.0));
+    item_2.add(width(20.0));
+    item_3.add(width(20.0));
+    let mut settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    settings.item_align = ItemAlignment::Fill;
+    settings.spacing = Spacing::Between;
+    let linear_layout = LinearLayout::new(&mut *root, settings);
+    root.set_container(linear_layout);
+
+    root.add_child(&mut *item_1);
+    root.add_child(&mut *item_2);
+    root.add_child(&mut *item_3);
+
+    layout.update();
+    assert!(layout.layout_rects == hashmap!{
+        root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
+        item_1.id => Rect::new(Point::new(0.0, 0.0), Size::new(20.0, 10.0)),
+        item_2.id => Rect::new(Point::new(40.0, 0.0), Size::new(20.0, 10.0)),
+        item_3.id => Rect::new(Point::new(80.0, 0.0), Size::new(20.0, 10.0)),
+    });
+}
+
 #[derive(Clone)]
 struct SharedLayout(Rc<RefCell<Layout>>);
 impl SharedLayout {
@@ -174,7 +357,6 @@ impl <'a> DerefMut for SharedLayout
 struct TestLayout {
     id_gen: IdGen,
     solver: LimnSolver,
-    widget_names: HashMap<LayoutId, String>,
     layout_rects: HashMap<LayoutId, Rect>,
     layouts: HashMap<LayoutId, SharedLayout>,
 }
@@ -183,7 +365,6 @@ impl TestLayout {
         TestLayout {
             id_gen: IdGen::new(),
             solver: LimnSolver::new(),
-            widget_names: HashMap::new(),
             layout_rects: HashMap::new(),
             layouts: HashMap::new(),
         }
@@ -191,7 +372,6 @@ impl TestLayout {
     fn new_widget(&mut self, name: &str) -> SharedLayout {
         let id = self.id_gen.next();
         let layout = Layout::new(id, Some(name.to_owned()));
-        self.widget_names.insert(id, name.to_owned());
         let layout = SharedLayout::new(layout);
         self.layouts.insert(id, layout.clone());
         layout
@@ -203,8 +383,6 @@ impl TestLayout {
         }
         for (id, var, value) in self.solver.fetch_changes() {
             let rect = self.layout_rects.entry(id).or_insert(Rect::zero());
-            let name = &self.widget_names[&id];
-            println!("{}.{:?} = {}", name, var, value);
             match var {
                 VarType::Left => rect.origin.x = value as f32,
                 VarType::Top => rect.origin.y = value as f32,
