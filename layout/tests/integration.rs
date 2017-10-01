@@ -11,7 +11,7 @@ use std::ops::{Deref, DerefMut};
 
 use cassowary::strength::*;
 
-use layout::{LimnSolver, LayoutId, Layout, VarType, LayoutRef, LayoutVars, LayoutContainer};
+use layout::{LimnSolver, LayoutId, Layout, VarType, LayoutRef, LayoutVars};
 use layout::{Size, Point, Rect};
 use layout::constraint::*;
 
@@ -25,6 +25,7 @@ fn one_widget() {
         size(Size::new(200.0, 200.0))
     ]);
 
+    layout.add_root(widget.clone());
     layout.update();
     assert!(layout.layout_rects == hashmap!{
         widget.id => Rect::new(Point::new(0.0, 0.0), Size::new(200.0, 200.0)),
@@ -70,6 +71,11 @@ fn grid() {
         match_height(&widget_tr),
     ]);
 
+    layout.add_root(widget_o.clone());
+    layout.add_root(widget_tl.clone());
+    layout.add_root(widget_tr.clone());
+    layout.add_root(widget_bl.clone());
+    layout.add_root(widget_br.clone());
     layout.update();
     assert!(layout.layout_rects == hashmap!{
         widget_o.id => Rect::new(Point::new(0.0, 0.0), Size::new(300.0, 300.0)),
@@ -89,19 +95,20 @@ fn grid_layout() {
         top_left(Point::new(0.0, 0.0)),
         size(Size::new(200.0, 200.0)),
     ]);
-    let mut widgets = {
+    let grid_layout = GridLayout::new(&mut grid, 2);
+    grid.set_container(grid_layout);
+
+    let widgets = {
         let mut widgets = Vec::new();
         for i in 0..4 {
-            widgets.push(layout.new_widget(&format!("widget_{}", i)));
+            let mut widget = layout.new_widget(&format!("widget_{}", i));
+            grid.add_child(widget.deref_mut());
+            widgets.push(widget);
         }
         widgets
     };
 
-    let mut grid_layout = GridLayout::new(&mut grid, 2);
-    for ref mut widget in &mut widgets {
-        grid_layout.add_child(&mut grid, widget);
-    }
-
+    layout.add_root(grid.clone());
     layout.update();
 
     assert!(layout.layout_rects == hashmap!{
@@ -117,16 +124,16 @@ fn grid_layout() {
 fn edit_var() {
     let mut layout = TestLayout::new();
 
-    let mut root_widget = layout.new_widget("root");
+    let mut root = layout.new_widget("root");
     let mut slider = layout.new_widget("slider");
     let mut slider_bar_pre = layout.new_widget("slider_bar_pre");
     let mut slider_handle = layout.new_widget("slider_handle");
-    root_widget.add(top_left(Point::new(0.0, 0.0)));
-    root_widget.edit_right().set(100.0).strength(STRONG);
-    root_widget.edit_bottom().set(100.0).strength(STRONG);
+    root.add(top_left(Point::new(0.0, 0.0)));
+    root.edit_right().set(100.0).strength(STRONG);
+    root.edit_bottom().set(100.0).strength(STRONG);
     slider.add(constraints![
-        align_left(&root_widget).padding(50.0),
-        bound_by(&root_widget),
+        align_left(&root).padding(50.0),
+        bound_by(&root),
     ]);
     slider_bar_pre.add(constraints![
         to_left_of(&slider_handle),
@@ -141,6 +148,7 @@ fn edit_var() {
     layout.solver.solver.add_edit_variable(slider_handle_left, STRONG).unwrap();
     layout.solver.solver.suggest_value(slider_handle_left, 50.0).unwrap();
 
+    layout.add_root(root);
     layout.update();
 }
 
@@ -165,10 +173,11 @@ fn linear_layout_fill() {
     let linear_layout = LinearLayout::new(&mut *root, settings);
     root.set_container(linear_layout);
 
-    root.add_child(&mut *item_1);
-    root.add_child(&mut *item_2);
-    root.add_child(&mut *item_3);
+    root.add_child(item_1.deref_mut());
+    root.add_child(item_2.deref_mut());
+    root.add_child(item_3.deref_mut());
 
+    layout.add_root(root.clone());
     layout.update();
     assert!(layout.layout_rects == hashmap!{
         root.id => Rect::new(Point::new(0.0, 0.0), Size::new(300.0, 10.0)),
@@ -203,10 +212,11 @@ fn linear_layout_end_padding() {
     let linear_layout = LinearLayout::new(&mut *root, settings);
     root.set_container(linear_layout);
 
-    root.add_child(&mut *item_1);
-    root.add_child(&mut *item_2);
-    root.add_child(&mut *item_3);
+    root.add_child(item_1.deref_mut());
+    root.add_child(item_2.deref_mut());
+    root.add_child(item_3.deref_mut());
 
+    layout.add_root(root.clone());
     layout.update();
     assert!(layout.layout_rects == hashmap!{
         root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
@@ -240,10 +250,11 @@ fn linear_layout_start() {
     let linear_layout = LinearLayout::new(&mut *root, settings);
     root.set_container(linear_layout);
 
-    root.add_child(&mut *item_1);
-    root.add_child(&mut *item_2);
-    root.add_child(&mut *item_3);
+    root.add_child(item_1.deref_mut());
+    root.add_child(item_2.deref_mut());
+    root.add_child(item_3.deref_mut());
 
+    layout.add_root(root.clone());
     layout.update();
     assert!(layout.layout_rects == hashmap!{
         root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
@@ -254,7 +265,7 @@ fn linear_layout_start() {
 }
 
 #[test]
-fn linear_layout_even() {
+fn linear_layout_spacing_around() {
     use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment, Spacing};
 
     let mut layout = TestLayout::new();
@@ -273,14 +284,15 @@ fn linear_layout_even() {
     item_3.add(width(20.0));
     let mut settings = LinearLayoutSettings::new(Orientation::Horizontal);
     settings.item_align = ItemAlignment::Fill;
-    settings.spacing = Spacing::Even;
+    settings.spacing = Spacing::Around;
     let linear_layout = LinearLayout::new(&mut *root, settings);
     root.set_container(linear_layout);
 
-    root.add_child(&mut *item_1);
-    root.add_child(&mut *item_2);
-    root.add_child(&mut *item_3);
+    root.add_child(item_1.deref_mut());
+    root.add_child(item_2.deref_mut());
+    root.add_child(item_3.deref_mut());
 
+    layout.add_root(root.clone());
     layout.update();
     assert!(layout.layout_rects == hashmap!{
         root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
@@ -291,7 +303,7 @@ fn linear_layout_even() {
 }
 
 #[test]
-fn linear_layout_between() {
+fn linear_layout_spacing_between() {
     use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment, Spacing};
 
     let mut layout = TestLayout::new();
@@ -314,10 +326,11 @@ fn linear_layout_between() {
     let linear_layout = LinearLayout::new(&mut *root, settings);
     root.set_container(linear_layout);
 
-    root.add_child(&mut *item_1);
-    root.add_child(&mut *item_2);
-    root.add_child(&mut *item_3);
+    root.add_child(item_1.deref_mut());
+    root.add_child(item_2.deref_mut());
+    root.add_child(item_3.deref_mut());
 
+    layout.add_root(root.clone());
     layout.update();
     assert!(layout.layout_rects == hashmap!{
         root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
@@ -325,6 +338,47 @@ fn linear_layout_between() {
         item_2.id => Rect::new(Point::new(40.0, 0.0), Size::new(20.0, 10.0)),
         item_3.id => Rect::new(Point::new(80.0, 0.0), Size::new(20.0, 10.0)),
     });
+}
+
+#[test]
+fn linear_layout_remove() {
+    use layout::linear_layout::{LinearLayout, LinearLayoutSettings, Orientation, ItemAlignment, Spacing};
+
+    let mut layout = TestLayout::new();
+
+    let mut root = layout.new_widget("root");
+    let mut item_1 = layout.new_widget("item_1");
+    let mut item_2 = layout.new_widget("item_2");
+    let mut item_3 = layout.new_widget("item_3");
+
+    root.add(constraints![
+        top_left(Point::new(0.0, 0.0)),
+        size(Size::new(100.0, 10.0))
+    ]);
+    item_1.add(width(20.0));
+    item_2.add(width(20.0));
+    item_3.add(width(20.0));
+    let mut settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    settings.fill_equal = true;
+    settings.item_align = ItemAlignment::Fill;
+    settings.spacing = Spacing::End;
+    settings.padding = 10.0;
+    let linear_layout = LinearLayout::new(&mut *root, settings);
+    root.set_container(linear_layout);
+
+    root.add_child(&mut *item_1);
+    root.add_child(&mut *item_2);
+    root.add_child(&mut *item_3);
+
+    root.remove_child(&mut *item_2);
+
+    layout.add_root(root.clone());
+    layout.update();
+    assert!(layout.match_layouts(hashmap!{
+        root.id => Rect::new(Point::new(0.0, 0.0), Size::new(100.0, 10.0)),
+        item_1.id => Rect::new(Point::new(0.0, 0.0), Size::new(20.0, 10.0)),
+        item_3.id => Rect::new(Point::new(30.0, 0.0), Size::new(20.0, 10.0)),
+    }));
 }
 
 #[derive(Clone)]
@@ -359,6 +413,7 @@ struct TestLayout {
     solver: LimnSolver,
     layout_rects: HashMap<LayoutId, Rect>,
     layouts: HashMap<LayoutId, SharedLayout>,
+    roots: Vec<SharedLayout>,
 }
 impl TestLayout {
     fn new() -> Self {
@@ -369,6 +424,7 @@ impl TestLayout {
             solver: solver,
             layout_rects: HashMap::new(),
             layouts: HashMap::new(),
+            roots: Vec::new(),
         }
     }
     fn new_widget(&mut self, name: &str) -> SharedLayout {
@@ -378,10 +434,19 @@ impl TestLayout {
         self.layouts.insert(id, layout.clone());
         layout
     }
+    fn add_root(&mut self, layout: SharedLayout) {
+        self.roots.push(layout);
+    }
+    fn update_layout(&mut self, mut layout: SharedLayout) {
+        self.solver.update_layout(layout.deref_mut());
+        for child in layout.get_children() {
+            let layout = self.layouts[child].clone();
+            self.update_layout(layout);
+        }
+    }
     fn update(&mut self) {
-        for mut layout in self.layouts.clone() {
-            let layout = layout.1.deref_mut();
-            self.solver.update_layout(layout);
+        for layout in self.roots.clone() {
+            self.update_layout(layout);
         }
         for (id, var, value) in self.solver.fetch_changes() {
             let rect = self.layout_rects.entry(id).or_insert(Rect::zero());
@@ -393,6 +458,16 @@ impl TestLayout {
                 _ => (),
             }
         }
+    }
+    fn match_layouts(&self, layouts: HashMap<LayoutId, Rect>) -> bool {
+        for (match_layout_id, match_layout_rect) in layouts {
+            let layout_rect = self.layout_rects[&match_layout_id];
+            if layout_rect != match_layout_rect {
+                self.solver.debug_layouts();
+                return false;
+            }
+        }
+        true
     }
 }
 struct IdGen {

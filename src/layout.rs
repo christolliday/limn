@@ -1,6 +1,6 @@
 use std::ops::DerefMut;
 
-use limn_layout::linear_layout::{LinearLayout, Orientation};
+use limn_layout::linear_layout::{LinearLayout, LinearLayoutSettings};
 use limn_layout::grid_layout::GridLayout;
 
 use resources::WidgetId;
@@ -13,14 +13,9 @@ pub use self::solver::LimnSolver;
 pub use limn_layout::*;
 
 impl WidgetBuilder {
-    pub fn vbox(&mut self, padding: f32, expand: bool) -> &mut Self {
-        let handler = LinearLayout::new(self.layout().deref_mut(), Orientation::Vertical, padding, expand);
-        self.layout().set_container(handler);
-        self
-    }
-    pub fn hbox(&mut self, padding: f32, expand: bool) -> &mut Self {
-        let handler = LinearLayout::new(self.layout().deref_mut(), Orientation::Horizontal, padding, expand);
-        self.layout().set_container(handler);
+    pub fn linear_layout(&mut self, settings: LinearLayoutSettings) -> &mut Self {
+        let container = LinearLayout::new(self.layout().deref_mut(), settings);
+        self.layout().set_container(container);
         self
     }
     pub fn grid(&mut self, num_columns: usize) -> &mut Self {

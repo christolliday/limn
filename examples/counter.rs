@@ -18,7 +18,9 @@ fn main() {
     let app = util::init_default("Limn counter demo");
     let mut root = WidgetBuilder::new("root");
     root.layout().add(min_size(Size::new(200.0, 100.0)));
-    root.hbox(50.0, true);
+    let mut layout_settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    layout_settings.spacing = Spacing::Around;
+    root.linear_layout(layout_settings);
 
     #[derive(Default)]
     struct CountHandler {

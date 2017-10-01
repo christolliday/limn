@@ -31,6 +31,10 @@ impl LimnSolver {
             self.layouts.register_layout(layout);
         }
         self.layouts.update_layout(layout);
+
+        for child in layout.get_removed_children() {
+            self.remove_layout(child);
+        }
         for constraint in layout.get_removed_constraints() {
             self.layouts.remove_constraint(&constraint);
             self.remove_constraint(&constraint);
@@ -190,7 +194,7 @@ impl LimnSolver {
         while let Some(layout) = layouts.pop_front() {
             println!("{}", self.layouts.layout_name(layout).to_uppercase());
             for constraint in &self.layouts.layouts[&layout].constraints {
-                if !shown_constraints.contains(constraint) {
+                if !shown_constraints.contains(constraint) && self.solver.has_constraint(constraint) {
                     self.debug_constraint(constraint);
                     shown_constraints.insert(constraint.clone());
                 }
@@ -220,7 +224,7 @@ impl LimnSolver {
             for constraint in new_constraints.drain() {
                 for var in constraint_vars(&constraint) {
                     for constraint in self.layouts.constraints_for(var) {
-                        if !visited_constraints.contains(constraint) {
+                        if !visited_constraints.contains(constraint) && self.solver.has_constraint(&constraint) {
                             newer_constraints.insert(constraint.clone());
                         }
                     }

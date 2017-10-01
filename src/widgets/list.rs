@@ -7,6 +7,7 @@ use draw::rect::{RectState, RectStyle};
 use draw::text::TextStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
+use layout::linear_layout::{LinearLayoutSettings, Orientation};
 use color::*;
 
 pub struct ListItemSelected {
@@ -80,9 +81,10 @@ widget_wrapper!(ListBuilder);
 impl ListBuilder {
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new("list");
+        let layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
         widget.add_handler(ListHandler::new())
               .add_handler_fn(list_handle_deselect)
-              .vbox(0.0, false);
+              .linear_layout(layout_settings);
         ListBuilder {
             widget: widget,
         }

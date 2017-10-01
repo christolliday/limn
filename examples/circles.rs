@@ -87,12 +87,12 @@ struct ControlBar {
 
 impl ControlBar {
     fn new() -> Self {
-        let control_color = GRAY_70;
         let mut widget = WidgetBuilder::new("control_bar");
-        let style = style!(RectStyle::BackgroundColor: control_color);
+        let mut layout_settings = LinearLayoutSettings::new(Orientation::Horizontal);
+        layout_settings.spacing = Spacing::Between;
+        layout_settings.padding = 10.0;
         widget
-            .set_draw_state_with_style(RectState::new(), style)
-            .hbox(30.0, true);
+            .linear_layout(layout_settings);
         let mut create_button = ToggleButtonBuilder::new();
         create_button
             .set_text("Create Circle", "Create Circle")
@@ -371,7 +371,6 @@ impl EventHandler<AppEvent> for AppEventHandler {
 fn main() {
     let mut app = util::init_default("Limn circles demo");
     let mut root = WidgetBuilder::new("root");
-    root.vbox(0.0, false);
 
     let mut circle_canvas = WidgetBuilder::new("circle_canvas");
     circle_canvas.layout().no_container();
@@ -386,9 +385,10 @@ fn main() {
         });
     let mut control_bar = ControlBar::new();
     control_bar.layout().add(constraints![
-        match_width(&root),
-        align_bottom(&root),
-        shrink_vertical(),
+        below(&circle_canvas).padding(10.0),
+        align_left(&root).padding(10.0),
+        align_right(&root).padding(10.0),
+        align_bottom(&root).padding(10.0),
     ]);
     app.add_handler(AppEventHandler::new(circle_canvas.widget_ref(), &control_bar));
     app.add_handler_fn(|event: &KeyboardInput, args| {

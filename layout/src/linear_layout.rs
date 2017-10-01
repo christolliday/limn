@@ -11,7 +11,7 @@ use super::constraint::*;
 #[derive(Debug, PartialEq)]
 pub enum Spacing {
     /// Equal spacing before, after and between all elements
-    Even,
+    Around,
     /// Equal spacing between elements, with no extra space on the ends
     Between,
     /// Elements packed together at the start, leaving space at the end
@@ -73,8 +73,8 @@ pub enum Orientation {
 struct WidgetData {
     start: Variable,
     end: Variable,
-    pred: Option<LayoutId>,
-    succ: Option<LayoutId>,
+    prev: Option<LayoutId>,
+    next: Option<LayoutId>,
     end_constraint: Option<Constraint>,
 }
 pub struct LinearLayout {
@@ -98,13 +98,13 @@ impl LinearLayout {
         let space = Variable::new();
         parent.add_associated_var(space, "linear_layout_space");
         match settings.spacing {
-            Spacing::Between | Spacing::Even => parent.add(space | GE(REQUIRED) | settings.padding),
+            Spacing::Between | Spacing::Around => parent.add(space | GE(REQUIRED) | settings.padding),
             _ => parent.add(space | EQ(REQUIRED) | settings.padding)
         };
         let parent_start = beginning(settings.orientation, &parent.vars);
         let parent_end = ending(settings.orientation, &parent.vars);
         match settings.spacing {
-            Spacing::Even => {
+            Spacing::Around => {
                 parent.add(constraints![
                     start | EQ(REQUIRED) | parent_start + space,
                     end | EQ(REQUIRED) | parent_end - space,
@@ -151,7 +151,7 @@ impl LayoutContainer for LinearLayout {
         if let Some(last_id) = self.last_widget {
             let last_widget = self.widgets.get_mut(&last_id).unwrap();
             parent.add(child_start | EQ(REQUIRED) | last_widget.end + self.space);
-            last_widget.succ = Some(child.id);
+            last_widget.next = Some(child.id);
         } else {
             if self.settings.spacing != Spacing::Start {
                 parent.add(child_start | EQ(REQUIRED) | self.start);
@@ -173,8 +173,8 @@ impl LayoutContainer for LinearLayout {
         self.widgets.insert(child.id, WidgetData {
             start: child_start,
             end: child_end,
-            pred: self.last_widget,
-            succ: None,
+            prev: self.last_widget,
+            next: None,
             end_constraint: end_constraint,
         });
         self.last_widget = Some(child.id);
@@ -261,32 +261,32 @@ impl LayoutContainer for LinearLayout {
 
     fn remove_child(&mut self, parent: &mut Layout, child: &mut Layout) {
         if let Some(widget_data) = self.widgets.remove(&child.id) {
-            if let Some(pred) = widget_data.pred {
-                let succ_start = widget_data.succ.map(|succ_id| self.widgets[&succ_id].start);
-                let pred = self.widgets.get_mut(&pred).unwrap();
-                if let Some(succ_start) = succ_start {
-                    parent.add(succ_start | EQ(REQUIRED) | pred.end + self.space);
+            if let Some(prev) = widget_data.prev {
+                let next_start = widget_data.next.map(|next_id| self.widgets[&next_id].start);
+                let prev = self.widgets.get_mut(&prev).unwrap();
+                if let Some(next_start) = next_start {
+                    parent.add(next_start | EQ(REQUIRED) | prev.end + self.space);
                 } else {
                     if self.settings.spacing != Spacing::End {
-                        let end_constraint = pred.end | EQ(REQUIRED) | self.end;
+                        let end_constraint = prev.end | EQ(REQUIRED) | self.end;
                         parent.add(end_constraint.clone());
-                        pred.end_constraint = Some(end_constraint);
+                        prev.end_constraint = Some(end_constraint);
                     }
                 }
-                pred.succ = widget_data.succ;
-            } else if let Some(succ) = widget_data.succ {
+                prev.next = widget_data.next;
+            } else if let Some(next) = widget_data.next {
                 if self.settings.spacing != Spacing::Start {
-                    let succ_start = self.widgets[&succ].start;
-                    parent.add(succ_start | EQ(REQUIRED) | self.start);
+                    let next_start = self.widgets[&next].start;
+                    parent.add(next_start | EQ(REQUIRED) | self.start);
                 }
             }
-            if let Some(succ) = widget_data.succ {
-                self.widgets.get_mut(&succ).unwrap().pred = widget_data.pred;
+            if let Some(next) = widget_data.next {
+                self.widgets.get_mut(&next).unwrap().prev = widget_data.prev;
             }
 
             if let Some(last_id) = self.last_widget {
                 if last_id == child.id {
-                    self.last_widget = widget_data.pred;
+                    self.last_widget = widget_data.prev;
                 }
             }
         }

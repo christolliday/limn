@@ -15,7 +15,6 @@ use util::{Rect, RectExt, Point, Size};
 pub(super) struct WebRenderContext {
     pub renderer: webrender::Renderer,
     pub render_api: RenderApi,
-    sender: RenderApiSender,
     pub epoch: Epoch,
     pub pipeline_id: PipelineId,
     pub document_id: DocumentId,
@@ -63,7 +62,6 @@ impl WebRenderContext {
         WebRenderContext {
             renderer: renderer,
             render_api: api,
-            sender: sender,
             epoch: epoch,
             pipeline_id: pipeline_id,
             document_id: document_id,

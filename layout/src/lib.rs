@@ -27,7 +27,7 @@ pub type Rect = euclid::Rect<f32>;
 
 pub type LayoutId = usize;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct LayoutVars {
     pub left: Variable,
     pub top: Variable,
@@ -97,11 +97,13 @@ pub struct Layout {
     pub name: Option<String>,
     pub id: LayoutId,
     container: Option<Rc<RefCell<LayoutContainer>>>,
+    parent: Option<LayoutId>,
     children: Vec<LayoutId>,
     edit_vars: Vec<EditVariable>,
     constraints: HashSet<Constraint>,
     new_constraints: HashSet<Constraint>,
     removed_constraints: Vec<Constraint>,
+    removed_children: Vec<LayoutId>,
     associated_vars: Vec<(Variable, String)>,
     pub hidden: bool,
 }
@@ -118,11 +120,13 @@ impl Layout {
             name: name,
             id: id,
             container: Some(Rc::new(RefCell::new(Frame::default()))),
+            parent: None,
             children: Vec::new(),
             edit_vars: Vec::new(),
             constraints: HashSet::new(),
             new_constraints: new_constraints,
             removed_constraints: Vec::new(),
+            removed_children: Vec::new(),
             associated_vars: Vec::new(),
             hidden: false,
         }
@@ -205,6 +209,7 @@ impl Layout {
         mem::replace(&mut self.edit_vars, Vec::new())
     }
     pub fn add_child(&mut self, child: &mut Layout) {
+        child.parent = Some(self.id);
         self.children.push(child.id);
         if let Some(container) = self.container.clone() {
             container.borrow_mut().add_child(self, child);
@@ -217,6 +222,10 @@ impl Layout {
         if let Some(pos) = self.children.iter().position(|id| child.id == *id) {
             self.children.remove(pos);
         }
+        self.removed_children.push(child.id);
+    }
+    pub fn get_removed_children(&mut self) -> Vec<LayoutId> {
+        mem::replace(&mut self.removed_children, Vec::new())
     }
     pub fn get_children(&self) -> &Vec<LayoutId> {
         &self.children
