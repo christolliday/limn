@@ -50,21 +50,21 @@ fn grid() {
         align_left(&widget_o),
     ]);
     widget_tr.add(constraints![
-        to_right_of(&widget_tl),
+        align_to_right_of(&widget_tl),
         align_top(&widget_o),
         align_right(&widget_o),
         match_width(&widget_tl),
     ]);
     widget_bl.add(constraints![
-        below(&widget_tl),
+        align_below(&widget_tl),
         align_bottom(&widget_o),
         align_left(&widget_o),
         match_width(&widget_tl),
         match_height(&widget_tl),
     ]);
     widget_br.add(constraints![
-        below(&widget_tr),
-        to_right_of(&widget_bl),
+        align_below(&widget_tr),
+        align_to_right_of(&widget_bl),
         align_bottom(&widget_o),
         align_right(&widget_o),
         match_width(&widget_bl),
