@@ -224,7 +224,9 @@ impl LimnSolver {
             for constraint in new_constraints.drain() {
                 for var in constraint_vars(&constraint) {
                     for constraint in self.layouts.constraints_for(var) {
-                        if !visited_constraints.contains(constraint) && self.solver.has_constraint(&constraint) {
+                        if constraint.strength() >= REQUIRED &&
+                            !visited_constraints.contains(constraint) &&
+                                self.solver.has_constraint(&constraint) {
                             newer_constraints.insert(constraint.clone());
                         }
                     }
