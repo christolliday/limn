@@ -66,6 +66,23 @@ pub fn align_right<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
     PaddableConstraint::AlignRight(widget.right).builder(REQUIRED)
 }
 
+pub fn align_above<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
+    let widget = widget.layout_ref();
+    PaddableConstraint::AlignAbove(widget.top).builder(REQUIRED)
+}
+pub fn align_below<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
+    let widget = widget.layout_ref();
+    PaddableConstraint::AlignBelow(widget.bottom).builder(REQUIRED)
+}
+pub fn align_to_left_of<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
+    let widget = widget.layout_ref();
+    PaddableConstraint::AlignToLeftOf(widget.left).builder(REQUIRED)
+}
+pub fn align_to_right_of<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
+    let widget = widget.layout_ref();
+    PaddableConstraint::AlignToRightOf(widget.right).builder(REQUIRED)
+}
+
 pub fn above<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
     let widget = widget.layout_ref();
     PaddableConstraint::Above(widget.top).builder(REQUIRED)
@@ -142,6 +159,10 @@ pub enum PaddableConstraint {
     AlignBottom(Variable),
     AlignLeft(Variable),
     AlignRight(Variable),
+    AlignAbove(Variable),
+    AlignBelow(Variable),
+    AlignToLeftOf(Variable),
+    AlignToRightOf(Variable),
     Above(Variable),
     Below(Variable),
     ToLeftOf(Variable),
@@ -326,17 +347,29 @@ impl ConstraintBuilder for PaddableConstraintBuilder {
             PaddableConstraint::AlignRight(right) => {
                 vec![ right - widget.right | EQ(strength) | padding ]
             }
-            PaddableConstraint::Above(top) => {
+            PaddableConstraint::AlignAbove(top) => {
                 vec![ top - widget.bottom | EQ(strength) | padding ]
             }
-            PaddableConstraint::Below(bottom) => {
+            PaddableConstraint::AlignBelow(bottom) => {
                 vec![ widget.top - bottom | EQ(strength) | padding ]
             }
-            PaddableConstraint::ToLeftOf(left) => {
+            PaddableConstraint::AlignToLeftOf(left) => {
                 vec![ left - widget.right | EQ(strength) | padding ]
             }
-            PaddableConstraint::ToRightOf(right) => {
+            PaddableConstraint::AlignToRightOf(right) => {
                 vec![ widget.left - right | EQ(strength) | padding ]
+            }
+            PaddableConstraint::Above(top) => {
+                vec![ top - widget.bottom | GE(strength) | padding ]
+            }
+            PaddableConstraint::Below(bottom) => {
+                vec![ widget.top - bottom | GE(strength) | padding ]
+            }
+            PaddableConstraint::ToLeftOf(left) => {
+                vec![ left - widget.right | GE(strength) | padding ]
+            }
+            PaddableConstraint::ToRightOf(right) => {
+                vec![ widget.left - right | GE(strength) | padding ]
             }
             PaddableConstraint::BoundLeft(left) => {
                 vec![ widget.left - left | GE(strength) | padding ]
