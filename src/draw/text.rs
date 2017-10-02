@@ -4,7 +4,7 @@ use rusttype::{Scale, GlyphId, VMetrics};
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::resources;
-use util::{Size, Rect, RectExt, Vector};
+use geometry::{Size, Rect, RectExt, Vector};
 use render;
 use widget::draw::Draw;
 use widget::property::PropSet;

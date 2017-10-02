@@ -1,7 +1,7 @@
 use glutin;
 
 use event::{EventHandler, EventArgs};
-use util::Point;
+use geometry::Point;
 use widget::{WidgetRef, WidgetBuilder};
 use widget::property::Property;
 use layout::LayoutChanged;

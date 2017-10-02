@@ -9,7 +9,7 @@ use webrender::api::*;
 use window::Window;
 use euclid::TypedPoint2D;
 use resources;
-use util::{Rect, RectExt, Point, Size};
+use geometry::{Rect, RectExt, Point, Size};
 
 // Provides access to the WebRender context and API
 pub(super) struct WebRenderContext {

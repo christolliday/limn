@@ -16,7 +16,7 @@ use event::{self, EventHandler, EventArgs, EventHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef};
 use ui::Ui;
 use resources::{resources, WidgetId};
-use util::{Point, Rect, RectExt};
+use geometry::{Point, Rect, RectExt};
 use render;
 use color::Color;
 use event::Target;

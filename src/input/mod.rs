@@ -8,7 +8,7 @@ use webrender;
 use event::{EventHandler, EventArgs};
 use input::mouse::{MouseMoved, MouseButton, MouseWheel};
 use input::keyboard::{KeyboardInput, ReceivedCharacter};
-use util::Point;
+use geometry::Point;
 use app::App;
 
 #[derive(Clone)]

@@ -8,7 +8,7 @@ use event::{EventHandler, EventArgs};
 use widget::property::PropSet;
 use widget::style::Style;
 
-use util::{Rect, Point};
+use geometry::{Rect, Point};
 
 
 pub trait Draw: Downcast {

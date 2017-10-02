@@ -10,7 +10,7 @@ use ui::Ui;
 use input::InputEvent;
 use widget::WidgetBuilder;
 use event::{self, EventHandler, EventArgs};
-use util::Size;
+use geometry::Size;
 
 /// This is contains the core of a Limn application,
 /// the Ui, event queue, and the handlers that operate

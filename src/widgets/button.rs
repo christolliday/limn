@@ -12,7 +12,7 @@ use widgets::text::TextBuilder;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use draw::rect::{RectState, RectStyle};
 use draw::text::TextStyle;
-use util::Size;
+use geometry::Size;
 use color::*;
 
 static COLOR_BUTTON_DEFAULT: Color = GRAY_80;

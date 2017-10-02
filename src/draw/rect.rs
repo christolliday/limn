@@ -4,7 +4,7 @@ use render::RenderBuilder;
 use widget::draw::Draw;
 use widget::property::PropSet;
 use widget::style::{self, Style, Value};
-use util::{Rect, RectExt};
+use geometry::{Rect, RectExt};
 use color::*;
 
 pub struct RectState {

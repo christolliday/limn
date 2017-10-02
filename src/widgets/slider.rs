@@ -11,7 +11,7 @@ use widget::property::states::*;
 use widgets::drag::{DragEvent, DragState};
 use draw::rect::{RectState, RectStyle};
 use draw::ellipse::{EllipseState, EllipseStyle};
-use util::{RectExt, Point};
+use geometry::{RectExt, Point};
 use color::*;
 
 #[derive(Clone, Copy)]

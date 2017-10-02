@@ -35,7 +35,7 @@ pub mod layout;
 pub mod widgets;
 pub mod draw;
 pub mod ui;
-pub mod util;
+pub mod geometry;
 pub mod resources;
 pub mod color;
 pub mod input;

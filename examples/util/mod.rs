@@ -4,7 +4,7 @@ extern crate env_logger;
 use limn::window::Window;
 use limn::app::App;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
-use limn::util::Size;
+use limn::geometry::Size;
 
 /// Create the window and initialize the app.
 /// The window size is initialized to 100x100 and then resized later based

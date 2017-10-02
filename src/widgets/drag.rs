@@ -3,7 +3,7 @@ use glutin;
 use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
-use util::{Point, Vector};
+use geometry::{Point, Vector};
 use app::App;
 
 #[derive(Debug, Clone)]

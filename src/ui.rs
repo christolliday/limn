@@ -13,7 +13,7 @@ use app::App;
 use widget::{WidgetRef, WidgetBuilder};
 use layout::{LimnSolver, LayoutChanged, LayoutVars, ExactFrame};
 use layout::constraint::*;
-use util::{Point, Rect, Size};
+use geometry::{Point, Rect, Size};
 use resources::WidgetId;
 use event::Target;
 use render::WebRenderContext;

@@ -6,7 +6,7 @@ use layout::constraint::*;
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widgets::slider::{SliderBuilder, SetSliderValue};
-use util::{Size, Vector, Rect, RectExt};
+use geometry::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
 use input::mouse::WidgetMouseWheel;
 use draw::rect::{RectState, RectStyle};

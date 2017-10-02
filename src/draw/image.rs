@@ -3,7 +3,7 @@ use webrender_api::*;
 use render::RenderBuilder;
 use widget::draw::Draw;
 use resources::resources;
-use util::{Rect, RectExt, Size, SizeExt};
+use geometry::{Rect, RectExt, Size, SizeExt};
 
 pub struct ImageState {
     pub image: String,
