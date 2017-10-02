@@ -23,8 +23,8 @@ fn main() {
 
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.layout().add(constraints![
-        bound_by(&root).padding(50.0),
-        size(Size::new(300.0, 300.0)),
+        match_layout(&root).padding(50.0),
+        min_size(Size::new(300.0, 300.0)),
     ]);
 
     let mut list_widget = ListBuilder::new();

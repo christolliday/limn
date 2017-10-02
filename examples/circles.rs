@@ -385,7 +385,7 @@ fn main() {
         });
     let mut control_bar = ControlBar::new();
     control_bar.layout().add(constraints![
-        below(&circle_canvas).padding(10.0),
+        align_below(&circle_canvas).padding(10.0),
         align_left(&root).padding(10.0),
         align_right(&root).padding(10.0),
         align_bottom(&root).padding(10.0),

@@ -43,7 +43,7 @@ impl ScrollBuilder {
         scrollbar_h.layout().add(constraints![
             align_bottom(&self.widget),
             align_left(&self.widget),
-            below(&self.content_holder),
+            align_below(&self.content_holder),
         ]);
         let mut scrollbar_v = SliderBuilder::new();
         scrollbar_v.set_name("scrollbar_v");
@@ -51,7 +51,7 @@ impl ScrollBuilder {
         scrollbar_v.layout().add(constraints![
             align_right(&self.widget),
             align_top(&self.widget),
-            to_right_of(&self.content_holder),
+            align_to_right_of(&self.content_holder),
         ]);
 
         let widget_ref = self.content_holder.widget_ref();
@@ -68,8 +68,8 @@ impl ScrollBuilder {
         corner.layout().add(constraints![
             align_bottom(&self.widget),
             align_right(&self.widget),
-            to_right_of(&scrollbar_h),
-            below(&scrollbar_v),
+            align_to_right_of(&scrollbar_h),
+            align_below(&scrollbar_v),
             match_height(&scrollbar_h),
             match_width(&scrollbar_v),
         ]);
