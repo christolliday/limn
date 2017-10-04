@@ -19,7 +19,7 @@ webrender_api = { git = "https://github.com/servo/webrender", rev = "ba51d8d5892
 stb_truetype = "0.2.1"
 app_units = "0.5"
 rusttype = "0.2.1"
-glutin = "0.9.1"
+glutin = { git = "https://github.com/christolliday/glutin", branch = "fix_windows" }
 image = "0.15"
 
 lazy_static = "0.2.2"
