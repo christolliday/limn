@@ -20,6 +20,7 @@ static COLOR_BUTTON_PRESSED: Color = GRAY_60;
 static COLOR_BUTTON_ACTIVATED: Color = GRAY_40;
 static COLOR_BUTTON_ACTIVATED_PRESSED: Color = GRAY_30;
 static COLOR_BUTTON_INACTIVE: Color = GRAY_90;
+static COLOR_BUTTON_MOUSEOVER: Color = GRAY_90;
 static COLOR_BUTTON_TEXT_INACTIVE: Color = GRAY_70;
 
 static BUTTON_BORDER: (f32, Color) = (1.0, GRAY_40);
@@ -33,6 +34,7 @@ lazy_static! {
                 ACTIVATED_PRESSED: COLOR_BUTTON_ACTIVATED_PRESSED,
                 ACTIVATED: COLOR_BUTTON_ACTIVATED,
                 PRESSED: COLOR_BUTTON_PRESSED,
+                MOUSEOVER: COLOR_BUTTON_MOUSEOVER,
                 INACTIVE: COLOR_BUTTON_INACTIVE),
             RectStyle::CornerRadius: Some(5.0),
             RectStyle::Border: selector!(Some(BUTTON_BORDER),
@@ -72,6 +74,13 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
         }
     }
 }
+use input::mouse::MouseOverEvent;
+fn button_handle_mouseover(event: &MouseOverEvent, mut args: EventArgs) {
+   match event {
+       &MouseOverEvent::Over => args.widget.add_prop(Property::MouseOver),
+       &MouseOverEvent::Out => args.widget.remove_prop(Property::MouseOver)
+   }
+}
 
 pub struct ToggleButtonBuilder {
     pub widget: WidgetBuilder,
@@ -84,6 +93,7 @@ impl ToggleButtonBuilder {
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
+            .add_handler_fn(button_handle_mouseover)
             .add_handler_fn(toggle_button_handle_mouse);
         widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
@@ -129,8 +139,8 @@ impl PushButtonBuilder {
         let mut widget = WidgetBuilder::new("push_button");
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
-            .add_handler_fn(button_handle_mouse_down);
-
+            .add_handler_fn(button_handle_mouse_down)
+            .add_handler_fn(button_handle_mouseover);
         widget.layout().add(constraints![
             min_size(Size::new(100.0, 50.0)).strength(STRONG),
             shrink(),
