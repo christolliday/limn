@@ -91,8 +91,8 @@ impl ControlBar {
         let mut layout_settings = LinearLayoutSettings::new(Orientation::Horizontal);
         layout_settings.spacing = Spacing::Between;
         layout_settings.padding = 10.0;
-        widget
-            .linear_layout(layout_settings);
+        layout_settings.item_align = ItemAlignment::Center;
+        widget.linear_layout(layout_settings);
         let mut create_button = ToggleButtonBuilder::new();
         create_button
             .set_text("Create Circle", "Create Circle")
@@ -106,17 +106,14 @@ impl ControlBar {
                     }
                 };
             });
-        create_button.layout().add(center_vertical(&widget));
         let mut undo_widget = PushButtonBuilder::new();
         undo_widget
             .set_text("Undo")
             .on_click(|_, args| { args.ui.event(AppEvent::Undo); });
-        undo_widget.layout().add(center_vertical(&widget));
         let mut redo_widget = PushButtonBuilder::new();
         redo_widget
             .set_text("Redo")
             .on_click(|_, args| { args.ui.event(AppEvent::Redo); });
-        redo_widget.layout().add(center_vertical(&widget));
         let slider_container = SliderControl::new();
         let (create_ref, undo_ref, redo_ref, slider_ref) = (create_button.widget_ref(), undo_widget.widget_ref(), redo_widget.widget_ref(), slider_container.widget_ref());
         widget
@@ -252,7 +249,7 @@ impl AppEventHandler {
         if let Some(ref selected) = self.selected {
             self.circle_widgets.get_mut(selected).unwrap().remove_prop(Property::Selected);
         }
-        self.selected = new_selected.clone();
+        self.selected = new_selected;
         if let Some(ref selected) = self.selected {
             let size = self.circles[selected].size;
             self.slider_ref.event(SetSliderValue(size));
@@ -371,12 +368,13 @@ impl EventHandler<AppEvent> for AppEventHandler {
 fn main() {
     let mut app = util::init_default("Limn circles demo");
     let mut root = WidgetBuilder::new("root");
+    root.layout().add(size(Size::new(700.0, 500.0)).strength(STRONG));
 
     let mut circle_canvas = WidgetBuilder::new("circle_canvas");
     circle_canvas.layout().no_container();
     circle_canvas.layout().add(constraints![
+        align_top(&root),
         match_width(&root),
-        min_height(600.0),
     ]);
     circle_canvas
         .set_draw_state_with_style(RectState::new(), style!(RectStyle::BackgroundColor: WHITE))
@@ -389,6 +387,7 @@ fn main() {
         align_left(&root).padding(10.0),
         align_right(&root).padding(10.0),
         align_bottom(&root).padding(10.0),
+        height(100.0),
     ]);
     app.add_handler(AppEventHandler::new(circle_canvas.widget_ref(), &control_bar));
     app.add_handler_fn(|event: &KeyboardInput, args| {
@@ -398,5 +397,6 @@ fn main() {
     });
     root.add_child(circle_canvas);
     root.add_child(control_bar);
+
     app.main_loop(root);
 }

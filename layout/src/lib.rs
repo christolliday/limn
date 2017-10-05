@@ -330,7 +330,7 @@ impl LayoutContainer for Frame {
     fn add_child(&mut self, parent: &mut Layout, child: &mut Layout) {
         child.add(constraints![
             bound_by(&parent).padding(self.padding),
-            match_layout(&parent).strength(STRONG),
+            match_layout(&parent).strength(WEAK),
         ]);
     }
 }

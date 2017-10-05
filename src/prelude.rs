@@ -14,4 +14,4 @@ pub use ui::Ui;
 pub use color::*;
 pub use layout::constraint::*;
 pub use layout::LAYOUT;
-pub use layout::linear_layout::{LinearLayoutSettings, Orientation, Spacing};
+pub use layout::linear_layout::{LinearLayoutSettings, Orientation, Spacing, ItemAlignment};

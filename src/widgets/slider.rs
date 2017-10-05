@@ -3,6 +3,7 @@ use std::ops::Range;
 use cassowary::strength::*;
 
 use layout::constraint::*;
+use layout::LayoutUpdated;
 use input::mouse::ClickEvent;
 use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
@@ -35,7 +36,7 @@ pub struct SliderBuilder {
     pub slider_handle: WidgetBuilder,
     pub orientation: Orientation,
     pub range: Range<f32>,
-    pub init_value: f32,
+    pub init_value: Option<f32>,
     pub variable_handle_size: bool,
     pub handle_style: HandleStyle,
     pub bar_style: BarStyle,
@@ -56,7 +57,7 @@ impl SliderBuilder {
             slider_handle: slider_handle,
             orientation: Orientation::Horizontal,
             range: 0.0..1.0,
-            init_value: 0.0,
+            init_value: None,
             variable_handle_size: false,
             handle_style: HandleStyle::Round,
             bar_style: BarStyle::NarrowRound,
@@ -87,7 +88,7 @@ impl SliderBuilder {
         self
     }
     pub fn set_value(&mut self, value: f32) -> &mut Self {
-        self.init_value = value;
+        self.init_value = Some(value);
         self
     }
     pub fn set_range(&mut self, range: Range<f32>) -> &mut Self {
@@ -218,15 +219,15 @@ impl Into<WidgetBuilder> for SliderBuilder {
         widget.add_handler_fn(move |event: &SetSliderValue, args| {
             args.widget.event(SliderInputEvent::SetValue(event.0));
         });
+        widget.add_handler_fn(move |_: &LayoutUpdated, args| {
+            args.widget.event(SliderInputEvent::LayoutUpdated);
+        });
         let widget_ref = widget.widget_ref();
-        widget.add_handler(SliderHandler::new(orientation, self.range, widget_ref.clone(), slider_handle.widget_ref()));
+        widget.add_handler(SliderHandler::new(orientation, self.range, widget_ref.clone(), slider_handle.widget_ref(), self.init_value));
 
         widget.add_child(slider_bar_pre);
         widget.add_child(slider_bar_post);
         widget.add_child(slider_handle);
-
-        // TODO: make sure slider position updates as slider is resized
-        widget_ref.event(SetSliderValue(self.init_value));
         widget
     }
 }
@@ -245,6 +246,7 @@ enum SliderInputEvent {
     Drag(DragEvent),
     Click(Point),
     SetValue(f32),
+    LayoutUpdated,
 }
 
 struct SliderHandler {
@@ -257,19 +259,21 @@ struct SliderHandler {
     last_val: f32,
 }
 impl SliderHandler {
-    fn new(orientation: Orientation, range: Range<f32>, slider_ref: WidgetRef, handle_ref: WidgetRef) -> Self {
-        let start = range.start;
-        SliderHandler {
+    fn new(orientation: Orientation, range: Range<f32>, slider_ref: WidgetRef, handle_ref: WidgetRef, init_value: Option<f32>) -> Self {
+        let value = init_value.unwrap_or(range.start);
+        let handler = SliderHandler {
             orientation: orientation,
             range: range,
             slider_ref: slider_ref,
             handle_ref: handle_ref,
             drag_start_pos: 0.0,
             drag_start_val: 0.0,
-            last_val: start,
-        }
+            last_val: value,
+        };
+        handler.update_handle_pos(value);
+        handler
     }
-    fn get_value(&self, handle_pos: f32) -> f32 {
+    fn get_value_for_pos(&self, handle_pos: f32) -> f32 {
         let handle_size = self.handle_size();
         let handle_pos_range = self.slider_size() - handle_size;
         let slider_range = self.slider_range();
@@ -313,12 +317,15 @@ impl SliderHandler {
         let max = slider_range.end - handle_size / 2.0;
         f32::min(f32::max(handle_pos, min), max)
     }
-    fn move_handle_to(&self, handle_start: f32) {
+    fn update_handle_pos(&self, value: f32) {
+        let value = (value - self.range.start) / (self.range.end - self.range.start);
+        let range_of_motion = self.slider_size() - self.handle_size();
+        let handle_start = self.slider_range().start + value * range_of_motion;
         self.handle_ref.update_layout(|layout| {
             if let Orientation::Horizontal = self.orientation {
-                layout.edit_left().set(handle_start);
+                layout.edit_left().set(handle_start).strength(WEAK);
             } else {
-                layout.edit_top().set(handle_start);
+                layout.edit_top().set(handle_start).strength(WEAK);
             }
         });
     }
@@ -339,12 +346,12 @@ impl EventHandler<SliderInputEvent> for SliderHandler {
                 };
                 if *state == DragState::Start {
                     self.drag_start_pos = self.handle_range().start;
-                    self.drag_start_val = self.get_value(self.handle_range().start + self.handle_size() / 2.0);
+                    self.drag_start_val = self.get_value_for_pos(self.handle_range().start + self.handle_size() / 2.0);
                 } else {
                     let handle_start = self.drag_start_pos + offset;
-                    self.move_handle_to(handle_start);
                     let position = self.clamp_position(handle_start + self.handle_size() / 2.0);
-                    let value = self.get_value(position);
+                    let value = self.get_value_for_pos(position);
+                    self.update_handle_pos(value);
                     let dragging = *state != DragState::End;
                     let event = SliderEvent {
                         value: value,
@@ -367,9 +374,8 @@ impl EventHandler<SliderInputEvent> for SliderHandler {
                     point.y
                 };
                 let position = self.clamp_position(position);
-                let handle_start = position - self.handle_size() / 2.0;
-                self.move_handle_to(handle_start);
-                let value = self.get_value(position);
+                let value = self.get_value_for_pos(position);
+                self.update_handle_pos(value);
                 let event = SliderEvent {
                     value: value,
                     offset: value - self.last_val,
@@ -381,11 +387,11 @@ impl EventHandler<SliderInputEvent> for SliderHandler {
             SliderInputEvent::SetValue(value) => {
                 if value.is_finite() {
                     self.last_val = value;
-                    let value = (value - self.range.start) / (self.range.end - self.range.start);
-                    let range_of_motion = self.slider_size() - self.handle_size();
-                    let handle_start = self.slider_range().start + value * range_of_motion;
-                    self.move_handle_to(handle_start);
+                    self.update_handle_pos(value);
                 }
+            }
+            SliderInputEvent::LayoutUpdated => {
+                self.update_handle_pos(self.last_val);
             }
         }
     }
