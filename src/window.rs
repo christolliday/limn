@@ -5,7 +5,7 @@ use webrender::api::{DeviceUintSize, LayoutSize};
 
 /// A simple wrapper around a `glutin::GlWindow`.
 pub struct Window {
-    window: glutin::GlWindow
+    pub window: glutin::GlWindow
 }
 impl Window {
     pub fn new(title: &str, size: (u32, u32), min_size: Option<(u32, u32)>, events_loop: &glutin::EventsLoop) -> Self {
