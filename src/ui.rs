@@ -59,7 +59,7 @@ impl Ui {
     }
 
     pub fn get_widget(&self, widget_id: WidgetId) -> Option<WidgetRef> {
-        self.widget_map.get(&widget_id).map(|widget| widget.clone())
+        self.widget_map.get(&widget_id).cloned()
     }
 
     pub fn get_root(&self) -> WidgetRef {

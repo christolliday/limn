@@ -135,7 +135,7 @@ fn load_image(file: &str) -> Result<(ImageData, ImageDescriptor), image::ImageEr
         image::ImageRgb8(_) => ImageFormat::RGB8,
         image::ImageRgba8(_) => ImageFormat::BGRA8,
         image::ImageLumaA8(_) => {
-            return Err(image::ImageError::UnsupportedError(format!("ImageLumaA8 unsupported")));
+            return Err(image::ImageError::UnsupportedError("ImageLumaA8 unsupported".to_string()));
         }
     };
     let mut bytes = image.raw_pixels();

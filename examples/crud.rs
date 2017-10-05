@@ -136,13 +136,13 @@ impl EventHandler<PeopleEvent> for PeopleHandler {
                 }
             },
             PeopleEvent::Update => {
-                if let Some(ref selected_id) = self.selected_item {
-                    self.people.insert(selected_id.clone(), self.person.clone());
+                if let Some(selected_id) = self.selected_item {
+                    self.people.insert(selected_id, self.person.clone());
                     self.people_widgets[&selected_id].event_subtree(TextUpdated(self.person.name()));
                 }
             },
             PeopleEvent::Delete => {
-                if let Some(selected_id) = self.selected_item.clone() {
+                if let Some(selected_id) = self.selected_item {
                     self.people.remove(&selected_id);
                     let mut widget = self.people_widgets.remove(&selected_id).unwrap();
                     widget.remove_widget();

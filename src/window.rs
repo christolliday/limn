@@ -23,7 +23,7 @@ impl Window {
                 opengles_version: (3, 0)
             });
 
-        let window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+        let window = glutin::GlWindow::new(window, context, events_loop).unwrap();
         unsafe { window.make_current().ok() };
         Window {
             window: window
