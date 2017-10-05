@@ -94,7 +94,7 @@ impl ListBuilder {
     {
         self.widget.add_handler_fn(move |event: &ListItemSelected, args| {
             on_item_selected(event.widget.clone(), args);
-            if let &Some(ref widget) = &event.widget {
+            if let Some(ref widget) = event.widget {
                 widget.event(ItemSelected);
             }
         });

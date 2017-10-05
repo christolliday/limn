@@ -150,7 +150,7 @@ fn create_circle(id: CircleId, circle: Circle, mut parent_ref: WidgetRef) -> Wid
     let widget_ref_clone = widget.widget_ref();
     widget_ref.event(CircleEvent::Update(circle.center, circle.size));
     widget.add_handler_fn(move |event: &WidgetMouseButton, args| {
-        if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
+        if let WidgetMouseButton(glutin::ElementState::Pressed, _) = *event {
             args.ui.event(AppEvent::Select(Some(id)));
         }
     });
