@@ -74,13 +74,6 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
         }
     }
 }
-use input::mouse::MouseOverEvent;
-fn button_handle_mouseover(event: &MouseOverEvent, mut args: EventArgs) {
-   match event {
-       &MouseOverEvent::Over => args.widget.add_prop(Property::MouseOver),
-       &MouseOverEvent::Out => args.widget.remove_prop(Property::MouseOver)
-   }
-}
 
 pub struct ToggleButtonBuilder {
     pub widget: WidgetBuilder,
@@ -93,7 +86,7 @@ impl ToggleButtonBuilder {
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
-            .add_handler_fn(button_handle_mouseover)
+            .enable_hover()
             .add_handler_fn(toggle_button_handle_mouse);
         widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
@@ -140,7 +133,7 @@ impl PushButtonBuilder {
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
             .add_handler_fn(button_handle_mouse_down)
-            .add_handler_fn(button_handle_mouseover);
+            .enable_hover();
         widget.layout().add(constraints![
             min_size(Size::new(100.0, 50.0)).strength(STRONG),
             shrink(),
