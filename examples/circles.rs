@@ -252,7 +252,7 @@ impl AppEventHandler {
         if let Some(ref selected) = self.selected {
             self.circle_widgets.get_mut(selected).unwrap().remove_prop(Property::Selected);
         }
-        self.selected = new_selected.clone();
+        self.selected = new_selected;
         if let Some(ref selected) = self.selected {
             let size = self.circles[selected].size;
             self.slider_ref.event(SetSliderValue(size));
@@ -343,8 +343,8 @@ impl EventHandler<AppEvent> for AppEventHandler {
             AppEvent::Redo => {
                 self.redo();
             }
-            AppEvent::Select(ref new_selected) => {
-                self.update_selected(new_selected.clone());
+            AppEvent::Select(new_selected) => {
+                self.update_selected(new_selected);
             }
             AppEvent::Delete => {
                 if let Some(selected) = self.selected.take() {
@@ -352,7 +352,7 @@ impl EventHandler<AppEvent> for AppEventHandler {
                 }
             }
             AppEvent::Resize(ref event) => {
-                if let Some(selected) = self.selected.clone() {
+                if let Some(selected) = self.selected {
                     if event.dragging {
                         let circle = &self.circles[&selected];
                         self.circle_widgets[&selected].event(CircleEvent::Update(circle.center, event.value));
@@ -361,8 +361,8 @@ impl EventHandler<AppEvent> for AppEventHandler {
                     }
                 }
             }
-            AppEvent::Move(ref widget_ref, change) => {
-                self.new_change(Change::Move(widget_ref.clone(), change));
+            AppEvent::Move(widget_ref, change) => {
+                self.new_change(Change::Move(widget_ref, change));
             }
         }
     }
