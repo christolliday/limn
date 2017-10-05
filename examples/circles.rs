@@ -135,7 +135,7 @@ impl ControlBar {
 }
 widget_wrapper!(ControlBar);
 
-fn create_circle(id: CircleId, circle: Circle, mut parent_ref: WidgetRef) -> WidgetRef {
+fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
     let style = style!(EllipseStyle::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyle::Border: Some((2.0, BLACK)));
     let mut widget = WidgetBuilder::new("circle");
@@ -265,9 +265,9 @@ impl AppEventHandler {
     fn apply_change(&mut self, change: Change) -> Change {
         match change {
             Change::Create(circle_id, circle) => {
-                self.circles.insert(circle_id, circle.clone());
-                let widget_ref = create_circle(circle_id, circle, self.circle_canvas_ref.clone());
-                self.circle_widgets.insert(circle_id, widget_ref.clone());
+                let widget_ref = create_circle(circle_id, &circle, &mut self.circle_canvas_ref);
+                self.circles.insert(circle_id, circle);
+                self.circle_widgets.insert(circle_id, widget_ref);
                 self.update_selected(Some(circle_id));
                 Change::Delete(circle_id)
             },
