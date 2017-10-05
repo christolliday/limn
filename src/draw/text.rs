@@ -90,7 +90,7 @@ impl TextState {
         let descent = self.v_metrics().descent;
         let mut resources = resources();
         let font = resources.get_font(&self.font);
-        let positions = text_layout::get_positioned_glyphs(
+        text_layout::get_positioned_glyphs(
             &self.text,
             bounds,
             &font.info,
@@ -103,8 +103,7 @@ impl TextState {
                     index: glyph.id().0,
                     point: LayoutPoint::new(position.x, position.y + descent),
                 }
-            }).collect();
-        positions
+            }).collect()
     }
     fn font_instance_key(&self) -> FontInstanceKey {
         *resources().get_font_instance(&self.font, self.font_size)
