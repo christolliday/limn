@@ -1,4 +1,4 @@
-use webrender_api::{LocalClip, BorderRadius, ComplexClipRegion, PrimitiveInfo};
+use webrender::api::{LocalClip, BorderRadius, ComplexClipRegion, PrimitiveInfo};
 
 use render::RenderBuilder;
 use widget::draw::Draw;

@@ -2,7 +2,7 @@ use std::f32;
 
 use euclid;
 use rusttype;
-use webrender_api::*;
+use webrender::api::*;
 
 pub type Size = euclid::Size2D<f32>;
 pub type Point = euclid::Point2D<f32>;
