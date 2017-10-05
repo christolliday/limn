@@ -92,9 +92,9 @@ impl LineInfo {
 ///
 /// `Infos` is a fundamental part of performing lazy reasoning about text within conrod.
 ///
-/// Construct an `Infos` iterator via the [infos function](./fn.infos.html) and its two builder
-/// methods, [wrap_by_character](./struct.Infos.html#method.wrap_by_character) and
-/// [wrap_by_whitespace](./struct.Infos.html#method.wrap_by_whitespace).
+/// Construct an `Infos` iterator via the [`infos` function](./fn.infos.html) and its two builder
+/// methods, [`wrap_by_character`](./struct.Infos.html#method.wrap_by_character) and
+/// [`wrap_by_whitespace`](./struct.Infos.html#method.wrap_by_whitespace).
 #[derive(Copy, Clone)]
 pub struct LineInfos<'a> {
     text: &'a str,
@@ -342,7 +342,7 @@ impl<'a, I> Iterator for SelectedLineRects<'a, I>
 ///
 /// This is primarily for use within the `next_break` functions below.
 ///
-/// The following code is adapted from the rusttype::LayoutIter::next src.
+/// The following code is adapted from the `rusttype::LayoutIter::next` src.
 fn advance_width(ch: char, font: &Font, scale: Scale, last_glyph: &mut Option<GlyphId>) -> f32 {
     let g = font.glyph(ch).unwrap().scaled(scale);
     let kern = last_glyph.map(|last| font.pair_kerning(scale, last, g.id()))

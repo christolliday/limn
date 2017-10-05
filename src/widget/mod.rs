@@ -306,7 +306,7 @@ impl WidgetWeak {
     }
 }
 
-/// Internal Widget representation, usually handled through a WidgetRef
+/// Internal Widget representation, usually handled through a `WidgetRef`.
 pub struct Widget {
     id: WidgetId,
     draw_state: Option<DrawWrapper>,
