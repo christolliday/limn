@@ -1,4 +1,4 @@
-use webrender_api::*;
+use webrender::api::*;
 
 use render::RenderBuilder;
 use widget::draw::Draw;

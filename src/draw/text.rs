@@ -1,4 +1,4 @@
-use webrender_api::{LayoutPoint, GlyphInstance, PrimitiveInfo, FontInstanceKey};
+use webrender::api::{LayoutPoint, GlyphInstance, PrimitiveInfo, FontInstanceKey};
 use rusttype::{Scale, GlyphId, VMetrics};
 
 use render::RenderBuilder;
