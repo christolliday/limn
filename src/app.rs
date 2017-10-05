@@ -23,6 +23,7 @@ pub struct App {
     ui: Ui,
     next_frame_time: Instant,
     events_loop: Rc<RefCell<glutin::EventsLoop>>,
+    window_initialized: bool,
 }
 
 impl App {
@@ -33,6 +34,7 @@ impl App {
             ui: ui,
             next_frame_time: Instant::now(),
             events_loop: Rc::new(RefCell::new(events_loop)),
+            window_initialized: false,
         };
         app.initialize_handlers();
         app
@@ -54,7 +56,10 @@ impl App {
         debug!("handle window event {:?}", event);
         if let glutin::Event::WindowEvent { event, .. } = event {
             if let glutin::WindowEvent::Resized(width, height) = event {
-                self.ui.window_resized(Size::new(width as f32, height as f32));
+                // ignore resize events before ui has been measured
+                if self.window_initialized {
+                    self.ui.window_resized(Size::new(width as f32, height as f32));
+                }
             } else {
                 self.ui.event(InputEvent(event));
             }
@@ -69,6 +74,7 @@ impl App {
         // Handle set up events to allow layout to 'settle' and initialize the window size to the initial layout size
         self.handle_events();
         self.ui.resize_window_to_fit();
+        self.window_initialized = true;
         loop {
             events_loop.poll_events(|event| {
                 self.handle_window_event(event);

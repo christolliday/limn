@@ -39,11 +39,8 @@ impl Ui {
         let mut root = WidgetBuilder::new("window");
         root.layout().set_container(ExactFrame);
         root.layout().add(top_left(Point::zero()));
-        if !WINDOW_CONSTRAINT_REQUIRED {
-            let mut root_layout = root.layout();
-            root_layout.edit_right().strength(REQUIRED - 1.0);
-            root_layout.edit_bottom().strength(REQUIRED - 1.0);
-        }
+        // x will crash if window size set to (0, 0)
+        root.layout().add(min_size(Size::new(1.0, 1.0)));
         let render = WebRenderContext::new(&mut window, events_loop);
         Ui {
             widget_map: HashMap::new(),
@@ -79,17 +76,8 @@ impl Ui {
     }
 
     pub(super) fn resize_window_to_fit(&mut self) {
-        let window_dims = self.get_root_dims();
+        let window_dims = self.root.bounds().size;
         self.window.borrow_mut().resize(window_dims.width as u32, window_dims.height as u32);
-    }
-
-    pub fn get_root_dims(&self) -> Size {
-        let root = self.get_root();
-        let mut dims = root.bounds().size;
-        // use min size to prevent window size from being set to 0 (X crashes)
-        dims.width = f32::max(100.0, dims.width);
-        dims.height = f32::max(100.0, dims.height);
-        dims
     }
 
     pub(super) fn window_resized(&mut self, window_dims: Size) {
@@ -111,8 +99,8 @@ impl Ui {
             self.window_constraints = window_constraints;
         } else {
             root.update_layout(|layout| {
-                layout.edit_right().set(window_dims.width);
-                layout.edit_bottom().set(window_dims.height);
+                layout.edit_right().set(window_dims.width).strength(REQUIRED - 1.0);
+                layout.edit_bottom().set(window_dims.height).strength(REQUIRED - 1.0);
             });
         }
         self.needs_redraw = true;
