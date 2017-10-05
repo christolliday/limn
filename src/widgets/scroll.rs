@@ -93,7 +93,7 @@ impl Into<WidgetBuilder> for ScrollBuilder {
             match_layout(&self.widget).strength(STRONG)
         ]);
         {
-            let ref content_holder = self.content_holder.layout().vars;
+            let content_holder = &self.content_holder.layout().vars;
             content.layout().add(constraints![
                 LAYOUT.left | LE(REQUIRED) | content_holder.left,
                 LAYOUT.top | LE(REQUIRED) | content_holder.top,
