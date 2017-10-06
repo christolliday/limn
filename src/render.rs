@@ -48,7 +48,7 @@ impl WebRenderContext {
         let (renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
         let api = sender.create_api();
         resources::init_resources(sender.create_api());
-        let document_id = api.add_document(window.size_u32());
+        let document_id = api.add_document(window.device_size());
 
         let frame_ready = Arc::new(AtomicBool::new(false));
         let notifier = Box::new(Notifier::new(events_loop.create_proxy(), frame_ready.clone()));

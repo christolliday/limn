@@ -93,7 +93,7 @@ impl Ui {
     }
 
     pub(super) fn window_resized(&mut self, window_dims: Size) {
-        let window_size = self.window.borrow_mut().size_u32();
+        let window_size = self.window.borrow_mut().device_size();
         self.render.window_resized(window_size);
         let mut root = self.get_root();
 
@@ -143,7 +143,7 @@ impl Ui {
     }
 
     fn draw(&mut self) {
-        let window_size = self.window.borrow_mut().size_f32();
+        let window_size = self.window.borrow_mut().layout_size();
         let (builder, resources) = {
             let mut renderer = self.render.render_builder(window_size);
             let crop_to = Rect::new(Point::zero(), Size::new(::std::f32::MAX, ::std::f32::MAX));
@@ -159,7 +159,7 @@ impl Ui {
 
     // Call after drawing
     pub(super) fn update(&mut self) {
-        self.render.update(self.window.borrow_mut().size_u32());
+        self.render.update(self.window.borrow_mut().device_size());
         let window = self.window.borrow_mut();
         window.swap_buffers();
     }
