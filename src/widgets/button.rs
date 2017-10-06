@@ -11,6 +11,7 @@ use widget::property::states::*;
 use widgets::text::TextBuilder;
 use input::mouse::{WidgetMouseButton, ClickEvent};
 use draw::rect::{RectState, RectStyle};
+use draw::image::ImageState;
 use draw::text::TextStyle;
 use geometry::Size;
 use color::*;
@@ -26,6 +27,22 @@ static COLOR_BUTTON_TEXT_INACTIVE: Color = GRAY_70;
 static BUTTON_BORDER: (f32, Color) = (1.0, GRAY_40);
 static BUTTON_BORDER_INACTIVE: (f32, Color) = (1.0, GRAY_70);
 
+pub enum ButtonLabel {
+    Text(String),
+    Image(ImageState),
+}
+
+impl <'a>Into<ButtonLabel> for &'a str {
+    fn into(self) -> ButtonLabel {
+        ButtonLabel::Text(self.to_owned())
+    }
+}
+
+impl Into<ButtonLabel> for ImageState {
+    fn into(self) -> ButtonLabel {
+        ButtonLabel::Image(self)
+    }
+}
 
 lazy_static! {
     pub static ref STYLE_BUTTON: Vec<RectStyle> = {
@@ -141,23 +158,33 @@ impl PushButtonBuilder {
 
         PushButtonBuilder { widget: widget }
     }
-    pub fn set_text(&mut self, text: &'static str) -> &mut Self {
 
-        let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyle::Text: text.to_owned(),
-            TextStyle::Align: Align::Middle);
+    pub fn set_label<L: Into<ButtonLabel>>(&mut self, label: L) -> &mut Self {
+        match label.into() {
+            ButtonLabel::Image(image) => {
+                let mut image_widget = WidgetBuilder::new("button-image");
+                let image_size = image.measure();
+                image_widget.set_draw_state(image);
+                image_widget.layout().add(size(image_size));
+                self.widget.add_child(image_widget);
+            },
+            ButtonLabel::Text(text) => {
+                let style = style!(parent: STYLE_BUTTON_TEXT,
+                    TextStyle::Text: text.to_owned(),
+                    TextStyle::Align: Align::Middle);
 
-        let mut button_text_widget = TextBuilder::new_with_style(style);
-        button_text_widget.set_name("button_text");
-        button_text_widget.layout().add(constraints![
-            bound_left(&self.widget).padding(20.0),
-            bound_right(&self.widget).padding(20.0),
-            bound_top(&self.widget).padding(10.0),
-            bound_bottom(&self.widget).padding(10.0),
-            center(&self.widget),
-        ]);
-
-        self.widget.add_child(button_text_widget);
+                let mut button_text_widget = TextBuilder::new_with_style(style);
+                button_text_widget.set_name("button_text");
+                button_text_widget.layout().add(constraints![
+                    bound_left(&self.widget).padding(20.0),
+                    bound_right(&self.widget).padding(20.0),
+                    bound_top(&self.widget).padding(10.0),
+                    bound_bottom(&self.widget).padding(10.0),
+                    center(&self.widget),
+                ]);
+                self.widget.add_child(button_text_widget);
+            }
+        }
         self
     }
 }
