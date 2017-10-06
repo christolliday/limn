@@ -132,7 +132,7 @@ impl ControlBar {
 }
 widget_wrapper!(ControlBar);
 
-fn create_circle(id: CircleId, circle: Circle, mut parent_ref: WidgetRef) -> WidgetRef {
+fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
     let style = style!(EllipseStyle::BackgroundColor: selector!(WHITE, SELECTED: RED),
                        EllipseStyle::Border: Some((2.0, BLACK)));
     let mut widget = WidgetBuilder::new("circle");
@@ -147,7 +147,7 @@ fn create_circle(id: CircleId, circle: Circle, mut parent_ref: WidgetRef) -> Wid
     let widget_ref_clone = widget.widget_ref();
     widget_ref.event(CircleEvent::Update(circle.center, circle.size));
     widget.add_handler_fn(move |event: &WidgetMouseButton, args| {
-        if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
+        if let WidgetMouseButton(glutin::ElementState::Pressed, _) = *event {
             args.ui.event(AppEvent::Select(Some(id)));
         }
     });
@@ -262,9 +262,9 @@ impl AppEventHandler {
     fn apply_change(&mut self, change: Change) -> Change {
         match change {
             Change::Create(circle_id, circle) => {
-                self.circles.insert(circle_id, circle.clone());
-                let widget_ref = create_circle(circle_id, circle, self.circle_canvas_ref.clone());
-                self.circle_widgets.insert(circle_id, widget_ref.clone());
+                let widget_ref = create_circle(circle_id, &circle, &mut self.circle_canvas_ref);
+                self.circles.insert(circle_id, circle);
+                self.circle_widgets.insert(circle_id, widget_ref);
                 self.update_selected(Some(circle_id));
                 Change::Delete(circle_id)
             },
@@ -340,8 +340,8 @@ impl EventHandler<AppEvent> for AppEventHandler {
             AppEvent::Redo => {
                 self.redo();
             }
-            AppEvent::Select(ref new_selected) => {
-                self.update_selected(new_selected.clone());
+            AppEvent::Select(new_selected) => {
+                self.update_selected(new_selected);
             }
             AppEvent::Delete => {
                 if let Some(selected) = self.selected.take() {
@@ -349,7 +349,7 @@ impl EventHandler<AppEvent> for AppEventHandler {
                 }
             }
             AppEvent::Resize(ref event) => {
-                if let Some(selected) = self.selected.clone() {
+                if let Some(selected) = self.selected {
                     if event.dragging {
                         let circle = &self.circles[&selected];
                         self.circle_widgets[&selected].event(CircleEvent::Update(circle.center, event.value));
@@ -358,8 +358,8 @@ impl EventHandler<AppEvent> for AppEventHandler {
                     }
                 }
             }
-            AppEvent::Move(ref widget_ref, change) => {
-                self.new_change(Change::Move(widget_ref.clone(), change));
+            AppEvent::Move(widget_ref, change) => {
+                self.new_change(Change::Move(widget_ref, change));
             }
         }
     }

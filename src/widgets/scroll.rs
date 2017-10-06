@@ -214,10 +214,10 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
         match *event {
             ScrollParentEvent::ContainerLayoutUpdated | ScrollParentEvent::ContentLayoutUpdated(_) => {
 
-                if let &ScrollParentEvent::ContentLayoutUpdated(rect) = event {
+                if let ScrollParentEvent::ContentLayoutUpdated(rect) = *event {
                     self.content_rect = rect
                 }
-                if let &ScrollParentEvent::ContainerLayoutUpdated = event {
+                if let ScrollParentEvent::ContainerLayoutUpdated = *event {
                     self.container_rect = args.widget.bounds();
                 }
 

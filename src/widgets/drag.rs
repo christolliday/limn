@@ -84,7 +84,7 @@ impl WidgetBuilder {
     /// Make a widget receive drag events.
     pub fn make_draggable(&mut self) -> &mut Self {
         self.add_handler_fn(|event: &WidgetMouseButton, args| {
-            if let &WidgetMouseButton(glutin::ElementState::Pressed, _) = event {
+            if let WidgetMouseButton(glutin::ElementState::Pressed, _) = *event {
                 let event = DragInputEvent::WidgetPressed(args.widget);
                 args.ui.event(event);
             }
@@ -104,7 +104,7 @@ impl App {
             args.ui.event(DragInputEvent::MouseMoved(event.0));
         });
         self.add_handler_fn(|event: &MouseButton, args| {
-            if let &MouseButton(glutin::ElementState::Released, _) = event {
+            if let MouseButton(glutin::ElementState::Released, _) = *event {
                 args.ui.event(DragInputEvent::MouseReleased);
             }
         });
