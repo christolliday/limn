@@ -44,11 +44,11 @@ impl Window {
     pub fn resize(&mut self, width: u32, height: u32) {
         self.window.set_inner_size(width, height);
     }
-    pub fn size_u32(&self) -> DeviceUintSize {
+    pub fn device_size(&self) -> DeviceUintSize {
         let (width, height) = self.window.get_inner_size_pixels().unwrap();
         DeviceUintSize::new(width, height)
     }
-    pub fn size_f32(&self) -> LayoutSize {
+    pub fn layout_size(&self) -> LayoutSize {
         let (width, height) = self.window.get_inner_size_pixels().unwrap();
         LayoutSize::new(width as f32, height as f32)
     }
