@@ -45,7 +45,7 @@ impl WebRenderContext {
             .. webrender::RendererOptions::default()
         };
 
-        let (renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
+        let (mut renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
         let api = sender.create_api();
         resources::init_resources(sender.create_api());
         let document_id = api.add_document(window.size_u32());
@@ -53,6 +53,8 @@ impl WebRenderContext {
         let frame_ready = Arc::new(AtomicBool::new(false));
         let notifier = Box::new(Notifier::new(events_loop.create_proxy(), frame_ready.clone()));
         renderer.set_render_notifier(notifier);
+
+        renderer.set_external_image_handler(Box::new(LimnExternalImageHandler));
 
         let epoch = Epoch(0);
         let root_background_color = ColorF::new(0.8, 0.8, 0.8, 1.0);
@@ -153,4 +155,24 @@ pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut R
 
 pub fn draw_horizontal_line<C: Into<ColorF>>(baseline: f32, start: f32, end: f32, color: C, renderer: &mut RenderBuilder) {
     draw_rect_outline(Rect::new(Point::new(start, baseline), Size::new(end - start, 0.0)), color, renderer);
+}
+
+// This weird thing is required just to pass a texture's id to WebRender
+struct LimnExternalImageHandler;
+
+impl webrender::ExternalImageHandler for LimnExternalImageHandler {
+    // Do not perform any actual locking since rendering happens on the main thread
+    fn lock(&mut self, key: ExternalImageId, _channel_index: u8) -> webrender::ExternalImage {
+        let descriptor = resources::resources().texture_descriptors[&key.0];
+        webrender::ExternalImage {
+            u0: 0.0,
+            u1: descriptor.width as f32,
+            v1: 0.0,
+            v0: descriptor.height as f32,
+            source: webrender::ExternalImageSource::NativeTexture(key.0 as _),
+        }
+    }
+
+    fn unlock(&mut self, _key: ExternalImageId, _channel_index: u8) {
+    }
 }

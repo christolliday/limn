@@ -47,6 +47,9 @@ impl WidgetRef {
     pub fn add_handler_fn<E: 'static, T: Fn(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
         self.add_handler_wrapper(TypeId::of::<E>(), EventHandlerWrapper::new_from_fn(handler))
     }
+    pub fn add_handler_fn_mut<E: 'static, T: FnMut(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+        self.add_handler_wrapper(TypeId::of::<E>(), EventHandlerWrapper::new_from_fn_mut(handler))
+    }
     fn add_handler_wrapper(&mut self, type_id: TypeId, handler: EventHandlerWrapper) -> &mut Self {
         self.widget_mut().handlers.entry(type_id).or_insert_with(Vec::new)
             .push(Rc::new(RefCell::new(handler)));
