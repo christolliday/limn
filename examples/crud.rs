@@ -218,16 +218,16 @@ fn main() {
     button_container.layout().add(below(&last_name_container).padding(20.0));
 
     let mut create_button = PushButtonBuilder::new();
-    create_button.set_text("Create");
+    create_button.set_label("Create");
     create_button.add_prop(Property::Inactive);
     let mut update_button = PushButtonBuilder::new();
-    update_button.set_text("Update");
+    update_button.set_label("Update");
     update_button.add_prop(Property::Inactive);
     update_button.on_click(|_, args| {
         args.ui.event(PeopleEvent::Update);
     });
     let mut delete_button = PushButtonBuilder::new();
-    delete_button.set_text("Delete");
+    delete_button.set_label("Delete");
     delete_button.add_prop(Property::Inactive);
     delete_button.on_click(|_, args| {
         args.ui.event(PeopleEvent::Delete);

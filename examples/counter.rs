@@ -40,7 +40,7 @@ fn main() {
     ]);
 
     let mut button_widget = PushButtonBuilder::new();
-    button_widget.set_text("Count");
+    button_widget.set_label("Count");
     let text_widget_ref = text_widget.widget_ref();
     button_widget.on_click(move |_, _| {
         text_widget_ref.event(CountEvent);

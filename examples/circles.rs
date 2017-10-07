@@ -108,11 +108,11 @@ impl ControlBar {
             });
         let mut undo_widget = PushButtonBuilder::new();
         undo_widget
-            .set_text("Undo")
+            .set_label("Undo")
             .on_click(|_, args| { args.ui.event(AppEvent::Undo); });
         let mut redo_widget = PushButtonBuilder::new();
         redo_widget
-            .set_text("Redo")
+            .set_label("Redo")
             .on_click(|_, args| { args.ui.event(AppEvent::Redo); });
         let slider_container = SliderControl::new();
         let (create_ref, undo_ref, redo_ref, slider_ref) = (create_button.widget_ref(), undo_widget.widget_ref(), redo_widget.widget_ref(), slider_container.widget_ref());
