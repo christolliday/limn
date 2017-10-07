@@ -105,6 +105,21 @@ impl EventHandlerWrapper {
             handle_fn: Box::new(handle_fn),
         }
     }
+    pub fn new_from_fn_mut<H, E>(handler: H) -> Self
+        where H: FnMut(&E, EventArgs) + 'static,
+              E: 'static
+    {
+        let handle_fn = |handler: &mut Any, event: &Any, args: EventArgs| {
+            let event: &E = event.downcast_ref().unwrap();
+            debug!("widget handle {}", ::type_name::<E>());
+            let handler: &mut H = handler.downcast_mut().unwrap();
+            handler(event, args);
+        };
+        EventHandlerWrapper {
+            handler: Box::new(handler),
+            handle_fn: Box::new(handle_fn),
+        }
+    }
     pub fn handle(&mut self, event: &Any, args: EventArgs) {
         (self.handle_fn)(self.handler.as_mut(), event, args);
     }

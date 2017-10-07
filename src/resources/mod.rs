@@ -34,6 +34,7 @@ pub struct FontInfo {
     pub info: Font,
 }
 
+#[derive(Clone)]
 pub struct ImageInfo {
     pub key: ImageKey,
     pub info: ImageDescriptor,
@@ -69,6 +70,7 @@ pub struct Resources {
     pub fonts: HashMap<String, FontInfo>,
     pub font_instances: HashMap<(String, app_units::Au), FontInstanceKey>,
     pub images: HashMap<String, ImageInfo>,
+    pub texture_descriptors: HashMap<u64, ImageDescriptor>,
     pub widget_id: IdGen<WidgetId>,
 }
 impl Resources {
@@ -78,6 +80,7 @@ impl Resources {
             fonts: HashMap::new(),
             font_instances: HashMap::new(),
             images: HashMap::new(),
+            texture_descriptors: HashMap::new(),
             widget_id: IdGen::new(),
         }
     }
@@ -86,15 +89,31 @@ impl Resources {
     }
 
     pub fn get_image(&mut self, name: &str) -> &ImageInfo {
-        if !self.images.contains_key(name) {
+        if self.images.contains_key(name) {
+            &self.images[name]
+        } else {
             let (data, descriptor) = load_image(name).unwrap();
-            let key = self.render.as_ref().unwrap().generate_image_key();
-            let mut resources = ResourceUpdates::new();
-            resources.add_image(key, descriptor, data, None);
-            self.render.as_ref().unwrap().update_resources(resources);
-            let image_info = ImageInfo { key: key, info: descriptor };
-            self.images.insert(name.to_owned(), image_info);
+            self.put_image(name, data, descriptor)
         }
+    }
+
+    pub fn put_image(&mut self, name: &str, data: ImageData, descriptor: ImageDescriptor) -> &ImageInfo {
+        let key = self.render.as_ref().unwrap().generate_image_key();
+        let mut resources = ResourceUpdates::new();
+        resources.add_image(key, descriptor, data, None);
+        self.render.as_ref().unwrap().update_resources(resources);
+        let image_info = ImageInfo { key: key, info: descriptor };
+        self.images.insert(name.to_owned(), image_info);
+        &self.images[name]
+    }
+
+    pub fn update_image(&mut self, name: &str, data: ImageData, descriptor: ImageDescriptor) -> &ImageInfo {
+        let mut image_info = self.images.remove(name).expect("update image");
+        let mut resources = ResourceUpdates::new();
+        resources.update_image(image_info.key, descriptor, data, None);
+        self.render.as_ref().unwrap().update_resources(resources);
+        image_info.info = descriptor;
+        self.images.insert(name.to_owned(), image_info);
         &self.images[name]
     }
 
