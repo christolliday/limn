@@ -11,6 +11,7 @@ pub use widget::property::states::*;
 pub use render::RenderBuilder;
 pub use resources::WidgetId;
 pub use ui::Ui;
+pub use app::FrameEvent;
 pub use color::*;
 pub use layout::constraint::*;
 pub use layout::LAYOUT;

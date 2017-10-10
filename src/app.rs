@@ -24,7 +24,6 @@ pub struct App {
     next_frame_time: Instant,
     events_loop: Rc<RefCell<glutin::EventsLoop>>,
     window_initialized: bool,
-    tick_callback: Option<Box<FnMut() -> bool>>,
 }
 
 impl App {
@@ -36,7 +35,6 @@ impl App {
             next_frame_time: Instant::now(),
             events_loop: Rc::new(RefCell::new(events_loop)),
             window_initialized: false,
-            tick_callback: None,
         };
         app.initialize_handlers();
         app
@@ -94,12 +92,9 @@ impl App {
                 } else {
                     self.next_frame_time += frame_length;
                 }
-                if let Some(ref mut tcb) = self.tick_callback {
-                    if tcb() {
-                        self.ui.redraw();
-                    }
-                }
                 self.ui.draw_if_needed();
+                self.ui.get_root().event(FrameEvent);
+                self.handle_events();
             }
             self.ui.update();
 
@@ -123,22 +118,18 @@ impl App {
         }
     }
 
-    /// Add a new stateful global event handler
+    /// Add a new global event handler
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.ui.get_root().add_handler(handler);
         self
     }
 
-    /// Add a new stateless global event handler
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
+    /// Add a new global event handler function
+    pub fn add_handler_fn<E: 'static, T: FnMut(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
         self.ui.get_root().add_handler_fn(handler);
         self
     }
-
-    /// Set a render frame tick callback. Return true in the callback to rerender this frame
-    pub fn set_tick_callback<T: FnMut() -> bool + 'static>(&mut self, callback: T) -> &mut Self {
-        self.tick_callback = Some(Box::new(callback));
-        self
-    }
-
 }
+
+/// Event emitted after every frame is rendered. To implement animation, add a handler for this event that calls args.ui.redraw() to draw a new frame.
+pub struct FrameEvent;
