@@ -23,3 +23,25 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
+
+### Running examples under NixOS
+
+winit needs X11 libraries at runtime. To get them on NixOS, you can create a `default.nix` file with the following content:
+
+```
+with import <nixpkgs> {}; {
+  cargoEnv = stdenv.mkDerivation {
+    name = "limn";
+    shellHook = with xorg; ''
+      export LD_LIBRARY_PATH=/run/opengl-driver/lib/:${lib.makeLibraryPath (with xorg; [libX11 libXcursor libXxf86vm libXi libXrandr xinput zlib])}
+    '';
+  };
+}
+```
+
+then, running example should work as
+
+```
+$ nix-shell --run bash
+$ cargo run --release --example crud
+```
