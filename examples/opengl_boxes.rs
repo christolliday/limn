@@ -24,7 +24,7 @@ use limn::app::App;
 use limn::window::Window;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::widgets::slider::{SliderBuilder, SliderEvent};
-use limn::widgets::external_image::{ExternalImageBuilder, ExternalImageState};
+use limn::widgets::glcanvas::{GLCanvasBuilder, GLCanvasState};
 
 fn init_framebuffer(gl: &Rc<gl::Gl>) -> (GLuint, GLuint, GLuint) {
     // Make a texture that will be sent to WebRender
@@ -237,7 +237,7 @@ fn main() {
     let mut root = WidgetBuilder::new("root");
 
     // Create an image that's connected to the texture we're rendering to
-    let mut gl_canvas = ExternalImageBuilder::new("gl_canvas", tex as _);
+    let mut gl_canvas = GLCanvasBuilder::new("gl_canvas", tex as _);
     gl_canvas.layout().no_container();
     gl_canvas.layout().add(constraints![
         match_width(&root),
@@ -256,7 +256,7 @@ fn main() {
         gl.bind_framebuffer(gl::FRAMEBUFFER, fb);
 
         // Handle widget size changes
-        if let Some(state) = gl_canvas_ref.draw_state().downcast_ref::<ExternalImageState>() {
+        if let Some(state) = gl_canvas_ref.draw_state().downcast_ref::<GLCanvasState>() {
             let old_size = target_size.get();
             let new_size = state.measure();
             if new_size.width != old_size.0 || new_size.height != old_size.1 {
