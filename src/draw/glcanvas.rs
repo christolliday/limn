@@ -5,13 +5,13 @@ use widget::draw::Draw;
 use resources::resources;
 use geometry::{Rect, RectExt, Size, SizeExt};
 
-pub struct ExternalImageState {
+pub struct GLCanvasState {
     pub name: String,
     pub data: ImageData,
 }
 
-impl ExternalImageState {
-    pub fn new(name: &str, texture_id: u64) -> ExternalImageState {
+impl GLCanvasState {
+    pub fn new(name: &str, texture_id: u64) -> GLCanvasState {
         let data = ImageData::External(ExternalImageData {
             id: ExternalImageId(texture_id),
             channel_index: 0,
@@ -19,7 +19,7 @@ impl ExternalImageState {
         });
         let descriptor = ImageDescriptor::new(0, 0, ImageFormat::RGB8, true);
         resources().put_image(name, data.clone(), descriptor);
-        ExternalImageState {
+        GLCanvasState {
             name: name.to_owned(),
             data: data,
         }
@@ -32,7 +32,7 @@ impl ExternalImageState {
     }
 }
 
-impl Draw for ExternalImageState {
+impl Draw for GLCanvasState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let mut res = resources();
         let image_info = res.get_image(&self.name).clone();
