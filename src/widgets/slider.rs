@@ -234,6 +234,9 @@ impl Into<WidgetBuilder> for SliderBuilder {
         widget.add_handler_fn(move |event: &SetSliderValue, args| {
             args.widget.event(SliderInputEvent::SetValue(event.0));
         });
+        widget.add_handler_fn(move |event: &SetSliderRange, args| {
+            args.widget.event(SliderInputEvent::SetRange(event.0.clone()));
+        });
         widget.add_handler_fn(move |_: &LayoutUpdated, args| {
             args.widget.event(SliderInputEvent::LayoutUpdated);
         });
@@ -256,12 +259,14 @@ pub struct SliderEvent {
 
 #[derive(Debug, Copy, Clone)]
 pub struct SetSliderValue(pub f32);
+pub struct SetSliderRange(pub Range<f32>);
 
 #[derive(Debug, Copy, Clone)]
 enum SliderInputEvent {
     Drag(DragEvent),
     Click(Point),
     SetValue(f32),
+    SetRange(Range<f32>),
     LayoutUpdated,
 }
 
@@ -407,7 +412,12 @@ impl EventHandler<SliderInputEvent> for SliderHandler {
                     self.last_val = value;
                     self.update_handle_pos(value);
                 }
-            }
+            },
+            SliderInputEvent::SetRange(ref range) => {
+                self.range = range.clone();
+                self.last_val = range.start;
+                self.update_handle_pos(range.start);
+            },
             SliderInputEvent::LayoutUpdated => {
                 self.update_handle_pos(self.last_val);
             }
