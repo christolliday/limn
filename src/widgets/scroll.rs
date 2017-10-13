@@ -18,8 +18,9 @@ pub struct ScrollBuilder {
     content: Option<WidgetBuilder>,
     scrollbars: Option<(WidgetBuilder, SliderBuilder, SliderBuilder)>,
 }
-impl ScrollBuilder {
-    pub fn new() -> Self {
+
+impl Default for ScrollBuilder {
+    fn default() -> Self {
         let widget = WidgetBuilder::new("scroll");
 
         let mut content_holder = WidgetBuilder::new("content_holder");
@@ -32,10 +33,23 @@ impl ScrollBuilder {
             scrollbars: None,
         }
     }
+}
+
+impl ScrollBuilder {
+
+    /// Creates a new ScrollBuilder
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the content on which the scroll function should be implemented
     pub fn add_content<C: Into<WidgetBuilder>>(&mut self, widget: C) -> &mut Self {
         self.content = Some(widget.into());
         self
     }
+
+    /// Add a scrollbar. Scrolling can be done independently,
+    /// even if no scroll bar is shown.
     pub fn add_scrollbar(&mut self) -> &mut Self {
         let mut scrollbar_h = SliderBuilder::new();
         scrollbar_h.set_name("scrollbar_h");
@@ -315,9 +329,7 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
 }
 fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
     let vec = match event {
-        glutin::MouseScrollDelta::LineDelta(x, y) => {
-            Vector::new(-x, y)
-        }
+        glutin::MouseScrollDelta::LineDelta(x, y) |
         glutin::MouseScrollDelta::PixelDelta(x, y) => {
             Vector::new(-x, y)
         }

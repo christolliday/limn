@@ -242,8 +242,12 @@ impl App {
         });
     }
 }
+
+#[derive(Debug, Copy, Clone)]
 pub struct WidgetAttachedEvent;
+#[derive(Debug, Copy, Clone)]
 pub struct WidgetDetachedEvent;
+#[derive(Debug, Copy, Clone)]
 pub struct ChildAttachedEvent(pub WidgetId, pub LayoutVars);
 
 pub enum ChildrenUpdatedEvent {

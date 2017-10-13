@@ -7,10 +7,12 @@ use widget::style::{self, Style, Value};
 use geometry::{Rect, RectExt, Point, Size};
 use color::*;
 
+#[derive(Debug, Copy, Clone)]
 pub struct EllipseState {
     pub background_color: Color,
     pub border: Option<(f32, Color)>,
 }
+
 impl Default for EllipseState {
     fn default() -> Self {
         EllipseState {

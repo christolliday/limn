@@ -296,7 +296,7 @@ pub fn xys_per_line_from_text<'a>(text: &'a str,
     let lines = line_infos.clone();
     let lines_with_rects = lines.zip(line_rects.clone());
     XysPerLineFromText {
-        xys_per_line: super::cursor::xys_per_line(lines_with_rects, font, text, font_size),
+        xys_per_line: xys_per_line(lines_with_rects, font, text, font_size),
     }
 }
 
@@ -445,7 +445,7 @@ impl<'a, 'b> Iterator for Xs<'a, 'b> {
                 .map(|g| {
                     g.pixel_bounding_box()
                         .map(|r| r.max.x as f32)
-                        .unwrap_or_else(|| x + g.unpositioned().h_metrics().advance_width as f32)
+                        .unwrap_or_else(|| x + g.unpositioned().h_metrics().advance_width)
                 });
             x
         })

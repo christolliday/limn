@@ -83,7 +83,7 @@ impl App {
     /// moved to asynchronous event handling.
     pub fn main_loop(mut self, root: WidgetBuilder) {
         self.ui.root.add_child(root);
-        let events_loop = self.events_loop.clone();
+        let events_loop = Rc::clone(&self.events_loop);
         let mut events_loop = events_loop.borrow_mut();
 
         // Handle set up events to allow layout to 'settle' and initialize
@@ -151,4 +151,5 @@ impl App {
 ///
 /// To implement animation, add a handler for this event that calls
 /// [`args.ui.redraw()`](../ui/struct.Ui.html#method.redraw) to draw a new frame.
+#[derive(Debug, Copy, Clone)]
 pub struct FrameEvent;

@@ -3,6 +3,7 @@ pub mod id;
 
 use std::sync::{Mutex, MutexGuard};
 use std::collections::HashMap;
+use std::default::Default;
 
 use webrender::api::*;
 use image;
@@ -59,7 +60,7 @@ impl<I: Id, T> Map<I, T> {
     }
     /// Adds the given resource to the `Map` and returns a unique `Id` for it.
     pub fn insert(&mut self, resource: T) -> I {
-        let id = self.id_gen.next();
+        let id = self.id_gen.next_id();
         self.map.insert(id, resource);
         id
     }
@@ -73,8 +74,9 @@ pub struct Resources {
     pub texture_descriptors: HashMap<u64, ImageDescriptor>,
     pub widget_id: IdGen<WidgetId>,
 }
-impl Resources {
-    pub fn new() -> Self {
+
+impl Default for Resources {
+    fn default() -> Self {
         Resources {
             render: None,
             fonts: HashMap::new(),
@@ -84,8 +86,16 @@ impl Resources {
             widget_id: IdGen::new(),
         }
     }
+}
+
+impl Resources {
+    /// Creates a new `Resources` struct, same as calling `default()`
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn widget_id(&mut self) -> WidgetId {
-        self.widget_id.next()
+        self.widget_id.next_id()
     }
 
     pub fn get_image(&mut self, name: &str) -> &ImageInfo {

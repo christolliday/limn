@@ -28,7 +28,7 @@ impl<'a, 'b> Iterator for GlyphRects<'a, 'b> {
             let left = *next_left;
             let right = g.pixel_bounding_box()
                 .map(|bb| bb.max.x as f32)
-                .unwrap_or_else(|| left + g.unpositioned().h_metrics().advance_width as f32);
+                .unwrap_or_else(|| left + g.unpositioned().h_metrics().advance_width);
             *next_left = right;
             let x = Range::new(left, right);
             Rect::from_ranges(x, y)
