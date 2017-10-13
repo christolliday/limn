@@ -10,6 +10,8 @@ use layout::constraint::*;
 pub struct TextBuilder;
 
 impl TextBuilder {
+    /// Returns a default TextBuilder (in form of a WidgetBuilder)
+    #[cfg_attr(feature = "cargo-clippy", allow(new_ret_no_self))]
     pub fn new(text: &str) -> WidgetBuilder {
         let text_draw_state = TextState::new(text);
         let mut widget = WidgetBuilder::new(text);

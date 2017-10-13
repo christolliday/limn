@@ -190,6 +190,7 @@ lazy_static! {
     static ref VIEW_MATRIX: Transform3D<GLfloat> = view_matrix(Vector3D::new(0.0, 5.0, 2.0), Vector3D::new(0.0, 0.4, 0.0));
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
 fn draw_boxes(gl: &Rc<gl::Gl>, prog: GLuint, model: GLuint,
               width: GLint, height: GLint, box_count: usize,
               time_cell: &Cell<f32>, scale_cell: &Cell<f32>) {

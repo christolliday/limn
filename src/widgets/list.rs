@@ -55,6 +55,7 @@ impl EventHandler<ListItemSelected> for ListHandler {
     }
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 fn list_handle_deselect(_: &ClickEvent, args: EventArgs) {
     args.widget.event(ListItemSelected { widget: None });
 }

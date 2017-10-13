@@ -151,6 +151,7 @@ impl Resources {
         &self.fonts[name]
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(map_entry))]
     pub fn get_font_instance(&mut self, name: &str, font_size: f32) -> &FontInstanceKey {
         let font_key = self.get_font(name).key;
         let size = app_units::Au::from_f32_px(text_layout::px_to_pt(font_size));
