@@ -197,8 +197,7 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
             }
             is_opaque
         }
-        ImageFormat::RGB8 => true,
-        ImageFormat::RG8 => true,
+        ImageFormat::RGB8 | ImageFormat::RG8 => true,
         ImageFormat::A8 => false,
         ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
     }
@@ -208,10 +207,10 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
 // These are slow. Gecko's gfx/2d/Swizzle.cpp has better versions
 pub fn premultiply(data: &mut [u8]) {
     for pixel in data.chunks_mut(4) {
-        let a = pixel[3] as u32;
-        let r = pixel[2] as u32;
-        let g = pixel[1] as u32;
-        let b = pixel[0] as u32;
+        let a = u32::from(pixel[3]);
+        let r = u32::from(pixel[2]);
+        let g = u32::from(pixel[1]);
+        let b = u32::from(pixel[0]);
 
         pixel[3] = a as u8;
         pixel[2] = ((r * a + 128) / 255) as u8;

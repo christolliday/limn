@@ -84,13 +84,11 @@ pub struct ListBuilder {
     pub widget: WidgetBuilder,
 }
 
-
 widget_wrapper!(ListBuilder);
 
-impl ListBuilder {
-
-    /// Creates a new `ListBuilder`
-    pub fn new() -> Self {
+impl Default for ListBuilder {
+    #[inline]
+    fn default() -> Self {
         let layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
 
         let mut widget = WidgetBuilder::new("list");
@@ -102,6 +100,13 @@ impl ListBuilder {
         ListBuilder {
             widget: widget,
         }
+    }
+}
+impl ListBuilder {
+
+    /// Creates a new `ListBuilder`
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Sets the closure to run when a list item is selected

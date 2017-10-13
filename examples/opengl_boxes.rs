@@ -26,7 +26,7 @@ use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::widgets::slider::{SliderBuilder, SliderEvent};
 use limn::widgets::glcanvas::{GLCanvasBuilder, GLCanvasState};
 
-pub const FLOATING_PT_ERROR: f64 = 0.0001;
+pub const FLOATING_PT_ERROR: f32 = 0.0001;
 
 fn init_framebuffer(gl: &Rc<gl::Gl>) -> (GLuint, GLuint, GLuint) {
     // Make a texture that will be sent to WebRender

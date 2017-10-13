@@ -27,7 +27,7 @@ pub struct IdGen<I> {
     phantom: PhantomData<I>,
 }
 
-impl<I: Id> IdGen<I> {
+impl<I: Id> Default for IdGen<I> {
     fn default() -> Self {
         IdGen {
             id: 0,

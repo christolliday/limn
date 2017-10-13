@@ -61,11 +61,17 @@ pub struct DebugSettingsHandler {
     debug_on: bool
 }
 
-impl DebugSettingsHandler {
-    pub fn new() -> Self {
+impl Default for DebugSettingsHandler {
+    fn default() -> Self {
         DebugSettingsHandler {
             debug_on: false,
         }
+    }
+}
+
+impl DebugSettingsHandler {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
