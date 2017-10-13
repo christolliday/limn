@@ -1,3 +1,9 @@
+// ---- START CLIPPY CONFIG
+
+#![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
+#![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
+#![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
+
 // Enable clippy if our Cargo.toml file asked us to do so.
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
@@ -25,6 +31,8 @@
 #![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
 #![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
 #![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
+
+// ---- END CLIPPY CONFIG
 
 #[macro_use]
 extern crate log;
@@ -118,17 +126,20 @@ pub trait LayoutRef {
 
 impl<'a> LayoutRef for &'a mut Layout {
     fn layout_ref(&self) -> LayoutVars {
-        self.vars.clone()
+        self.vars
     }
 }
+
 impl LayoutRef for Layout {
     fn layout_ref(&self) -> LayoutVars {
-        self.vars.clone()
+        self.vars
     }
 }
+
 impl LayoutRef for LayoutVars {
+    /// Returns a copy of the current `LayoutVars`
     fn layout_ref(&self) -> LayoutVars {
-        self.clone()
+        *self
     }
 }
 

@@ -1,3 +1,5 @@
+#![allow(unreadable_literal)]
+
 use std::fmt;
 use webrender::api::ColorF;
 
