@@ -63,6 +63,7 @@ extern crate stable_bst;
 extern crate gleam;
 extern crate app_units;
 extern crate image;
+extern crate font_loader;
 
 #[macro_use]
 pub mod style;
