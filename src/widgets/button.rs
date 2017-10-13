@@ -143,8 +143,9 @@ pub struct PushButtonBuilder {
 
 widget_wrapper!(PushButtonBuilder);
 
-impl PushButtonBuilder {
-    pub fn new() -> Self {
+impl Default for PushButtonBuilder {
+    #[inline]
+    fn default() -> Self {
         let mut widget = WidgetBuilder::new("push_button");
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
@@ -157,6 +158,14 @@ impl PushButtonBuilder {
 
         PushButtonBuilder { widget: widget }
     }
+}
+impl PushButtonBuilder {
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the text of the button
     pub fn set_text(&mut self, text: &'static str) -> &mut Self {
 
         let style = style!(parent: STYLE_BUTTON_TEXT,

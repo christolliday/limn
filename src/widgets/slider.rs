@@ -218,7 +218,7 @@ impl Into<WidgetBuilder> for SliderBuilder {
         let widget_ref = widget.widget_ref();
         slider_handle
             .add_handler_fn(move |event: &DragEvent, _| {
-                widget_ref.event(SliderInputEvent::Drag(event.clone()));
+                widget_ref.event(SliderInputEvent::Drag(*event));
             })
             .make_draggable();
 

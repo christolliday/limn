@@ -328,7 +328,7 @@ impl EventHandler<AppEvent> for AppEventHandler {
             AppEvent::ClickCanvas(point) => {
                 if self.create_mode {
                     let circle = Circle { center: point, size: 100.0 };
-                    let circle_id = self.id_gen.next();
+                    let circle_id = self.id_gen.next_id();
                     self.new_change(Change::Create(circle_id, circle));
                 } else {
                     self.update_selected(None);

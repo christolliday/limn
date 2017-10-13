@@ -193,7 +193,7 @@ impl WidgetRef {
             let mut handlers: Vec<Rc<RefCell<EventHandlerWrapper>>> = Vec::new();
             if let Some(event_handlers) = widget.handlers.get_mut(&type_id) {
                 for handler in event_handlers {
-                    handlers.push(Rc::clone(&handler));
+                    handlers.push(Rc::clone(handler));
                 }
             }
             handlers
