@@ -13,7 +13,7 @@ const DEBUG_LINE_BOUNDS: bool = false;
 
 component_style!{pub struct TextState<name="text", style=TextStyle> {
     text: String = String::from(""),
-    font: String = String::from("NotoSans/NotoSans-Regular"),
+    font: String = String::from("Sans"),
     font_size: f32 = 24.0,
     text_color: Color = BLACK,
     background_color: Color = TRANSPARENT,
