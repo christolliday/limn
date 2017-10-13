@@ -4,6 +4,7 @@ use cassowary::WeightedRelation::*;
 use super::{LayoutVars, Layout, Constraint, LayoutContainer};
 use super::constraint::*;
 
+#[derive(Debug, Clone)]
 pub struct GridLayout {
     num_columns: usize,
     column: usize,

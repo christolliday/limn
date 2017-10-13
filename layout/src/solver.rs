@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Write;
 
 use cassowary;
-use cassowary::strength;
 use cassowary::strength::*;
 use cassowary::{Variable, Constraint, Expression};
 use cassowary::WeightedRelation::*;
@@ -474,14 +473,15 @@ impl LayoutManager {
     }
 }
 
+/// Creates a printable string value for a given strength
 fn strength_desc(strength: f64) -> &'static str {
-    if strength < strength::WEAK { "WEAK-" }
-    else if strength == strength::WEAK { "WEAK " }
-    else if strength < strength::MEDIUM { "WEAK+" }
-    else if strength == strength::MEDIUM { "MED  " }
-    else if strength < strength::STRONG { "MED+ " }
-    else if strength == strength::STRONG { "STR  " }
-    else if strength < strength::REQUIRED { "STR+ " }
-    else if strength == strength::REQUIRED { "REQD " }
+    if strength < WEAK { "WEAK-" }
+    else if strength == WEAK { "WEAK " }
+    else if strength < MEDIUM { "WEAK+" }
+    else if strength == MEDIUM { "MED  " }
+    else if strength < STRONG { "MED+ " }
+    else if strength == STRONG { "STR  " }
+    else if strength < REQUIRED { "STR+ " }
+    else if strength == REQUIRED { "REQD " }
     else { "REQD+" }
 }
