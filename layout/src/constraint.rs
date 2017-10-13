@@ -137,7 +137,7 @@ pub fn match_height<T: LayoutRef>(widget: &T) -> PaddableConstraintBuilder {
     PaddableConstraint::MatchHeight(widget.height).builder(REQUIRED)
 }
 
-#[derive(Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum WidgetConstraint {
     Width(f32),
     Height(f32),
@@ -155,7 +155,7 @@ pub enum WidgetConstraint {
     CenterVertical(Variable, Variable),
 }
 
-#[derive(Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum PaddableConstraint {
     AlignTop(Variable),
     AlignBottom(Variable),
@@ -178,6 +178,7 @@ pub enum PaddableConstraint {
     MatchWidth(Variable),
     MatchHeight(Variable),
 }
+
 impl WidgetConstraint {
     pub fn builder(self, default_strength: f64) -> WidgetConstraintBuilder {
         WidgetConstraintBuilder {
@@ -186,6 +187,7 @@ impl WidgetConstraint {
         }
     }
 }
+
 impl PaddableConstraint {
     pub fn builder(self, default_strength: f64) -> PaddableConstraintBuilder {
         PaddableConstraintBuilder {
@@ -196,10 +198,12 @@ impl PaddableConstraint {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct WidgetConstraintBuilder {
     constraint: WidgetConstraint,
     strength: f64,
 }
+
 impl WidgetConstraintBuilder {
     pub fn strength(mut self, strength: f64) -> Self {
         self.strength = strength;
@@ -207,11 +211,13 @@ impl WidgetConstraintBuilder {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct PaddableConstraintBuilder {
     constraint: PaddableConstraint,
     strength: f64,
     padding: f32,
 }
+
 impl PaddableConstraintBuilder {
     pub fn strength(mut self, strength: f64) -> Self {
         self.strength = strength;

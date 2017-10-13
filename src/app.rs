@@ -5,13 +5,14 @@ use std::cell::RefCell;
 use glutin;
 
 use window::Window;
-
 use ui::Ui;
 use input::InputEvent;
 use widget::WidgetBuilder;
 use event::{self, EventHandler, EventArgs};
 use geometry::Size;
 
+/// Limn application, global object to be instatiated per window.
+///
 /// This is contains the core of a Limn application,
 /// the Ui, event queue, and the handlers that operate
 /// directly on the UI. These handlers are used to handle
@@ -20,13 +21,24 @@ use geometry::Size;
 /// are used in a typical desktop app. This set of handlers
 /// could be configured differently for a mobile app, for example.
 pub struct App {
+    /// The UI currently visible in the window
     ui: Ui,
+    /// Minimum time until the next frame is drawn, caps the UI to 60 FPS
     next_frame_time: Instant,
+    /// Events that need to be processed before the next frame can be drawn
     events_loop: Rc<RefCell<glutin::EventsLoop>>,
+    /// Used to ignore resize events before ui has been measured
     window_initialized: bool,
 }
 
 impl App {
+
+    /// Creates a new `App` from an existing `Window`.
+    /// Automatically initializes the default event handlers for a typical
+    /// desktop app:
+    ///
+    /// `ui_handlers`, `layout_handlers`, `input_handlers`,
+    /// `mouse_handlers`, `keyboard_handlers` and `drag_handlers`
     pub fn new(window: Window, events_loop: glutin::EventsLoop) -> Self {
         event::queue_set_events_loop(&events_loop);
         let ui = Ui::new(window, &events_loop);
@@ -65,13 +77,17 @@ impl App {
             }
         }
     }
-    /// Application main loop
+
+    /// Updates the UI and redraws the window (the applications main loop)
+    /// Event handling currently blocks the whole UI, eventually this should be
+    /// moved to asynchronous event handling.
     pub fn main_loop(mut self, root: WidgetBuilder) {
         self.ui.root.add_child(root);
         let events_loop = self.events_loop.clone();
         let mut events_loop = events_loop.borrow_mut();
 
-        // Handle set up events to allow layout to 'settle' and initialize the window size to the initial layout size
+        // Handle set up events to allow layout to 'settle' and initialize
+        // the window size to the initial layout size
         self.handle_events();
         self.ui.resize_window_to_fit();
         self.window_initialized = true;
@@ -131,5 +147,8 @@ impl App {
     }
 }
 
-/// Event emitted after every frame is rendered. To implement animation, add a handler for this event that calls args.ui.redraw() to draw a new frame.
+/// Event emitted after every frame is rendered.
+///
+/// To implement animation, add a handler for this event that calls
+/// [`args.ui.redraw()`](../ui/struct.Ui.html#method.redraw) to draw a new frame.
 pub struct FrameEvent;
