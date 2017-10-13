@@ -51,8 +51,8 @@ pub struct EditTextBuilder {
     pub text_widget: WidgetBuilder,
 }
 
-impl EditTextBuilder {
-    pub fn new() -> Self {
+impl Default for EditTextBuilder {
+    fn default() -> Self {
         let default_border = Some((1.0, GRAY_70));
         let focused_border = Some((1.0, BLUE));
         let rect_style = style!(
@@ -87,7 +87,14 @@ impl EditTextBuilder {
             text_widget: text_widget,
         }
     }
+}
+impl EditTextBuilder {
+    /// Creates a new `EditTextBuilder`
+    pub fn new() -> Self {
+        Self::default()
+    }
 
+    /// Sets the callback which is used on changing the edited text
     pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
         where F: Fn(&TextUpdated, EventArgs) + 'static
     {
@@ -97,6 +104,7 @@ impl EditTextBuilder {
 }
 
 widget_builder!(EditTextBuilder);
+
 impl Into<WidgetBuilder> for EditTextBuilder {
     fn into(mut self) -> WidgetBuilder {
         self.widget.add_child(self.text_widget);
@@ -108,6 +116,7 @@ impl Into<WidgetBuilder> for EditTextBuilder {
 struct TextUpdatedHandler {
     size_constraints: Vec<Constraint>,
 }
+
 impl EventHandler<StyleUpdated> for TextUpdatedHandler {
     fn handle(&mut self, _: &StyleUpdated, mut args: EventArgs) {
         args.widget.update_layout(|layout| {

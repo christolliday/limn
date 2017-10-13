@@ -402,6 +402,7 @@ impl Widget {
 }
 
 /// Used to initialize and modify a Widget before it's been added to a parent Widget
+#[derive(Debug, Clone)]
 pub struct WidgetBuilder {
     pub widget: WidgetRef,
 }

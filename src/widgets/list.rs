@@ -55,7 +55,7 @@ impl EventHandler<ListItemSelected> for ListHandler {
     }
 }
 
-fn list_handle_deselect(_: &ClickEvent, args: &EventArgs) {
+fn list_handle_deselect(_: &ClickEvent, args: EventArgs) {
     args.widget.event(ListItemSelected { widget: None });
 }
 

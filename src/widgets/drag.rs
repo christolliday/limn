@@ -6,7 +6,7 @@ use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use geometry::{Point, Vector};
 use app::App;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct DragEvent {
     pub state: DragState,
     /// mouse position
@@ -24,6 +24,7 @@ pub enum DragState {
     End,
 }
 
+#[derive(Debug, Clone)]
 struct DragInputHandler {
     widget: Option<WidgetRef>,
     position: Point,
@@ -74,6 +75,7 @@ impl EventHandler<DragInputEvent> for DragInputHandler {
     }
 }
 
+#[derive(Debug, Clone)]
 enum DragInputEvent {
     WidgetPressed(WidgetRef),
     MouseMoved(Point),

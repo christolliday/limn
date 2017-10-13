@@ -6,6 +6,7 @@ use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use layout::constraint::*;
 
+#[derive(Debug, Copy, Clone)]
 pub struct TextBuilder;
 
 impl TextBuilder {

@@ -52,7 +52,7 @@ impl WebRenderContext {
         let document_id = api.add_document(window.size_px());
 
         let frame_ready = Arc::new(AtomicBool::new(false));
-        let notifier = Box::new(Notifier::new(events_loop.create_proxy(), frame_ready.clone()));
+        let notifier = Box::new(Notifier::new(events_loop.create_proxy(), Arc::clone(&frame_ready)));
         renderer.set_render_notifier(notifier);
 
         renderer.set_external_image_handler(Box::new(LimnExternalImageHandler));

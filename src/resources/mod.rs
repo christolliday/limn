@@ -30,12 +30,13 @@ pub fn resources() -> MutexGuard<'static, Resources> {
 
 named_id!(WidgetId);
 
+#[derive(Clone)]
 pub struct FontInfo {
     pub key: FontKey,
     pub info: Font,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct ImageInfo {
     pub key: ImageKey,
     pub info: ImageDescriptor,
@@ -47,13 +48,21 @@ pub struct Map<I, T> {
     map: HashMap<I, T>,
 }
 
-impl<I: Id, T> Map<I, T> {
-    pub fn new() -> Self {
+impl<I: Id, T> Default for Map<I, T> {
+    #[inline]
+    fn default() -> Self {
         Map {
             id_gen: IdGen::new(),
             map: HashMap::new(),
         }
     }
+}
+impl<I: Id, T> Map<I, T> {
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Borrow the resource associated with the given `Id`.
     pub fn get(&self, id: I) -> Option<&T> {
         self.map.get(&id)
