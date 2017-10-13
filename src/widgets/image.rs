@@ -6,6 +6,7 @@ use layout::constraint::*;
 pub struct ImageBuilder;
 
 impl ImageBuilder {
+    #[cfg_attr(feature = "cargo-clippy", allow(new_ret_no_self))]
     pub fn new(file: &str) -> WidgetBuilder {
         let image_draw_state = ImageState::new(file);
         let image_size = image_draw_state.measure();
