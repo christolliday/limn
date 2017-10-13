@@ -45,7 +45,9 @@ impl App {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct EscKeyCloseHandler;
+
 impl EventHandler<KeyboardInput> for EscKeyCloseHandler {
     fn handle(&mut self, event: &KeyboardInput, args: EventArgs) {
         if let KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = *event {
@@ -53,9 +55,12 @@ impl EventHandler<KeyboardInput> for EscKeyCloseHandler {
         }
     }
 }
+
+#[derive(Debug, Copy, Clone)]
 pub struct DebugSettingsHandler {
     debug_on: bool
 }
+
 impl DebugSettingsHandler {
     pub fn new() -> Self {
         DebugSettingsHandler {
@@ -63,6 +68,7 @@ impl DebugSettingsHandler {
         }
     }
 }
+
 impl EventHandler<KeyboardInput> for DebugSettingsHandler {
     fn handle(&mut self, event: &KeyboardInput, args: EventArgs) {
         let ui = args.ui;

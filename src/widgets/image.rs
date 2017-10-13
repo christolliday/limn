@@ -2,6 +2,7 @@ use widget::WidgetBuilder;
 use draw::image::ImageState;
 use layout::constraint::*;
 
+#[derive(Debug, Copy, Clone)]
 pub struct ImageBuilder;
 
 impl ImageBuilder {

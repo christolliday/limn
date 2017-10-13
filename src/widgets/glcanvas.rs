@@ -1,6 +1,7 @@
 use widget::WidgetBuilder;
 pub use draw::glcanvas::GLCanvasState;
 
+#[derive(Debug, Copy, Clone)]
 pub struct GLCanvasBuilder;
 
 impl GLCanvasBuilder {

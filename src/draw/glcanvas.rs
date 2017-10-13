@@ -35,7 +35,7 @@ impl GLCanvasState {
 impl Draw for GLCanvasState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let mut res = resources();
-        let image_info = res.get_image(&self.name).clone();
+        let image_info = *res.get_image(&self.name);
         if bounds.width() as u32 != image_info.info.width ||
             bounds.height() as u32 != image_info.info.height {
             let descriptor = ImageDescriptor::new(bounds.width() as u32, bounds.height() as u32, ImageFormat::RGB8, true);

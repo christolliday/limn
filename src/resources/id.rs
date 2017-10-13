@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::hash::Hash;
-use std::default::Default;
 
 pub trait Id: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {
     fn new(index: usize) -> Self;
