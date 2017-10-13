@@ -26,7 +26,7 @@ impl Default for TextState {
     fn default() -> Self {
         TextState {
             text: "".to_owned(),
-            font: "NotoSans/NotoSans-Regular".to_owned(),
+            font: "Sans".to_owned(),
             font_size: 24.0,
             text_color: BLACK,
             background_color: TRANSPARENT,
