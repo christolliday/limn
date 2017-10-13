@@ -140,4 +140,5 @@ macro_rules! style {
     };
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct StyleUpdated;

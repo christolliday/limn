@@ -13,6 +13,8 @@ use color::*;
 pub struct ListItemSelected {
     widget: Option<WidgetRef>,
 }
+
+#[derive(Debug, Copy, Clone)]
 pub struct ItemSelected;
 
 static COLOR_LIST_ITEM_DEFAULT: Color = GRAY_30;
@@ -30,14 +32,17 @@ lazy_static! {
     };
 }
 
+#[derive(Default)]
 pub struct ListHandler {
     selected: Option<WidgetRef>,
 }
+
 impl ListHandler {
     pub fn new() -> Self {
-        ListHandler { selected: None }
+        Self::default()
     }
 }
+
 impl EventHandler<ListItemSelected> for ListHandler {
     fn handle(&mut self, event: &ListItemSelected, _: EventArgs) {
         let selected = event.widget.clone();
@@ -50,18 +55,20 @@ impl EventHandler<ListItemSelected> for ListHandler {
     }
 }
 
-fn list_handle_deselect(_: &ClickEvent, args: EventArgs) {
+fn list_handle_deselect(_: &ClickEvent, args: &EventArgs) {
     args.widget.event(ListItemSelected { widget: None });
 }
 
 pub struct ListItemHandler {
     list_id: WidgetRef,
 }
+
 impl ListItemHandler {
     pub fn new(list_id: WidgetRef) -> Self {
         ListItemHandler { list_id: list_id }
     }
 }
+
 impl EventHandler<ClickEvent> for ListItemHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
         if !args.widget.props().contains(&Property::Selected) {
@@ -76,19 +83,28 @@ impl EventHandler<ClickEvent> for ListItemHandler {
 pub struct ListBuilder {
     pub widget: WidgetBuilder,
 }
+
+
 widget_wrapper!(ListBuilder);
 
 impl ListBuilder {
+
+    /// Creates a new `ListBuilder`
     pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new("list");
         let layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
+
+        let mut widget = WidgetBuilder::new("list");
+
         widget.add_handler(ListHandler::new())
-              .add_handler_fn(list_handle_deselect)
+              .add_handler_fn(&list_handle_deselect)
               .linear_layout(layout_settings);
+
         ListBuilder {
             widget: widget,
         }
     }
+
+    /// Sets the closure to run when a list item is selected
     pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
         where F: Fn(Option<WidgetRef>, EventArgs) + 'static
     {
@@ -100,6 +116,8 @@ impl ListBuilder {
         });
         self
     }
+
+    /// Set the contents of the list
     pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
         where C: Iterator<Item=I>,
               F: Fn(I, &mut ListBuilder) -> WidgetBuilder,
@@ -115,9 +133,11 @@ impl ListBuilder {
 }
 
 impl WidgetBuilder {
+
     pub fn list_item(&mut self, parent_list: &WidgetRef) -> &mut Self {
         self.add_handler(ListItemHandler::new(parent_list.clone()))
     }
+
     pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
         where F: Fn(EventArgs) + 'static
     {
@@ -128,8 +148,7 @@ impl WidgetBuilder {
     }
 }
 
-pub fn default_text_adapter(item: String, list: &mut ListBuilder) -> WidgetBuilder {
-    let text = (*item).to_owned();
+pub fn default_text_adapter(text: String, list: &mut ListBuilder) -> WidgetBuilder {
     let style = style!(parent: STYLE_LIST_TEXT, TextStyle::Text: text);
     let mut text_widget = TextBuilder::new_with_style(style);
 

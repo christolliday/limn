@@ -180,11 +180,11 @@ impl<'a, I> Iterator for Lines<'a, I>
 /// Converts the given font size in "points" to its font size in pixels.
 /// assumes 96 dpi display. 1 pt = 1/72"
 pub fn pt_to_px(font_size_in_points: f32) -> f32 {
-    (font_size_in_points * 4.0) as f32 / 3.0
+    (font_size_in_points * 4.0) / 3.0
 }
 
 pub fn px_to_pt(font_size_in_px: f32) -> f32 {
-    (font_size_in_px * 3.0) as f32 / 4.0
+    (font_size_in_px * 3.0) / 4.0
 }
 
 /// Converts the given font size in "points" to a uniform `rusttype::Scale`.

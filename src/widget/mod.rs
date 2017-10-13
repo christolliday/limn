@@ -56,7 +56,7 @@ impl WidgetRef {
         LayoutGuard { guard: self.0.borrow() }
     }
     pub fn layout_vars(&self) -> LayoutVars {
-        self.0.borrow().layout.vars.clone()
+        self.0.borrow().layout.vars
     }
     pub fn props(&self) -> PropsGuard {
         PropsGuard { guard: self.0.borrow() }
@@ -143,7 +143,7 @@ impl WidgetRef {
             });
         });
         self.event(::ui::WidgetAttachedEvent);
-        self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars.clone()));
+        self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars));
         self.event(::ui::ChildrenUpdatedEvent::Added(child));
         self
     }
@@ -193,7 +193,7 @@ impl WidgetRef {
             let mut handlers: Vec<Rc<RefCell<EventHandlerWrapper>>> = Vec::new();
             if let Some(event_handlers) = widget.handlers.get_mut(&type_id) {
                 for handler in event_handlers {
-                    handlers.push(handler.clone());
+                    handlers.push(Rc::clone(&handler));
                 }
             }
             handlers

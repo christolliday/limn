@@ -244,7 +244,7 @@ impl<I> LineRects<I>
             let total_text_height = num_lines as f32 * line_height;
             let total_text_y_range = Range::new(0.0, total_text_height);
             let total_text_y = total_text_y_range.align_start_of(bounding_y);
-            let range = Range::new(0.0, font_size as f32);
+            let range = Range::new(0.0, font_size);
             let y = range.align_start_of(total_text_y);
 
             Rect::from_ranges(x, y)
@@ -290,8 +290,9 @@ impl<I> Iterator for LineRects<I>
 ///
 /// Lines that do not contain any selected text will be skipped.
 pub struct SelectedLineRects<'a, I> {
-    selected_glyph_rects_per_line: super::glyph::SelectedGlyphRectsPerLine<'a, I>,
+    selected_glyph_rects_per_line: SelectedGlyphRectsPerLine<'a, I>,
 }
+
 impl<'a, I> SelectedLineRects<'a, I>
     where I: Iterator<Item = (&'a str, Rect)>
 {
@@ -349,7 +350,7 @@ fn advance_width(ch: char, font: &Font, scale: Scale, last_glyph: &mut Option<Gl
         .unwrap_or(0.0);
     let advance_width = g.h_metrics().advance_width;
     *last_glyph = Some(g.id());
-    (kern + advance_width) as f32
+    (kern + advance_width)
 }
 
 fn peek_next_char(char_indices: &mut Peekable<CharIndices>, next_char_expected: char) -> bool {
@@ -498,7 +499,7 @@ fn next_break_by_whitespace(text: &str,
 
 /// Produce the width of the given line of text including spaces (i.e. ' ').
 pub fn width(text: &str, font: &Font, font_size: f32) -> f32 {
-    let scale = Scale::uniform(font_size as f32);
+    let scale = Scale::uniform(font_size);
     let point = rusttype::Point { x: 0.0, y: 0.0 };
 
     let mut total_w = 0.0;
@@ -508,5 +509,6 @@ pub fn width(text: &str, font: &Font, font_size: f32) -> f32 {
             None => total_w += g.unpositioned().h_metrics().advance_width,
         }
     }
-    total_w as f32
+
+    total_w
 }

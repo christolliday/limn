@@ -17,7 +17,7 @@ pub struct DragEvent {
     pub change: Vector,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum DragState {
     Start,
     Moved,

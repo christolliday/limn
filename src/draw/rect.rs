@@ -7,11 +7,13 @@ use widget::style::{self, Style, Value};
 use geometry::{Rect, RectExt};
 use color::*;
 
+#[derive(Debug, Copy, Clone)]
 pub struct RectState {
     pub background_color: Color,
     pub corner_radius: Option<f32>,
     pub border: Option<(f32, Color)>,
 }
+
 impl Default for RectState {
     fn default() -> Self {
         RectState {
@@ -21,6 +23,7 @@ impl Default for RectState {
         }
     }
 }
+
 impl RectState {
     pub fn new() -> Self {
         RectState::default()
