@@ -141,19 +141,34 @@ impl Resources {
         &self.images[name]
     }
 
+    #[deprecated(note = "may panic, instead of this use get_font_or_load_from_system or get_font_if_present")]
     pub fn get_font(&mut self, name: &str) -> &FontInfo {
-        if !self.fonts.contains_key(name) {
-            let data = load_font_data(name).unwrap();
-            let key = self.render.as_ref().unwrap().generate_font_key();
-            let mut resources = ResourceUpdates::new();
-            resources.add_raw_font(key, data, 0);
+        self.get_font_or_load_from_system(name).unwrap()
+    }
 
-            let font = load_font(name).unwrap();
-            self.render.as_ref().unwrap().update_resources(resources);
-            let font_info = FontInfo { key: key, info: font };
-            self.fonts.insert(name.to_owned(), font_info);
+    pub fn get_font_if_present(&mut self, name: &str) -> Option<&FontInfo> {
+        self.fonts.get(name)
+    }
+
+    pub fn get_font_or_load_from_system(&mut self, name: &str) -> Result<&FontInfo, ::std::io::Error> {
+        if !self.fonts.contains_key(name) {
+            return self.add_font(name, try!(load_system_font_by_family_name(name)));
         }
-        &self.fonts[name]
+        Ok(&self.fonts[name])
+    }
+
+    pub fn add_font(&mut self, name: &str, font_bytes: Vec<u8>) -> Result<&FontInfo, ::std::io::Error> {
+        let font = try!(font_from_bytes(font_bytes.clone()));
+
+        let key = self.render.as_ref().unwrap().generate_font_key();
+        let mut resources = ResourceUpdates::new();
+        resources.add_raw_font(key, font_bytes, 0);
+
+        self.render.as_ref().unwrap().update_resources(resources);
+        let font_info = FontInfo { key: key, info: font };
+        self.fonts.insert(name.to_owned(), font_info);
+
+        Ok(&self.fonts[name])
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(map_entry))]
@@ -225,7 +240,7 @@ pub fn premultiply(data: &mut [u8]) {
     }
 }
 
-fn load_font_data(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
+fn load_system_font_by_family_name(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
     let property = system_fonts::FontPropertyBuilder::new().family(name).build();
     let font = system_fonts::get(&property)
         .map(|tuple| tuple.0)
@@ -233,9 +248,12 @@ fn load_font_data(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
     font
 }
 
-pub fn load_font(name: &str) -> Result<Font, ::std::io::Error> {
-    let data = try!(load_font_data(name));
-    let collection = rusttype::FontCollection::from_bytes(data);
+fn font_from_bytes(bytes: Vec<u8>) -> Result<Font, ::std::io::Error> {
+    let collection = rusttype::FontCollection::from_bytes(bytes);
     let mut font_iter = collection.into_fonts();
     font_iter.next().ok_or(::std::io::Error::new(::std::io::ErrorKind::InvalidData, "Bad font format"))
+}
+
+pub fn load_font(name: &str) -> Result<Font, ::std::io::Error> {
+    font_from_bytes(try!(load_system_font_by_family_name(name)))
 }
