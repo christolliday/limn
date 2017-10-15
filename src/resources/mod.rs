@@ -134,7 +134,7 @@ impl Resources {
         Ok(&self.fonts[name])
     }
 
-    pub fn add_font(&mut self, name: &str, font_bytes: Vec<u8>) -> Result<&FontInfo, ::std::io::Error> {
+    pub fn put_font(&mut self, name: &str, font_bytes: Vec<u8>) -> Result<&FontInfo, ::std::io::Error> {
         let font = try!(font_from_bytes(font_bytes.clone()));
 
         let key = self.render.as_ref().unwrap().generate_font_key();
