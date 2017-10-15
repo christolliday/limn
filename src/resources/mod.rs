@@ -118,18 +118,13 @@ impl Resources {
         &self.images[name]
     }
 
-    #[deprecated(note = "may panic, instead of this use get_font_or_load_from_system or get_font_if_present")]
-    pub fn get_font(&mut self, name: &str) -> &FontInfo {
-        self.get_font_or_load_from_system(name).unwrap()
-    }
-
-    pub fn get_font_if_present(&mut self, name: &str) -> Option<&FontInfo> {
+    pub fn get_font_if_loaded(&mut self, name: &str) -> Option<&FontInfo> {
         self.fonts.get(name)
     }
 
-    pub fn get_font_or_load_from_system(&mut self, name: &str) -> Result<&FontInfo, ::std::io::Error> {
+    pub fn get_font(&mut self, name: &str) -> Result<&FontInfo, ::std::io::Error> {
         if !self.fonts.contains_key(name) {
-            return self.add_font(name, try!(load_system_font_by_family_name(name)));
+            return self.put_font(name, try!(load_system_font_bytes_by_family_name(name)));
         }
         Ok(&self.fonts[name])
     }
@@ -149,7 +144,7 @@ impl Resources {
     }
 
     pub fn get_font_instance(&mut self, name: &str, font_size: f32) -> &FontInstanceKey {
-        let font_key = self.get_font(name).key;
+        let font_key = self.get_font(name).unwrap().key;
         let size = app_units::Au::from_f32_px(text_layout::px_to_pt(font_size));
         if !self.font_instances.contains_key(&(name.to_owned(), size)) {
             let instance_key = self.render.as_ref().unwrap().generate_font_instance_key();
@@ -217,7 +212,7 @@ pub fn premultiply(data: &mut [u8]) {
     }
 }
 
-fn load_system_font_by_family_name(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
+fn load_system_font_bytes_by_family_name(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
     let property = system_fonts::FontPropertyBuilder::new().family(name).build();
     let font = system_fonts::get(&property)
         .map(|tuple| tuple.0)
@@ -231,6 +226,6 @@ fn font_from_bytes(bytes: Vec<u8>) -> Result<Font, ::std::io::Error> {
     font_iter.next().ok_or(::std::io::Error::new(::std::io::ErrorKind::InvalidData, "Bad font format"))
 }
 
-pub fn load_font(name: &str) -> Result<Font, ::std::io::Error> {
-    font_from_bytes(try!(load_system_font_by_family_name(name)))
+pub fn load_system_font_by_family_name(name: &str) -> Result<Font, ::std::io::Error> {
+    font_from_bytes(try!(load_system_font_bytes_by_family_name(name)))
 }
