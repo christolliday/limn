@@ -8,6 +8,7 @@ use webrender::api::*;
 use image;
 use rusttype;
 use app_units;
+use font_loader::system_fonts;
 
 use text_layout;
 
@@ -117,23 +118,33 @@ impl Resources {
         &self.images[name]
     }
 
-    pub fn get_font(&mut self, name: &str) -> &FontInfo {
-        if !self.fonts.contains_key(name) {
-            let data = load_font_data(name).unwrap();
-            let key = self.render.as_ref().unwrap().generate_font_key();
-            let mut resources = ResourceUpdates::new();
-            resources.add_raw_font(key, data, 0);
+    pub fn get_font_if_loaded(&mut self, name: &str) -> Option<&FontInfo> {
+        self.fonts.get(name)
+    }
 
-            let font = load_font(name).unwrap();
-            self.render.as_ref().unwrap().update_resources(resources);
-            let font_info = FontInfo { key: key, info: font };
-            self.fonts.insert(name.to_owned(), font_info);
+    pub fn get_font(&mut self, name: &str) -> Result<&FontInfo, ::std::io::Error> {
+        if !self.fonts.contains_key(name) {
+            return self.put_font(name, try!(load_system_font_bytes_by_family_name(name)));
         }
-        &self.fonts[name]
+        Ok(&self.fonts[name])
+    }
+
+    pub fn put_font(&mut self, name: &str, font_bytes: Vec<u8>) -> Result<&FontInfo, ::std::io::Error> {
+        let font = try!(font_from_bytes(font_bytes.clone()));
+
+        let key = self.render.as_ref().unwrap().generate_font_key();
+        let mut resources = ResourceUpdates::new();
+        resources.add_raw_font(key, font_bytes, 0);
+
+        self.render.as_ref().unwrap().update_resources(resources);
+        let font_info = FontInfo { key: key, info: font };
+        self.fonts.insert(name.to_owned(), font_info);
+
+        Ok(&self.fonts[name])
     }
 
     pub fn get_font_instance(&mut self, name: &str, font_size: f32) -> &FontInstanceKey {
-        let font_key = self.get_font(name).key;
+        let font_key = self.get_font(name).unwrap().key;
         let size = app_units::Au::from_f32_px(text_layout::px_to_pt(font_size));
         if !self.font_instances.contains_key(&(name.to_owned(), size)) {
             let instance_key = self.render.as_ref().unwrap().generate_font_instance_key();
@@ -201,17 +212,20 @@ pub fn premultiply(data: &mut [u8]) {
     }
 }
 
-fn load_font_data(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
-    use std::fs::File;
-    use std::io::Read;
-    let mut file = File::open(format!("assets/fonts/{}.ttf", name)).expect("Font missing");
-    let mut data = Vec::new();
-    try!(file.read_to_end(&mut data));
-    Ok(data)
+fn load_system_font_bytes_by_family_name(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
+    let property = system_fonts::FontPropertyBuilder::new().family(name).build();
+    let font = system_fonts::get(&property)
+        .map(|tuple| tuple.0)
+        .ok_or(::std::io::Error::new(::std::io::ErrorKind::NotFound, "Font not found"));
+    font
 }
 
-pub fn load_font(name: &str) -> Result<Font, ::std::io::Error> {
-    let data = try!(load_font_data(name));
-    let collection = rusttype::FontCollection::from_bytes(data);
-    Ok(collection.into_font().unwrap())
+fn font_from_bytes(bytes: Vec<u8>) -> Result<Font, ::std::io::Error> {
+    let collection = rusttype::FontCollection::from_bytes(bytes);
+    let mut font_iter = collection.into_fonts();
+    font_iter.next().ok_or(::std::io::Error::new(::std::io::ErrorKind::InvalidData, "Bad font format"))
+}
+
+pub fn load_system_font_by_family_name(name: &str) -> Result<Font, ::std::io::Error> {
+    font_from_bytes(try!(load_system_font_bytes_by_family_name(name)))
 }
