@@ -41,10 +41,10 @@ impl ClockHand {
 
 impl Draw for ClockHand {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
-        let transform = rotation_transform(&bounds.center().typed(),
+        let transform = rotation_transform(&bounds.center(),
             self.rotation + Radians::new(f32::consts::PI));
         renderer.builder.push_stacking_context(
-            &PrimitiveInfo::new(Rect::zero().typed()),
+            &PrimitiveInfo::new(Rect::zero()),
             ScrollPolicy::Fixed,
             Some(PropertyBinding::Value(transform)),
             TransformStyle::Flat,
@@ -55,7 +55,7 @@ impl Draw for ClockHand {
         let rect = Rect::new(
             bounds.center() + Size::new(-self.width / 2.0, 0.0),
             Size::new(self.width, self.length)
-        ).typed();
+        );
         renderer.builder.push_rect(
             &PrimitiveInfo::new(rect),
             self.color.into());

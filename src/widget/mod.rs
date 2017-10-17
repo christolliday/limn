@@ -16,7 +16,7 @@ use event::{self, EventHandler, EventArgs, EventHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef};
 use ui::Ui;
 use resources::{resources, WidgetId};
-use geometry::{Point, Rect, RectExt};
+use geometry::{Point, Rect};
 use render;
 use color::Color;
 use event::Target;
@@ -346,7 +346,7 @@ impl Widget {
     }
     pub fn draw(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
         let bounds = self.bounds;
-        let clip_id = renderer.builder.define_clip(None, bounds.typed(), vec![], None);
+        let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
         renderer.builder.push_clip_id(clip_id);
         if let Some(draw_state) = self.draw_state.as_mut() {
             draw_state.state.draw(bounds, crop_to, renderer);

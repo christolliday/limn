@@ -9,7 +9,7 @@ use webrender::api::*;
 use window::Window;
 use euclid::TypedPoint2D;
 use resources;
-use geometry::{Rect, RectExt, Point, Size};
+use geometry::{Rect, Point, Size};
 
 // Provides access to the WebRender context and API
 pub(super) struct WebRenderContext {
@@ -36,6 +36,7 @@ impl WebRenderContext {
     pub fn new(window: &mut Window, events_loop: &glutin::EventsLoop) -> Self {
         let gl = window.gl();
         println!("OpenGL version {}", gl.get_string(gl::VERSION));
+        println!("HiDPI factor {}", window.hidpi_factor());
 
         let opts = webrender::RendererOptions {
             resource_override_path: None,
@@ -48,7 +49,7 @@ impl WebRenderContext {
         let (mut renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
         let api = sender.create_api();
         resources::init_resources(sender.create_api());
-        let document_id = api.add_document(window.device_size());
+        let document_id = api.add_document(window.size_px());
 
         let frame_ready = Arc::new(AtomicBool::new(false));
         let notifier = Box::new(Notifier::new(events_loop.create_proxy(), frame_ready.clone()));
@@ -149,7 +150,7 @@ pub fn draw_rect_outline<C: Into<ColorF>>(rect: Rect, color: C, renderer: &mut R
     let side = BorderSide { color: color.into(), style: BorderStyle::Solid };
     let border = NormalBorder { left: side, right: side, top: side, bottom: side, radius: BorderRadius::zero() };
     let details = BorderDetails::Normal(border);
-    let info = PrimitiveInfo::new(rect.typed());
+    let info = PrimitiveInfo::new(rect);
     renderer.builder.push_border(&info, widths, details);
 }
 

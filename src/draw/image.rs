@@ -3,7 +3,7 @@ use webrender::api::*;
 use render::RenderBuilder;
 use widget::draw::Draw;
 use resources::resources;
-use geometry::{Rect, RectExt, Size, SizeExt};
+use geometry::{Rect, Size};
 
 pub struct ImageState {
     pub image: String,
@@ -28,10 +28,10 @@ impl ImageState {
 impl Draw for ImageState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let key = resources().get_image(&self.image).key;
-        let info = PrimitiveInfo::new(bounds.typed());
+        let info = PrimitiveInfo::new(bounds);
         renderer.builder.push_image(
             &info,
-            bounds.size.typed(),
+            bounds.size,
             LayoutSize::zero(),
             ImageRendering::Auto,
             key,

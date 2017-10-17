@@ -1,7 +1,8 @@
 use gleam::gl;
 use glutin;
 use glutin::GlContext;
-use webrender::api::{DeviceUintSize, LayoutSize};
+use webrender::api::DeviceUintSize;
+use geometry::Size;
 
 /// A simple wrapper around a `glutin::GlWindow`.
 pub struct Window {
@@ -44,12 +45,15 @@ impl Window {
     pub fn resize(&mut self, width: u32, height: u32) {
         self.window.set_inner_size(width, height);
     }
-    pub fn device_size(&self) -> DeviceUintSize {
+    /// Get the size of the client area of the window in actual pixels.
+    /// This is the size of the framebuffer
+    pub fn size_px(&self) -> DeviceUintSize {
         let (width, height) = self.window.get_inner_size_pixels().unwrap();
         DeviceUintSize::new(width, height)
     }
-    pub fn layout_size(&self) -> LayoutSize {
-        let (width, height) = self.window.get_inner_size_pixels().unwrap();
-        LayoutSize::new(width as f32, height as f32)
+    /// Get the size of the client area of the window in density independent pixels.
+    pub fn size_dp(&self) -> Size {
+        let (width, height) = self.window.get_inner_size_points().unwrap();
+        Size::new(width as f32, height as f32)
     }
 }

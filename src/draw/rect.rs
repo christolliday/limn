@@ -28,16 +28,15 @@ impl RectState {
 }
 
 fn clip_rounded(rect: Rect, radius: f32) -> LocalClip {
-    let rect = rect.typed();
     let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform(radius));
     LocalClip::RoundedRect(rect, clip_region)
 }
 
 fn push_rect(renderer: &mut RenderBuilder, rect: Rect, color: Color, clip_rect: Rect, radius: Option<f32>) {
     let info = if let Some(radius) = radius {
-        PrimitiveInfo::with_clip(rect.typed(), clip_rounded(clip_rect, radius))
+        PrimitiveInfo::with_clip(rect, clip_rounded(clip_rect, radius))
     } else {
-        PrimitiveInfo::new(rect.typed())
+        PrimitiveInfo::new(rect)
     };
     renderer.builder.push_rect(&info, color.into());
 }

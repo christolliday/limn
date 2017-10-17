@@ -46,12 +46,12 @@ impl TextState {
         let line_height = self.line_height();
         let mut resources = resources();
         let font = resources.get_font(&self.font);
-        text_layout::get_text_size(
+        Size::from_untyped(&text_layout::get_text_size(
             &self.text,
             &font.info,
             self.font_size,
             line_height,
-            self.wrap)
+            self.wrap))
     }
     pub fn min_height(&self) -> f32 {
         self.line_height()
@@ -78,12 +78,12 @@ impl TextState {
         let font = resources.get_font(&self.font);
         text_layout::get_line_rects(
             &self.text,
-            bounds,
+            bounds.to_untyped(),
             &font.info,
             self.font_size,
             line_height,
             self.wrap,
-            self.align)
+            self.align).iter().map(|rect| Rect::from_untyped(rect)).collect()
     }
     fn position_glyphs(&self, bounds: Rect) -> Vec<GlyphInstance> {
         let line_height = self.line_height();
@@ -92,7 +92,7 @@ impl TextState {
         let font = resources.get_font(&self.font);
         text_layout::get_positioned_glyphs(
             &self.text,
-            bounds,
+            bounds.to_untyped(),
             &font.info,
             self.font_size,
             line_height,
@@ -133,14 +133,14 @@ impl Draw for TextState {
             for glyph in &glyphs {
                 let scaled_glyph = font.info.glyph(GlyphId(glyph.index)).unwrap().scaled(scale);
                 if let Some(rect) = scaled_glyph.exact_bounding_box() {
-                    let origin = glyph.point.to_vector().to_untyped() + Vector::new(0.0, -1.0);
+                    let origin = glyph.point.to_vector() + Vector::new(0.0, -1.0);
                     let rect = Rect::from_rusttype(rect).translate(&origin);
                     render::draw_rect_outline(rect, BLUE, renderer);
                 }
             }
         }
         let key = self.font_instance_key();
-        let info = PrimitiveInfo::new(bounds.typed());
+        let info = PrimitiveInfo::new(bounds);
         renderer.builder.push_text(
             &info,
             &glyphs,

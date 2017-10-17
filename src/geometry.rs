@@ -4,10 +4,24 @@ use euclid;
 use rusttype;
 use webrender::api::*;
 
-pub type Size = euclid::Size2D<f32>;
-pub type Point = euclid::Point2D<f32>;
-pub type Vector = euclid::Vector2D<f32>;
-pub type Rect = euclid::Rect<f32>;
+/// This is the unit used for all geometric types that represent a position on screen,
+/// independent of the device's hidpi factor, or "Device Pixel Ratio".
+/// Sometimes known as 'points', logical pixels or device independent pixels,
+///
+/// `DensityIndependentPixel` is an alias to a webrender `LayerPixel` to simplify
+/// integration, but doesn't imply that the reference frame is a layer. Positions
+/// should generally be relative to the window, where the origin is the top left,
+/// and x and y values increase moving down and to the right.
+pub type DensityIndependentPixel = LayerPixel;
+
+pub type Size = euclid::TypedSize2D<f32, DensityIndependentPixel>;
+pub type Point = euclid::TypedPoint2D<f32, DensityIndependentPixel>;
+pub type Vector = euclid::TypedVector2D<f32, DensityIndependentPixel>;
+pub type Rect = euclid::TypedRect<f32, DensityIndependentPixel>;
+
+/// This is the unit of actual pixels in the framebuffer.
+/// Multiply by the windows hidpi factor to get `DensityIndependentPixel`s
+pub use webrender::api::DevicePixel;
 
 pub trait RectExt<T> {
     fn from_rusttype<S: Into<T>>(rect: rusttype::Rect<S>) -> Self;
@@ -20,7 +34,6 @@ pub trait RectExt<T> {
     fn height(&self) -> T;
     fn center(&self) -> Point;
     fn shrink_bounds(&self, size: T) -> Self;
-    fn typed(&self) -> LayoutRect;
 }
 impl RectExt<f32> for Rect {
     fn from_rusttype<S: Into<f32>>(rect: rusttype::Rect<S>) -> Self {
@@ -57,25 +70,11 @@ impl RectExt<f32> for Rect {
             Point::new(self.origin.x + size / 2.0, self.origin.y + size / 2.0),
             Size::new(self.size.width - size, self.size.height - size))
     }
-    fn typed(&self) -> LayoutRect {
-        LayoutRect::from_untyped(self)
-    }
-}
-
-pub trait PointExt {
-    fn typed(&self) -> LayoutPoint;
-}
-
-impl PointExt for Point {
-    fn typed(&self) -> LayoutPoint {
-        LayoutPoint::from_untyped(self)
-    }
 }
 
 pub trait SizeExt<T> {
     fn from_array(size: [u32; 2]) -> Self;
     fn from_tuple(size: (u32, u32)) -> Self;
-    fn typed(&self) -> LayoutSize;
 }
 
 impl SizeExt<f32> for Size {
@@ -84,8 +83,5 @@ impl SizeExt<f32> for Size {
     }
     fn from_tuple(size: (u32, u32)) -> Self {
         Size::new(size.0 as f32, size.1 as f32)
-    }
-    fn typed(&self) -> LayoutSize {
-        LayoutSize::from_untyped(self)
     }
 }

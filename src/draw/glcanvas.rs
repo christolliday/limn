@@ -3,7 +3,7 @@ use webrender::api::*;
 use render::RenderBuilder;
 use widget::draw::Draw;
 use resources::resources;
-use geometry::{Rect, RectExt, Size, SizeExt};
+use geometry::{Rect, RectExt, Size};
 
 pub struct GLCanvasState {
     pub name: String,
@@ -44,10 +44,10 @@ impl Draw for GLCanvasState {
                 res.texture_descriptors.insert(texture_id, descriptor);
             }
         }
-        let info = PrimitiveInfo::new(bounds.typed());
+        let info = PrimitiveInfo::new(bounds);
         renderer.builder.push_image(
             &info,
-            bounds.size.typed(),
+            bounds.size,
             LayoutSize::zero(),
             ImageRendering::Auto,
             image_info.key,

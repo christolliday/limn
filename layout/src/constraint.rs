@@ -2,6 +2,8 @@ use cassowary::{Variable, Constraint, Term, Expression};
 use cassowary::WeightedRelation::*;
 use cassowary::strength::*;
 
+use euclid::{TypedPoint2D, TypedSize2D};
+
 use super::{LAYOUT, LayoutRef, LayoutVars, Size, Point};
 
 pub fn width(width: f32) -> WidgetConstraintBuilder {
@@ -16,11 +18,11 @@ pub fn min_width(width: f32) -> WidgetConstraintBuilder {
 pub fn min_height(height: f32) -> WidgetConstraintBuilder {
     WidgetConstraint::MinHeight(height).builder(REQUIRED)
 }
-pub fn size(size: Size) -> WidgetConstraintBuilder {
-    WidgetConstraint::Size(size).builder(REQUIRED)
+pub fn size<T>(size: TypedSize2D<f32, T>) -> WidgetConstraintBuilder {
+    WidgetConstraint::Size(size.to_untyped()).builder(REQUIRED)
 }
-pub fn min_size(size: Size) -> WidgetConstraintBuilder {
-    WidgetConstraint::MinSize(size).builder(REQUIRED)
+pub fn min_size<T>(size: TypedSize2D<f32, T>) -> WidgetConstraintBuilder {
+    WidgetConstraint::MinSize(size.to_untyped()).builder(REQUIRED)
 }
 pub fn aspect_ratio(aspect_ratio: f32) -> WidgetConstraintBuilder {
     WidgetConstraint::AspectRatio(aspect_ratio).builder(REQUIRED)
@@ -34,8 +36,8 @@ pub fn shrink_horizontal() -> WidgetConstraintBuilder {
 pub fn shrink_vertical() -> WidgetConstraintBuilder {
     WidgetConstraint::ShrinkVertical.builder(WEAK)
 }
-pub fn top_left(point: Point) -> WidgetConstraintBuilder {
-    WidgetConstraint::TopLeft(point).builder(REQUIRED)
+pub fn top_left<T>(point: TypedPoint2D<f32, T>) -> WidgetConstraintBuilder {
+    WidgetConstraint::TopLeft(point.to_untyped()).builder(REQUIRED)
 }
 pub fn center<T: LayoutRef>(widget: &T) -> WidgetConstraintBuilder {
     WidgetConstraint::Center(widget.layout_ref().clone()).builder(REQUIRED)

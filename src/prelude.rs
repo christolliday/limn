@@ -1,7 +1,7 @@
 pub use cassowary::strength::*;
 pub use cassowary::WeightedRelation::*;
 
-pub use geometry::{Point, PointExt, Rect, RectExt, Size, SizeExt, Vector};
+pub use geometry::{Point, Rect, RectExt, Size, SizeExt, Vector};
 pub use event::{Target, EventHandler, EventArgs};
 pub use event::{event, event_global};
 pub use widget::{WidgetRef, WidgetBuilder};

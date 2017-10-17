@@ -27,14 +27,13 @@ impl EllipseState {
 }
 
 fn clip_ellipse(rect: Rect) -> LocalClip {
-    let rect = rect.typed();
     let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform_size(rect.size / 2.0));
     LocalClip::RoundedRect(rect, clip_region)
 }
 
 fn push_ellipse(renderer: &mut RenderBuilder, rect: Rect, clip_rect: Rect, color: Color) {
     let clip = clip_ellipse(clip_rect);
-    let info = PrimitiveInfo::with_clip(rect.typed(), clip);
+    let info = PrimitiveInfo::with_clip(rect, clip);
     renderer.builder.push_rect(&info, color.into());
 }
 
