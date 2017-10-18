@@ -14,9 +14,9 @@ use glutin;
 #[derive(Clone, Debug)]
 pub struct ReceivedCharacter(pub char);
 #[derive(Clone, Debug)]
-pub struct KeyboardInput(pub glutin::ElementState, pub glutin::ScanCode, pub Option<glutin::VirtualKeyCode>);
+pub struct KeyboardInput(pub glutin::KeyboardInput);
 #[derive(Debug)]
-pub struct WidgetKeyboardInput(pub glutin::ElementState, pub glutin::ScanCode, pub Option<glutin::VirtualKeyCode>);
+pub struct WidgetKeyboardInput(pub glutin::KeyboardInput);
 #[derive(Debug)]
 pub struct WidgetReceivedCharacter(pub char);
 
@@ -81,8 +81,8 @@ impl EventHandler<KeyboardInputEvent> for FocusHandler {
             }
             KeyboardInputEvent::KeyboardInput(ref key_input) => {
                 if let Some(ref focused) = self.focused {
-                    let &KeyboardInput(state, scan_code, maybe_keycode) = key_input;
-                    let event = WidgetKeyboardInput(state, scan_code, maybe_keycode);
+                    let &KeyboardInput(input) = key_input;
+                    let event = WidgetKeyboardInput(input);
                     focused.event_subtree(event);
                 }
             }
