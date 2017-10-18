@@ -83,7 +83,7 @@ pub mod ui;
 pub mod geometry;
 /// Font, image and texture resources
 pub mod resources;
-/// Color constants. TODO: use CSS instead
+/// Color constants
 pub mod color;
 /// Keyboard and mouse handling (from `winit`)
 pub mod input;

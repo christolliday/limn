@@ -79,8 +79,7 @@ impl App {
     }
 
     /// Updates the UI and redraws the window (the applications main loop)
-    /// Event handling currently blocks the whole UI, eventually this should be
-    /// moved to asynchronous event handling.
+    /// Event handling currently blocks the whole UI
     pub fn main_loop(mut self, root: WidgetBuilder) {
         self.ui.root.add_child(root);
         let events_loop = Rc::clone(&self.events_loop);
