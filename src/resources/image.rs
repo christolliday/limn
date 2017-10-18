@@ -1,45 +1,59 @@
+use std::io::prelude::*;
 use image::{self, GenericImage};
-use error as LimnError;
+use webrender::api::{ImageDescriptor, ImageData, ImageFormat};
+use resources::errors::Error as LimnResourcesError;
+use resources::errors::ErrorKind as LimnResourcesErrorKind;
+use std::path::Path;
 
 /// Image descriptor
 #[derive(Debug, Clone)]
 pub struct Image {
     pub info: ImageDescriptor,
     pub data: ImageData,
+    pub tiling: Option<u16>,
 }
 
-impl ImageInfo {
+impl Image {
 
-    pub fn from_file<P>(path: AsRef<Path>) 
-                    -> Result<Self, LimnError> 
+    pub fn from_file<P: AsRef<Path>>(path: P)
+                    -> Result<Self, LimnResourcesError>
    {
-        let image = image::open(path);
+        use std::fs::File;
+        let mut buf = Vec::new();
+        let file = File::open(path)?;
+        file.read_to_end(&mut buf);
+        Self::try_from_memory(&buf)
+    }
+
+    pub fn try_from_memory(data: &[u8])
+                    -> Result<Self, LimnResourcesError>
+    {
+        let image = image::load_from_memory(data)?;
         let image_dims = image.dimensions();
         let format = match image {
             image::ImageLuma8(_) => ImageFormat::A8,
             image::ImageRgb8(_) => ImageFormat::RGB8,
             image::ImageRgba8(_) => ImageFormat::BGRA8,
             image::ImageLumaA8(_) => {
-                return Err(image::ImageError::UnsupportedError("ImageLumaA8 unsupported".to_string()));
+                return Err(LimnResourcesError::from_kind(
+                    LimnResourcesErrorKind::ImageFormatUnsupported("LumaA8")));
             }
         };
-        
+
         let mut bytes = image.raw_pixels();
         if format == ImageFormat::BGRA8 {
             premultiply(bytes.as_mut_slice());
         }
-        
+
         let opaque = is_image_opaque(format, &bytes[..]);
         let descriptor = ImageDescriptor::new(image_dims.0, image_dims.1, format, opaque);
         let data = ImageData::new(bytes);
-        Ok((data, descriptor))
-    }
-    
-    #[cfg(font_loader)]
-    pub fn from_font_loader() 
-        -> Result<Self, LimnError> 
-    {
-        
+
+        Ok(Self {
+            info: descriptor,
+            data: data,
+            tiling: None,
+        })
     }
 }
 

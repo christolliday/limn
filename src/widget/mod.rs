@@ -15,7 +15,8 @@ use render::RenderBuilder;
 use event::{self, EventHandler, EventArgs, EventHandlerWrapper};
 use layout::{Layout, LayoutVars, LayoutRef};
 use ui::Ui;
-use resources::{resources, WidgetId};
+use resources::get_global_resources;
+use resources::id::WidgetId;
 use geometry::{Point, Rect, RectExt};
 use render;
 use color::Color;
@@ -323,7 +324,7 @@ pub struct Widget {
 
 impl Widget {
     fn new(name: String) -> Self {
-        let id = resources().widget_id();
+        let id = get_global_resources().widget_id();
         Widget {
             id: id,
             draw_state: None,

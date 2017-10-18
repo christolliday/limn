@@ -3,7 +3,7 @@ use rusttype::{Scale, GlyphId, VMetrics};
 
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
-use resources::resources;
+use resources::get_global_resources;
 use geometry::{Size, Rect, RectExt, Vector};
 use render;
 use widget::draw::Draw;
@@ -44,7 +44,7 @@ impl TextState {
     }
     pub fn measure(&self) -> Size {
         let line_height = self.line_height();
-        let mut resources = resources();
+        let mut resources = get_global_resources();
         let font = resources.get_font(&self.font);
         text_layout::get_text_size(
             &self.text,
@@ -61,7 +61,7 @@ impl TextState {
     }
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
         let line_height = self.line_height();
-        let mut resources = resources();
+        let mut resources = get_global_resources();
         let font = resources.get_font(&self.font);
         let height = text_layout::get_text_height(
             text,
@@ -74,7 +74,7 @@ impl TextState {
     }
     fn get_line_rects(&self, bounds: Rect) -> Vec<Rect> {
         let line_height = self.line_height();
-        let mut resources = resources();
+        let mut resources = get_global_resources();
         let font = resources.get_font(&self.font);
         text_layout::get_line_rects(
             &self.text,
@@ -88,7 +88,7 @@ impl TextState {
     fn position_glyphs(&self, bounds: Rect) -> Vec<GlyphInstance> {
         let line_height = self.line_height();
         let descent = self.v_metrics().descent;
-        let mut resources = resources();
+        let mut resources = get_global_resources();
         let font = resources.get_font(&self.font);
         text_layout::get_positioned_glyphs(
             &self.text,
@@ -106,10 +106,10 @@ impl TextState {
             }).collect()
     }
     fn font_instance_key(&self) -> FontInstanceKey {
-        *resources().get_font_instance(&self.font, self.font_size)
+        *get_global_resources().get_font_instance(&self.font, self.font_size)
     }
     fn v_metrics(&self) -> VMetrics {
-        let mut resources = resources();
+        let mut resources = get_global_resources();
         let font = resources.get_font(&self.font);
         font.info.v_metrics(Scale::uniform(self.font_size))
     }
@@ -121,7 +121,7 @@ impl Draw for TextState {
         if DEBUG_LINE_BOUNDS {
             let line_rects = self.get_line_rects(bounds);
             let v_metrics = self.v_metrics();
-            let mut resources = resources();
+            let mut resources = get_global_resources();
             let font = resources.get_font(&self.font);
             for mut rect in line_rects {
                 render::draw_rect_outline(rect, CYAN, renderer);

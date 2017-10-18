@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use limn_layout::linear_layout::{LinearLayout, LinearLayoutSettings};
 use limn_layout::grid_layout::GridLayout;
 
-use resources::WidgetId;
+use resources::id::WidgetId;
 
 use app::App;
 

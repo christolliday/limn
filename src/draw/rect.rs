@@ -12,6 +12,7 @@ pub struct RectState {
     pub corner_radius: Option<f32>,
     pub border: Option<(f32, Color)>,
 }
+
 impl Default for RectState {
     fn default() -> Self {
         RectState {
@@ -21,6 +22,7 @@ impl Default for RectState {
         }
     }
 }
+
 impl RectState {
     pub fn new() -> Self {
         RectState::default()

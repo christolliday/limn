@@ -1,19 +1,47 @@
-//! Module for actions on a font. 
-//! The underlying type for a font is 
-use rusttype::{self, Font};
-use errors::Error as LimnError;
+//! Module for actions on a font.
+//! The underlying type for a font is a `rusttype::Font`
 
-fn load_font_data(name: &str) -> Result<Vec<u8>, LimnError> {
-    use std::fs::File;
-    use std::io::Read;
-    let mut file = File::open(format!("assets/fonts/{}.ttf", name)).expect("Font missing");
-    let mut data = Vec::new();
-    try!(file.read_to_end(&mut data));
-    Ok(data)
-}
+use rusttype;
+use resources::errors::Error as LimnResourcesError;
+use resources::errors::ErrorKind as LimnResourcesErrorKind;
+use std::path::Path;
+use std::io::prelude::*;
 
-pub fn load_font(name: &str) -> Result<Font, > {
-    let data = try!(load_font_data(name));
-    let collection = rusttype::FontCollection::from_bytes(data);
-    Ok(collection.into_font().unwrap())
+pub struct Font(::rusttype::Font<'static>);
+
+impl Font {
+
+    /// Convenience function, load a font from a file
+    pub fn from_file<P: AsRef<Path>>(path: P)
+        -> Result<Self, LimnResourcesError>
+    {
+        use std::fs::File;
+        let mut file = File::open(path)?;
+        Self::try_from(&mut file)
+    }
+
+    /// Convenience function for loading fonts from system fonts
+    #[cfg(feature = "font_loader")]
+    pub fn from_font_loader(family_name: &str)
+        -> Result<Self, LimnResourcesError>
+    {
+        use std::io::Cursor;
+        let property = system_fonts::FontPropertyBuilder::new().family(family_name).build();
+        let font = system_fonts::get(&property)
+            .map(|tuple| tuple.0).ok()?;
+        Self::try_from(&mut Cursor::new(font))
+    }
+
+    /// Create fonts from any source that implements `Read`
+    pub fn try_from<R: Read>(source: &mut R)
+    -> Result<Self, LimnResourcesError>
+    {
+        let mut buf = Vec::new();
+        source.read_to_end(&mut buf)?;
+        let collection = rusttype::FontCollection::from_bytes(buf);
+        let font = collection.into_font()
+                  .ok_or(LimnResourcesErrorKind::EmptyFontCollection)?;
+
+        Ok(Self { 0: font })
+    }
 }

@@ -9,7 +9,7 @@ pub use widget::draw::{Draw, DrawEventHandler};
 pub use widget::property::Property;
 pub use widget::property::states::*;
 pub use render::RenderBuilder;
-pub use resources::WidgetId;
+pub use resources::id::WidgetId;
 pub use ui::Ui;
 pub use app::FrameEvent;
 pub use color::*;

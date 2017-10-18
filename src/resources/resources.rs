@@ -1,19 +1,19 @@
 use std::sync::{Mutex, MutexGuard};
 use std::collections::HashMap;
-use webrender::api::FontInstanceKey;
-
+use webrender::api::*;
+use resources::font::Font;
+use resources::image::Image;
 use app_units;
 use text_layout;
-use id::{Id, IdGen, WidgetId};
-use image
+use resources::id::{Id, IdGen, WidgetId};
 
 pub struct Resources {
     /// Rendering API, initialized at startup
     pub render: Option<RenderApi>,
     /// List of fonts, indexed by a unique key (u32).
-    pub fonts: HashMap<FontInstanceKey, Font>,
-    pub images: HashMap<String, ImageInfo>,
-    pub texture_descriptors: HashMap<u64, ImageDescriptor>,
+    pub fonts: HashMap<FontInstanceKey, Rc<Font>>,
+    /// List of images
+    pub images: HashMap<ImageKey, Rc<Image>>,
     pub widget_id: IdGen<WidgetId>,
 }
 
@@ -28,12 +28,12 @@ pub(crate) fn init_resources(render_api: RenderApi) {
 }
 
 // Allow global access to Resources
-pub fn resources() -> MutexGuard<'static, Resources> {
+pub fn get_global_resources() -> MutexGuard<'static, Resources> {
     RES.try_lock().unwrap()
 }
 
 impl Resources {
-    
+
     /// This function only gets called to instantiate a singleton-like resource container
     /// It should not be called ouside of limn, which is why it's not public
     pub(super) fn new() -> Self {
@@ -46,7 +46,7 @@ impl Resources {
             widget_id: IdGen::new(),
         }
     }
-    
+
     pub fn widget_id(&mut self) -> WidgetId {
         self.widget_id.next()
     }

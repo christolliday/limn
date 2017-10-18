@@ -2,7 +2,7 @@ use webrender::api::*;
 
 use render::RenderBuilder;
 use widget::draw::Draw;
-use resources::resources;
+use resources::get_global_resources;
 use geometry::{Rect, RectExt, Size, SizeExt};
 
 pub struct ImageState {
@@ -17,7 +17,7 @@ impl ImageState {
         }
     }
     pub fn measure(&self) -> Size {
-        let mut res = resources();
+        let mut res = get_global_resources();
         let info = res.get_image(&self.image).info;
         Size::new(info.width as f32, info.height as f32)
     }
@@ -27,7 +27,7 @@ impl ImageState {
 }
 impl Draw for ImageState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
-        let key = resources().get_image(&self.image).key;
+        let key = get_global_resources().get_image(&self.image).key;
         let info = PrimitiveInfo::new(bounds.typed());
         renderer.builder.push_image(
             &info,

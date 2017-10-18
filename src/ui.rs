@@ -14,12 +14,13 @@ use widget::{WidgetRef, WidgetBuilder};
 use layout::{LimnSolver, LayoutChanged, LayoutVars, ExactFrame};
 use layout::constraint::*;
 use geometry::{Point, Rect, Size};
-use resources::WidgetId;
+use resources::id::WidgetId;
 use event::Target;
 use render::WebRenderContext;
 
 /// If true, the constraint that matches the root layout size to the window size
-/// is required. This can be useful for debugging but can result in panics from resizing the window.
+/// is required. This can be useful for debugging but can result in panics from
+/// resizing the window.
 const WINDOW_CONSTRAINT_REQUIRED: bool = false;
 
 pub struct Ui {

@@ -12,6 +12,9 @@ pub extern crate rusttype;
 pub extern crate webrender;
 pub extern crate app_units;
 
+#[cfg(feature = "font_loader")]
+pub extern crate font_loader;
+
 #[macro_use]
 extern crate error_chain;
 #[macro_use]

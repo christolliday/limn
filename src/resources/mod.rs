@@ -4,3 +4,6 @@ pub mod font;
 pub mod image;
 pub mod resources;
 pub mod resources_map;
+pub mod errors;
+
+pub use self::resources::*;

@@ -1,3 +1,4 @@
+use resources::get_global_resources;
 use webrender::api::*;
 
 use render::RenderBuilder;
@@ -18,7 +19,7 @@ impl GLCanvasState {
             image_type: ExternalImageType::Texture2DHandle,
         });
         let descriptor = ImageDescriptor::new(0, 0, ImageFormat::RGB8, true);
-        resources().put_image(name, data.clone(), descriptor);
+        get_global_resources().put_image(name, data.clone(), descriptor);
         GLCanvasState {
             name: name.to_owned(),
             data: data,
@@ -26,7 +27,7 @@ impl GLCanvasState {
     }
 
     pub fn measure(&self) -> Size {
-        let mut res = resources();
+        let mut res = get_global_resources();
         let info = res.get_image(&self.name).info;
         Size::new(info.width as f32, info.height as f32)
     }
@@ -34,7 +35,7 @@ impl GLCanvasState {
 
 impl Draw for GLCanvasState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
-        let mut res = resources();
+        let mut res = get_global_resources();
         let image_info = res.get_image(&self.name).clone();
         if bounds.width() as u32 != image_info.info.width ||
             bounds.height() as u32 != image_info.info.height {
