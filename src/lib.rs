@@ -2,35 +2,38 @@
 
 #![cfg_attr(feature="nightly", feature(core_intrinsics))]
 
-extern crate text_layout;
 #[macro_use]
-extern crate limn_layout;
-extern crate cassowary;
-extern crate rusttype;
-extern crate glutin;
+pub extern crate limn_layout;
+pub extern crate text_layout;
+pub extern crate glutin;
+pub extern crate gleam;
+pub extern crate image;
+pub extern crate rusttype;
+pub extern crate webrender;
+pub extern crate app_units;
+
+#[macro_use]
+extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
-extern crate linked_hash_map;
-extern crate stable_bst;
 #[macro_use]
 extern crate maplit;
 #[macro_use]
 extern crate downcast_rs;
-extern crate euclid;
 #[macro_use]
 extern crate log;
-extern crate webrender;
-extern crate gleam;
-extern crate app_units;
-extern crate image;
+extern crate linked_hash_map;
+extern crate stable_bst;
+extern crate euclid;
+extern crate cassowary;
 
 #[macro_use]
 pub mod event;
-pub mod app;
 #[macro_use]
 pub mod widget;
 #[macro_use]
 pub mod layout;
+pub mod app;
 pub mod widgets;
 pub mod draw;
 pub mod ui;
@@ -41,6 +44,7 @@ pub mod input;
 pub mod prelude;
 pub mod render;
 pub mod window;
+pub mod errors;
 
 #[cfg(not(feature="nightly"))]
 fn type_name<T>() -> &'static str {

@@ -5,28 +5,25 @@ authors = ["Chris Tolliday <ctolliday@gmail.com>"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-text_layout = { path = "text_layout" }
+text-layout = { path = "text_layout" }
 limn-layout = { path = "layout" }
 cassowary = "0.3.0"
-
 euclid = "0.15.1"
 log = "0.3"
 gleam = "0.4.7"
-
 webrender = { git = "https://github.com/servo/webrender", rev = "ba51d8d5892d7ff8a69a9657c882b620595de4f7" }
-
 stb_truetype = "0.2.1"
 app_units = "0.5"
 rusttype = "0.2.1"
 glutin = { git = "https://github.com/christolliday/glutin", branch = "fix_windows" }
 image = "0.16"
-
 lazy_static = "0.2.2"
 linked-hash-map = "0.5.0"
 stable_bst = "0.2.0"
 maplit = "0.1.4"
 downcast-rs = "1.0.0"
 multi_mut = "0.1.3"
+error-chain = "0.11.0"
 
 [dev-dependencies]
 find_folder = "0.3.0"

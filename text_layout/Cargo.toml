@@ -1,5 +1,5 @@
 [package]
-name = "text_layout"
+name = "text-layout"
 version = "0.1.0"
 authors = ["Chris Tolliday <ctolliday@gmail.com>", "Conrod Developers"]
 license = "MIT OR Apache-2.0"
