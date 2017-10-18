@@ -3,3 +3,4 @@ pub mod id;
 pub mod font;
 pub mod image;
 pub mod resources;
+pub mod resources_map;
