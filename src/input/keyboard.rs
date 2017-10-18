@@ -30,7 +30,7 @@ pub struct WidgetReceivedCharacter(pub char);
 #[derive(Default)]
 pub struct FocusHandler {
     focusable_map: HashMap<WidgetRef, usize>,
-    /// Note: can replace TreeMap with std BTreeMap once the range API or similar is stable
+    // can replace TreeMap with std BTreeMap once the range API or similar is stable
     focusable: TreeMap<usize, WidgetRef>,
     focused: Option<WidgetRef>,
     focus_index_max: usize,

@@ -73,6 +73,7 @@ impl Default for SliderBuilder {
         }
     }
 }
+
 impl SliderBuilder {
     pub fn new() -> Self {
         Self::default()
@@ -84,7 +85,7 @@ impl SliderBuilder {
         self
     }
 
-    /// Sets the scrollbar style. TODO: Replace with CSS
+    /// Sets the scrollbar style
     pub fn scrollbar_style(&mut self) -> &mut Self {
         self.variable_handle_size = true;
         self.handle_style = HandleStyle::Square;

@@ -26,8 +26,6 @@ use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::widgets::slider::{SliderBuilder, SliderEvent};
 use limn::widgets::glcanvas::{GLCanvasBuilder, GLCanvasState};
 
-pub const FLOATING_PT_ERROR: f32 = 0.0001;
-
 fn init_framebuffer(gl: &Rc<gl::Gl>) -> (GLuint, GLuint, GLuint) {
     // Make a texture that will be sent to WebRender
     let tex = gl.gen_textures(1)[0];
@@ -260,10 +258,9 @@ fn main() {
 
         // Handle widget size changes
         if let Some(state) = gl_canvas_ref.draw_state().downcast_ref::<GLCanvasState>() {
-            let old_size = target_size.get();
+            let (old_size_width, old_size_height) = target_size.get();
             let new_size = state.measure();
-            if (new_size.width - old_size.0).abs() > FLOATING_PT_ERROR ||
-               (new_size.height - old_size.1).abs() > FLOATING_PT_ERROR {
+            if new_size.width != old_size_width || new_size.height != old_size_height {
                 target_size.set((new_size.width, new_size.height));
                 resize_destination(&gl, tex, depth_buf, new_size.width as _, new_size.height as _);
             }
