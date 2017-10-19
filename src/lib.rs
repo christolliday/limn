@@ -49,7 +49,7 @@ extern crate downcast_rs;
 #[macro_use]
 extern crate log;
 
-extern crate text_layout;
+extern crate limn_text_layout as text_layout;
 extern crate cassowary;
 extern crate rusttype;
 extern crate glutin;

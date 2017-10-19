@@ -1,14 +1,19 @@
 [package]
 name = "limn"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Chris Tolliday <ctolliday@gmail.com>"]
+keywords = ["ui", "widgets", "gui", "interface", "graphics"]
+categories = ["gui"]
+description = "Cross platform, event driven GUI library."
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/christolliday/limn.git"
+homepage = "https://github.com/christolliday/limn"
 
 [workspace]
 
 [dependencies]
-text_layout = { path = "text_layout" }
-limn-layout = { path = "layout" }
+limn-text_layout = { path = "text_layout", version = "0.0.1" }
+limn-layout = { path = "layout", version = "0.0.1" }
 cassowary = "0.3.0"
 
 euclid = "0.15.1"

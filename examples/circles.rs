@@ -2,14 +2,14 @@
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;
-extern crate text_layout;
+extern crate limn_text_layout;
 extern crate glutin;
 
 mod util;
 
 use std::collections::HashMap;
 
-use text_layout::Align;
+use limn_text_layout::Align;
 
 use limn::prelude::*;
 

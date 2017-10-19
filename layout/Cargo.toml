@@ -1,7 +1,13 @@
 [package]
 name = "limn-layout"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Chris Tolliday <ctolliday@gmail.com>"]
+keywords = ["gui", "layout", "cassowary"]
+categories = ["gui"]
+description = "Auto layout for GUIs, high level wrapper around cassowary-rs"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/christolliday/limn.git"
+homepage = "https://github.com/christolliday/limn"
 
 [dependencies]
 cassowary = "0.3.0"

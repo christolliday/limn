@@ -3,7 +3,6 @@ extern crate limn;
 extern crate limn_layout;
 #[macro_use]
 extern crate lazy_static;
-extern crate text_layout;
 extern crate env_logger;
 extern crate glutin;
 extern crate gleam;

@@ -51,7 +51,7 @@ use self::types::*;
 
 
 
-/// The RustType `PositionedGlyph` type used by conrod.
+/// The RustType `PositionedGlyph` type.
 pub type PositionedGlyph = rusttype::PositionedGlyph<'static>;
 
 pub type Font = rusttype::Font<'static>;
