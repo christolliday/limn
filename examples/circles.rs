@@ -1,16 +1,11 @@
 #[macro_use]
 extern crate limn;
-#[macro_use]
-extern crate limn_layout;
-extern crate limn_text_layout;
-extern crate glutin;
 
 mod util;
 
 use std::collections::HashMap;
 
-use limn_text_layout::Align;
-
+use limn::glutin;
 use limn::prelude::*;
 
 use limn::input::mouse::WidgetMouseButton;
@@ -23,7 +18,6 @@ use limn::draw::ellipse::{EllipseState, EllipseStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::TextBuilder;
 use limn::input::keyboard::KeyboardInput;
-use limn::resources::id::{Id, IdGen};
 
 struct SliderControl {
     widget: WidgetBuilder,

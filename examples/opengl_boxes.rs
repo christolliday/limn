@@ -1,10 +1,8 @@
 extern crate limn;
-#[macro_use]
-extern crate limn_layout;
+
 #[macro_use]
 extern crate lazy_static;
 extern crate env_logger;
-extern crate glutin;
 extern crate gleam;
 extern crate euclid;
 
@@ -19,6 +17,7 @@ use euclid::{Vector3D, Transform3D};
 
 use limn::prelude::*;
 
+use limn::glutin as glutin;
 use limn::app::App;
 use limn::window::Window;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};

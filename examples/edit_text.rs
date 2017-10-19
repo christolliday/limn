@@ -1,11 +1,6 @@
 extern crate limn;
-#[macro_use]
-extern crate limn_layout;
-extern crate limn_text_layout;
 
 mod util;
-
-use limn_text_layout::{Align, Wrap};
 
 use limn::prelude::*;
 

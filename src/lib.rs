@@ -49,17 +49,18 @@ extern crate downcast_rs;
 #[macro_use]
 extern crate log;
 
-extern crate limn_text_layout as text_layout;
-extern crate cassowary;
-extern crate rusttype;
-extern crate glutin;
+pub extern crate limn_text_layout as text_layout;
+pub extern crate cassowary;
+pub extern crate rusttype;
+pub extern crate glutin;
+pub extern crate webrender;
+extern crate euclid;
 extern crate linked_hash_map;
 extern crate stable_bst;
-extern crate euclid;
-extern crate webrender;
 extern crate gleam;
 extern crate app_units;
 extern crate image;
+
 
 /// Mouse & keyboard handling / delegating functions
 #[macro_use]

@@ -1,7 +1,5 @@
 #[macro_use]
 extern crate limn;
-#[macro_use]
-extern crate limn_layout;
 
 mod util;
 
@@ -16,7 +14,6 @@ use limn::widgets::scroll::ScrollBuilder;
 use limn::widgets::text::TextBuilder;
 use limn::draw::text::{TextState, TextStyle};
 use limn::draw::rect::RectState;
-use limn::resources::id::{Id, IdGen};
 
 named_id!(PersonId);
 

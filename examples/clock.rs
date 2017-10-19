@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate limn;
-#[macro_use]
-extern crate limn_layout;
-extern crate webrender;
 extern crate euclid;
 
 extern crate chrono;
@@ -13,8 +10,8 @@ use std::f32;
 use std::{thread, time};
 
 use chrono::{Local, Timelike};
-use webrender::api::*;
 
+use limn::webrender::api::*;
 use limn::prelude::*;
 use limn::draw::ellipse::{EllipseState, EllipseStyle};
 
