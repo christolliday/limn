@@ -6,7 +6,10 @@ use limn::prelude::*;
 use limn::widgets::image::ImageBuilder;
 
 fn main() {
-    let app = util::init_default("Limn button demo");
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn image demo")
+        .with_min_dimensions(100, 100);
+    let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     let mut image_widget = ImageBuilder::new("rust.png");

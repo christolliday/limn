@@ -138,6 +138,10 @@ impl App {
         self.ui.get_root().add_handler(handler);
         self
     }
+
+    pub fn window(&self) -> ::std::cell::Ref<Window> {
+        self.ui.window.borrow()
+    }
 }
 
 /// Event emitted after every frame is rendered.

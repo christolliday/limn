@@ -6,7 +6,10 @@ use limn::prelude::*;
 use limn::widgets::button::ToggleButtonBuilder;
 
 fn main() {
-    let app = util::init_default("Limn button demo");
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn button demo")
+        .with_min_dimensions(100, 100);
+    let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     let mut button = ToggleButtonBuilder::new();

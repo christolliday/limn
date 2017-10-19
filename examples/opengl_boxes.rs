@@ -17,10 +17,6 @@ use euclid::{Vector3D, Transform3D};
 
 use limn::prelude::*;
 
-use limn::glutin as glutin;
-use limn::app::App;
-use limn::window::Window;
-use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::widgets::slider::{SliderBuilder, SliderEvent};
 use limn::widgets::glcanvas::{GLCanvasBuilder, GLCanvasState};
 
@@ -215,24 +211,20 @@ fn draw_boxes(gl: &Rc<gl::Gl>, prog: GLuint, model: GLuint,
 }
 
 fn main() {
-    env_logger::init().unwrap();
-    let window_size = (1280, 720);
-    let events_loop = glutin::EventsLoop::new();
-    let window = Window::new("Limn+OpenGL boxes demo", window_size, Some(window_size), &events_loop);
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn+OpenGL boxes demo")
+        .with_min_dimensions(1280, 720);
+    let mut app = util::init(window_builder);
 
     // This returns a gleam struct. But if you look at the source of .gl(), you
     // can figure out how to connect any other OpenGL wrapper.
-    let gl = window.gl();
+    let gl = app.window().gl();
 
     // Prepare all the GL resources
     let (fb, tex, depth_buf) = init_framebuffer(&gl);
     let prog = init_boxes_shader(&gl);
     let (model, box_count) = init_boxes_model(&gl);
 
-    // Setup the app
-    let mut app = App::new(window, events_loop);
-    app.add_handler(EscKeyCloseHandler);
-    app.add_handler(DebugSettingsHandler::new());
     let mut root = WidgetBuilder::new("root");
 
     // Create an image that's connected to the texture we're rendering to

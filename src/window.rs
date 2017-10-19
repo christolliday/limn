@@ -9,14 +9,7 @@ pub struct Window {
     pub window: glutin::GlWindow
 }
 impl Window {
-    pub fn new(title: &str, size: (u32, u32), min_size: Option<(u32, u32)>, events_loop: &glutin::EventsLoop) -> Self {
-        let mut window = glutin::WindowBuilder::new()
-            .with_title(title)
-            .with_dimensions(size.0, size.1);
-
-        if let Some(min_size) = min_size {
-            window = window.with_min_dimensions(min_size.0, min_size.1)
-        }
+    pub fn new(window_builder: glutin::WindowBuilder, events_loop: &glutin::EventsLoop) -> Self {
         let context = glutin::ContextBuilder::new()
             .with_vsync(true)
             .with_gl(glutin::GlRequest::GlThenGles {
@@ -24,7 +17,7 @@ impl Window {
                 opengles_version: (3, 0)
             });
 
-        let window = glutin::GlWindow::new(window, context, events_loop).unwrap();
+        let window = glutin::GlWindow::new(window_builder, context, events_loop).unwrap();
         unsafe { window.make_current().ok() };
         Window {
             window: window

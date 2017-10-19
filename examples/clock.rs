@@ -116,7 +116,10 @@ impl ClockBuilder {
 }
 
 fn main() {
-    let mut app = util::init_default("Limn clock demo");
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn clock demo")
+        .with_min_dimensions(100, 100);
+    let mut app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     let mut clock = ClockBuilder::new().widget;

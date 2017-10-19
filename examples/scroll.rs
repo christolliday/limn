@@ -9,7 +9,10 @@ use limn::widgets::scroll::ScrollBuilder;
 use limn::draw::rect::{RectState, RectStyle};
 
 fn main() {
-    let app = util::init_default_min_size("Limn scroll demo", Size::new(300.0, 300.0));
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn scroll demo")
+        .with_min_dimensions(300, 300);
+    let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     let mut scroll_widget = ScrollBuilder::new();

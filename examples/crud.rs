@@ -174,7 +174,10 @@ impl EventHandler<PeopleEvent> for PeopleHandler {
 }
 
 fn main() {
-    let mut app = util::init_default("Limn edit text demo");
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn CRUD demo")
+        .with_min_dimensions(100, 100);
+    let mut app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     root.layout().add(min_size(Size::new(300.0, 300.0)));

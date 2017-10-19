@@ -12,9 +12,11 @@ use limn::prelude::*;
 use limn::widgets::list::{self, ListBuilder};
 use limn::widgets::scroll::ScrollBuilder;
 
-
 fn main() {
-    let app = util::init_default("Limn list demo");
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn list demo")
+        .with_min_dimensions(100, 100);
+    let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     let mut scroll_widget = ScrollBuilder::new();

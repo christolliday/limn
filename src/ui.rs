@@ -30,7 +30,7 @@ pub struct Ui {
     needs_redraw: bool,
     should_close: bool,
     debug_draw_bounds: bool,
-    window: Rc<RefCell<Window>>,
+    pub window: Rc<RefCell<Window>>,
     window_constraints: Vec<Constraint>,
 }
 

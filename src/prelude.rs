@@ -1,6 +1,8 @@
 pub use cassowary::strength::*;
 pub use cassowary::WeightedRelation::*;
 
+pub use glutin;
+
 pub use geometry::{Point, Rect, RectExt, Size, SizeExt, Vector};
 pub use event::{Target, EventHandler, EventArgs};
 pub use event::{event, event_global};
@@ -12,7 +14,8 @@ pub use render::RenderBuilder;
 pub use resources::WidgetId;
 pub use resources::id::{Id, IdGen};
 pub use ui::Ui;
-pub use app::FrameEvent;
+pub use app::{App, FrameEvent};
+pub use window::Window;
 pub use color::*;
 // re exports macros in limn-layout
 pub use layout::*;

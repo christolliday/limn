@@ -25,7 +25,10 @@ impl EventHandler<EditTextSettingsEvent> for EditTextSettingsHandler {
 }
 
 fn main() {
-    let app = util::init_default("Limn edit text demo");
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn edit text demo")
+        .with_min_dimensions(100, 100);
+    let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     let mut content_widget = WidgetBuilder::new("content");

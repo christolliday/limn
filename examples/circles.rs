@@ -360,7 +360,12 @@ impl EventHandler<AppEvent> for AppEventHandler {
 }
 
 fn main() {
-    let mut app = util::init_default("Limn circles demo");
+
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title("Limn circles demo")
+        .with_min_dimensions(100, 100);
+    let mut app = util::init(window_builder);
+
     let mut root = WidgetBuilder::new("root");
     root.layout().add(size(Size::new(700.0, 500.0)).strength(STRONG));
 
