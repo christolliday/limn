@@ -12,6 +12,4 @@ install:
 build: false
 
 test_script:
-  - cargo test --verbose
-  - cd layout
-  - cargo test --verbose
+  - cargo test --all --verbose
