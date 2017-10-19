@@ -112,7 +112,7 @@ pub enum KeyboardInputEvent {
 
 impl WidgetBuilder {
     pub fn make_focusable(&mut self) -> &mut Self {
-        self.add_handler_fn(|_: &ClickEvent, args| {
+        self.add_handler(|_: &ClickEvent, args: EventArgs| {
             args.ui.get_root().event(KeyboardInputEvent::FocusChange(Some(args.widget)));
         })
     }
@@ -120,10 +120,10 @@ impl WidgetBuilder {
 
 impl App {
     pub fn add_keyboard_handlers(&mut self) {
-        self.add_handler_fn(|event: &KeyboardInput, args| {
+        self.add_handler(|event: &KeyboardInput, args: EventArgs| {
             args.widget.event(KeyboardInputEvent::KeyboardInput(*event));
         });
-        self.add_handler_fn(|event: &ReceivedCharacter, args| {
+        self.add_handler(|event: &ReceivedCharacter, args: EventArgs| {
             args.widget.event(KeyboardInputEvent::ReceivedCharacter(*event));
         });
         self.add_handler(FocusHandler::new());

@@ -450,12 +450,6 @@ impl WidgetBuilder {
         self
     }
 
-    /// Adds a handler closure to the current widget
-    pub fn add_handler_fn<E: 'static, T: Fn(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
-        self.widget.add_handler_fn(handler);
-        self
-    }
-
     /// Recursively sets a certain property on the current widget
     pub fn add_prop(&mut self, property: Property) -> &mut Self {
         self.widget.widget_mut().props.insert(property);

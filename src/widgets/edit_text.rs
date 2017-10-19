@@ -61,10 +61,10 @@ impl Default for EditTextBuilder {
         let mut widget = WidgetBuilder::new("edit_text");
         widget
             .set_draw_state_with_style(RectState::new(), rect_style)
-            .add_handler_fn(|_: &WidgetAttachedEvent, args| {
+            .add_handler(|_: &WidgetAttachedEvent, args: EventArgs| {
                 args.ui.event(KeyboardInputEvent::AddFocusable(args.widget));
             })
-            .add_handler_fn(|_: &WidgetDetachedEvent, args| {
+            .add_handler(|_: &WidgetDetachedEvent, args: EventArgs| {
                 args.ui.event(KeyboardInputEvent::RemoveFocusable(args.widget));
             })
             .make_focusable();
@@ -73,8 +73,8 @@ impl Default for EditTextBuilder {
         text_widget
             .set_draw_state(TextState::default())
             .add_handler(TextUpdatedHandler::default())
-            .add_handler_fn(edit_text_handle_char)
-            .add_handler_fn(text_change_handle);
+            .add_handler(edit_text_handle_char)
+            .add_handler(text_change_handle);
 
         text_widget.layout().add(constraints![
             align_left(&widget).padding(5.0),
@@ -98,7 +98,7 @@ impl EditTextBuilder {
     pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
         where F: Fn(&TextUpdated, EventArgs) + 'static
     {
-        self.text_widget.add_handler_fn(callback);
+        self.text_widget.add_handler(callback);
         self
     }
 }

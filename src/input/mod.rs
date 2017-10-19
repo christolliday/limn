@@ -16,7 +16,7 @@ pub struct InputEvent(pub glutin::WindowEvent);
 
 impl App {
     pub fn add_input_handlers(&mut self) {
-        self.add_handler_fn(|event: &InputEvent, args| {
+        self.add_handler(|event: &InputEvent, args: EventArgs| {
             let InputEvent(event) = event.clone();
             match event {
                 glutin::WindowEvent::Closed => {

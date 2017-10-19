@@ -253,7 +253,7 @@ fn main() {
     // Render frames in the app loop
     let scale_c = Rc::clone(&scale); // The slider will take the original
     let mut gl_canvas_ref = gl_canvas.widget_ref();
-    app.add_handler_fn(move |_: &FrameEvent, args| {
+    app.add_handler(move |_: &FrameEvent, args: EventArgs| {
         gl.bind_framebuffer(gl::FRAMEBUFFER, fb);
 
         // Handle widget size changes
@@ -288,7 +288,7 @@ fn main() {
         align_right(&root).padding(10.0),
         align_bottom(&root).padding(10.0),
     ]);
-    size_slider.add_handler_fn(move |event: &SliderEvent, _| {
+    size_slider.add_handler(move |event: &SliderEvent, _: EventArgs| {
         scale.set(event.value);
     });
 

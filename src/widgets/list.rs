@@ -95,7 +95,7 @@ impl Default for ListBuilder {
         let mut widget = WidgetBuilder::new("list");
 
         widget.add_handler(ListHandler::new())
-              .add_handler_fn(&list_handle_deselect)
+              .add_handler(&list_handle_deselect)
               .linear_layout(layout_settings);
 
         ListBuilder {
@@ -114,7 +114,7 @@ impl ListBuilder {
     pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
         where F: Fn(Option<WidgetRef>, EventArgs) + 'static
     {
-        self.widget.add_handler_fn(move |event: &ListItemSelected, args| {
+        self.widget.add_handler(move |event: &ListItemSelected, args: EventArgs| {
             on_item_selected(event.widget.clone(), args);
             if let Some(ref widget) = event.widget {
                 widget.event(ItemSelected);
@@ -147,7 +147,7 @@ impl WidgetBuilder {
     pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
         where F: Fn(EventArgs) + 'static
     {
-        self.add_handler_fn(move |_: &ItemSelected, args| {
+        self.add_handler(move |_: &ItemSelected, args: EventArgs| {
             on_item_selected(args);
         });
         self

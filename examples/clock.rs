@@ -134,7 +134,7 @@ fn main() {
         thread::sleep(time::Duration::from_millis(1000));
         event_global(ClockTick);
     });
-    app.add_handler_fn(move |_: &ClockTick, _| {
+    app.add_handler(move |_: &ClockTick, _: EventArgs| {
         clock_ref.event_subtree(ClockTick);
     });
     app.main_loop(root);

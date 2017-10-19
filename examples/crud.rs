@@ -114,7 +114,7 @@ impl PeopleHandler {
             let mut list_text_widget = WidgetBuilder::new("list_text");
             list_text_widget
                 .set_draw_state_with_style(text_draw_state, text_style)
-                .add_handler_fn(edit_text::text_change_handle);
+                .add_handler(edit_text::text_change_handle);
             list_text_widget.layout().add(center(&list_item_widget));
             list_item_widget.add_child(list_text_widget);
             list_item_widget

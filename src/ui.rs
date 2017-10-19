@@ -15,7 +15,7 @@ use layout::{LimnSolver, LayoutChanged, LayoutVars, ExactFrame};
 use layout::constraint::*;
 use geometry::{Point, Rect, Size};
 use resources::WidgetId;
-use event::Target;
+use event::{Target, EventArgs};
 use render::WebRenderContext;
 
 /// If true, the constraint that matches the root layout size to the window size
@@ -228,12 +228,12 @@ pub struct RemoveWidget(pub WidgetRef);
 
 impl App {
     pub fn add_ui_handlers(&mut self) {
-        self.add_handler_fn(|event: &RegisterWidget, args| {
+        self.add_handler(|event: &RegisterWidget, args: EventArgs| {
             let event = event.clone();
             let RegisterWidget(widget_ref) = event;
             args.ui.widget_map.insert(widget_ref.id(), widget_ref.clone());
         });
-        self.add_handler_fn(|event: &RemoveWidget, args| {
+        self.add_handler(|event: &RemoveWidget, args: EventArgs| {
             let event = event.clone();
             let RemoveWidget(widget_ref) = event;
             args.ui.solver.remove_layout(widget_ref.id().0);

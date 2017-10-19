@@ -93,18 +93,18 @@ impl EventHandler<MouseInputEvent> for MouseController {
 impl App {
     pub fn add_mouse_handlers(&mut self) {
         // adapters to create MouseInputEvents for MouseController
-        self.add_handler_fn(| _: &LayoutChanged, args| {
+        self.add_handler(| _: &LayoutChanged, args: EventArgs| {
             args.widget.event(MouseInputEvent::LayoutChanged);
         });
-        self.add_handler_fn(|event: &MouseMoved, args| {
+        self.add_handler(|event: &MouseMoved, args: EventArgs| {
             let &MouseMoved(mouse) = event;
             args.widget.event(MouseInputEvent::MouseMoved(mouse));
         });
-        self.add_handler_fn(|event: &MouseButton, args| {
+        self.add_handler(|event: &MouseButton, args: EventArgs| {
             let &MouseButton(state, button) = event;
             args.widget.event(MouseInputEvent::MouseButton(state, button));
         });
-        self.add_handler_fn(|event: &MouseWheel, args| {
+        self.add_handler(|event: &MouseWheel, args: EventArgs| {
             let &MouseWheel(scroll) = event;
             args.widget.event(MouseInputEvent::MouseWheel(scroll));
         });
@@ -121,7 +121,7 @@ pub enum MouseOverEvent {
 
 impl WidgetBuilder {
     pub fn enable_hover(&mut self) -> &mut Self {
-        self.add_handler_fn(|event: &MouseOverEvent, mut args| {
+        self.add_handler(|event: &MouseOverEvent, mut args: EventArgs| {
             match *event {
                 MouseOverEvent::Over => args.widget.add_prop(Property::MouseOver),
                 MouseOverEvent::Out => args.widget.remove_prop(Property::MouseOver),

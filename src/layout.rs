@@ -8,6 +8,7 @@ use resources::WidgetId;
 use app::App;
 
 use widget::{WidgetRef, WidgetBuilder};
+use event::EventArgs;
 
 pub use self::solver::LimnSolver;
 pub use limn_layout::*;
@@ -39,10 +40,10 @@ pub struct LayoutUpdated;
 
 impl App {
     pub fn add_layout_handlers(&mut self) {
-        self.add_handler_fn(|_: &ResizeWindow, args| {
+        self.add_handler(|_: &ResizeWindow, args: EventArgs| {
             args.ui.resize_window_to_fit();
         });
-        self.add_handler_fn(|event: &UpdateLayout, args| {
+        self.add_handler(|event: &UpdateLayout, args: EventArgs| {
             let event = event.clone();
             let UpdateLayout(widget_ref) = event;
             let mut widget_mut = widget_ref.widget_mut();
@@ -50,7 +51,7 @@ impl App {
             args.ui.solver.update_layout(layout);
             args.ui.check_layout_changes();
         });
-        self.add_handler_fn(|event: &LayoutChanged, args| {
+        self.add_handler(|event: &LayoutChanged, args: EventArgs| {
             let changes = &event.0;
             for &(widget_id, var, value) in changes {
                 let widget_id = WidgetId(widget_id);

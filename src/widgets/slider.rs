@@ -113,7 +113,7 @@ impl SliderBuilder {
     pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
         where F: Fn(f32, &mut EventArgs) + 'static
     {
-        self.add_handler_fn(move |event: &SliderEvent, mut args| {
+        self.add_handler(move |event: &SliderEvent, mut args: EventArgs| {
             on_value_changed(event.value, &mut args);
         });
         self
@@ -218,26 +218,26 @@ impl Into<WidgetBuilder> for SliderBuilder {
 
         let widget_ref = widget.widget_ref();
         slider_handle
-            .add_handler_fn(move |event: &DragEvent, _| {
+            .add_handler(move |event: &DragEvent, _: EventArgs| {
                 widget_ref.event(SliderInputEvent::Drag(*event));
             })
             .make_draggable();
 
         let widget_ref = widget.widget_ref();
-        slider_bar_pre.add_handler_fn(move |event: &ClickEvent, _| {
+        slider_bar_pre.add_handler(move |event: &ClickEvent, _: EventArgs| {
             widget_ref.event(SliderInputEvent::Click(event.position));
         });
         let widget_ref = widget.widget_ref();
-        slider_bar_post.add_handler_fn(move |event: &ClickEvent, _| {
+        slider_bar_post.add_handler(move |event: &ClickEvent, _: EventArgs| {
             widget_ref.event(SliderInputEvent::Click(event.position));
         });
-        widget.add_handler_fn(move |event: &SetSliderValue, args| {
+        widget.add_handler(move |event: &SetSliderValue, args: EventArgs| {
             args.widget.event(SliderInputEvent::SetValue(event.0));
         });
-        widget.add_handler_fn(move |event: &SetSliderRange, args| {
+        widget.add_handler(move |event: &SetSliderRange, args: EventArgs| {
             args.widget.event(SliderInputEvent::SetRange(event.0.clone()));
         });
-        widget.add_handler_fn(move |_: &LayoutUpdated, args| {
+        widget.add_handler(move |_: &LayoutUpdated, args: EventArgs| {
             args.widget.event(SliderInputEvent::LayoutUpdated);
         });
         let widget_ref = widget.widget_ref();

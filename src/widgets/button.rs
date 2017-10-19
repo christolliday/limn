@@ -88,9 +88,9 @@ impl Default for ToggleButtonBuilder {
         let mut widget = WidgetBuilder::new("toggle_button");
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
-            .add_handler_fn(button_handle_mouse_down)
+            .add_handler(button_handle_mouse_down)
             .enable_hover()
-            .add_handler_fn(toggle_button_handle_mouse);
+            .add_handler(toggle_button_handle_mouse);
         widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
             shrink(),
@@ -132,7 +132,7 @@ impl ToggleButtonBuilder {
     pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
         where F: Fn(&ToggleEvent, EventArgs) + 'static
     {
-        self.widget.add_handler_fn(callback);
+        self.widget.add_handler(callback);
         self
     }
 }
@@ -149,7 +149,7 @@ impl Default for PushButtonBuilder {
         let mut widget = WidgetBuilder::new("push_button");
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
-            .add_handler_fn(button_handle_mouse_down)
+            .add_handler(button_handle_mouse_down)
             .enable_hover();
         widget.layout().add(constraints![
             min_size(Size::new(100.0, 50.0)).strength(STRONG),
@@ -191,7 +191,7 @@ impl WidgetBuilder {
     pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
         where F: Fn(&ClickEvent, &mut EventArgs) + 'static
     {
-        self.add_handler_fn(move |event, mut args| {
+        self.add_handler(move |event: &ClickEvent, mut args: EventArgs| {
             (on_click)(event, &mut args);
             *args.handled = true;
         })

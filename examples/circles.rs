@@ -41,7 +41,7 @@ impl SliderControl {
             style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "--".to_owned()));
         slider_value
             .set_name("slider_value")
-            .add_handler_fn(edit_text::text_change_handle);
+            .add_handler(edit_text::text_change_handle);
         slider_value.layout().add(align_right(&widget));
         let mut slider_widget = SliderBuilder::new();
         slider_widget
@@ -55,13 +55,13 @@ impl SliderControl {
         ]);
 
         let slider_value_ref = slider_value.widget_ref();
-        slider_widget.add_handler_fn(move |event: &SliderEvent, args| {
+        slider_widget.add_handler(move |event: &SliderEvent, args: EventArgs| {
             slider_value_ref.event(TextUpdated((event.value as i32).to_string()));
             args.ui.event(AppEvent::Resize(*event));
         });
         let slider_widget_ref = slider_widget.widget_ref();
         let slider_value_ref = slider_value.widget_ref();
-        widget.add_handler_fn(move |event: &SetSliderValue, _| {
+        widget.add_handler(move |event: &SetSliderValue, _: EventArgs| {
             let size = event.0;
             slider_widget_ref.event(SetSliderValue(size));
             slider_value_ref.event(TextUpdated((size as i32).to_string()));
@@ -139,14 +139,14 @@ fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> W
     widget
         .set_draw_state_with_style(EllipseState::new(), style)
         .make_draggable()
-        .add_handler_fn(|event: &DragEvent, args| {
+        .add_handler(|event: &DragEvent, args: EventArgs| {
             args.widget.event(CircleEvent::Drag(*event));
         })
         .add_handler(CircleHandler(id));
     let widget_ref = widget.widget_ref();
     let widget_ref_clone = widget.widget_ref();
     widget_ref.event(CircleEvent::Update(circle.center, circle.size));
-    widget.add_handler_fn(move |event: &WidgetMouseButton, args| {
+    widget.add_handler(move |event: &WidgetMouseButton, args: EventArgs| {
         if let WidgetMouseButton(glutin::ElementState::Pressed, _) = *event {
             args.ui.event(AppEvent::Select(Some(id)));
         }
@@ -390,7 +390,7 @@ fn main() {
         height(100.0),
     ]);
     app.add_handler(AppEventHandler::new(circle_canvas.widget_ref(), &control_bar));
-    app.add_handler_fn(|event: &KeyboardInput, args| {
+    app.add_handler(|event: &KeyboardInput, args: EventArgs| {
         if event.0.state == glutin::ElementState::Released {
             if let Some(glutin::VirtualKeyCode::Delete) = event.0.virtual_keycode {
                 args.ui.event(AppEvent::Delete)

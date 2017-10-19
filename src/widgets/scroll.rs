@@ -97,12 +97,12 @@ impl ScrollBuilder {
 impl Into<WidgetBuilder> for ScrollBuilder {
     fn into(mut self) -> WidgetBuilder {
         let widget_ref = self.content_holder.widget_ref();
-        self.content_holder.add_handler_fn(move |_: &LayoutUpdated, _| {
+        self.content_holder.add_handler(move |_: &LayoutUpdated, _: EventArgs| {
             widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
         });
         let mut content = self.content.expect("Scroll bar has no content");
         let widget_ref = self.content_holder.widget_ref();
-        content.add_handler_fn(move |_: &LayoutUpdated, args| {
+        content.add_handler(move |_: &LayoutUpdated, args: EventArgs| {
             widget_ref.event(ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
         });
         self.content_holder.layout().add(constraints![
@@ -125,7 +125,7 @@ impl Into<WidgetBuilder> for ScrollBuilder {
             scroll_parent_handler.scrollbars = Some(ScrollBars::new(scrollbar_h, scrollbar_v, corner.widget_ref()));
         }
         self.content_holder.add_handler(scroll_parent_handler);
-        self.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
+        self.content_holder.add_handler(|event: &WidgetMouseWheel, args: EventArgs| {
             args.widget.event(ScrollParentEvent::WidgetMouseWheel(*event));
         });
         self.content_holder.add_child(content);

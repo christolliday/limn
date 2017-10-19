@@ -56,8 +56,9 @@ impl Iterator for Queue {
     }
 }
 
-/// Context passed to a `EventHandler`, allows modification
-/// to a widget and it's layout, and posting events to the Queue.
+/// Context passed to a `EventHandler`, provides access to the widget
+/// that holds it, the `Ui, and a flag to notify the dispatcher that
+/// the event has been handled (in the case the event is bubbling up)
 pub struct EventArgs<'a> {
     pub widget: WidgetRef,
     pub ui: &'a mut Ui,
@@ -67,6 +68,12 @@ pub struct EventArgs<'a> {
 /// Used to create a stateful event handler for widgets.
 pub trait EventHandler<T> {
     fn handle(&mut self, event: &T, args: EventArgs);
+}
+
+impl <T, E> EventHandler<E> for T where T: FnMut(&E, EventArgs) {
+    fn handle(&mut self, event: &E, args: EventArgs) {
+        self(event, args);
+    }
 }
 
 /// Non-generic `EventHandler` or Widget callback wrapper.

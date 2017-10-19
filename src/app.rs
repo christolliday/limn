@@ -8,7 +8,7 @@ use window::Window;
 use ui::Ui;
 use input::InputEvent;
 use widget::WidgetBuilder;
-use event::{self, EventHandler, EventArgs};
+use event::{self, EventHandler};
 use geometry::Size;
 
 /// Limn application, global object to be instatiated per window.
@@ -136,12 +136,6 @@ impl App {
     /// Add a new global event handler
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.ui.get_root().add_handler(handler);
-        self
-    }
-
-    /// Add a new global event handler function
-    pub fn add_handler_fn<E: 'static, T: FnMut(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
-        self.ui.get_root().add_handler_fn(handler);
         self
     }
 }

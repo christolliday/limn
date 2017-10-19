@@ -85,7 +85,7 @@ enum DragInputEvent {
 impl WidgetBuilder {
     /// Make a widget receive drag events.
     pub fn make_draggable(&mut self) -> &mut Self {
-        self.add_handler_fn(|event: &WidgetMouseButton, args| {
+        self.add_handler(|event: &WidgetMouseButton, args: EventArgs| {
             if let WidgetMouseButton(glutin::ElementState::Pressed, _) = *event {
                 let event = DragInputEvent::WidgetPressed(args.widget);
                 args.ui.event(event);
@@ -102,10 +102,10 @@ impl App {
     /// synthesize `DragEvent`s
     pub fn add_drag_handlers(&mut self) {
         self.add_handler(DragInputHandler::new());
-        self.add_handler_fn(|event: &MouseMoved, args| {
+        self.add_handler(|event: &MouseMoved, args: EventArgs| {
             args.ui.event(DragInputEvent::MouseMoved(event.0));
         });
-        self.add_handler_fn(|event: &MouseButton, args| {
+        self.add_handler(|event: &MouseButton, args: EventArgs| {
             if let MouseButton(glutin::ElementState::Released, _) = *event {
                 args.ui.event(DragInputEvent::MouseReleased);
             }
