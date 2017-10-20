@@ -25,6 +25,7 @@ impl Font {
     pub fn from_font_loader(family_name: &str)
         -> Result<Self, LimnResourcesError>
     {
+        use font_loader::system_fonts;
         use std::io::Cursor;
         let property = system_fonts::FontPropertyBuilder::new().family(family_name).build();
         let font = system_fonts::get(&property)
@@ -32,6 +33,15 @@ impl Font {
         Self::try_from(&mut Cursor::new(font))
     }
 
+    /// Convenience function for loading a font from bytes, usually for fallback
+    /// fonts that were included in the binary via `include_bytes!("myfont.ttf")`
+    pub fn from_bytes(bytes: &'static[u8])
+                      -> Result<Self, LimnResourcesError>
+    {
+        use std::io::Cursor;
+        Self::try_from(&mut Cursor::new(*bytes))
+    }
+    
     /// Create fonts from any source that implements `Read`
     pub fn try_from<R: Read>(source: &mut R)
     -> Result<Self, LimnResourcesError>

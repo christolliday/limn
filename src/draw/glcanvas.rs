@@ -1,9 +1,8 @@
-use resources::get_global_resources;
 use webrender::api::*;
 
 use render::RenderBuilder;
 use widget::draw::Draw;
-use resources::resources;
+use resources::get_global_resources;
 use geometry::{Rect, RectExt, Size, SizeExt};
 
 pub struct GLCanvasState {

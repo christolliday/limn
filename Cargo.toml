@@ -36,3 +36,5 @@ rand = "0.3"
 [features]
 nightly = []
 font_loader = ["font-loader"]
+
+default = ["font_loader"]

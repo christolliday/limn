@@ -13,35 +13,79 @@ use color::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 
+// fields are marked private because updating them requires
+// sending extra messages to webrender. TextStates are completely
+// static right now
+
 pub struct TextState {
-    pub text: String,
-    pub font: String,
-    pub font_size: f32,
-    pub text_color: Color,
-    pub background_color: Color,
-    pub wrap: Wrap,
-    pub align: Align,
+    pub(crate) font: FontInstanceId,
+    pub(crate) text_color: Color,
+    pub(crate) background_color: Color,
+    pub(crate) wrap: Wrap,
+    pub(crate) align: Align,
 }
-impl Default for TextState {
-    fn default() -> Self {
+
+pub struct TextStateBuilder {
+    text_state: TextState,
+}
+
+impl TextStateBuilder {
+    
+    /// Create a text style with a certain font and size.
+    /// Since size + font are cached, this requires creating an extra `FontInstanceId`
+    #[inline]
+    pub fn new(font: FontInstanceId)
+               -> Self where S: Into<String>
+    {
         TextState {
-            text: "".to_owned(),
-            font: "NotoSans/NotoSans-Regular".to_owned(),
-            font_size: 24.0,
+            text: text.into(),
+            font: font,
             text_color: BLACK,
             background_color: TRANSPARENT,
             wrap: Wrap::Whitespace,
             align: Align::Start,
         }
     }
+
+    // Builder functions to change default behaviour
+
+    /// Set the text color of the style
+    #[inline]
+    pub fn with_text_color(mut self, color: Color) -> Self {
+        self.text_state.text_color = color;
+        self
+    }
+
+    /// Set the text background color of the style
+    #[inline]
+    pub fn with_background_color(mut self, color: Color) -> Self {
+        self.text_state.background_color = color;
+        self
+    }
+
+    /// Set the wrap type
+    #[inline]
+    pub fn with_background_color(self, wrap: Wrap) -> Self {
+        self.text_state.wrap = wrap;
+        self
+    }
+
+    /// Set the alignment of the text
+    #[inline]
+    pub fn with_alignment(self, align: Align) -> Self {
+        self.text_state.align = align;
+        self
+    }
+
+    /// Build the text style
+    #[inline]
+    pub fn build(self) -> TextState {
+        self.text_state
+    }
 }
 
 impl TextState {
-    pub fn new(text: &str) -> Self {
-        let mut draw_state = TextState::default();
-        draw_state.text = text.to_owned();
-        draw_state
-    }
+    
     pub fn measure(&self) -> Size {
         let line_height = self.line_height();
         let mut resources = get_global_resources();
@@ -53,12 +97,15 @@ impl TextState {
             line_height,
             self.wrap)
     }
+
     pub fn min_height(&self) -> f32 {
         self.line_height()
     }
+    
     pub fn line_height(&self) -> f32 {
         self.font_size + self.v_metrics().line_gap
     }
+    
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
         let line_height = self.line_height();
         let mut resources = get_global_resources();
@@ -72,6 +119,7 @@ impl TextState {
             bounds.width());
         height <= bounds.height()
     }
+    
     fn get_line_rects(&self, bounds: Rect) -> Vec<Rect> {
         let line_height = self.line_height();
         let mut resources = get_global_resources();
@@ -85,6 +133,7 @@ impl TextState {
             self.wrap,
             self.align)
     }
+    
     fn position_glyphs(&self, bounds: Rect) -> Vec<GlyphInstance> {
         let line_height = self.line_height();
         let descent = self.v_metrics().descent;
@@ -105,9 +154,11 @@ impl TextState {
                 }
             }).collect()
     }
+    
     fn font_instance_key(&self) -> FontInstanceKey {
         *get_global_resources().get_font_instance(&self.font, self.font_size)
     }
+    
     fn v_metrics(&self) -> VMetrics {
         let mut resources = get_global_resources();
         let font = resources.get_font(&self.font);
@@ -153,7 +204,7 @@ impl Draw for TextState {
 
 #[derive(Debug, Clone)]
 pub enum TextStyle {
-    Text(Value<String>),
+    /*Text(Value<String>),*/
     Font(Value<String>),
     FontSize(Value<f32>),
     TextColor(Value<Color>),
@@ -165,7 +216,7 @@ pub enum TextStyle {
 impl Style<TextState> for TextStyle {
     fn apply(&self, state: &mut TextState, props: &PropSet) -> bool {
         match *self {
-            TextStyle::Text(ref val) => style::update(&mut state.text, val.get(props)),
+            /*TextStyle::Text(ref val) => style::update(&mut state.text, val.get(props)),*/
             TextStyle::Font(ref val) => style::update(&mut state.font, val.get(props)),
             TextStyle::FontSize(ref val) => style::update(&mut state.font_size, val.get(props)),
             TextStyle::TextColor(ref val) => style::update(&mut state.text_color, val.get(props)),
