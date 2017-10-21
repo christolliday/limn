@@ -10,31 +10,26 @@ use widget::draw::Draw;
 use widget::property::PropSet;
 use widget::style::{self, Value, Style};
 use color::*;
+use std::sync::Arc;
+use resources::font::Font;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 
-// fields are marked private because updating them requires
-// sending extra messages to webrender. TextStates are completely
-// static right now
-
 pub struct TextState {
-    pub(crate) font: FontInstanceId,
-    pub(crate) text_color: Color,
-    pub(crate) background_color: Color,
-    pub(crate) wrap: Wrap,
-    pub(crate) align: Align,
+    pub text: String,
+    pub font: Arc<Font>,
+    pub text_color: Color,
+    pub background_color: Color,
+    pub wrap: Wrap,
+    pub align: Align,
 }
 
-pub struct TextStateBuilder {
-    text_state: TextState,
-}
-
-impl TextStateBuilder {
+impl TextState {
     
     /// Create a text style with a certain font and size.
     /// Since size + font are cached, this requires creating an extra `FontInstanceId`
     #[inline]
-    pub fn new(font: FontInstanceId)
+    pub fn new<S>(text: S, font: Arc<Font>)
                -> Self where S: Into<String>
     {
         TextState {
@@ -65,7 +60,7 @@ impl TextStateBuilder {
 
     /// Set the wrap type
     #[inline]
-    pub fn with_background_color(self, wrap: Wrap) -> Self {
+    pub fn with_wrap(self, wrap: Wrap) -> Self {
         self.text_state.wrap = wrap;
         self
     }
@@ -77,21 +72,11 @@ impl TextStateBuilder {
         self
     }
 
-    /// Build the text style
-    #[inline]
-    pub fn build(self) -> TextState {
-        self.text_state
-    }
-}
-
-impl TextState {
-    
     pub fn measure(&self) -> Size {
         let line_height = self.line_height();
         let mut resources = get_global_resources();
         let font = resources.get_font(&self.font);
         text_layout::get_text_size(
-            &self.text,
             &font.info,
             self.font_size,
             line_height,
@@ -109,7 +94,7 @@ impl TextState {
     pub fn text_fits(&self, text: &str, bounds: Rect) -> bool {
         let line_height = self.line_height();
         let mut resources = get_global_resources();
-        let font = resources.get_font(&self.font);
+        let font = *self.font;
         let height = text_layout::get_text_height(
             text,
             &font.info,
@@ -204,7 +189,7 @@ impl Draw for TextState {
 
 #[derive(Debug, Clone)]
 pub enum TextStyle {
-    /*Text(Value<String>),*/
+    Text(Value<String>),
     Font(Value<String>),
     FontSize(Value<f32>),
     TextColor(Value<Color>),
@@ -216,7 +201,7 @@ pub enum TextStyle {
 impl Style<TextState> for TextStyle {
     fn apply(&self, state: &mut TextState, props: &PropSet) -> bool {
         match *self {
-            /*TextStyle::Text(ref val) => style::update(&mut state.text, val.get(props)),*/
+            TextStyle::Text(ref val) => style::update(&mut state.text, val.get(props)),
             TextStyle::Font(ref val) => style::update(&mut state.font, val.get(props)),
             TextStyle::FontSize(ref val) => style::update(&mut state.font_size, val.get(props)),
             TextStyle::TextColor(ref val) => style::update(&mut state.text_color, val.get(props)),

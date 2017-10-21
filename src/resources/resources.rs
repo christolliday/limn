@@ -19,9 +19,11 @@ pub struct FontInstanceId {
     pub size: Au,
 }
 
-/// The fonts postscript name, used for uniquely identifying a font
+/// A fonts unique ID. Can be the postscript name when postscript support
+/// lands in `rusttype`, but for the most part, this will just be the URI
+/// (file name or URL) to the font, to guarantee uniqueness
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
-pub struct FontPostscriptName(String);
+pub struct FontUID(String);
 
 /// Global resources tracker, for fonts, widgets and images
 #[derive(Debug)]
@@ -30,7 +32,7 @@ pub struct Resources {
     pub render: Option<RenderApi>,
     /// List of fonts, indexed by a unique key (u32).
     /// Note that to actually get the font, you have to look it up in `GLOBAL_FONTS`
-    pub fonts: HashMap<FontInstanceId, Arc<FontPostscriptName>>,
+    pub fonts: HashMap<FontInstanceId, FontUID>,
     /// List of images, indexed by a unique key
     pub images: HashMap<ImageKey, Arc<Image>>,
     /// Map of widgets and their respective IDs
@@ -39,6 +41,11 @@ pub struct Resources {
     last_font_id: u64,
     /// The last assigned image ID. Not public on purpose
     last_image_id: u64,
+    /// Updates needed for this frame. For performance reasons,
+    /// we try to keep the amount of updates small
+    /// TODO: do we have to fill this every frame or is it ok to
+    /// retain resources between frames?
+    current_resource_update: ResourceUpdates,
 }
 
 lazy_static! {
@@ -46,7 +53,7 @@ lazy_static! {
     static ref GLOBAL_RESOURCES: Arc<Mutex<Resources>> = Arc::new(Mutex::new(Resources::new()));
     /// Since fonts can be re-rendered in different sizes, but without requiring to re-load the
     /// font again, the fonts are not contained in the resources.
-    static ref GLOBAL_FONTS: Arc<Mutex<HashMap<FontPostscriptName, Arc<Font>>>> = Arc::new(Mutex::new(HashMap::new()));
+    static ref GLOBAL_FONTS: Arc<Mutex<HashMap<FontUID, Arc<Font>>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
 /// Initialize the resources
@@ -60,9 +67,27 @@ pub fn get_global_resources() -> MutexGuard<'static, Resources> {
 }
 
 /// Allow access to global fonts
-pub fn get_global_font_map() -> MutexGuard<'static, HashMap<String, Arc<Font>>> {
+pub fn get_global_fonts() -> MutexGuard<'static, HashMap<String, Arc<Font>>> {
     GLOBAL_FONTS.try_lock().unwrap()
 }
+
+/// ResourceUpdates
+/// The resource updates for a given transaction (they must be applied in the same frame)
+/// new
+/// 
+/// add_image
+/// update_image
+/// delete_image
+///
+/// add_raw_font
+/// add_native_font
+/// delete_font
+///
+/// add_font_instance
+/// delete_font_instance
+/// 
+/// merge
+/// clear
 
 impl Resources {
 
@@ -92,33 +117,55 @@ impl Resources {
 
     /// Function for checking if a font has already been loaded into the resources
     #[inline]
-    pub fn get_font(&mut self, id: &FontInstanceKey) -> Option<Arc<FontInfo>> {
-        self.fonts.get(id)
+    pub fn get_font(&mut self, id: &FontInstanceKey) -> Option<Arc<Font>> {
+        if let Some(uuid) = self.fonts.get(id) {
+            if let Some(ref font) = get_global_fonts().get(uuid) {
+                // clones the Arc, not the font
+                font.clone()
+            }
+        }
+
+        None        
     }
 
     /// Convenience function for getting or inserting a font
     /// This will not insert the font if it already exists (checked for equality
     /// by postscript name)
-    pub fn get_font_or_insert_with(&mut self, id: &Font) -> Arc<FontInfo> {
-        
+    pub fn get_font_or_insert_with<S>(&mut self, id: S, font: Font)
+                                   -> Arc<Font> where S: Into<String>
+    {
+        if let Some(uuid) = self.fonts.get(id) {
+            if let Some(ref font) = get_global_fonts().get(uuid) {
+                font.clone()
+            } else {
+                // font and font list are out of sync, should not happen
+                get_global_fonts().lock().insert(uuid, Arc::new(font));
+                get_global_fonts().lock().get(id).unwrap().clone()
+            }
+        } else {
+            get_global_fonts().lock().insert(id, Arc::new(font));
+            get_global_fonts().lock().get(id).unwrap().clone()
+        }
     }
 
-    /// Inserts a font
-    pub fn add_font(&mut self, font: Font) -> Arc<FontInfo> {
-        
+    /// Inserts a font. Same as calling `get_font_or_insert_with()`.
+    pub fn add_font<S>(&mut self, id: S, font: Font)
+                       -> Arc<Font> where S: Into<String>
+    {
+        self.get_font_or_insert_with(id, font);
     }
 
     fn generate_font_instance_key(&mut self) -> u64 {
         // note that the order is important!
         // So you can simply say: self.fonts[font_instance_key]
         let font_instance_key = self.last_font_id;
-        last_font_id += 1;
+        self.last_font_id += 1;
         font_instance_key
     }
 
     fn generate_image_instance_key(&mut self) -> u64 {
         let image_instance_key = self.last_image_id;
-        last_image_id += 1;
+        self.last_image_id += 1;
         image_instance_key
     }
 

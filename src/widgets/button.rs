@@ -78,9 +78,11 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
 pub struct ToggleButtonBuilder {
     pub widget: WidgetBuilder,
 }
+
 widget_wrapper!(ToggleButtonBuilder);
 
 impl ToggleButtonBuilder {
+
     pub fn new() -> Self {
         let mut widget = WidgetBuilder::new("toggle_button");
         widget
@@ -95,13 +97,18 @@ impl ToggleButtonBuilder {
 
         ToggleButtonBuilder { widget: widget }
     }
+    
     pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
 
-        let style = style!(parent: STYLE_BUTTON_TEXT,
+        let style = style!(
+            parent: STYLE_BUTTON_TEXT,
             TextStyle::Text: selector!(off_text.to_owned(),
-                ACTIVATED: on_text.to_owned()),
-            TextStyle::Align: Align::Middle);
+            ACTIVATED: on_text.to_owned()),
+            TextStyle::Align: Align::Middle
+        );
+        
         let mut button_text_widget = TextBuilder::new_with_style(style);
+
         button_text_widget.set_name("button_text");
         button_text_widget.layout().add(constraints![
             bound_left(&self.widget).padding(20.0),
@@ -114,6 +121,7 @@ impl ToggleButtonBuilder {
         self.widget.add_child(button_text_widget);
         self
     }
+    
     pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
         where F: Fn(&ToggleEvent, EventArgs) + 'static
     {
@@ -125,6 +133,7 @@ impl ToggleButtonBuilder {
 pub struct PushButtonBuilder {
     pub widget: WidgetBuilder,
 }
+
 widget_wrapper!(PushButtonBuilder);
 
 impl PushButtonBuilder {

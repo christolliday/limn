@@ -11,6 +11,8 @@ use draw::rect::{RectState, RectStyle};
 use draw::text::TextState;
 use event::{EventHandler, EventArgs};
 use color::*;
+use resources::font::Font;
+use resources::get_global_resources;
 
 const BACKSPACE: char = '\u{8}';
 
@@ -69,9 +71,13 @@ impl EditTextBuilder {
             })
             .make_focusable();
 
+        // The font_path also serves as an identifier for the font!
+        let font_path = "assets/fonts/NotoSans/NotoSans-Regular.ttf";
+        let default_font = get_global_resources().add_font(font_path, Font::try_from_file(font_path).unwrap());
+        
         let mut text_widget = WidgetBuilder::new("edit_text_text");
         text_widget
-            .set_draw_state(TextState::default())
+            .set_draw_state(TextState::new("", default_font))
             .add_handler(TextUpdatedHandler::default())
             .add_handler_fn(edit_text_handle_char)
             .add_handler_fn(text_change_handle);

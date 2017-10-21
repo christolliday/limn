@@ -3,7 +3,7 @@ use image::{self, GenericImage};
 use webrender::api::{ImageDescriptor, ImageData, ImageFormat};
 use resources::errors::Error as LimnResourcesError;
 use resources::errors::ErrorKind as LimnResourcesErrorKind;
-use std::path::Path;
+use std::path::PathBuf;
 
 /// Image descriptor
 #[derive(Debug, Clone)]
@@ -15,9 +15,9 @@ pub struct Image {
 
 impl Image {
 
-    pub fn from_file<P: AsRef<Path>>(path: P)
-                    -> Result<Self, LimnResourcesError>
-   {
+    pub fn try_from_file<P>(path: P)
+                            -> Result<Self, LimnResourcesError> where P: AsRef<PathBuf>
+    {
         use std::fs::File;
         let mut buf = Vec::new();
         let file = File::open(path)?;
@@ -25,8 +25,8 @@ impl Image {
         Self::try_from_memory(&buf)
     }
 
-    pub fn try_from_memory(data: &[u8])
-                    -> Result<Self, LimnResourcesError>
+    pub fn try_from_memory(data: [u8])
+                           -> Result<Self, LimnResourcesError>
     {
         let image = image::load_from_memory(data)?;
         let image_dims = image.dimensions();
@@ -54,6 +54,14 @@ impl Image {
             data: data,
             tiling: None,
         })
+    }
+
+    pub fn try_from<R>(data: R)
+                       -> Result<Self, LimnResourcesError>
+    {
+        let mut buf = Vec::<u8>::new();
+        data.read_to_end(&mut buf);
+        Self::try_from_memory(buf[..]);
     }
 }
 

@@ -408,9 +408,11 @@ pub struct WidgetBuilder {
 }
 
 impl WidgetBuilder {
-    pub fn new(name: &str) -> Self {
+    pub fn new<S>(name: S)
+               -> Self where S: Into<String>
+    {
         WidgetBuilder {
-            widget: WidgetRef::new(Widget::new(name.to_owned())),
+            widget: WidgetRef::new(Widget::new(name.into())),
         }
     }
     pub fn widget_ref(&self) -> WidgetRef {

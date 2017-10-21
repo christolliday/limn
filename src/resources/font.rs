@@ -12,7 +12,7 @@ pub struct Font(::rusttype::Font<'static>);
 impl Font {
 
     /// Convenience function, load a font from a file
-    pub fn from_file<P: AsRef<Path>>(path: P)
+    pub fn try_from_file<P: AsRef<Path>>(path: P)
         -> Result<Self, LimnResourcesError>
     {
         use std::fs::File;
@@ -22,7 +22,7 @@ impl Font {
 
     /// Convenience function for loading fonts from system fonts
     #[cfg(feature = "font_loader")]
-    pub fn from_font_loader(family_name: &str)
+    pub fn try_from_font_loader(family_name: &str)
         -> Result<Self, LimnResourcesError>
     {
         use font_loader::system_fonts;
@@ -35,16 +35,19 @@ impl Font {
 
     /// Convenience function for loading a font from bytes, usually for fallback
     /// fonts that were included in the binary via `include_bytes!("myfont.ttf")`
-    pub fn from_bytes(bytes: &'static[u8])
+    pub fn try_from_bytes(bytes: &'static[u8])
                       -> Result<Self, LimnResourcesError>
     {
-        use std::io::Cursor;
-        Self::try_from(&mut Cursor::new(*bytes))
+        // duplicated because rusttype can create a font without owning the data
+        let collection = rusttype::FontCollection::from_bytes(bytes);
+        let font = collection.into_font()
+            .ok_or(LimnResourcesErrorKind::EmptyFontCollection)?;
+        Ok(Self { 0: font })
     }
     
     /// Create fonts from any source that implements `Read`
     pub fn try_from<R: Read>(source: &mut R)
-    -> Result<Self, LimnResourcesError>
+                             -> Result<Self, LimnResourcesError>
     {
         let mut buf = Vec::new();
         source.read_to_end(&mut buf)?;
