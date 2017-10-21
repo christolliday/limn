@@ -9,11 +9,15 @@ use widget::WidgetBuilder;
 use widget::property::Property;
 use widget::property::states::*;
 use widgets::text::TextBuilder;
-use input::mouse::{WidgetMouseButton, ClickEvent};
+use input::mouse::WidgetMouseButton;
 use draw::rect::{RectState, RectStyle};
 use draw::text::TextStyle;
 use geometry::Size;
 use color::*;
+use widget::draw::Draw;
+use widget::style::Style;
+use resources::font::Font;
+use std::sync::Arc;
 
 static COLOR_BUTTON_DEFAULT: Color = GRAY_80;
 static COLOR_BUTTON_PRESSED: Color = GRAY_60;
@@ -61,6 +65,7 @@ pub enum ToggleEvent {
     On,
     Off,
 }
+
 // show whether toggle button is activated
 fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
     if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
@@ -75,109 +80,271 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
     }
 }
 
-pub struct ToggleButtonBuilder {
-    pub widget: WidgetBuilder,
+// --------------------- end of default functions
+
+// The WidgetBuilder is getting built only when it is needed!
+// The reason for this is configurability. When pulling out all configuration
+// options into a `Builder`, the library user can more easily configure
+// which things he wants to override. Plus, we are not calling unnecessary
+// methods, if the widget ends up unused for some reason.
+
+// Between the time where the ToggleButtonBuilder is constructed
+// and the time where the ToggleButtonBuilder is converted into a WidgetBuilder
+// the user can configure the ToggleButtonBuilder by overriding the fields directly
+
+/// Padding for a button (or other elements)
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+pub struct Padding {
+    pub left: f32,
+    pub right: f32,
+    pub top: f32,
+    pub bottom: f32,
 }
 
-widget_wrapper!(ToggleButtonBuilder);
+/// Button builder, shared between `ToggleButtonBuilder`
+/// and `PushButtonBuilder`
+pub struct ButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static {
+    /// name, such as "button_text", "toggle_button"
+    pub name: &'static str,
+    pub hover_enabled: bool,
+    pub min_size_horz: f32,
+    pub min_size_vert: f32,
+    pub on_toggle_handler: Option<F>,
+    pub style: Option<(D, S)>,
+}
 
-impl ToggleButtonBuilder {
+impl<F, D, S> ButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static
+{
+    /// Creates a new button. The button does not know anything about
+    /// any containing text. 
+    pub fn new(name: &'static str)
+               -> Self
+    {
+        Self {
+            name: name,
+            hover_enabled: true,
+            min_size_horz: 70.0,
+            min_size_vert: 30.0,
+            on_toggle_handler: None,
+            style: Some((RectState::new(), STYLE_BUTTON.clone())),
+        }
+    }
+    
+    /// Sets the callback function 
+    pub fn on_toggle(self, callback: F) -> Self
+    {
+        self.on_toggle_handler = Some(callback);
+        self
+    }
+}
 
-    pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new("toggle_button");
-        widget
-            .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
-            .add_handler_fn(button_handle_mouse_down)
-            .enable_hover()
-            .add_handler_fn(toggle_button_handle_mouse);
+impl<F, D, S> Into<WidgetBuilder> for ButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static
+{
+    fn into(self) -> WidgetBuilder {
+
+        let mut widget = WidgetBuilder::new(self.name);
+
+        if self.hover_enabled {
+            widget.enable_hover();
+        }
+        
+        if let Some((state, style)) = self.style {
+            widget.set_draw_state_with_style(state, style);
+        }
+
+        if let Some(handler) = self.on_toggle_handler {
+            widget.add_handler_fn(handler);
+        }
+
         widget.layout().add(constraints![
-            min_size(Size::new(70.0, 30.0)),
+            min_size(Size::new(self.min_size_horz, self.min_size_vert)),
             shrink(),
         ]);
 
-        ToggleButtonBuilder { widget: widget }
+        if let Some(callback) = self.on_toggle_handler {
+            widget.add_handler_fn(callback);
+        }
+        
+        widget
+    }
+}
+
+/// Toggle button, specialization of the generic 
+pub struct ToggleButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static {
+    /// The underlying button builder
+    pub button_builder: ButtonBuilder<F, D, S>,
+    pub on_off_text: Option<(String, String, Padding, Arc<Font>)>,
+}
+
+impl<F, D, S> ToggleButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static    
+{
+    /// Creates a new ToggleButtonBuilder
+    pub fn new()
+               -> Self
+    {
+        Self {
+            button_builder: ButtonBuilder::new("toggle_button"),
+            on_off_text: None,
+        }
     }
     
-    pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
+    /// Builder method to tell if there should be a text displayed on the button
+    /// The `on_text` is shown when the button is in its "On" state and vice versa.
+    #[inline]
+    pub fn with_text<T>(self, on_text: T, off_text: T, font: Arc<Font>)
+                        -> Self where T: Into<String>
+    {
+        self.on_off_text = Some((
+            on_text.into(),
+            off_text.into(),
+            Padding {
+                left: 20.0,
+                right: 20.0,
+                top: 10.0,
+                bottom: 10.0,
+            },
+            font));
+        
+        self
+    }
+}
+
+impl<F, D, S> Into<WidgetBuilder> for ToggleButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static
+{
+    fn into(self) -> WidgetBuilder {
+        
+        let mut toggle_button: WidgetBuilder = self.button_builder.into();
+
+        // now apply styles for on and off text if necessary
+        if self.on_off_text.is_none() { return toggle_button; }
+        let (on_text, off_text, padding, font) = self.on_off_text.unwrap();
 
         let style = style!(
             parent: STYLE_BUTTON_TEXT,
-            TextStyle::Text: selector!(off_text.to_owned(),
-            ACTIVATED: on_text.to_owned()),
+            TextStyle::Text: selector!(off_text,
+                                       ACTIVATED: on_text),
             TextStyle::Align: Align::Middle
         );
         
-        let mut button_text_widget = TextBuilder::new_with_style(style);
+        let mut button_text_widget: WidgetBuilder =
+            TextBuilder::new(off_text, font)
+            .with_style(style)
+            .into();
 
         button_text_widget.set_name("button_text");
+        
         button_text_widget.layout().add(constraints![
-            bound_left(&self.widget).padding(20.0),
-            bound_right(&self.widget).padding(20.0),
-            bound_top(&self.widget).padding(10.0),
-            bound_bottom(&self.widget).padding(10.0),
-            center(&self.widget),
+            bound_left(&toggle_button).padding(padding.left),
+            bound_right(&toggle_button).padding(padding.right),
+            bound_top(&toggle_button).padding(padding.top),
+            bound_bottom(&toggle_button).padding(padding.bottom),
+            center(&toggle_button),
         ]);
 
-        self.widget.add_child(button_text_widget);
-        self
+        toggle_button.add_child(button_text_widget);
+
+        toggle_button
     }
+}
+
+/// PushButtonBuilder, a specialization of the ButtonBuilder
+/// that only displays a text and doesn't change it in any way
+pub struct PushButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static
+{
+    /// The underlying button builder, which does not know anything
+    /// about the font
+    pub button_builder: ButtonBuilder<F, D, S>,
+    /// The text to be displayed on the button
+    pub text: Option<(String, Padding, Arc<Font>)>,
+}
+
+impl<F, D, S> PushButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static    
+{
     
-    pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&ToggleEvent, EventArgs) + 'static
+    pub fn new() -> Self {
+        Self {
+            button_builder: ButtonBuilder::new("push_button"),
+            text: None,
+        }
+    }
+
+    /// Sets the text to display on a PushButtonBuilder
+    #[inline]
+    pub fn with_text<T>(self, text: T, off_text: T, font: Arc<Font>)
+                        -> Self where T: Into<String>
     {
-        self.widget.add_handler_fn(callback);
+        self.text = Some((
+            text.into(),
+            Padding {
+                left: 20.0,
+                right: 20.0,
+                top: 10.0,
+                bottom: 10.0,
+            },
+            font));
+        
         self
     }
 }
 
-pub struct PushButtonBuilder {
-    pub widget: WidgetBuilder,
-}
+impl<F, D, S> Into<WidgetBuilder> for PushButtonBuilder<F, D, S>
+    where F: Fn(&ToggleEvent, EventArgs) + 'static,
+          D: Draw + 'static,
+          S: Style<D> + 'static
+{
+    fn into(self) -> WidgetBuilder {
+        
+        let push_button: WidgetBuilder = self.button_builder.into();
 
-widget_wrapper!(PushButtonBuilder);
+        // add text as a child only if needed
+        if self.text.is_none() { return push_button; }
+        let (text, padding, font) = self.text.unwrap();
 
-impl PushButtonBuilder {
-    pub fn new() -> Self {
-        let mut widget = WidgetBuilder::new("push_button");
-        widget
-            .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
-            .add_handler_fn(button_handle_mouse_down)
-            .enable_hover();
-        widget.layout().add(constraints![
-            min_size(Size::new(100.0, 50.0)).strength(STRONG),
-            shrink(),
-        ]);
+        let style = style!(
+            parent: STYLE_BUTTON_TEXT,
+            TextStyle::Text: text,
+            TextStyle::Align: Align::Middle
+        );
+        
+        let mut button_text_widget: WidgetBuilder =
+            TextBuilder::new(text, font)
+            .with_style(style)
+            .into();
 
-        PushButtonBuilder { widget: widget }
-    }
-    pub fn set_text(&mut self, text: &'static str) -> &mut Self {
-
-        let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyle::Text: text.to_owned(),
-            TextStyle::Align: Align::Middle);
-
-        let mut button_text_widget = TextBuilder::new_with_style(style);
         button_text_widget.set_name("button_text");
         button_text_widget.layout().add(constraints![
-            bound_left(&self.widget).padding(20.0),
-            bound_right(&self.widget).padding(20.0),
-            bound_top(&self.widget).padding(10.0),
-            bound_bottom(&self.widget).padding(10.0),
-            center(&self.widget),
+            bound_left(&push_button).padding(20.0),
+            bound_right(&push_button).padding(20.0),
+            bound_top(&push_button).padding(10.0),
+            bound_bottom(&push_button).padding(10.0),
+            center(&push_button),
         ]);
 
-        self.widget.add_child(button_text_widget);
-        self
-    }
-}
-
-impl WidgetBuilder {
-    pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
-        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
-    {
-        self.add_handler_fn(move |event, mut args| {
-            (on_click)(event, &mut args);
-            *args.handled = true;
-        })
+        push_button.add_child(button_text_widget);
+        push_button
     }
 }

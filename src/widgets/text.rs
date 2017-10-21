@@ -35,6 +35,7 @@ impl TextBuilder {
                       -> Self
     {
         self.style = Some(style);
+        self
     }
 }
 
@@ -50,8 +51,7 @@ impl Into<WidgetBuilder> for TextBuilder {
         }
 
         widget.add_handler(TextUpdatedHandler::default());
-        
-        self.0
+        widget
     }
 }
 

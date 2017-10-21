@@ -22,6 +22,7 @@ use render;
 use color::Color;
 use event::Target;
 use layout::UpdateLayout;
+use input::mouse::ClickEvent;
 
 use self::property::{PropSet, Property};
 use self::draw::{Draw, DrawWrapper};
@@ -460,6 +461,15 @@ impl WidgetBuilder {
         self.widget.widget_mut().name = name.to_owned();
         self.widget.widget_mut().layout.name = Some(name.to_owned());
         self
+    }
+
+    pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
+        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
+    {
+        self.add_handler_fn(move |event, mut args| {
+            (on_click)(event, &mut args);
+            *args.handled = true;
+        })
     }
 }
 
