@@ -1,3 +1,5 @@
+//! Includes standard bundled widgets.
+
 pub mod button;
 pub mod scroll;
 pub mod drag;

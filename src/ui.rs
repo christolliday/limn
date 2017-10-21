@@ -1,3 +1,5 @@
+//! Contains `Ui`, which contains application global state and is accessible to every event handler.
+
 use std::collections::{HashSet, HashMap, VecDeque};
 use std::any::{Any, TypeId};
 use std::rc::Rc;
@@ -22,6 +24,8 @@ use render::WebRenderContext;
 /// is required. This can be useful for debugging but can result in panics from resizing the window.
 const WINDOW_CONSTRAINT_REQUIRED: bool = false;
 
+/// The core of a limn application, holds the root of the widget tree and other application global state.
+/// `Ui` is accessible to every event handler, so features helper methods that can be accessed at any time.
 pub struct Ui {
     pub(crate) root: WidgetRef,
     widget_map: HashMap<WidgetId, WidgetRef>,

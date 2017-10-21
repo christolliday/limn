@@ -1,11 +1,13 @@
+//! Re-exports of common crate-internal functions / structs
+
 pub use cassowary::strength::*;
 pub use cassowary::WeightedRelation::*;
 
 pub use glutin;
 
 pub use geometry::{Point, Rect, RectExt, Size, SizeExt, Vector};
-pub use event::{Target, EventHandler, EventArgs};
-pub use event::{event, event_global};
+pub use event::{EventHandler, EventArgs};
+pub use event::event_global;
 pub use widget::{WidgetRef, WidgetBuilder};
 pub use widget::draw::{Draw, DrawEventHandler};
 pub use widget::property::Property;

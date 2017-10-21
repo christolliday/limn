@@ -63,6 +63,8 @@ pub type Rect = euclid::Rect<f32>;
 
 pub type LayoutId = usize;
 
+/// A set of cassowary `Variable`s representing the
+/// bounding rectangle of a layout.
 #[derive(Debug, Copy, Clone)]
 pub struct LayoutVars {
     pub left: Variable,
@@ -74,8 +76,6 @@ pub struct LayoutVars {
 }
 
 impl LayoutVars {
-
-    /// Creates a new set of empty `LayoutVars`
     pub fn new() -> Self {
         LayoutVars {
             left: Variable::new(),
@@ -97,7 +97,7 @@ impl LayoutVars {
          self.height]
     }
 
-    /// Checks if another `Variable` is the same as the
+    /// If a `Variable` matches one of the variables in this layout, return it's type
     pub fn var_type(&self, var: Variable) -> VarType {
         if var == self.left { VarType::Left }
         else if var == self.top { VarType::Top }
@@ -143,6 +143,10 @@ impl LayoutRef for LayoutVars {
     }
 }
 
+/// Represents a single item in the overall layout hierarchy with a bounding rectangle and an id.
+///
+/// Modifying any properties of this layout only stores those changes here, they won't affect the
+/// solver until this struct is passed to the solver.
 pub struct Layout {
     pub vars: LayoutVars,
     pub name: Option<String>,
@@ -195,7 +199,9 @@ impl Layout {
         self.container = None;
     }
 
-    /// Replaces the container of the current layout
+    /// Replaces the container of the current layout.
+    /// The container is what determines what constraints will be added between this layout
+    /// and it's children, as they are added, if any.
     pub fn set_container<T>(&mut self, container: T) where T: LayoutContainer + 'static {
         self.container = Some(Rc::new(RefCell::new(container)));
     }
@@ -379,6 +385,7 @@ macro_rules! constraints {
     };
 }
 
+/// Defines what constraints a parent applies to it's children as they are added
 pub trait LayoutContainer {
     fn add_child(&mut self, parent: &mut Layout, child: &mut Layout);
     fn remove_child(&mut self, _: &mut Layout, _: &mut Layout) {}

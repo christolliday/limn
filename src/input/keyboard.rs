@@ -1,3 +1,5 @@
+//! Keyboard input handlers.
+
 use std::collections::HashMap;
 
 use stable_bst::map::TreeMap;

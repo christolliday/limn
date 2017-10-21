@@ -1,3 +1,5 @@
+//! Color helper types and constants
+
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
 use std::fmt;

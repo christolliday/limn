@@ -1,3 +1,5 @@
+//! Mouse input handlers.
+
 use glutin;
 
 use event::{EventHandler, EventArgs};

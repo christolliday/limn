@@ -1,3 +1,24 @@
+//! Types used to create and manage widgets.
+//!
+//! Limn UIs exist as a tree of widgets, each of which consists of a bounding rectangle,
+//! a list of references to it's children, a list of `EventHandler`s that receive and send events,
+//! and optionally a draw state struct that implements `Draw`.
+//!
+//! The tree consists of pointers to widgets called `WidgetRef`s. A widget can be constructed by creating a
+//! `WidgetBuilder`, which is a wrapper around a `WidgetRef` that allows for configuration and that signifies
+//! it hasn't yet been initialized and added to a parent widget.
+//!
+//! Creating a reusable widget definition can be achieved by creating a function that returns a `WidgetBuilder`,
+//! or, if the API for constructing the widget is more complex, a builder struct that implements
+//! `Into<WidgetBuilder>` that can be configured, before being converted into a `WidgetBuilder`, initializing
+//! the `WidgetBuilder` and attaching it's `WidgetRef` to a parent widget.
+//!
+//! The root widget is just an ordinary widget that happens to be stored by the `Ui` so it can be drawn, and that
+//! has the size of the window as its bounding rectangle.
+//!
+//! Creating a user interface consists of constructing a widget tree, then passing the `WidgetBuilder` root of
+//! that tree to a limn `App`, which will attach it to the `Ui` root widget for you and begin the event loop.
+
 #[macro_use]
 pub mod style;
 pub mod property;

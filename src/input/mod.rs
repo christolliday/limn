@@ -1,3 +1,6 @@
+//! Contains handlers for input events from `winit` (keyboard, mouse etc.),
+//! generally responsible for forwarding input to other handlers.
+
 pub mod mouse;
 pub mod keyboard;
 
@@ -45,6 +48,7 @@ impl App {
     }
 }
 
+/// Triggers exit on Esc key press.
 #[derive(Debug, Copy, Clone)]
 pub struct EscKeyCloseHandler;
 
@@ -56,6 +60,7 @@ impl EventHandler<KeyboardInput> for EscKeyCloseHandler {
     }
 }
 
+/// Triggers various debugging settings/events on function key presses.
 #[derive(Debug, Copy, Clone)]
 pub struct DebugSettingsHandler {
     debug_on: bool
@@ -88,10 +93,9 @@ impl EventHandler<KeyboardInput> for DebugSettingsHandler {
                 Some(glutin::VirtualKeyCode::F2) => ui.solver.debug_constraints(),
                 Some(glutin::VirtualKeyCode::F3) => ui.debug_widget_positions(),
                 Some(glutin::VirtualKeyCode::F4) => ui.solver.debug_variables(),
-                Some(glutin::VirtualKeyCode::P) => ui.render.toggle_flags(webrender::PROFILER_DBG),
+                Some(glutin::VirtualKeyCode::F5) => ui.render.toggle_flags(webrender::PROFILER_DBG),
                 _ => {}
             }
-
         }
     }
 }

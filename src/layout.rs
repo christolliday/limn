@@ -15,14 +15,16 @@ pub use limn_layout::*;
 
 impl WidgetBuilder {
 
-    /// Creates a linear layout with Widgets positioned relatively to each other
+    /// Set this widgets container to be a `LinearLayout`.
+    /// Children added to this widget will be arranged along one axis without overlapping.
     pub fn linear_layout(&mut self, settings: LinearLayoutSettings) -> &mut Self {
         let container = LinearLayout::new(self.layout().deref_mut(), settings);
         self.layout().set_container(container);
         self
     }
 
-    /// Creates a grid-based layout with a certain number of columns
+    /// Set this widgets container to be a `GridLayout`.
+    /// Children added to this widget will be arranged in a grid.
     pub fn grid(&mut self, num_columns: usize) -> &mut Self {
         let container = GridLayout::new(self.layout().deref_mut(), num_columns);
         self.layout().set_container(container);

@@ -1,3 +1,5 @@
+//! Contains the `App` type, used to initialize and run a Limn application.
+
 use std::time::{Instant, Duration};
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -11,28 +13,27 @@ use widget::WidgetBuilder;
 use event::{self, EventHandler};
 use geometry::Size;
 
-/// Limn application, global object to be instatiated per window.
+/// The `App` type is just a thin wrapper around a `Ui` containing
+/// the methods used to initialize and run an `App`.
 ///
-/// This is contains the core of a Limn application,
-/// the Ui, event queue, and the handlers that operate
-/// directly on the UI. These handlers are used to handle
-/// global events and modify the UI graph.
-/// A small set of handlers are configured by default that
-/// are used in a typical desktop app. This set of handlers
-/// could be configured differently for a mobile app, for example.
+/// The main difference between `App` and `Ui` is that `App` is available
+/// while initializing your application, and `Ui` is available to
+/// every event handler. As such, `App` should contain methods that
+/// can't, or shouldn't be called while the `App` is running.
+///
+/// There should be only one `App` per Window.
 pub struct App {
-    /// The UI currently visible in the window
+    /// The UI currently visible in the window.
     ui: Ui,
-    /// Minimum time until the next frame is drawn, caps the UI to 60 FPS
+    /// Minimum time until the next frame is drawn, caps the UI to 60 FPS.
     next_frame_time: Instant,
-    /// Events that need to be processed before the next frame can be drawn
+    /// Source of `glutin` input events.
     events_loop: Rc<RefCell<glutin::EventsLoop>>,
     /// Used to ignore resize events before ui has been measured
     window_initialized: bool,
 }
 
 impl App {
-
     /// Creates a new `App` from an existing `Window`.
     /// Automatically initializes the default event handlers for a typical
     /// desktop app:

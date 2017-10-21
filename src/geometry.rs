@@ -1,3 +1,5 @@
+//! Geometric type definitions, such as `Point`, `Rect` and `Size`
+
 use std::f32;
 
 use euclid;
@@ -23,6 +25,9 @@ pub type Rect = euclid::TypedRect<f32, DensityIndependentPixel>;
 /// Multiply by the windows hidpi factor to get `DensityIndependentPixel`s
 pub use webrender::api::DevicePixel;
 
+/// Extension trait for rectangles.
+/// Helper methods for rectangle sides depend on the assumption that `Rect`
+/// size never contains negative values.
 pub trait RectExt<T> {
     fn from_rusttype<S: Into<T>>(rect: rusttype::Rect<S>) -> Self;
     fn to_slice(&self) -> [T; 4];
@@ -72,6 +77,7 @@ impl RectExt<f32> for Rect {
     }
 }
 
+/// Extension trait for sizes.
 pub trait SizeExt<T> {
     fn from_array(size: [u32; 2]) -> Self;
     fn from_tuple(size: (u32, u32)) -> Self;

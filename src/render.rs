@@ -1,3 +1,5 @@
+//! Helper functions and useful types for interacting with WebRender
+
 use std::sync::Arc;
 use std::sync::atomic::{self, AtomicBool};
 

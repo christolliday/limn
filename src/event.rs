@@ -1,3 +1,42 @@
+//! Contains types relevant to event handling and the event queue.
+//!
+//! The event system in limn is based on asynchronous message passing between the event handlers contained in widgets.
+//! By creating types implementing `EventHandler` you can define reusable behaviour that can be applied to any widget,
+//! or any application.
+//!
+//! Handlers can be added to a widget using `WidgetBuilder::add_handler`, or to the root widget using `Ui::add_handler`.
+//! Typically handlers in the root widget are used to interface with the outside world or manage application global
+//! state. Input events are always sent to the root widget first, which has handlers that can redirect them to the
+//! appropriate widgets, the widget under the mouse, or the widget that has keyboard focus, for example.
+//!
+//! There are different ways events can be dispatched:
+//!
+//! - `WidgetRef::event`
+//!
+//!   send an event to a single widget.
+//! - `WidgetRef::event_subtree`
+//!
+//!   send an event to a widget and recursively send it to all it's children.
+//! - `WidgetRef::event_bubble_up`
+//!
+//!   send an event to a widget, then send it to the widgets parent either until you
+//! reach the root or some widget marks it as handled.
+//! - `Ui::event`
+//!
+//!   send an event to the root widget. This is purely a convenience method, which removes the need to pass references to
+//!   the root around, since `Ui` is available as an argument to every handle method.
+//!
+//! Currently, `limn` handles all widget events on a single thread, the UI thread, which is the only thread that can modify
+//! UI state. This means to keep your app responsive, any event handler that needs to block or do long running work must do
+//! it on another thread, either by spawning or notifying a thread, which can then send an event back to the UI when it's
+//! ready. The `event_global` helper method makes this easier, it is equivalent to `Ui::event` but requires the event be
+//! `Send` and can be called from any thread, without a reference to the `Ui`. `WidgetRef` and any other types that can
+//! modify the UI are not thread safe, so can't currently be referenced from other threads, so if any specific widgets need
+//! to be notified from another thread, it's necessary to add a handler to the root widget to forward events.
+//!
+//! For further explanation of the single threaded event architecture see
+//! https://github.com/christolliday/limn/pull/20#discussion_r145373568
+
 use std::any::{Any, TypeId};
 use std::cell::{Cell, RefCell};
 use std::sync::Mutex;
@@ -12,7 +51,7 @@ use widget::WidgetRef;
 /// An event will be sent to all handlers that match both the Target,
 /// and the event type.
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
-pub enum Target {
+pub(crate) enum Target {
     /// Sends an event to a specific widget
     Widget(WidgetRef),
     /// Sends an event to every descendant of a specific widget
@@ -57,7 +96,7 @@ impl Iterator for Queue {
 }
 
 /// Context passed to a `EventHandler`, provides access to the widget
-/// that holds it, the `Ui, and a flag to notify the dispatcher that
+/// that holds it, the `Ui`, and a flag to notify the dispatcher that
 /// the event has been handled (in the case the event is bubbling up)
 pub struct EventArgs<'a> {
     pub widget: WidgetRef,
@@ -150,7 +189,7 @@ pub(super) fn queue_set_events_loop(events_loop: &EventsLoop) {
 }
 
 /// Send message to target address, must be sent from main UI thread.
-pub fn event<T: 'static>(address: Target, data: T) {
+pub(crate) fn event<T: 'static>(address: Target, data: T) {
     LOCAL_QUEUE.with(|queue| {
         if let Some(queue) = queue.as_ref() {
             debug!("push event {}", ::type_name::<T>());
