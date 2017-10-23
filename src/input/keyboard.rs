@@ -20,29 +20,24 @@ pub struct WidgetKeyboardInput(pub glutin::KeyboardInput);
 #[derive(Debug, Copy, Clone)]
 pub struct WidgetReceivedCharacter(pub char);
 
-/**
-Note on focus:
-The tab key iterates through the widgets that have registered as focusable.
-Currently the order of this iteration is just based on the order the widgets
-are registered as focusable.
-Later on maybe it should be based on the relative positioning of widgets (could get
-ugly updating the treemap as widgets change position), or some user defined ordering.
-*/
+
+/// Note on focus:
+/// The tab key iterates through the widgets that have registered as focusable.
+/// Currently the order of this iteration is just based on the order the widgets
+/// are registered as focusable.
+/// Later on maybe it should be based on the relative positioning of widgets (could get
+/// ugly updating the treemap as widgets change position), or some user defined ordering.
+#[derive(Default)]
 pub struct FocusHandler {
     focusable_map: HashMap<WidgetRef, usize>,
-     // can replace TreeMap with std BTreeMap once the range API or similar is stable
+    // can replace TreeMap with std BTreeMap once the range API or similar is stable
     focusable: TreeMap<usize, WidgetRef>,
     focused: Option<WidgetRef>,
     focus_index_max: usize,
 }
 impl FocusHandler {
     pub fn new() -> Self {
-        FocusHandler {
-            focusable_map: HashMap::new(),
-            focusable: TreeMap::new(),
-            focused: None,
-            focus_index_max: 0,
-        }
+        Self::default()
     }
     fn set_focus(&mut self, new_focus: Option<WidgetRef>) {
         if new_focus != self.focused {
@@ -126,10 +121,10 @@ impl WidgetBuilder {
 impl App {
     pub fn add_keyboard_handlers(&mut self) {
         self.add_handler_fn(|event: &KeyboardInput, args| {
-            args.widget.event(KeyboardInputEvent::KeyboardInput(event.clone()));
+            args.widget.event(KeyboardInputEvent::KeyboardInput(*event));
         });
         self.add_handler_fn(|event: &ReceivedCharacter, args| {
-            args.widget.event(KeyboardInputEvent::ReceivedCharacter(event.clone()));
+            args.widget.event(KeyboardInputEvent::ReceivedCharacter(*event));
         });
         self.add_handler(FocusHandler::new());
     }

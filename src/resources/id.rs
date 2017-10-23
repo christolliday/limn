@@ -26,14 +26,25 @@ pub struct IdGen<I> {
     id: usize,
     phantom: PhantomData<I>,
 }
-impl<I: Id> IdGen<I> {
-    pub fn new() -> Self {
+
+impl<I: Id> Default for IdGen<I> {
+    fn default() -> Self {
         IdGen {
             id: 0,
             phantom: PhantomData,
         }
     }
-    pub fn next(&mut self) -> I {
+}
+
+impl<I: Id> IdGen<I> {
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Not to be confused with `std::iterator::Iterator::next()`!
+    /// This function simply increases the Id by 1 while keeping the type
+    pub fn next_id(&mut self) -> I {
         let id = self.id;
         self.id = id.wrapping_add(1);
         Id::new(id)

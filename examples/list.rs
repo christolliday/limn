@@ -1,5 +1,3 @@
-#[allow(unused_imports)]
-#[macro_use]
 extern crate limn;
 #[macro_use]
 extern crate limn_layout;

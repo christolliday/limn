@@ -3,6 +3,7 @@ pub mod id;
 
 use std::sync::{Mutex, MutexGuard};
 use std::collections::HashMap;
+use std::default::Default;
 
 use webrender::api::*;
 use image;
@@ -29,12 +30,13 @@ pub fn resources() -> MutexGuard<'static, Resources> {
 
 named_id!(WidgetId);
 
+#[derive(Clone)]
 pub struct FontInfo {
     pub key: FontKey,
     pub info: Font,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct ImageInfo {
     pub key: ImageKey,
     pub info: ImageDescriptor,
@@ -46,20 +48,28 @@ pub struct Map<I, T> {
     map: HashMap<I, T>,
 }
 
-impl<I: Id, T> Map<I, T> {
-    pub fn new() -> Self {
+impl<I: Id, T> Default for Map<I, T> {
+    #[inline]
+    fn default() -> Self {
         Map {
             id_gen: IdGen::new(),
             map: HashMap::new(),
         }
     }
+}
+impl<I: Id, T> Map<I, T> {
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Borrow the resource associated with the given `Id`.
     pub fn get(&self, id: I) -> Option<&T> {
         self.map.get(&id)
     }
     /// Adds the given resource to the `Map` and returns a unique `Id` for it.
     pub fn insert(&mut self, resource: T) -> I {
-        let id = self.id_gen.next();
+        let id = self.id_gen.next_id();
         self.map.insert(id, resource);
         id
     }
@@ -73,8 +83,9 @@ pub struct Resources {
     pub texture_descriptors: HashMap<u64, ImageDescriptor>,
     pub widget_id: IdGen<WidgetId>,
 }
-impl Resources {
-    pub fn new() -> Self {
+
+impl Default for Resources {
+    fn default() -> Self {
         Resources {
             render: None,
             fonts: HashMap::new(),
@@ -84,8 +95,16 @@ impl Resources {
             widget_id: IdGen::new(),
         }
     }
+}
+
+impl Resources {
+    /// Creates a new `Resources` struct, same as calling `default()`
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn widget_id(&mut self) -> WidgetId {
-        self.widget_id.next()
+        self.widget_id.next_id()
     }
 
     pub fn get_image(&mut self, name: &str) -> &ImageInfo {
@@ -132,6 +151,7 @@ impl Resources {
         &self.fonts[name]
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(map_entry))]
     pub fn get_font_instance(&mut self, name: &str, font_size: f32) -> &FontInstanceKey {
         let font_key = self.get_font(name).key;
         let size = app_units::Au::from_f32_px(text_layout::px_to_pt(font_size));
@@ -178,8 +198,7 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
             }
             is_opaque
         }
-        ImageFormat::RGB8 => true,
-        ImageFormat::RG8 => true,
+        ImageFormat::RGB8 | ImageFormat::RG8 => true,
         ImageFormat::A8 => false,
         ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
     }
@@ -189,10 +208,10 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
 // These are slow. Gecko's gfx/2d/Swizzle.cpp has better versions
 pub fn premultiply(data: &mut [u8]) {
     for pixel in data.chunks_mut(4) {
-        let a = pixel[3] as u32;
-        let r = pixel[2] as u32;
-        let g = pixel[1] as u32;
-        let b = pixel[0] as u32;
+        let a = u32::from(pixel[3]);
+        let r = u32::from(pixel[2]);
+        let g = u32::from(pixel[1]);
+        let b = u32::from(pixel[0]);
 
         pixel[3] = a as u8;
         pixel[2] = ((r * a + 128) / 255) as u8;

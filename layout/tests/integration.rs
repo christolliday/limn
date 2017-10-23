@@ -470,15 +470,25 @@ impl TestLayout {
         true
     }
 }
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 struct IdGen {
     id: usize,
 }
-impl IdGen {
-    fn new() -> Self {
+
+impl Default for IdGen {
+    fn default() -> Self {
         IdGen {
             id: 0,
         }
     }
+}
+impl IdGen {
+
+    fn new() -> Self {
+        Self::default()
+    }
+
     fn next(&mut self) -> LayoutId {
         let next = self.id;
         self.id += 1;

@@ -46,7 +46,7 @@ lazy_static! {
     };
 }
 
-// show whether button is held down or not
+/// Show whether button is held down or not
 fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: EventArgs) {
     if !args.widget.props().contains(&Property::Inactive) {
         let &WidgetMouseButton(state, _) = event;
@@ -57,11 +57,13 @@ fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: EventArgs) {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum ToggleEvent {
     On,
     Off,
 }
-// show whether toggle button is activated
+
+/// Show whether toggle button is activated
 fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
     if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
         let activated = args.widget.props().contains(&Property::Activated);
@@ -78,10 +80,11 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
 pub struct ToggleButtonBuilder {
     pub widget: WidgetBuilder,
 }
+
 widget_wrapper!(ToggleButtonBuilder);
 
-impl ToggleButtonBuilder {
-    pub fn new() -> Self {
+impl Default for ToggleButtonBuilder {
+    fn default() -> Self {
         let mut widget = WidgetBuilder::new("toggle_button");
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
@@ -95,6 +98,16 @@ impl ToggleButtonBuilder {
 
         ToggleButtonBuilder { widget: widget }
     }
+}
+
+impl ToggleButtonBuilder {
+
+    /// Creates a new, default ToggleButtonBuilder
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the text of the button (register on / off events)
     pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
 
         let style = style!(parent: STYLE_BUTTON_TEXT,
@@ -114,6 +127,8 @@ impl ToggleButtonBuilder {
         self.widget.add_child(button_text_widget);
         self
     }
+
+    /// Callback function to be called when the button is toggled
     pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
         where F: Fn(&ToggleEvent, EventArgs) + 'static
     {
@@ -125,10 +140,12 @@ impl ToggleButtonBuilder {
 pub struct PushButtonBuilder {
     pub widget: WidgetBuilder,
 }
+
 widget_wrapper!(PushButtonBuilder);
 
-impl PushButtonBuilder {
-    pub fn new() -> Self {
+impl Default for PushButtonBuilder {
+    #[inline]
+    fn default() -> Self {
         let mut widget = WidgetBuilder::new("push_button");
         widget
             .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
@@ -141,6 +158,14 @@ impl PushButtonBuilder {
 
         PushButtonBuilder { widget: widget }
     }
+}
+impl PushButtonBuilder {
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the text of the button
     pub fn set_text(&mut self, text: &'static str) -> &mut Self {
 
         let style = style!(parent: STYLE_BUTTON_TEXT,

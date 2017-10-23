@@ -93,7 +93,7 @@ impl PeopleHandler {
         }
     }
     fn add_person(&mut self) {
-        let id = self.id_gen.next();
+        let id = self.id_gen.next_id();
         self.people.insert(id, self.person.clone());
         let list_item_widget = {
             let text_style = style!(TextStyle::TextColor: WHITE);

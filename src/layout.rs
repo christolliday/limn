@@ -13,11 +13,15 @@ pub use self::solver::LimnSolver;
 pub use limn_layout::*;
 
 impl WidgetBuilder {
+
+    /// Creates a linear layout with Widgets positioned relatively to each other
     pub fn linear_layout(&mut self, settings: LinearLayoutSettings) -> &mut Self {
         let container = LinearLayout::new(self.layout().deref_mut(), settings);
         self.layout().set_container(container);
         self
     }
+
+    /// Creates a grid-based layout with a certain number of columns
     pub fn grid(&mut self, num_columns: usize) -> &mut Self {
         let container = GridLayout::new(self.layout().deref_mut(), num_columns);
         self.layout().set_container(container);
@@ -27,8 +31,10 @@ impl WidgetBuilder {
 
 #[derive(Clone)]
 pub struct UpdateLayout(pub WidgetRef);
+#[derive(Debug, Copy, Clone)]
 pub struct ResizeWindow;
 pub struct LayoutChanged(pub Vec<(usize, VarType, f64)>);
+#[derive(Debug, Copy, Clone)]
 pub struct LayoutUpdated;
 
 impl App {

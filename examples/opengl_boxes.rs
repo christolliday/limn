@@ -38,7 +38,7 @@ fn init_framebuffer(gl: &Rc<gl::Gl>) -> (GLuint, GLuint, GLuint) {
     gl.bind_framebuffer(gl::FRAMEBUFFER, fb);
 
     // Set them up
-    resize_destination(&gl, tex, depth_buf, 1024, 768);
+    resize_destination(gl, tex, depth_buf, 1024, 768);
 
     // Unbind the framebuffer (so that WebRender will render to the window)
     gl.bind_framebuffer(gl::FRAMEBUFFER, 0);
@@ -188,6 +188,7 @@ lazy_static! {
     static ref VIEW_MATRIX: Transform3D<GLfloat> = view_matrix(Vector3D::new(0.0, 5.0, 2.0), Vector3D::new(0.0, 0.4, 0.0));
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
 fn draw_boxes(gl: &Rc<gl::Gl>, prog: GLuint, model: GLuint,
               width: GLint, height: GLint, box_count: usize,
               time_cell: &Cell<f32>, scale_cell: &Cell<f32>) {
@@ -237,7 +238,7 @@ fn main() {
     let mut root = WidgetBuilder::new("root");
 
     // Create an image that's connected to the texture we're rendering to
-    let mut gl_canvas = GLCanvasBuilder::new("gl_canvas", tex as _);
+    let mut gl_canvas = GLCanvasBuilder::new("gl_canvas", u64::from(tex));
     gl_canvas.layout().no_container();
     gl_canvas.layout().add(constraints![
         match_width(&root),
@@ -257,9 +258,9 @@ fn main() {
 
         // Handle widget size changes
         if let Some(state) = gl_canvas_ref.draw_state().downcast_ref::<GLCanvasState>() {
-            let old_size = target_size.get();
+            let (old_size_width, old_size_height) = target_size.get();
             let new_size = state.measure();
-            if new_size.width != old_size.0 || new_size.height != old_size.1 {
+            if new_size.width != old_size_width || new_size.height != old_size_height {
                 target_size.set((new_size.width, new_size.height));
                 resize_destination(&gl, tex, depth_buf, new_size.width as _, new_size.height as _);
             }

@@ -56,7 +56,7 @@ impl WidgetRef {
         LayoutGuard { guard: self.0.borrow() }
     }
     pub fn layout_vars(&self) -> LayoutVars {
-        self.0.borrow().layout.vars.clone()
+        self.0.borrow().layout.vars
     }
     pub fn props(&self) -> PropsGuard {
         PropsGuard { guard: self.0.borrow() }
@@ -143,7 +143,7 @@ impl WidgetRef {
             });
         });
         self.event(::ui::WidgetAttachedEvent);
-        self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars.clone()));
+        self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars));
         self.event(::ui::ChildrenUpdatedEvent::Added(child));
         self
     }
@@ -193,7 +193,7 @@ impl WidgetRef {
             let mut handlers: Vec<Rc<RefCell<EventHandlerWrapper>>> = Vec::new();
             if let Some(event_handlers) = widget.handlers.get_mut(&type_id) {
                 for handler in event_handlers {
-                    handlers.push(handler.clone());
+                    handlers.push(Rc::clone(handler));
                 }
             }
             handlers
@@ -322,8 +322,9 @@ pub struct Widget {
 }
 
 impl Widget {
-    fn new(name: String) -> Self {
+    fn new<S: Into<String>>(name: S) -> Self {
         let id = resources().widget_id();
+        let name: String = name.into();
         Widget {
             id: id,
             draw_state: None,
@@ -402,42 +403,60 @@ impl Widget {
 }
 
 /// Used to initialize and modify a Widget before it's been added to a parent Widget
+#[derive(Debug, Clone)]
 pub struct WidgetBuilder {
     pub widget: WidgetRef,
 }
 
 impl WidgetBuilder {
-    pub fn new(name: &str) -> Self {
+
+    /// Creates a new, named `WidgetBuilder`, ex. "glcanvas".
+    /// The `WidgetBuilder` can then be referred to by name
+    pub fn new<S: Into<String>>(name: S) -> Self {
         WidgetBuilder {
-            widget: WidgetRef::new(Widget::new(name.to_owned())),
+            widget: WidgetRef::new(Widget::new(name)),
         }
     }
+
+    /// Clones the current widget
     pub fn widget_ref(&self) -> WidgetRef {
         self.widget.clone()
     }
+
+    /// Returns the ID of the current widget
     pub fn id(&self) -> WidgetId {
         self.widget.id()
     }
+
+    /// Applies a new `Draw`-State to the widget.
     pub fn set_draw_state<T: Draw + 'static>(&mut self, draw_state: T) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
         self.widget.widget_mut().apply_style();
         self.widget.event(self::style::StyleUpdated);
         self
     }
+
+    /// Applies both a DrawState and a Style to the current widget
     pub fn set_draw_state_with_style<T: Draw + 'static, S: Style<T> + 'static>(&mut self, draw_state: T, style: S) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new_with_style(draw_state, style));
         self.widget.widget_mut().apply_style();
         self.widget.event(self::style::StyleUpdated);
         self
     }
+
+    /// Adds a handler to the current widget
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.widget.add_handler(handler);
         self
     }
+
+    /// Adds a handler closure to the current widget
     pub fn add_handler_fn<E: 'static, T: Fn(&E, EventArgs) + 'static>(&mut self, handler: T) -> &mut Self {
         self.widget.add_handler_fn(handler);
         self
     }
+
+    /// Recursively sets a certain property on the current widget
     pub fn add_prop(&mut self, property: Property) -> &mut Self {
         self.widget.widget_mut().props.insert(property);
         for child in &mut self.widget.widget_mut().children {
@@ -446,13 +465,30 @@ impl WidgetBuilder {
         }
         self
     }
+
+    /// Recursively removes a certain property on the current widget
+    pub fn remove_prop(&mut self, property: &Property) -> &mut Self {
+        self.widget.widget_mut().props.remove(property);
+        for child in &mut self.widget.widget_mut().children {
+            child.widget_mut().props.remove(property);
+            child.apply_style();
+        }
+        self
+    }
+
+    /// Performs the layout on the current widget
     pub fn layout(&mut self) -> LayoutGuardMut {
         LayoutGuardMut { guard: self.widget.0.borrow_mut() }
     }
+
+    /// Adds a child widget to the current Widget.
+    /// Note that the child may be unconstrained.
     pub fn add_child<U: Into<WidgetRef>>(&mut self, child: U) -> &mut Self {
         self.widget.add_child(child);
         self
     }
+
+    /// Sets the name of the WidgetBuilder
     pub fn set_name(&mut self, name: &str) -> &mut Self {
         self.widget.widget_mut().name = name.to_owned();
         self.widget.widget_mut().layout.name = Some(name.to_owned());

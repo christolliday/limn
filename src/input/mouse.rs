@@ -7,14 +7,19 @@ use widget::property::Property;
 use layout::LayoutChanged;
 use app::App;
 
+#[derive(Debug, Copy, Clone)]
 pub struct MouseMoved(pub Point);
+#[derive(Debug, Copy, Clone)]
 pub struct MouseWheel(pub glutin::MouseScrollDelta);
+#[derive(Debug, Copy, Clone)]
 pub struct MouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
-#[derive(Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
+#[derive(Debug, Copy, Clone)]
 pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
+#[derive(Debug, Copy, Clone)]
 pub enum MouseInputEvent {
     LayoutChanged,
     MouseMoved(Point),
@@ -22,22 +27,27 @@ pub enum MouseInputEvent {
     MouseWheel(glutin::MouseScrollDelta),
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct ClickEvent {
     pub position: Point,
 }
 
+#[derive(Debug, Clone)]
 struct MouseController {
     pub mouse: Point,
     pub widget_under_mouse: Option<WidgetRef>,
 }
+
 impl MouseController {
+
+    /// Creates a new MouseController
     pub fn new() -> Self {
         MouseController {
             mouse: Point::zero(),
             widget_under_mouse: None,
         }
     }
+
     fn check_widget_under_cursor(&mut self, args: EventArgs) {
         let widget_under_cursor = args.ui.widget_under_cursor(self.mouse);
         if widget_under_cursor != self.widget_under_mouse {
@@ -103,7 +113,7 @@ impl App {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum MouseOverEvent {
     Over,
     Out,

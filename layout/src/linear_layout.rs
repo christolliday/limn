@@ -8,7 +8,7 @@ use super::{LayoutId, LayoutVars, Layout, LayoutContainer};
 use super::constraint::*;
 
 /// Specifies the extra space between elements along the primary axis
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone,PartialEq)]
 pub enum Spacing {
     /// Equal spacing before, after and between all elements
     Around,
@@ -21,6 +21,7 @@ pub enum Spacing {
 }
 
 /// Specifies alignment of items perpendicular to the primary axis
+#[derive(Debug, Copy, Clone)]
 pub enum ItemAlignment {
     /// No constraints are added, items can be aligned individually
     None,
@@ -42,16 +43,24 @@ pub enum ItemAlignment {
     Bottom,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct LinearLayoutSettings {
+    /// Horizontal or vertical orientation of the current layout
     pub orientation: Orientation,
+    /// Flex-like spacing property
     pub spacing: Spacing,
+    /// Alignment of children
     pub item_align: ItemAlignment,
     /// Constrain items to have equal size along primary axis, and fill container
     pub fill_equal: bool,
+    /// Padding around the current layout in relation to the parent item
     pub padding: f32,
 }
 
 impl LinearLayoutSettings {
+
+    /// Creates a default `LinearLayoutSettings`, aligned to the
+    /// end of the parent container
     pub fn new(orientation: Orientation) -> Self {
         LinearLayoutSettings {
             orientation: orientation,
@@ -63,13 +72,13 @@ impl LinearLayoutSettings {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Orientation {
     Horizontal,
     Vertical,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct WidgetData {
     start: Variable,
     end: Variable,
@@ -77,14 +86,13 @@ struct WidgetData {
     next: Option<LayoutId>,
     end_constraint: Option<Constraint>,
 }
+
 pub struct LinearLayout {
     settings: LinearLayoutSettings,
-
     start: Variable,
     end: Variable,
     space: Variable,
     size: Option<Variable>,
-
     widgets: HashMap<LayoutId, WidgetData>,
     last_widget: Option<LayoutId>,
 }

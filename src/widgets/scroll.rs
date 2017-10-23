@@ -12,14 +12,17 @@ use input::mouse::WidgetMouseWheel;
 use draw::rect::{RectState, RectStyle};
 use color::*;
 
+const FLOATING_POINT_ERROR: f32 = 0.0001;
+
 pub struct ScrollBuilder {
     widget: WidgetBuilder,
     content_holder: WidgetBuilder,
     content: Option<WidgetBuilder>,
     scrollbars: Option<(WidgetBuilder, SliderBuilder, SliderBuilder)>,
 }
-impl ScrollBuilder {
-    pub fn new() -> Self {
+
+impl Default for ScrollBuilder {
+    fn default() -> Self {
         let widget = WidgetBuilder::new("scroll");
 
         let mut content_holder = WidgetBuilder::new("content_holder");
@@ -32,10 +35,23 @@ impl ScrollBuilder {
             scrollbars: None,
         }
     }
+}
+
+impl ScrollBuilder {
+
+    /// Creates a new ScrollBuilder
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the content on which the scroll function should be implemented
     pub fn add_content<C: Into<WidgetBuilder>>(&mut self, widget: C) -> &mut Self {
         self.content = Some(widget.into());
         self
     }
+
+    /// Add a scrollbar. Scrolling can be done independently,
+    /// even if no scroll bar is shown.
     pub fn add_scrollbar(&mut self) -> &mut Self {
         let mut scrollbar_h = SliderBuilder::new();
         scrollbar_h.set_name("scrollbar_h");
@@ -110,7 +126,7 @@ impl Into<WidgetBuilder> for ScrollBuilder {
         }
         self.content_holder.add_handler(scroll_parent_handler);
         self.content_holder.add_handler_fn(|event: &WidgetMouseWheel, args| {
-            args.widget.event(ScrollParentEvent::WidgetMouseWheel(event.clone()));
+            args.widget.event(ScrollParentEvent::WidgetMouseWheel(*event));
         });
         self.content_holder.add_child(content);
         if self.scrollbars.is_some() {
@@ -233,12 +249,16 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
                         self.move_slider_y();
                     }
                 }
+
+
                 let width_ratio = self.container_rect.width() / self.content_rect.width();
                 let height_ratio = self.container_rect.height() / self.content_rect.height();
                 if let Some(ref mut scrollbars) = self.scrollbars {
+
                     // update handle sizes
                     let mut visibility_updated = false;
-                    if width_ratio.is_finite() && width_ratio != self.width_ratio {
+
+                    if width_ratio.is_finite() && (width_ratio - self.width_ratio).abs() > FLOATING_POINT_ERROR {
                         let width = self.container_rect.width() * width_ratio;
                         scrollbars.h_handle.update_layout(|layout| {
                             layout.edit_width().set(width);
@@ -258,7 +278,8 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
                             });
                         }
                     }
-                    if height_ratio.is_finite() && height_ratio != self.height_ratio {
+
+                    if height_ratio.is_finite() && (height_ratio - self.height_ratio).abs() > FLOATING_POINT_ERROR {
                         let height = self.container_rect.height() * height_ratio;
                         scrollbars.v_handle.update_layout(|layout| {
                             layout.edit_height().set(height);
@@ -278,6 +299,7 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
                             });
                         }
                     }
+
                     if visibility_updated {
                         if !scrollbars.scrollbar_h.layout().hidden && !scrollbars.scrollbar_v.layout().hidden {
                             scrollbars.corner.update_layout(|layout| layout.show());
@@ -315,9 +337,7 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
 }
 fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
     let vec = match event {
-        glutin::MouseScrollDelta::LineDelta(x, y) => {
-            Vector::new(-x, y)
-        }
+        glutin::MouseScrollDelta::LineDelta(x, y) |
         glutin::MouseScrollDelta::PixelDelta(x, y) => {
             Vector::new(-x, y)
         }

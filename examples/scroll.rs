@@ -22,7 +22,7 @@ fn main() {
 
     {
         let mut add_rect = |color| {
-            let mut rect = WidgetBuilder::new(&format!("rect_{:?}", color));
+            let mut rect = WidgetBuilder::new(format!("rect_{:?}", color));
             rect.set_draw_state_with_style(RectState::new(),
                 style!(RectStyle::BackgroundColor: color));
             rect_container.add_child(rect);

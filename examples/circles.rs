@@ -57,7 +57,7 @@ impl SliderControl {
         let slider_value_ref = slider_value.widget_ref();
         slider_widget.add_handler_fn(move |event: &SliderEvent, args| {
             slider_value_ref.event(TextUpdated((event.value as i32).to_string()));
-            args.ui.event(AppEvent::Resize(event.clone()));
+            args.ui.event(AppEvent::Resize(*event));
         });
         let slider_widget_ref = slider_widget.widget_ref();
         let slider_value_ref = slider_value.widget_ref();
@@ -140,7 +140,7 @@ fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> W
         .set_draw_state_with_style(EllipseState::new(), style)
         .make_draggable()
         .add_handler_fn(|event: &DragEvent, args| {
-            args.widget.event(CircleEvent::Drag(event.clone()));
+            args.widget.event(CircleEvent::Drag(*event));
         })
         .add_handler(CircleHandler(id));
     let widget_ref = widget.widget_ref();
@@ -328,7 +328,7 @@ impl EventHandler<AppEvent> for AppEventHandler {
             AppEvent::ClickCanvas(point) => {
                 if self.create_mode {
                     let circle = Circle { center: point, size: 100.0 };
-                    let circle_id = self.id_gen.next();
+                    let circle_id = self.id_gen.next_id();
                     self.new_change(Change::Create(circle_id, circle));
                 } else {
                     self.update_selected(None);

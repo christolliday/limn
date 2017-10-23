@@ -1,9 +1,45 @@
-extern crate cassowary;
-extern crate euclid;
+// ---- START CLIPPY CONFIG
+
+#![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
+#![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
+#![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
+
+// Enable clippy if our Cargo.toml file asked us to do so.
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
+
+#![warn(missing_copy_implementations,
+        trivial_numeric_casts,
+        trivial_casts,
+        unused_extern_crates,
+        unused_import_braces,
+        unused_qualifications)]
+#![cfg_attr(feature="clippy", warn(cast_possible_truncation))]
+#![cfg_attr(feature="clippy", warn(cast_possible_wrap))]
+#![cfg_attr(feature="clippy", warn(cast_precision_loss))]
+#![cfg_attr(feature="clippy", warn(cast_sign_loss))]
+#![cfg_attr(feature="clippy", warn(missing_docs_in_private_items))]
+#![cfg_attr(feature="clippy", warn(mut_mut))]
+
+// Disallow `println!`. Use `debug!` for debug output
+// (which is provided by the `log` crate).
+#![cfg_attr(feature="clippy", warn(print_stdout))]
+
+// This allows us to use `unwrap` on `Option` values (because doing makes
+// working with Regex matches much nicer) and when compiling in test mode
+// (because using it in tests is idiomatic).
+#![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
+#![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
+#![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
+
+// ---- END CLIPPY CONFIG
+
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
+extern crate cassowary;
+extern crate euclid;
 
 use std::collections::HashSet;
 use std::ops::Drop;
@@ -27,7 +63,7 @@ pub type Rect = euclid::Rect<f32>;
 
 pub type LayoutId = usize;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct LayoutVars {
     pub left: Variable,
     pub top: Variable,
@@ -36,7 +72,10 @@ pub struct LayoutVars {
     pub width: Variable,
     pub height: Variable,
 }
+
 impl LayoutVars {
+
+    /// Creates a new set of empty `LayoutVars`
     pub fn new() -> Self {
         LayoutVars {
             left: Variable::new(),
@@ -47,9 +86,18 @@ impl LayoutVars {
             height: Variable::new(),
         }
     }
+
+    /// Returns the current inner state of this struct as an array
     pub fn array(&self) -> [Variable; 6] {
-        [self.left, self.top, self.right, self.bottom, self.width, self.height]
+        [self.left,
+         self.top,
+         self.right,
+         self.bottom,
+         self.width,
+         self.height]
     }
+
+    /// Checks if another `Variable` is the same as the
     pub fn var_type(&self, var: Variable) -> VarType {
         if var == self.left { VarType::Left }
         else if var == self.top { VarType::Top }
@@ -78,17 +126,20 @@ pub trait LayoutRef {
 
 impl<'a> LayoutRef for &'a mut Layout {
     fn layout_ref(&self) -> LayoutVars {
-        self.vars.clone()
+        self.vars
     }
 }
+
 impl LayoutRef for Layout {
     fn layout_ref(&self) -> LayoutVars {
-        self.vars.clone()
+        self.vars
     }
 }
+
 impl LayoutRef for LayoutVars {
+    /// Returns a copy of the current `LayoutVars`
     fn layout_ref(&self) -> LayoutVars {
-        self.clone()
+        *self
     }
 }
 
@@ -107,7 +158,10 @@ pub struct Layout {
     associated_vars: Vec<(Variable, String)>,
     pub hidden: bool,
 }
+
 impl Layout {
+
+    /// Creates a new `Layout`.
     pub fn new(id: LayoutId, name: Option<String>) -> Self {
         let vars = LayoutVars::new();
         let mut new_constraints = HashSet::new();
@@ -131,13 +185,18 @@ impl Layout {
             hidden: false,
         }
     }
+
     pub fn layout(&mut self) -> &mut Self {
         self
     }
+
+    /// Clears the container of the current `Layout`.
     pub fn no_container(&mut self) {
         self.container = None;
     }
-    pub fn set_container<T: LayoutContainer + 'static>(&mut self, container: T) {
+
+    /// Replaces the container of the current layout
+    pub fn set_container<T>(&mut self, container: T) where T: LayoutContainer + 'static {
         self.container = Some(Rc::new(RefCell::new(container)));
     }
     pub fn edit_left(&mut self) -> VariableEditable {
@@ -256,6 +315,7 @@ pub struct VariableEditable<'a> {
     val: Option<f64>,
     strength: f64,
 }
+
 impl<'a> VariableEditable<'a> {
     pub fn new(builder: &'a mut Layout, var: Variable) -> Self {
         VariableEditable {
@@ -274,18 +334,21 @@ impl<'a> VariableEditable<'a> {
         self
     }
 }
+
 impl<'a> Drop for VariableEditable<'a> {
     fn drop(&mut self) {
         let edit_var = EditVariable::new(&self);
         self.builder.edit_vars.push(edit_var);
     }
 }
-#[derive(Debug)]
+
+#[derive(Debug, Copy, Clone)]
 pub struct EditVariable {
     var: Variable,
     val: f64,
     strength: f64,
 }
+
 impl EditVariable {
     fn new(editable: &VariableEditable) -> Self {
         EditVariable {
@@ -321,12 +384,14 @@ pub trait LayoutContainer {
     fn remove_child(&mut self, _: &mut Layout, _: &mut Layout) {}
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct Frame {
     padding: f32,
 }
 
 impl LayoutContainer for Frame {
+
+    /// Adds a weak constraint to a Frame
     fn add_child(&mut self, parent: &mut Layout, child: &mut Layout) {
         child.add(constraints![
             bound_by(&parent).padding(self.padding),
@@ -335,6 +400,7 @@ impl LayoutContainer for Frame {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct ExactFrame;
 
 impl LayoutContainer for ExactFrame {

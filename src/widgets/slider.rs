@@ -15,22 +15,25 @@ use draw::ellipse::{EllipseState, EllipseStyle};
 use geometry::{RectExt, Point};
 use color::*;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Orientation {
     Horizontal,
     Vertical,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum HandleStyle {
     Round,
     Square
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum BarStyle {
     NarrowRound,
     Wide,
 }
 
+#[derive(Debug)]
 pub struct SliderBuilder {
     pub widget: WidgetBuilder,
     pub slider_handle: WidgetBuilder,
@@ -47,8 +50,9 @@ pub struct SliderBuilder {
     pub width: f32,
 }
 
-impl SliderBuilder {
-    pub fn new() -> Self {
+impl Default for SliderBuilder {
+    #[inline]
+    fn default() -> Self {
         let widget = WidgetBuilder::new("slider");
 
         let slider_handle = WidgetBuilder::new("slider_handle");
@@ -68,10 +72,20 @@ impl SliderBuilder {
             width: 30.0,
         }
     }
+}
+
+impl SliderBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Sets the orientation of the slider to vertical
     pub fn make_vertical(&mut self) -> &mut Self {
         self.orientation = Orientation::Vertical;
         self
     }
+
+    /// Sets the scrollbar style
     pub fn scrollbar_style(&mut self) -> &mut Self {
         self.variable_handle_size = true;
         self.handle_style = HandleStyle::Square;
@@ -83,6 +97,7 @@ impl SliderBuilder {
         self.width = 15.0;
         self
     }
+
     pub fn set_width(&mut self, width: f32) -> &mut Self {
         self.width = width;
         self
@@ -204,7 +219,7 @@ impl Into<WidgetBuilder> for SliderBuilder {
         let widget_ref = widget.widget_ref();
         slider_handle
             .add_handler_fn(move |event: &DragEvent, _| {
-                widget_ref.event(SliderInputEvent::Drag(event.clone()));
+                widget_ref.event(SliderInputEvent::Drag(*event));
             })
             .make_draggable();
 
@@ -219,6 +234,9 @@ impl Into<WidgetBuilder> for SliderBuilder {
         widget.add_handler_fn(move |event: &SetSliderValue, args| {
             args.widget.event(SliderInputEvent::SetValue(event.0));
         });
+        widget.add_handler_fn(move |event: &SetSliderRange, args| {
+            args.widget.event(SliderInputEvent::SetRange(event.0.clone()));
+        });
         widget.add_handler_fn(move |_: &LayoutUpdated, args| {
             args.widget.event(SliderInputEvent::LayoutUpdated);
         });
@@ -232,23 +250,27 @@ impl Into<WidgetBuilder> for SliderBuilder {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct SliderEvent {
     pub value: f32,
     pub offset: f32,
     pub dragging: bool,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct SetSliderValue(pub f32);
+pub struct SetSliderRange(pub Range<f32>);
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 enum SliderInputEvent {
     Drag(DragEvent),
     Click(Point),
     SetValue(f32),
+    SetRange(Range<f32>),
     LayoutUpdated,
 }
 
+#[derive(Debug, Clone)]
 struct SliderHandler {
     orientation: Orientation,
     range: Range<f32>,
@@ -258,6 +280,7 @@ struct SliderHandler {
     drag_start_val: f32,
     last_val: f32,
 }
+
 impl SliderHandler {
     fn new(orientation: Orientation, range: Range<f32>, slider_ref: WidgetRef, handle_ref: WidgetRef, init_value: Option<f32>) -> Self {
         let value = init_value.unwrap_or(range.start);
@@ -389,7 +412,12 @@ impl EventHandler<SliderInputEvent> for SliderHandler {
                     self.last_val = value;
                     self.update_handle_pos(value);
                 }
-            }
+            },
+            SliderInputEvent::SetRange(ref range) => {
+                self.range = range.clone();
+                self.last_val = range.start;
+                self.update_handle_pos(range.start);
+            },
             SliderInputEvent::LayoutUpdated => {
                 self.update_handle_pos(self.last_val);
             }
