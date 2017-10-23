@@ -11,13 +11,13 @@ use app::App;
 
 use glutin;
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct ReceivedCharacter(pub char);
-#[derive(Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct KeyboardInput(pub glutin::KeyboardInput);
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct WidgetKeyboardInput(pub glutin::KeyboardInput);
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct WidgetReceivedCharacter(pub char);
 
 /**
