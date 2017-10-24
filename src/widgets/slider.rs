@@ -261,7 +261,7 @@ pub struct SliderEvent {
 pub struct SetSliderValue(pub f32);
 pub struct SetSliderRange(pub Range<f32>);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 enum SliderInputEvent {
     Drag(DragEvent),
     Click(Point),
