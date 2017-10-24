@@ -18,14 +18,14 @@ cassowary = "0.3.0"
 
 euclid = "0.15.1"
 log = "0.3"
-gleam = "0.4.7"
+gleam = "0.4.15"
 
-webrender = { git = "https://github.com/servo/webrender", rev = "ba51d8d5892d7ff8a69a9657c882b620595de4f7" }
+webrender = { git = "https://github.com/servo/webrender", rev = "bcdcd6aa7794e1421c70de639f2e14cad786a262" }
 
 stb_truetype = "0.2.1"
 app_units = "0.5"
 rusttype = "0.2.1"
-glutin = "0.10.0"
+glutin = { git = "https://github.com/christolliday/glutin", branch = "new_winit" }
 image = "0.16"
 
 lazy_static = "0.2.2"

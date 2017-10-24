@@ -32,7 +32,7 @@ impl App {
                 glutin::WindowEvent::MouseInput { state, button, .. } => {
                     args.widget.event(MouseButton(state, button));
                 }
-                glutin::WindowEvent::MouseMoved { position, .. } => {
+                glutin::WindowEvent::CursorMoved { position, .. } => {
                     let point = Point::new(position.0 as f32, position.1 as f32);
                     args.widget.event(MouseMoved(point));
                 }
@@ -94,7 +94,7 @@ impl EventHandler<KeyboardInput> for DebugSettingsHandler {
                 Some(glutin::VirtualKeyCode::F2) => ui.solver.debug_constraints(),
                 Some(glutin::VirtualKeyCode::F3) => ui.debug_widget_positions(),
                 Some(glutin::VirtualKeyCode::F4) => ui.solver.debug_variables(),
-                Some(glutin::VirtualKeyCode::F5) => ui.render.toggle_flags(webrender::PROFILER_DBG),
+                Some(glutin::VirtualKeyCode::F5) => ui.render.toggle_flags(webrender::DebugFlags::PROFILER_DBG),
                 Some(glutin::VirtualKeyCode::F6) => ui.print_widgets(),
                 _ => {}
             }

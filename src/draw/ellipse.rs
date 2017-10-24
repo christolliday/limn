@@ -1,4 +1,4 @@
-use webrender::api::{ComplexClipRegion, BorderRadius, LocalClip, PrimitiveInfo};
+use webrender::api::{ComplexClipRegion, BorderRadius, LocalClip, PrimitiveInfo, ClipMode};
 
 use render::RenderBuilder;
 use widget::draw::Draw;
@@ -30,7 +30,7 @@ impl Draw for EllipseState {
 }
 
 fn clip_ellipse(rect: Rect) -> LocalClip {
-    let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform_size(rect.size / 2.0));
+    let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform_size(rect.size / 2.0), ClipMode::Clip);
     LocalClip::RoundedRect(rect, clip_region)
 }
 

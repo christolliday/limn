@@ -48,14 +48,13 @@ impl WebRenderContext {
             .. webrender::RendererOptions::default()
         };
 
-        let (mut renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
-        let api = sender.create_api();
-        resources::init_resources(sender);
-        let document_id = api.add_document(window.size_px());
-
         let frame_ready = Arc::new(AtomicBool::new(false));
         let notifier = Box::new(Notifier::new(events_loop.create_proxy(), Arc::clone(&frame_ready)));
-        renderer.set_render_notifier(notifier);
+
+        let (mut renderer, sender) = webrender::Renderer::new(gl, notifier, opts).unwrap();
+        let api = sender.create_api();
+        resources::init_resources(sender);
+        let document_id = api.add_document(window.size_px(), 0);
 
         renderer.set_external_image_handler(Box::new(LimnExternalImageHandler));
 
@@ -133,17 +132,19 @@ impl Notifier {
 }
 
 impl RenderNotifier for Notifier {
-    fn new_frame_ready(&mut self) {
+    fn wake_up(&self) {
+        debug!("wakeup renderer");
         #[cfg(not(target_os = "android"))]
-        debug!("new frame ready");
         self.events_proxy.wakeup().ok();
         self.frame_ready.store(true, atomic::Ordering::Release);
     }
 
-    fn new_scroll_frame_ready(&mut self, _composite_needed: bool) {
-        #[cfg(not(target_os = "android"))]
-        debug!("new scroll frame ready");
-        self.events_proxy.wakeup().ok();
+    fn new_document_ready(&self, _: DocumentId, _: bool, _: bool) {
+        self.wake_up();
+    }
+
+    fn clone(&self) -> Box<RenderNotifier + 'static> {
+        Box::new(Notifier::new(self.events_proxy.clone(), self.frame_ready.clone()))
     }
 }
 
