@@ -380,7 +380,7 @@ fn main() {
         .set_draw_state_with_style(RectState::new(), style!(RectStyle::BackgroundColor: WHITE))
         .on_click(|event, args| {
             args.ui.event(AppEvent::ClickCanvas(event.position));
-        });
+    });
     let mut control_bar = ControlBar::new();
     control_bar.layout().add(constraints![
         align_below(&circle_canvas).padding(10.0),
@@ -391,8 +391,10 @@ fn main() {
     ]);
     app.add_handler(AppEventHandler::new(circle_canvas.widget_ref(), &control_bar));
     app.add_handler_fn(|event: &KeyboardInput, args| {
-        if let KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Delete)) = *event {
-            args.ui.event(AppEvent::Delete);
+        if event.0.state == glutin::ElementState::Released {
+            if let Some(glutin::VirtualKeyCode::Delete) = event.0.virtual_keycode {
+                args.ui.event(AppEvent::Delete)
+            }
         }
     });
     root.add_child(circle_canvas);

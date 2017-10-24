@@ -33,7 +33,7 @@ impl App {
                     args.widget.event(MouseMoved(point));
                 }
                 glutin::WindowEvent::KeyboardInput { input, .. } => {
-                    let key_input = KeyboardInput(input.state, input.scancode, input.virtual_keycode);
+                    let key_input = KeyboardInput(input);
                     args.widget.event(key_input);
                 }
                 glutin::WindowEvent::ReceivedCharacter(char) => {
@@ -50,7 +50,7 @@ pub struct EscKeyCloseHandler;
 
 impl EventHandler<KeyboardInput> for EscKeyCloseHandler {
     fn handle(&mut self, event: &KeyboardInput, args: EventArgs) {
-        if let KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) = *event {
+        if let Some(glutin::VirtualKeyCode::Escape) = event.0.virtual_keycode {
             args.ui.close();
         }
     }
@@ -78,21 +78,20 @@ impl DebugSettingsHandler {
 impl EventHandler<KeyboardInput> for DebugSettingsHandler {
     fn handle(&mut self, event: &KeyboardInput, args: EventArgs) {
         let ui = args.ui;
-        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F1)) = *event {
-            self.debug_on = !self.debug_on;
-            ui.set_debug_draw_bounds(self.debug_on);
-        }
-        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F2)) = *event {
-            ui.solver.debug_constraints();
-        }
-        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F3)) = *event {
-            ui.debug_widget_positions();
-        }
-        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::F4)) = *event {
-            ui.solver.debug_variables();
-        }
-        if let KeyboardInput(ElementState::Released, _, Some(glutin::VirtualKeyCode::P)) = *event {
-            ui.render.toggle_flags(webrender::PROFILER_DBG);
+        let &KeyboardInput(input) = event;
+        if ElementState::Released == input.state {
+            match input.virtual_keycode {
+                Some(glutin::VirtualKeyCode::F1) => {
+                    self.debug_on = !self.debug_on;
+                    ui.set_debug_draw_bounds(self.debug_on);
+                },
+                Some(glutin::VirtualKeyCode::F2) => ui.solver.debug_constraints(),
+                Some(glutin::VirtualKeyCode::F3) => ui.debug_widget_positions(),
+                Some(glutin::VirtualKeyCode::F4) => ui.solver.debug_variables(),
+                Some(glutin::VirtualKeyCode::P) => ui.render.toggle_flags(webrender::PROFILER_DBG),
+                _ => {}
+            }
+
         }
     }
 }
