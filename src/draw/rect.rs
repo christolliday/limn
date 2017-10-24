@@ -1,4 +1,4 @@
-use webrender::api::{LocalClip, BorderRadius, ComplexClipRegion, PrimitiveInfo};
+use webrender::api::{LocalClip, BorderRadius, ComplexClipRegion, PrimitiveInfo, ClipMode};
 
 use render::RenderBuilder;
 use widget::draw::Draw;
@@ -26,7 +26,7 @@ impl Draw for RectState {
 }
 
 fn clip_rounded(rect: Rect, radius: f32) -> LocalClip {
-    let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform(radius));
+    let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform(radius), ClipMode::Clip);
     LocalClip::RoundedRect(rect, clip_region)
 }
 
