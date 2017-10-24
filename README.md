@@ -3,12 +3,15 @@
 [![Build Status](https://travis-ci.org/christolliday/limn.svg?branch=master)](https://travis-ci.org/christolliday/limn)
 [![Build status](https://ci.appveyor.com/api/projects/status/jheej7tmkntqa8d4/branch/master?svg=true)](https://ci.appveyor.com/project/christolliday/limn/branch/master)
 
+[**Documentation**](https://christolliday.github.io/limn)
+
 **WARNING: Has primarily been tested on X11, serious bugs exist and all APIs are likely to change.**
 
 An early stage, experimental, cross platform GUI library written in Rust.
 
 Limn uses [webrender](https://github.com/servo/webrender) for rendering, [cassowary](https://github.com/dylanede/cassowary-rs) for layout,
 and [glutin](https://github.com/tomaka/glutin) for window handling.
+
 
 ## Motivation
 
