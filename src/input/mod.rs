@@ -3,6 +3,7 @@
 
 pub mod mouse;
 pub mod keyboard;
+pub mod drag;
 
 use glutin;
 use glutin::ElementState;

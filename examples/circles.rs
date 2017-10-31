@@ -11,13 +11,13 @@ use limn::prelude::*;
 use limn::input::mouse::WidgetMouseButton;
 use limn::widgets::button::{ButtonStyle, ToggleEvent};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue, SliderEvent};
-use limn::widgets::drag::DragEvent;
 use limn::draw::text::TextStyle;
 use limn::draw::rect::{RectState, RectStyle};
 use limn::draw::ellipse::{EllipseState, EllipseStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
+use limn::input::drag::DragEvent;
 
 struct SliderControl {
     widget: WidgetBuilder,
