@@ -4,11 +4,11 @@ use limn::prelude::*;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::resources;
 use limn::widgets::button;
-use limn::widgets::text::TextComponent;
+use limn::widgets::text::StaticTextStyle;
 
 pub fn default_style() {
     let mut res = resources::resources();
-    res.theme.register_style_class("button_text", TextComponent {
+    res.theme.register_style_class("button_text", StaticTextStyle {
         style: Some(button::STYLE_BUTTON_TEXT.clone()),
     });
 }
