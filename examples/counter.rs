@@ -4,8 +4,8 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::text::TextBuilder;
-use limn::widgets::button::PushButtonBuilder;
+use limn::widgets::text::TextComponent;
+use limn::widgets::button::ButtonComponent;
 use limn::draw::text::TextState;
 
 struct CountEvent;
@@ -33,16 +33,19 @@ fn main() {
         }
     }
 
-    let mut text_widget = TextBuilder::new("0");
+    let mut text_widget = TextComponent::default();
+    text_widget.text("0");
+    let mut text_widget = WidgetBuilder::from_component(text_widget);
     text_widget.add_handler(CountHandler::default());
     text_widget.layout().add(constraints![
         center_vertical(&root),
     ]);
 
-    let mut button_widget = PushButtonBuilder::new();
-    button_widget.set_text("Count");
+    let mut button_widget = ButtonComponent::default();
+    button_widget.text("Count");
+    let mut button_widget = WidgetBuilder::from_component(button_widget);
     let text_widget_ref = text_widget.widget_ref();
-    button_widget.on_click(move |_, _| {
+    button_widget.add_handler(move |_: &ClickEvent, _: EventArgs| {
         text_widget_ref.event(CountEvent);
     });
     button_widget.layout().add(constraints![

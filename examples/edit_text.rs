@@ -4,7 +4,7 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::button::{ToggleButtonBuilder, ToggleEvent};
+use limn::widgets::button::{ButtonComponent, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::draw::text::TextState;
 
@@ -39,34 +39,35 @@ fn main() {
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
 
     let edit_text_ref = edit_text_box.text_widget.widget_ref();
-    let mut h_align_button = ToggleButtonBuilder::new();
-    h_align_button
-        .set_text("Right Align", "Left Align")
-        .on_toggle(move |event, _| {
-            match *event {
-                ToggleEvent::On => {
-                    edit_text_ref.event(EditTextSettingsEvent::Align(Align::End));
-                },
-                ToggleEvent::Off => {
-                    edit_text_ref.event(EditTextSettingsEvent::Align(Align::Start));
-                },
-            }
-        });
+    let mut h_align_button = ButtonComponent::default();
+    h_align_button.toggle_text("Right Align", "Left Align");
+    let mut h_align_button = WidgetBuilder::from_component(h_align_button);
+    h_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
+        match *event {
+            ToggleEvent::On => {
+                edit_text_ref.event(EditTextSettingsEvent::Align(Align::End));
+            },
+            ToggleEvent::Off => {
+                edit_text_ref.event(EditTextSettingsEvent::Align(Align::Start));
+            },
+        }
+    });
 
     let edit_text_ref = edit_text_box.text_widget.widget_ref();
-    let mut v_align_button = ToggleButtonBuilder::new();
-    v_align_button
-        .set_text("Wrap Word", "Wrap Char")
-        .on_toggle(move |event, _| {
-            match *event {
-                ToggleEvent::On => {
-                    edit_text_ref.event(EditTextSettingsEvent::Wrap(Wrap::Whitespace));
-                },
-                ToggleEvent::Off => {
-                    edit_text_ref.event(EditTextSettingsEvent::Wrap(Wrap::Character));
-                },
-            }
-        });
+
+    let mut v_align_button = ButtonComponent::default();
+    v_align_button.toggle_text("Wrap Word", "Wrap Char");
+    let mut v_align_button = WidgetBuilder::from_component(v_align_button);
+    v_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
+        match *event {
+            ToggleEvent::On => {
+                edit_text_ref.event(EditTextSettingsEvent::Wrap(Wrap::Whitespace));
+            },
+            ToggleEvent::Off => {
+                edit_text_ref.event(EditTextSettingsEvent::Wrap(Wrap::Character));
+            },
+        }
+    });
 
     h_align_button.layout().add(constraints![
         align_top(&content_widget),

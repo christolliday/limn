@@ -14,6 +14,8 @@ use text_layout;
 
 use self::id::{Id, IdGen};
 
+use style::Theme;
+
 pub type Font = rusttype::Font<'static>;
 
 lazy_static! {
@@ -82,6 +84,7 @@ pub struct Resources {
     pub images: HashMap<String, ImageInfo>,
     pub texture_descriptors: HashMap<u64, ImageDescriptor>,
     pub widget_id: IdGen<WidgetId>,
+    pub theme: Theme,
 }
 
 impl Default for Resources {
@@ -93,6 +96,7 @@ impl Default for Resources {
             images: HashMap::new(),
             texture_descriptors: HashMap::new(),
             widget_id: IdGen::new(),
+            theme: Theme::new(),
         }
     }
 }

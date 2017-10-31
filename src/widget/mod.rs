@@ -42,6 +42,7 @@ use render;
 use color::Color;
 use event::Target;
 use layout::UpdateLayout;
+use style::Component;
 
 use self::property::{PropSet, Property};
 use self::draw::{Draw, DrawWrapper};
@@ -120,6 +121,12 @@ impl WidgetRef {
     }
     pub fn debug_color(&self) -> Option<Color> {
         self.0.borrow().debug_color
+    }
+    pub fn style_id(&self) -> Option<String> {
+        self.0.borrow().style_id.clone()
+    }
+    pub fn style_class(&self) -> Option<String> {
+        self.0.borrow().style_class.clone()
     }
     pub fn has_updated(&self) -> bool {
         self.0.borrow().has_updated
@@ -332,6 +339,8 @@ pub struct Widget {
     id: WidgetId,
     draw_state: Option<DrawWrapper>,
     props: PropSet,
+    style_id: Option<String>,
+    style_class: Option<String>,
     has_updated: bool,
     pub(super) layout: Layout,
     pub(super) bounds: Rect,
@@ -350,6 +359,8 @@ impl Widget {
             id: id,
             draw_state: None,
             props: PropSet::new(),
+            style_id: None,
+            style_class: None,
             layout: Layout::new(id.0, Some(name.clone())),
             has_updated: false,
             bounds: Rect::zero(),
@@ -439,6 +450,15 @@ impl WidgetBuilder {
         }
     }
 
+    pub fn from_component<T: Component>(component: T) -> Self {
+        let name: String = T::name();
+        let mut widget = WidgetBuilder {
+            widget: WidgetRef::new(Widget::new(name)),
+        };
+        component.apply(&mut widget);
+        widget
+    }
+
     /// Clones the current widget
     pub fn widget_ref(&self) -> WidgetRef {
         self.widget.clone()
@@ -469,6 +489,22 @@ impl WidgetBuilder {
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.widget.add_handler(handler);
         self
+    }
+
+    pub fn set_style_id(&mut self, style_id: &str) -> &mut Self {
+        self.widget.widget_mut().style_id = Some(style_id.to_owned());
+        self
+    }
+    pub fn set_style_class(&mut self, style_class: &str) -> &mut Self {
+        self.widget.widget_mut().style_class = Some(style_class.to_owned());
+        self
+    }
+
+    pub fn style_id(&self) -> Option<String> {
+        self.widget.style_id()
+    }
+    pub fn style_class(&self) -> Option<String> {
+        self.widget.style_class()
     }
 
     /// Recursively sets a certain property on the current widget

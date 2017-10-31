@@ -9,14 +9,14 @@ use limn::glutin;
 use limn::prelude::*;
 
 use limn::input::mouse::WidgetMouseButton;
-use limn::widgets::button::{PushButtonBuilder, ToggleButtonBuilder, ToggleEvent};
+use limn::widgets::button::{ButtonComponent, ToggleEvent};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue, SliderEvent};
 use limn::widgets::drag::DragEvent;
 use limn::draw::text::TextStyle;
 use limn::draw::rect::{RectState, RectStyle};
 use limn::draw::ellipse::{EllipseState, EllipseStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
-use limn::widgets::text::TextBuilder;
+use limn::widgets::text::TextComponent;
 use limn::input::keyboard::KeyboardInput;
 
 struct SliderControl {
@@ -27,12 +27,14 @@ impl SliderControl {
     fn new() -> Self {
         let text_style = style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
         let mut widget = WidgetBuilder::new("slider_container");
-        let mut slider_title = TextBuilder::new_with_style(
-            style!(parent: text_style, TextStyle::Text: "Circle Size".to_owned()));
+        let mut slider_title = TextComponent::default();
+        slider_title.style(style!(parent: text_style, TextStyle::Text: "Circle Size".to_owned()));
+        let mut slider_title = WidgetBuilder::from_component(slider_title);
         slider_title.set_name("slider_title");
         slider_title.layout().add(align_left(&widget));
-        let mut slider_value = TextBuilder::new_with_style(
-            style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "--".to_owned()));
+        let mut slider_value = TextComponent::default();
+        slider_value.style(style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "--".to_owned()));
+        let mut slider_value = WidgetBuilder::from_component(slider_value);
         slider_value
             .set_name("slider_value")
             .add_handler(edit_text::text_change_handle);
@@ -87,27 +89,33 @@ impl ControlBar {
         layout_settings.padding = 10.0;
         layout_settings.item_align = ItemAlignment::Center;
         widget.linear_layout(layout_settings);
-        let mut create_button = ToggleButtonBuilder::new();
-        create_button
-            .set_text("Create Circle", "Create Circle")
-            .on_toggle(|event, args| {
-                match *event {
-                    ToggleEvent::On => {
-                        args.ui.event(AppEvent::SetCreateMode(true));
-                    },
-                    ToggleEvent::Off => {
-                        args.ui.event(AppEvent::SetCreateMode(false));
-                    }
-                };
-            });
-        let mut undo_widget = PushButtonBuilder::new();
-        undo_widget
-            .set_text("Undo")
-            .on_click(|_, args| { args.ui.event(AppEvent::Undo); });
-        let mut redo_widget = PushButtonBuilder::new();
-        redo_widget
-            .set_text("Redo")
-            .on_click(|_, args| { args.ui.event(AppEvent::Redo); });
+        let mut create_button = ButtonComponent::default();
+        create_button.text("Create Circle");
+        create_button.toggle(true);
+        let mut create_button = WidgetBuilder::from_component(create_button);
+        create_button.add_handler(|event: &ToggleEvent, args: EventArgs| {
+            match *event {
+                ToggleEvent::On => {
+                    args.ui.event(AppEvent::SetCreateMode(true));
+                },
+                ToggleEvent::Off => {
+                    args.ui.event(AppEvent::SetCreateMode(false));
+                }
+            };
+        });
+        let mut undo_widget = ButtonComponent::default();
+        undo_widget.text("Undo");
+        let mut undo_widget = WidgetBuilder::from_component(undo_widget);
+        undo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
+            args.ui.event(AppEvent::Undo);
+        });
+
+        let mut redo_widget = ButtonComponent::default();
+        redo_widget.text("Redo");
+        let mut redo_widget = WidgetBuilder::from_component(redo_widget);
+        redo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
+            args.ui.event(AppEvent::Redo);
+        });
         let slider_container = SliderControl::new();
         let (create_ref, undo_ref, redo_ref, slider_ref) = (create_button.widget_ref(), undo_widget.widget_ref(), redo_widget.widget_ref(), slider_container.widget_ref());
         widget
@@ -145,7 +153,7 @@ fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> W
             args.ui.event(AppEvent::Select(Some(id)));
         }
     });
-    widget.on_click(|_, args| *args.handled = true);
+    widget.add_handler(|_: &ClickEvent, args: EventArgs| *args.handled = true);
     parent_ref.add_child(widget);
     widget_ref_clone
 }
@@ -377,9 +385,9 @@ fn main() {
     ]);
     circle_canvas
         .set_draw_state_with_style(RectState::new(), style!(RectStyle::BackgroundColor: WHITE))
-        .on_click(|event, args| {
+        .add_handler(|event: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::ClickCanvas(event.position));
-    });
+        });
     let mut control_bar = ControlBar::new();
     control_bar.layout().add(constraints![
         align_below(&circle_canvas).padding(10.0),

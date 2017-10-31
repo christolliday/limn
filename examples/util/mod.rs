@@ -2,9 +2,21 @@ extern crate env_logger;
 
 use limn::prelude::*;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
+use limn::resources;
+use limn::widgets::button;
+use limn::widgets::text::TextComponent;
+
+pub fn default_style() {
+    let mut res = resources::resources();
+    res.theme.register_style_class("button_text", TextComponent {
+        style: Some(button::STYLE_BUTTON_TEXT.clone()),
+    });
+}
 
 // Initialize a limn App with common handlers and set up logger
 pub fn init(window_builder: glutin::WindowBuilder) -> App {
+    default_style();
+
     env_logger::init().unwrap();
     let events_loop = glutin::EventsLoop::new();
     let window = Window::new(window_builder, &events_loop);

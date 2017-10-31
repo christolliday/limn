@@ -2,12 +2,13 @@ use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widget::property::states::*;
-use widgets::text::TextBuilder;
+use widgets::text::TextComponent;
 use draw::rect::{RectState, RectStyle};
 use draw::text::TextStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
 use layout::linear_layout::{LinearLayoutSettings, Orientation};
+use style::Component;
 use color::*;
 
 pub struct ListItemSelected {
@@ -156,7 +157,11 @@ impl WidgetBuilder {
 
 pub fn default_text_adapter(text: String, list: &mut ListBuilder) -> WidgetBuilder {
     let style = style!(parent: STYLE_LIST_TEXT, TextStyle::Text: text);
-    let mut text_widget = TextBuilder::new_with_style(style);
+    let mut text_widget = WidgetBuilder::new("list_item_text");
+    let text = TextComponent {
+        style: Some(style),
+    };
+    text.apply(&mut text_widget);
 
     let mut item_widget = WidgetBuilder::new("list_item");
     item_widget
