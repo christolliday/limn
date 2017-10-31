@@ -33,10 +33,10 @@ impl EventHandler<StyleUpdated> for TextUpdatedHandler {
 use style::*;
 
 #[derive(Clone)]
-pub struct TextComponent {
+pub struct StaticTextStyle {
     pub style: Option<Vec<TextStyle>>,
 }
-impl TextComponent {
+impl StaticTextStyle {
     pub fn text(&mut self, text: &str) {
         self.style = Some(style!(TextStyle::Text: text.to_owned()));
     }
@@ -45,37 +45,37 @@ impl TextComponent {
     }
 }
 
-impl Default for TextComponent {
+impl Default for StaticTextStyle {
     fn default() -> Self {
-        TextComponent {
+        StaticTextStyle {
             style: Some(vec![]),
         }
     }
 }
 
-impl Component for TextComponent {
-    type Values = TextComponentValues;
+impl ComponentStyle for StaticTextStyle {
+    type Component = TextComponent;
     fn name() -> String {
         "text".to_owned()
     }
     fn merge(&self, other: &Self) -> Self {
-        TextComponent {
+        StaticTextStyle {
             style: self.style.merge(&other.style),
         }
     }
-    fn to_values(self) -> Self::Values {
-        TextComponentValues {
+    fn component(self) -> Self::Component {
+        TextComponent {
             style: self.style.unwrap(),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct TextComponentValues {
+pub struct TextComponent {
     style: Vec<TextStyle>,
 }
 
-impl ComponentValues for TextComponentValues {
+impl Component for TextComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let text_draw_state = TextState::default();
         widget.set_draw_state_with_style(text_draw_state, self.style.clone());

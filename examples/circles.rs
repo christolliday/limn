@@ -9,14 +9,14 @@ use limn::glutin;
 use limn::prelude::*;
 
 use limn::input::mouse::WidgetMouseButton;
-use limn::widgets::button::{ButtonComponent, ToggleEvent};
+use limn::widgets::button::{ButtonStyle, ToggleEvent};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue, SliderEvent};
 use limn::widgets::drag::DragEvent;
 use limn::draw::text::TextStyle;
 use limn::draw::rect::{RectState, RectStyle};
 use limn::draw::ellipse::{EllipseState, EllipseStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
-use limn::widgets::text::TextComponent;
+use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
 
 struct SliderControl {
@@ -27,12 +27,12 @@ impl SliderControl {
     fn new() -> Self {
         let text_style = style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
         let mut widget = WidgetBuilder::new("slider_container");
-        let mut slider_title = TextComponent::default();
+        let mut slider_title = StaticTextStyle::default();
         slider_title.style(style!(parent: text_style, TextStyle::Text: "Circle Size".to_owned()));
         let mut slider_title = WidgetBuilder::from_component(slider_title);
         slider_title.set_name("slider_title");
         slider_title.layout().add(align_left(&widget));
-        let mut slider_value = TextComponent::default();
+        let mut slider_value = StaticTextStyle::default();
         slider_value.style(style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "--".to_owned()));
         let mut slider_value = WidgetBuilder::from_component(slider_value);
         slider_value
@@ -89,7 +89,7 @@ impl ControlBar {
         layout_settings.padding = 10.0;
         layout_settings.item_align = ItemAlignment::Center;
         widget.linear_layout(layout_settings);
-        let mut create_button = ButtonComponent::default();
+        let mut create_button = ButtonStyle::default();
         create_button.text("Create Circle");
         create_button.toggle(true);
         let mut create_button = WidgetBuilder::from_component(create_button);
@@ -103,14 +103,14 @@ impl ControlBar {
                 }
             };
         });
-        let mut undo_widget = ButtonComponent::default();
+        let mut undo_widget = ButtonStyle::default();
         undo_widget.text("Undo");
         let mut undo_widget = WidgetBuilder::from_component(undo_widget);
         undo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::Undo);
         });
 
-        let mut redo_widget = ButtonComponent::default();
+        let mut redo_widget = ButtonStyle::default();
         redo_widget.text("Redo");
         let mut redo_widget = WidgetBuilder::from_component(redo_widget);
         redo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {

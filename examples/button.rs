@@ -1,11 +1,9 @@
-#[macro_use]
 extern crate limn;
 
 mod util;
 
 use limn::prelude::*;
-use limn::widgets::button::ButtonComponent;
-use limn::draw::text::TextStyle;
+use limn::widgets::button::ButtonStyle;
 
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
@@ -14,7 +12,7 @@ fn main() {
     let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
-    let mut button = ButtonComponent::default();
+    let mut button = ButtonStyle::default();
     button.toggle_text("ON", "OFF");
     let mut button = WidgetBuilder::from_component(button);
     button.layout().add(constraints![

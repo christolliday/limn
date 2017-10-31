@@ -6,7 +6,7 @@ use widget::WidgetBuilder;
 use widget::property::Property;
 use widget::property::states::*;
 use input::mouse::WidgetMouseButton;
-use widgets::text::TextComponent;
+use widgets::text::StaticTextStyle;
 use draw::rect::{RectState, RectStyle};
 use draw::text::TextStyle;
 use geometry::Size;
@@ -76,13 +76,13 @@ pub fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs
 }
 
 #[derive(Clone)]
-pub struct ButtonComponent {
+pub struct ButtonStyle {
     rect: Option<Vec<RectStyle>>,
     text: Option<Option<Vec<TextStyle>>>,
     toggle: Option<bool>,
 }
 
-impl ButtonComponent {
+impl ButtonStyle {
     pub fn rect_style(&mut self, rect: Vec<RectStyle>) {
         self.rect = Some(rect);
     }
@@ -102,9 +102,9 @@ impl ButtonComponent {
     }
 }
 
-impl Default for ButtonComponent {
+impl Default for ButtonStyle {
     fn default() -> Self {
-        ButtonComponent {
+        ButtonStyle {
             rect: Some(STYLE_BUTTON_RECT.clone()),
             text: Some(None),
             toggle: Some(false),
@@ -112,20 +112,20 @@ impl Default for ButtonComponent {
     }
 }
 
-impl Component for ButtonComponent {
-    type Values = ButtonComponentValues;
+impl ComponentStyle for ButtonStyle {
+    type Component = ButtonComponent;
     fn name() -> String {
         "button".to_owned()
     }
     fn merge(&self, other: &Self) -> Self {
-        ButtonComponent {
+        ButtonStyle {
             rect: self.rect.as_ref().or(other.rect.as_ref()).cloned(),
             text: self.text.merge(&other.text),
             toggle: self.toggle.as_ref().or(other.toggle.as_ref()).cloned(),
         }
     }
-    fn to_values(self) -> Self::Values {
-        ButtonComponentValues {
+    fn component(self) -> Self::Component {
+        ButtonComponent {
             rect: self.rect.unwrap(),
             text: self.text.unwrap(),
             toggle: self.toggle.unwrap(),
@@ -134,13 +134,13 @@ impl Component for ButtonComponent {
 }
 
 #[derive(Debug)]
-pub struct ButtonComponentValues {
+pub struct ButtonComponent {
     rect: Vec<RectStyle>,
     text: Option<Vec<TextStyle>>,
     toggle: bool,
 }
 
-impl ComponentValues for ButtonComponentValues {
+impl Component for ButtonComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
         widget
             .set_style_class("button_rect")
@@ -155,7 +155,7 @@ impl ComponentValues for ButtonComponentValues {
             let mut button_text_widget = WidgetBuilder::new("button_text");
             button_text_widget
                 .set_style_class("button_text");
-            let text = TextComponent {
+            let text = StaticTextStyle {
                 style: Some(text_style),
             };
             text.apply(&mut button_text_widget);

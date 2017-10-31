@@ -7,11 +7,11 @@ use std::collections::HashMap;
 
 use limn::prelude::*;
 
-use limn::widgets::button::ButtonComponent;
+use limn::widgets::button::ButtonStyle;
 use limn::widgets::edit_text::{self, EditTextBuilder, TextUpdated};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
-use limn::widgets::text::TextComponent;
+use limn::widgets::text::StaticTextStyle;
 use limn::draw::text::{TextState, TextStyle};
 use limn::draw::rect::RectState;
 
@@ -188,7 +188,7 @@ fn main() {
         let mut name_container = WidgetBuilder::new("name_container");
         name_container.layout().add(match_width(container));
 
-        let mut static_text = TextComponent::default();
+        let mut static_text = StaticTextStyle::default();
         static_text.text(title);
         let mut static_text = WidgetBuilder::from_component(static_text);
         static_text.layout().add(center_vertical(&name_container));
@@ -219,19 +219,19 @@ fn main() {
     let mut button_container = WidgetBuilder::new("button_container");
     button_container.layout().add(below(&last_name_container).padding(20.0));
 
-    let mut create_button = ButtonComponent::default();
+    let mut create_button = ButtonStyle::default();
     create_button.text("Create");
     let mut create_button = WidgetBuilder::from_component(create_button);
     create_button.add_prop(Property::Inactive);
 
-    let mut update_button = ButtonComponent::default();
+    let mut update_button = ButtonStyle::default();
     update_button.text("Update");
     let mut update_button = WidgetBuilder::from_component(update_button);
     update_button.add_prop(Property::Inactive);
     update_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Update);
     });
-    let mut delete_button = ButtonComponent::default();
+    let mut delete_button = ButtonStyle::default();
     delete_button.text("Delete");
     let mut delete_button = WidgetBuilder::from_component(delete_button);
     delete_button.add_prop(Property::Inactive);

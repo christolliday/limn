@@ -18,13 +18,13 @@ impl Theme {
         }
     }
 
-    pub fn register_style<T: Component + Send + 'static>(&mut self, style: T) {
+    pub fn register_style<T: ComponentStyle + Send + 'static>(&mut self, style: T) {
         self.styles.insert(TypeId::of::<T>(), Box::new(style));
     }
-    pub fn register_style_class<T: Component + Send + 'static>(&mut self, class: &str, style: T) {
+    pub fn register_style_class<T: ComponentStyle + Send + 'static>(&mut self, class: &str, style: T) {
         self.style_classes.insert((TypeId::of::<T>(), class.to_owned()), Box::new(style));
     }
-    pub fn get_style<T: Component + Default + 'static>(&self, mut style: T, class: Option<String>) -> T {
+    pub fn get_style<T: ComponentStyle + Default + 'static>(&self, mut style: T, class: Option<String>) -> T {
         let type_id = TypeId::of::<T>();
         if let Some(class) = class {
             if let Some(class) = self.style_classes.get(&(type_id, class)) {
@@ -41,12 +41,12 @@ impl Theme {
     }
 }
 
-pub trait ComponentValues: ::std::fmt::Debug {
+pub trait Component: ::std::fmt::Debug {
     fn apply(&self, widget: &mut WidgetBuilder);
 }
 
-pub trait Component: Default + Clone + 'static {
-    type Values: ComponentValues;
+pub trait ComponentStyle: Default + Clone + 'static {
+    type Component: Component;
     fn name() -> String;
     fn merge(&self, other: &Self) -> Self;
     fn apply(&self, widget: &mut WidgetBuilder) {
@@ -55,10 +55,10 @@ pub trait Component: Default + Clone + 'static {
             let class = widget.style_class();
             let style = self.clone();
             res.theme.get_style(style, class)
-        }.to_values();
+        }.component();
         style.apply(widget);
     }
-    fn to_values(self) -> Self::Values;
+    fn component(self) -> Self::Component;
 }
 
 pub trait MergeStyle {
