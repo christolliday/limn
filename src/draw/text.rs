@@ -13,6 +13,7 @@ use color::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 
+#[derive(Debug)]
 pub struct TextState {
     pub text: String,
     pub font: String,

@@ -6,28 +6,6 @@ use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use layout::constraint::*;
 
-#[derive(Debug, Copy, Clone)]
-pub struct TextBuilder;
-
-impl TextBuilder {
-    /// Returns a default TextBuilder (in form of a WidgetBuilder)
-    #[cfg_attr(feature = "cargo-clippy", allow(new_ret_no_self))]
-    pub fn new(text: &str) -> WidgetBuilder {
-        let text_draw_state = TextState::new(text);
-        let mut widget = WidgetBuilder::new(text);
-        widget.set_draw_state(text_draw_state);
-        widget.add_handler(TextUpdatedHandler { size_constraints: Vec::new() });
-        widget
-    }
-    pub fn new_with_style(style: Vec<TextStyle>) -> WidgetBuilder {
-        let text_draw_state = TextState::default();
-        let mut widget = WidgetBuilder::new("text");
-        widget.set_draw_state_with_style(text_draw_state, style);
-        widget.add_handler(TextUpdatedHandler::default());
-        widget
-    }
-}
-
 #[derive(Default)]
 struct TextUpdatedHandler {
     size_constraints: Vec<Constraint>,
@@ -49,5 +27,58 @@ impl EventHandler<StyleUpdated> for TextUpdatedHandler {
             layout.add(size_constraints.clone());
         });
         self.size_constraints = size_constraints;
+    }
+}
+
+use style::*;
+
+#[derive(Clone)]
+pub struct TextComponent {
+    pub style: Option<Vec<TextStyle>>,
+}
+impl TextComponent {
+    pub fn text(&mut self, text: &str) {
+        self.style = Some(style!(TextStyle::Text: text.to_owned()));
+    }
+    pub fn style(&mut self, style: Vec<TextStyle>) {
+        self.style = Some(style);
+    }
+}
+
+impl Default for TextComponent {
+    fn default() -> Self {
+        TextComponent {
+            style: Some(vec![]),
+        }
+    }
+}
+
+impl Component for TextComponent {
+    type Values = TextComponentValues;
+    fn name() -> String {
+        "text".to_owned()
+    }
+    fn merge(&self, other: &Self) -> Self {
+        TextComponent {
+            style: self.style.merge(&other.style),
+        }
+    }
+    fn to_values(self) -> Self::Values {
+        TextComponentValues {
+            style: self.style.unwrap(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct TextComponentValues {
+    style: Vec<TextStyle>,
+}
+
+impl ComponentValues for TextComponentValues {
+    fn apply(&self, widget: &mut WidgetBuilder) {
+        let text_draw_state = TextState::default();
+        widget.set_draw_state_with_style(text_draw_state, self.style.clone());
+        widget.add_handler(TextUpdatedHandler::default());
     }
 }

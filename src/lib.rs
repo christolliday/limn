@@ -84,6 +84,7 @@ pub mod prelude;
 pub mod render;
 /// Wrapper around `glutin::Window`
 pub mod window;
+pub mod style;
 
 #[cfg(not(feature="nightly"))]
 fn type_name<T>() -> &'static str {

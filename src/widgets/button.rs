@@ -1,19 +1,17 @@
 use glutin;
 
-use text_layout::Align;
-use cassowary::strength::*;
-
 use layout::constraint::*;
 use event::EventArgs;
 use widget::WidgetBuilder;
 use widget::property::Property;
 use widget::property::states::*;
-use widgets::text::TextBuilder;
-use input::mouse::{WidgetMouseButton, ClickEvent};
+use input::mouse::WidgetMouseButton;
+use widgets::text::TextComponent;
 use draw::rect::{RectState, RectStyle};
 use draw::text::TextStyle;
 use geometry::Size;
 use color::*;
+use style::*;
 
 static COLOR_BUTTON_DEFAULT: Color = GRAY_80;
 static COLOR_BUTTON_PRESSED: Color = GRAY_60;
@@ -28,7 +26,7 @@ static BUTTON_BORDER_INACTIVE: (f32, Color) = (1.0, GRAY_70);
 
 
 lazy_static! {
-    pub static ref STYLE_BUTTON: Vec<RectStyle> = {
+    pub static ref STYLE_BUTTON_RECT: Vec<RectStyle> = {
         style!(
             RectStyle::BackgroundColor: selector!(COLOR_BUTTON_DEFAULT,
                 ACTIVATED_PRESSED: COLOR_BUTTON_ACTIVATED_PRESSED,
@@ -47,7 +45,7 @@ lazy_static! {
 }
 
 /// Show whether button is held down or not
-fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: EventArgs) {
+pub fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: EventArgs) {
     if !args.widget.props().contains(&Property::Inactive) {
         let &WidgetMouseButton(state, _) = event;
         match state {
@@ -64,7 +62,7 @@ pub enum ToggleEvent {
 }
 
 /// Show whether toggle button is activated
-fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
+pub fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
     if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
         let activated = args.widget.props().contains(&Property::Activated);
         if activated {
@@ -77,123 +75,102 @@ fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
     }
 }
 
-pub struct ToggleButtonBuilder {
-    pub widget: WidgetBuilder,
+#[derive(Clone)]
+pub struct ButtonComponent {
+    rect: Option<Vec<RectStyle>>,
+    text: Option<Option<Vec<TextStyle>>>,
+    toggle: Option<bool>,
 }
 
-widget_wrapper!(ToggleButtonBuilder);
+impl ButtonComponent {
+    pub fn rect_style(&mut self, rect: Vec<RectStyle>) {
+        self.rect = Some(rect);
+    }
+    pub fn text_style(&mut self, text: Option<Vec<TextStyle>>) {
+        self.text = Some(text);
+    }
+    pub fn text(&mut self, text: &str) {
+        self.text = Some(Some(style!(TextStyle::Text: text.to_owned())));
+    }
+    pub fn toggle_text(&mut self, on_text: &str, off_text: &str) {
+        self.text = Some(Some(style!(TextStyle::Text:
+            selector!(on_text.to_owned(), ACTIVATED: off_text.to_owned()))));
+        self.toggle = Some(true);
+    }
+    pub fn toggle(&mut self, toggle: bool) {
+        self.toggle = Some(toggle);
+    }
+}
 
-impl Default for ToggleButtonBuilder {
+impl Default for ButtonComponent {
     fn default() -> Self {
-        let mut widget = WidgetBuilder::new("toggle_button");
+        ButtonComponent {
+            rect: Some(STYLE_BUTTON_RECT.clone()),
+            text: Some(None),
+            toggle: Some(false),
+        }
+    }
+}
+
+impl Component for ButtonComponent {
+    type Values = ButtonComponentValues;
+    fn name() -> String {
+        "button".to_owned()
+    }
+    fn merge(&self, other: &Self) -> Self {
+        ButtonComponent {
+            rect: self.rect.as_ref().or(other.rect.as_ref()).cloned(),
+            text: self.text.merge(&other.text),
+            toggle: self.toggle.as_ref().or(other.toggle.as_ref()).cloned(),
+        }
+    }
+    fn to_values(self) -> Self::Values {
+        ButtonComponentValues {
+            rect: self.rect.unwrap(),
+            text: self.text.unwrap(),
+            toggle: self.toggle.unwrap(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ButtonComponentValues {
+    rect: Vec<RectStyle>,
+    text: Option<Vec<TextStyle>>,
+    toggle: bool,
+}
+
+impl ComponentValues for ButtonComponentValues {
+    fn apply(&self, widget: &mut WidgetBuilder) {
         widget
-            .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
+            .set_style_class("button_rect")
+            .set_draw_state_with_style(RectState::new(), self.rect.clone())
             .add_handler(button_handle_mouse_down)
-            .enable_hover()
-            .add_handler(toggle_button_handle_mouse);
+            .enable_hover();
         widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
             shrink(),
         ]);
+        if let Some(text_style) = self.text.clone() {
+            let mut button_text_widget = WidgetBuilder::new("button_text");
+            button_text_widget
+                .set_style_class("button_text");
+            let text = TextComponent {
+                style: Some(text_style),
+            };
+            text.apply(&mut button_text_widget);
+            button_text_widget.layout().add(constraints![
+                bound_left(widget).padding(20.0),
+                bound_right(widget).padding(20.0),
+                bound_top(widget).padding(10.0),
+                bound_bottom(widget).padding(10.0),
+                center(widget),
+            ]);
 
-        ToggleButtonBuilder { widget: widget }
-    }
-}
-
-impl ToggleButtonBuilder {
-
-    /// Creates a new, default ToggleButtonBuilder
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Set the text of the button (register on / off events)
-    pub fn set_text(&mut self, on_text: &'static str, off_text: &'static str) -> &mut Self {
-
-        let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyle::Text: selector!(off_text.to_owned(),
-                ACTIVATED: on_text.to_owned()),
-            TextStyle::Align: Align::Middle);
-        let mut button_text_widget = TextBuilder::new_with_style(style);
-        button_text_widget.set_name("button_text");
-        button_text_widget.layout().add(constraints![
-            bound_left(&self.widget).padding(20.0),
-            bound_right(&self.widget).padding(20.0),
-            bound_top(&self.widget).padding(10.0),
-            bound_bottom(&self.widget).padding(10.0),
-            center(&self.widget),
-        ]);
-
-        self.widget.add_child(button_text_widget);
-        self
-    }
-
-    /// Callback function to be called when the button is toggled
-    pub fn on_toggle<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&ToggleEvent, EventArgs) + 'static
-    {
-        self.widget.add_handler(callback);
-        self
-    }
-}
-
-pub struct PushButtonBuilder {
-    pub widget: WidgetBuilder,
-}
-
-widget_wrapper!(PushButtonBuilder);
-
-impl Default for PushButtonBuilder {
-    #[inline]
-    fn default() -> Self {
-        let mut widget = WidgetBuilder::new("push_button");
-        widget
-            .set_draw_state_with_style(RectState::new(), STYLE_BUTTON.clone())
-            .add_handler(button_handle_mouse_down)
-            .enable_hover();
-        widget.layout().add(constraints![
-            min_size(Size::new(100.0, 50.0)).strength(STRONG),
-            shrink(),
-        ]);
-
-        PushButtonBuilder { widget: widget }
-    }
-}
-impl PushButtonBuilder {
-
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Set the text of the button
-    pub fn set_text(&mut self, text: &'static str) -> &mut Self {
-
-        let style = style!(parent: STYLE_BUTTON_TEXT,
-            TextStyle::Text: text.to_owned(),
-            TextStyle::Align: Align::Middle);
-
-        let mut button_text_widget = TextBuilder::new_with_style(style);
-        button_text_widget.set_name("button_text");
-        button_text_widget.layout().add(constraints![
-            bound_left(&self.widget).padding(20.0),
-            bound_right(&self.widget).padding(20.0),
-            bound_top(&self.widget).padding(10.0),
-            bound_bottom(&self.widget).padding(10.0),
-            center(&self.widget),
-        ]);
-
-        self.widget.add_child(button_text_widget);
-        self
-    }
-}
-
-impl WidgetBuilder {
-    pub fn on_click<F>(&mut self, on_click: F) -> &mut Self
-        where F: Fn(&ClickEvent, &mut EventArgs) + 'static
-    {
-        self.add_handler(move |event: &ClickEvent, mut args: EventArgs| {
-            (on_click)(event, &mut args);
-            *args.handled = true;
-        })
+            widget.add_child(button_text_widget);
+        }
+        if self.toggle {
+            widget.add_handler(toggle_button_handle_mouse);
+        }
     }
 }
