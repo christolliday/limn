@@ -55,9 +55,6 @@ impl Default for StaticTextStyle {
 
 impl ComponentStyle for StaticTextStyle {
     type Component = TextComponent;
-    fn name() -> String {
-        "text".to_owned()
-    }
     fn merge(&self, other: &Self) -> Self {
         StaticTextStyle {
             style: self.style.merge(&other.style),
@@ -76,6 +73,9 @@ pub struct TextComponent {
 }
 
 impl Component for TextComponent {
+    fn name() -> String {
+        "text".to_owned()
+    }
     fn apply(&self, widget: &mut WidgetBuilder) {
         let text_draw_state = TextState::default();
         widget.set_draw_state_with_style(text_draw_state, self.style.clone());

@@ -42,7 +42,7 @@ use render;
 use color::Color;
 use event::Target;
 use layout::UpdateLayout;
-use style::ComponentStyle;
+use style::Component;
 
 use self::property::{PropSet, Property};
 use self::draw::{Draw, DrawWrapper};
@@ -450,7 +450,7 @@ impl WidgetBuilder {
         }
     }
 
-    pub fn from_component<T: ComponentStyle>(component: T) -> Self {
+    pub fn from_component<T: Component>(component: T) -> Self {
         let name: String = T::name();
         let mut widget = WidgetBuilder {
             widget: WidgetRef::new(Widget::new(name)),

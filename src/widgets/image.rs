@@ -2,17 +2,30 @@ use widget::WidgetBuilder;
 use draw::image::ImageState;
 use layout::constraint::*;
 
-#[derive(Debug, Copy, Clone)]
-pub struct ImageBuilder;
+use style::*;
 
-impl ImageBuilder {
-    #[cfg_attr(feature = "cargo-clippy", allow(new_ret_no_self))]
-    pub fn new(file: &str) -> WidgetBuilder {
-        let image_draw_state = ImageState::new(file);
+#[derive(Debug)]
+pub struct ImageComponent {
+    file: String,
+}
+
+impl ImageComponent {
+    pub fn new(file: &str) -> Self {
+        ImageComponent {
+            file: file.to_owned(),
+        }
+    }
+}
+
+impl Component for ImageComponent {
+    fn name() -> String {
+        "image".to_owned()
+    }
+    fn apply(&self, widget: &mut WidgetBuilder) {
+        let image_draw_state = ImageState::new(&self.file);
         let image_size = image_draw_state.measure();
-        let mut widget = WidgetBuilder::new("image");
+        widget.set_name("image");
         widget.set_draw_state(image_draw_state);
         widget.layout().add(size(image_size));
-        widget
     }
 }

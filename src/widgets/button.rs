@@ -44,35 +44,10 @@ lazy_static! {
     };
 }
 
-/// Show whether button is held down or not
-pub fn button_handle_mouse_down(event: &WidgetMouseButton, mut args: EventArgs) {
-    if !args.widget.props().contains(&Property::Inactive) {
-        let &WidgetMouseButton(state, _) = event;
-        match state {
-            glutin::ElementState::Pressed => args.widget.add_prop(Property::Pressed),
-            glutin::ElementState::Released => args.widget.remove_prop(Property::Pressed),
-        }
-    }
-}
-
 #[derive(Debug, Copy, Clone)]
 pub enum ToggleEvent {
     On,
     Off,
-}
-
-/// Show whether toggle button is activated
-pub fn toggle_button_handle_mouse(event: &WidgetMouseButton, mut args: EventArgs) {
-    if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
-        let activated = args.widget.props().contains(&Property::Activated);
-        if activated {
-            args.widget.event(ToggleEvent::Off);
-            args.widget.remove_prop(Property::Activated);
-        } else {
-            args.widget.event(ToggleEvent::On);
-            args.widget.add_prop(Property::Activated);
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -114,9 +89,6 @@ impl Default for ButtonStyle {
 
 impl ComponentStyle for ButtonStyle {
     type Component = ButtonComponent;
-    fn name() -> String {
-        "button".to_owned()
-    }
     fn merge(&self, other: &Self) -> Self {
         ButtonStyle {
             rect: self.rect.as_ref().or(other.rect.as_ref()).cloned(),
@@ -141,11 +113,22 @@ pub struct ButtonComponent {
 }
 
 impl Component for ButtonComponent {
+    fn name() -> String {
+        "button".to_owned()
+    }
     fn apply(&self, widget: &mut WidgetBuilder) {
         widget
             .set_style_class("button_rect")
             .set_draw_state_with_style(RectState::new(), self.rect.clone())
-            .add_handler(button_handle_mouse_down)
+            .add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
+                if !args.widget.props().contains(&Property::Inactive) {
+                    let &WidgetMouseButton(state, _) = event;
+                    match state {
+                        glutin::ElementState::Pressed => args.widget.add_prop(Property::Pressed),
+                        glutin::ElementState::Released => args.widget.remove_prop(Property::Pressed),
+                    }
+                }
+            })
             .enable_hover();
         widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
@@ -153,8 +136,7 @@ impl Component for ButtonComponent {
         ]);
         if let Some(text_style) = self.text.clone() {
             let mut button_text_widget = WidgetBuilder::new("button_text");
-            button_text_widget
-                .set_style_class("button_text");
+            button_text_widget.set_style_class("button_text");
             let text = StaticTextStyle {
                 style: Some(text_style),
             };
@@ -170,7 +152,18 @@ impl Component for ButtonComponent {
             widget.add_child(button_text_widget);
         }
         if self.toggle {
-            widget.add_handler(toggle_button_handle_mouse);
+            widget.add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
+                if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
+                    let activated = args.widget.props().contains(&Property::Activated);
+                    if activated {
+                        args.widget.event(ToggleEvent::Off);
+                        args.widget.remove_prop(Property::Activated);
+                    } else {
+                        args.widget.event(ToggleEvent::On);
+                        args.widget.add_prop(Property::Activated);
+                    }
+                }
+            });
         }
     }
 }

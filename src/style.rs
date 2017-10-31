@@ -41,14 +41,21 @@ impl Theme {
     }
 }
 
-pub trait Component: ::std::fmt::Debug {
+pub trait Component {
+    fn name() -> String;
     fn apply(&self, widget: &mut WidgetBuilder);
 }
 
 pub trait ComponentStyle: Default + Clone + 'static {
-    type Component: Component;
-    fn name() -> String;
+    type Component: Component + Sized;
     fn merge(&self, other: &Self) -> Self;
+    fn component(self) -> Self::Component;
+}
+
+impl <T: ComponentStyle> Component for T {
+    fn name() -> String {
+        T::Component::name()
+    }
     fn apply(&self, widget: &mut WidgetBuilder) {
         let style = {
             let res = resources::resources();
@@ -58,7 +65,6 @@ pub trait ComponentStyle: Default + Clone + 'static {
         }.component();
         style.apply(widget);
     }
-    fn component(self) -> Self::Component;
 }
 
 pub trait MergeStyle {
