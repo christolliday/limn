@@ -14,7 +14,7 @@ fn main() {
 
     let mut button = ButtonStyle::default();
     button.toggle_text("ON", "OFF");
-    let mut button = WidgetBuilder::from_component(button);
+    let mut button = WidgetBuilder::from_component_style(button);
     button.layout().add(constraints![
         center(&root),
         bound_by(&root).padding(50.0).strength(WEAK),

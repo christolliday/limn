@@ -13,18 +13,37 @@ use chrono::{Local, Timelike};
 
 use limn::webrender::api::*;
 use limn::prelude::*;
-use limn::draw::ellipse::{EllipseState, EllipseStyle};
+use limn::draw::ellipse::EllipseComponent;
 
 type Radians = euclid::Radians<f32>;
 
 struct ClockTick;
 
+#[derive(Clone)]
 pub struct ClockHand {
     color: Color,
     width: f32,
     length: f32,
     rotation: Radians,
 }
+
+impl Default for ClockHand {
+    fn default() -> Self {
+        ClockHand {
+            color: BLACK,
+            width: 0.0,
+            length: 0.0,
+            rotation: Radians::new(0.0),
+        }
+    }
+}
+
+impl Component for ClockHand {
+    fn name() -> String {
+        "clock_hand".to_owned()
+    }
+}
+
 impl ClockHand {
     pub fn new(color: Color, width: f32, length: f32, rotation: Radians) -> Self {
         ClockHand {
@@ -77,11 +96,12 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new() -> Self {
 
-        let style = style!(
-            EllipseStyle::BackgroundColor: WHITE,
-            EllipseStyle::Border: Some((2.0, BLACK)));
+        let ellipse = EllipseComponent {
+            background_color: Value::from(WHITE),
+            border: Value::from(Some((2.0, BLACK))),
+        };
         let mut widget = WidgetBuilder::new("clock");
-        widget.set_draw_state_with_style(EllipseState::new(), style);
+        widget.set_into_draw_state(ellipse);
         widget.layout().add(size(Size::new(200.0, 200.0)));
 
         let hour_angle = || rotation((Local::now().hour() % 12) as f32 / 12.0);

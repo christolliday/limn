@@ -3,9 +3,10 @@ use webrender::api::{LocalClip, BorderRadius, ComplexClipRegion, PrimitiveInfo};
 use render::RenderBuilder;
 use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{self, Style, Value};
+use widget::style::{self, PropSelector, Value};
 use geometry::{Rect, RectExt};
 use color::*;
+use style::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RectState {
@@ -58,21 +59,48 @@ impl Draw for RectState {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum RectStyle {
-    BackgroundColor(Value<Color>),
-    CornerRadius(Value<Option<f32>>),
-    Border(Value<Option<(f32, Color)>>),
+#[derive(Default, Clone)]
+pub struct RectComponentStyle {
+    pub background_color: Option<Value<Color>>,
+    pub corner_radius: Option<Value<Option<f32>>>,
+    pub border: Option<Value<Option<(f32, Color)>>>,
 }
 
-impl Style<RectState> for RectStyle {
-    fn apply(&self, state: &mut RectState, props: &PropSet) -> bool {
-        match *self {
-            RectStyle::BackgroundColor(ref val) => {
-                style::update(&mut state.background_color, val.get(props))
-            }
-            RectStyle::CornerRadius(ref val) => style::update(&mut state.corner_radius, val.get(props)),
-            RectStyle::Border(ref val) => style::update(&mut state.border, val.get(props)),
+impl ComponentStyle for RectComponentStyle {
+    type Component = RectComponent;
+    fn merge(&self, other: &Self) -> Self {
+        RectComponentStyle {
+            background_color: self.background_color.as_ref().or(other.background_color.as_ref()).cloned(),
+            corner_radius: self.corner_radius.as_ref().or(other.corner_radius.as_ref()).cloned(),
+            border: self.border.as_ref().or(other.border.as_ref()).cloned(),
         }
+    }
+    fn component(self) -> Self::Component {
+        RectComponent {
+            background_color: self.background_color.unwrap_or(Value::from(BLACK)),
+            corner_radius: self.corner_radius.unwrap_or(Value::from(None)),
+            border: self.border.unwrap_or(Value::from(None)),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct RectComponent {
+    pub background_color: Value<Color>,
+    pub corner_radius: Value<Option<f32>>,
+    pub border: Value<Option<(f32, Color)>>,
+}
+
+impl Component for RectComponent {
+    fn name() -> String {
+        "rect".to_owned()
+    }
+}
+
+impl PropSelector<RectState> for RectComponent {
+    fn apply(&self, state: &mut RectState, props: &PropSet) -> bool {
+        style::update(&mut state.background_color, self.background_color.get(props)) |
+        style::update(&mut state.corner_radius, self.corner_radius.get(props)) |
+        style::update(&mut state.border, self.border.get(props))
     }
 }

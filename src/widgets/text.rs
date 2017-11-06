@@ -1,8 +1,8 @@
 use cassowary::Constraint;
 
 use widget::WidgetBuilder;
-use widget::style::StyleUpdated;
-use draw::text::{TextState, TextStyle};
+use widget::style::{Value, StyleUpdated};
+use draw::text::{TextState, TextComponentStyle};
 use event::{EventHandler, EventArgs};
 use layout::constraint::*;
 
@@ -34,13 +34,16 @@ use style::*;
 
 #[derive(Clone)]
 pub struct StaticTextStyle {
-    pub style: Option<Vec<TextStyle>>,
+    pub style: Option<TextComponentStyle>,
 }
 impl StaticTextStyle {
     pub fn text(&mut self, text: &str) {
-        self.style = Some(style!(TextStyle::Text: text.to_owned()));
+        self.style = Some(TextComponentStyle {
+            text: Some(Value::from(text.to_owned())),
+            ..TextComponentStyle::default()
+        });
     }
-    pub fn style(&mut self, style: Vec<TextStyle>) {
+    pub fn style(&mut self, style: TextComponentStyle) {
         self.style = Some(style);
     }
 }
@@ -48,37 +51,40 @@ impl StaticTextStyle {
 impl Default for StaticTextStyle {
     fn default() -> Self {
         StaticTextStyle {
-            style: Some(vec![]),
+            style: None,
         }
     }
 }
 
 impl ComponentStyle for StaticTextStyle {
-    type Component = TextComponent;
+    type Component = StaticTextComponent;
     fn merge(&self, other: &Self) -> Self {
         StaticTextStyle {
-            style: self.style.merge(&other.style),
+            style: self.style.as_ref().or(other.style.as_ref()).cloned(),
         }
     }
     fn component(self) -> Self::Component {
-        TextComponent {
+        StaticTextComponent {
             style: self.style.unwrap(),
         }
     }
 }
 
-#[derive(Debug)]
-pub struct TextComponent {
-    style: Vec<TextStyle>,
+#[derive(Clone)]
+pub struct StaticTextComponent {
+    style: TextComponentStyle,
 }
 
-impl Component for TextComponent {
+impl Component for StaticTextComponent {
     fn name() -> String {
         "text".to_owned()
     }
+}
+
+impl WidgetModifier for StaticTextComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let text_draw_state = TextState::default();
-        widget.set_draw_state_with_style(text_draw_state, self.style.clone());
+        widget.set_draw_style(self.style.clone());
         widget.add_handler(TextUpdatedHandler::default());
     }
 }

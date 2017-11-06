@@ -5,11 +5,12 @@ use cassowary::WeightedRelation::*;
 use layout::constraint::*;
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
+use widget::style::Value;
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use geometry::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
 use input::mouse::WidgetMouseWheel;
-use draw::rect::{RectState, RectStyle};
+use draw::rect::RectComponentStyle;
 use color::*;
 
 const FLOATING_POINT_ERROR: f32 = 0.0001;
@@ -78,9 +79,12 @@ impl ScrollBuilder {
         scrollbar_v.on_value_changed(move |value, _| {
             widget_ref.event(ScrollParentEvent::ScrollBarMovedY(value));
         });
-        let corner_style = style!(RectStyle::BackgroundColor: GRAY_70);
+        let corner_style = RectComponentStyle {
+            background_color: Some(Value::from(GRAY_70)),
+            ..RectComponentStyle::default()
+        };
         let mut corner = WidgetBuilder::new("corner");
-        corner.set_draw_state_with_style(RectState::new(), corner_style);
+        corner.set_draw_style(corner_style);
         corner.layout().add(constraints![
             align_bottom(&self.widget),
             align_right(&self.widget),

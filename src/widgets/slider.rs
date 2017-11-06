@@ -10,10 +10,12 @@ use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widget::property::states::*;
-use draw::rect::{RectState, RectStyle};
-use draw::ellipse::{EllipseState, EllipseStyle};
+use widget::style::Value;
+use draw::rect::RectComponentStyle;
+use draw::ellipse::EllipseComponentStyle;
 use geometry::{RectExt, Point};
 use color::*;
+use style::ComponentStyle;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Orientation {
@@ -127,14 +129,18 @@ impl Into<WidgetBuilder> for SliderBuilder {
 
         match self.handle_style {
             HandleStyle::Round => {
-                slider_handle.set_draw_state_with_style(EllipseState::new(), style!(
-                    EllipseStyle::BackgroundColor: self.handle_color,
-                    EllipseStyle::Border: self.border))
+                slider_handle.set_draw_style(EllipseComponentStyle {
+                    background_color: Some(Value::from(self.handle_color)),
+                    border: Some(Value::from(self.border)),
+                    ..EllipseComponentStyle::default()
+                });
             }
             HandleStyle::Square => {
-                slider_handle.set_draw_state_with_style(RectState::new(), style!(
-                    RectStyle::BackgroundColor: self.handle_color,
-                    RectStyle::Border: self.border))
+                slider_handle.set_draw_style(RectComponentStyle {
+                    background_color: Some(Value::from(self.handle_color)),
+                    border: Some(Value::from(self.border)),
+                    ..RectComponentStyle::default()
+                });
             }
         };
 
@@ -142,23 +148,28 @@ impl Into<WidgetBuilder> for SliderBuilder {
             BarStyle::NarrowRound => Some(3.0),
             BarStyle::Wide => None,
         };
-        let bar_style = style!(
-            RectStyle::BackgroundColor: self.bar_color,
-            RectStyle::CornerRadius: Some(3.0),
-            RectStyle::Border: self.border,
-            RectStyle::CornerRadius: corner_radius);
+        let bar_style = RectComponentStyle {
+            background_color: Some(Value::from(self.handle_color)),
+            corner_radius: Some(Value::from(Some(3.0))),
+            border: Some(Value::from(self.border)),
+            ..RectComponentStyle::default()
+        };
 
         let pre_style = if let Some(highlight) = self.highlight {
-            style!(parent: bar_style, RectStyle::BackgroundColor:
-                selector!(highlight, INACTIVE: self.bar_color))
+            RectComponentStyle {
+                background_color: Some(Value::from(selector!(highlight, INACTIVE: self.bar_color))),
+                ..RectComponentStyle::default()
+            }.merge(&bar_style)
+            //style!(parent: bar_style, RectStyle::BackgroundColor:
+            //    selector!(highlight, INACTIVE: self.bar_color))
         } else {
             bar_style.clone()
         };
         let mut slider_bar_pre = WidgetBuilder::new("slider_bar_pre");
-        slider_bar_pre.set_draw_state_with_style(RectState::new(), pre_style);
+        slider_bar_pre.set_draw_style(pre_style);
 
         let mut slider_bar_post = WidgetBuilder::new("slider_bar_post");
-        slider_bar_post.set_draw_state_with_style(RectState::new(), bar_style);
+        slider_bar_post.set_draw_style(bar_style);
 
         let (bar_width, bar_padding) = match self.bar_style {
             BarStyle::Wide => (self.width, 0.0),

@@ -12,7 +12,7 @@ use limn::widgets::edit_text::{self, EditTextBuilder, TextUpdated};
 use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::widgets::text::StaticTextStyle;
-use limn::draw::text::{TextState, TextStyle};
+use limn::draw::text::{TextState, TextComponentStyle};
 use limn::draw::rect::RectState;
 
 named_id!(PersonId);
@@ -93,24 +93,29 @@ impl PeopleHandler {
         let id = self.id_gen.next_id();
         self.people.insert(id, self.person.clone());
         let list_item_widget = {
-            let text_style = style!(TextStyle::TextColor: WHITE);
-            let text_draw_state = TextState::new(&self.person.name());
-            let text_size = text_draw_state.measure();
+            let text_style = TextComponentStyle {
+                text: Some(Value::from(self.person.name())),
+                text_color: Some(Value::from(WHITE)),
+                ..TextComponentStyle::default()
+            };
+            //style!(TextStyle::TextColor: WHITE);
+            //let text_draw_state = TextState::new(&self.person.name());
+            //let text_size = text_draw_state.measure();
             let mut list_item_widget = WidgetBuilder::new("list_item");
             list_item_widget
-                .set_draw_state_with_style(RectState::new(), STYLE_LIST_ITEM.clone())
+                .set_draw_style(STYLE_LIST_ITEM.clone())
                 .list_item(&self.widgets.list_widget)
                 .on_item_selected(move |args| {
                     args.ui.event(PeopleEvent::PersonSelected(Some(id)));
                 })
                 .enable_hover();
             list_item_widget.layout().add(constraints![
-                height(text_size.height),
+                //height(text_size.height),
                 match_width(&self.widgets.list_widget),
             ]);
             let mut list_text_widget = WidgetBuilder::new("list_text");
             list_text_widget
-                .set_draw_state_with_style(text_draw_state, text_style)
+                .set_draw_style(text_style)
                 .add_handler(edit_text::text_change_handle);
             list_text_widget.layout().add(center(&list_item_widget));
             list_item_widget.add_child(list_text_widget);
@@ -190,7 +195,7 @@ fn main() {
 
         let mut static_text = StaticTextStyle::default();
         static_text.text(title);
-        let mut static_text = WidgetBuilder::from_component(static_text);
+        let mut static_text = WidgetBuilder::from_component_style(static_text);
         static_text.layout().add(center_vertical(&name_container));
 
         let mut text_box = EditTextBuilder::new();
@@ -221,19 +226,19 @@ fn main() {
 
     let mut create_button = ButtonStyle::default();
     create_button.text("Create");
-    let mut create_button = WidgetBuilder::from_component(create_button);
+    let mut create_button = WidgetBuilder::from_component_style(create_button);
     create_button.add_prop(Property::Inactive);
 
     let mut update_button = ButtonStyle::default();
     update_button.text("Update");
-    let mut update_button = WidgetBuilder::from_component(update_button);
+    let mut update_button = WidgetBuilder::from_component_style(update_button);
     update_button.add_prop(Property::Inactive);
     update_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Update);
     });
     let mut delete_button = ButtonStyle::default();
     delete_button.text("Delete");
-    let mut delete_button = WidgetBuilder::from_component(delete_button);
+    let mut delete_button = WidgetBuilder::from_component_style(delete_button);
     delete_button.add_prop(Property::Inactive);
     delete_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Delete);
@@ -242,8 +247,6 @@ fn main() {
     delete_button.layout().add(to_right_of(&update_button).padding(20.0));
 
     let mut scroll_container = ScrollBuilder::new();
-    scroll_container
-        .set_draw_state(RectState::new());
     scroll_container.layout().add(constraints![
         below(&button_container).padding(20.0),
         min_height(260.0),

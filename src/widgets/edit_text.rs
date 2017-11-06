@@ -4,10 +4,11 @@ use layout::constraint::ConstraintBuilder;
 use layout::constraint::*;
 use widget::style::StyleUpdated;
 use widget::WidgetBuilder;
+use widget::style::Value;
 use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
-use draw::rect::{RectState, RectStyle};
+use draw::rect::RectComponentStyle;
 use draw::text::TextState;
 use event::{EventHandler, EventArgs};
 use color::*;
@@ -55,12 +56,14 @@ impl Default for EditTextBuilder {
     fn default() -> Self {
         let default_border = Some((1.0, GRAY_70));
         let focused_border = Some((1.0, BLUE));
-        let rect_style = style!(
-            RectStyle::Border: selector!(default_border, FOCUSED: focused_border),
-            RectStyle::CornerRadius: Some(3.0));
+        let rect_style = RectComponentStyle {
+            border: Some(Value::from(selector!(default_border, FOCUSED: focused_border))),
+            corner_radius: Some(Value::from(Some(3.0))),
+            ..RectComponentStyle::default()
+        };
         let mut widget = WidgetBuilder::new("edit_text");
         widget
-            .set_draw_state_with_style(RectState::new(), rect_style)
+            .set_draw_style(rect_style)
             .add_handler(|_: &WidgetAttachedEvent, args: EventArgs| {
                 args.ui.event(KeyboardInputEvent::AddFocusable(args.widget));
             })

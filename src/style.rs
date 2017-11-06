@@ -24,7 +24,7 @@ impl Theme {
     pub fn register_style_class<T: ComponentStyle + Send + 'static>(&mut self, class: &str, style: T) {
         self.style_classes.insert((TypeId::of::<T>(), class.to_owned()), Box::new(style));
     }
-    pub fn get_style<T: ComponentStyle + Default + 'static>(&self, mut style: T, class: Option<String>) -> T {
+    pub fn get_style<T: ComponentStyle + 'static>(&self, mut style: T, class: Option<String>) -> T {
         let type_id = TypeId::of::<T>();
         if let Some(class) = class {
             if let Some(class) = self.style_classes.get(&(type_id, class)) {
@@ -36,26 +36,49 @@ impl Theme {
             let type_class = type_class.downcast_ref::<T>().unwrap();
             style = style.merge(type_class);
         }
-        let default = T::default();
-        style.merge(&default)
+        style
     }
 }
 
-pub trait Component {
+pub trait Component: Clone {
     fn name() -> String;
+}
+
+pub trait ComponentStyle: Clone + 'static {
+    type Component: Sized;
+    fn merge(&self, other: &Self) -> Self;
+    fn component(self) -> Self::Component;
+    fn resolve(self, class: Option<String>) -> Self::Component {
+        let res = resources::resources();
+        let style = self.clone();
+        res.theme.get_style(style, class).component()
+    }
+}
+
+pub trait WidgetModifier {
     fn apply(&self, widget: &mut WidgetBuilder);
 }
 
-pub trait ComponentStyle: Default + Clone + 'static {
-    type Component: Component + Sized;
-    fn merge(&self, other: &Self) -> Self;
-    fn component(self) -> Self::Component;
+impl <T: Component + 'static> ComponentStyle for T {
+    type Component = T;
+    fn merge(&self, other: &Self) -> Self {
+        self.clone()
+    }
+    fn component(self) -> Self::Component {
+        self
+    }
+    fn resolve(self, class: Option<String>) -> Self::Component {
+        self
+    }
 }
 
-impl <T: ComponentStyle> Component for T {
+/* impl <T: ComponentStyle> Component for T {
     fn name() -> String {
         T::Component::name()
     }
+} */
+
+/* impl <T: ComponentStyle<Component = S>, S: WidgetModifier + Component> WidgetModifier for T {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let style = {
             let res = resources::resources();
@@ -65,13 +88,13 @@ impl <T: ComponentStyle> Component for T {
         }.component();
         style.apply(widget);
     }
-}
+} */
 
 pub trait MergeStyle {
     fn merge(&self, lower: &Self) -> Self;
 }
 
-use draw::text::TextStyle;
+/* use draw::text::TextStyle;
 
 impl MergeStyle for Option<Option<Vec<TextStyle>>> {
     fn merge(&self, lower: &Self) -> Self {
@@ -109,4 +132,4 @@ impl MergeStyle for Option<Vec<TextStyle>> {
         }
         unreachable!();
     }
-}
+} */

@@ -1,14 +1,28 @@
 use webrender::api::*;
 
 use render::RenderBuilder;
-use widget::draw::Draw;
+use widget::draw::{Draw, DrawComponent, IntoDrawState};
 use resources::resources;
 use geometry::{Rect, RectExt, Size};
+use style::Component;
 
+#[derive(Clone)]
 pub struct GLCanvasState {
     pub name: String,
     pub data: ImageData,
 }
+
+impl Component for GLCanvasState {
+    fn name() -> String {
+        "glcanvas".to_owned()
+    }
+}
+
+/* impl IntoDrawState<Box<DrawComponent>> for GLCanvasState {
+    fn draw_state(self) -> Box<DrawComponent> {
+        Box::new(self)
+    }
+} */
 
 impl GLCanvasState {
     pub fn new(name: &str, texture_id: u64) -> GLCanvasState {

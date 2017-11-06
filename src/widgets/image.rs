@@ -4,7 +4,7 @@ use layout::constraint::*;
 
 use style::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ImageComponent {
     file: String,
 }
@@ -21,6 +21,9 @@ impl Component for ImageComponent {
     fn name() -> String {
         "image".to_owned()
     }
+}
+
+impl WidgetModifier for ImageComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let image_draw_state = ImageState::new(&self.file);
         let image_size = image_draw_state.measure();
