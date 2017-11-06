@@ -3,9 +3,10 @@ use webrender::api::{ComplexClipRegion, BorderRadius, LocalClip, PrimitiveInfo};
 use render::RenderBuilder;
 use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{self, Style, Value};
+use widget::style::{self, PropSelector, Value};
 use geometry::{Rect, RectExt, Point, Size};
 use color::*;
+use style::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct EllipseState {
@@ -63,19 +64,43 @@ fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
 }
 
-#[derive(Clone, Debug)]
-pub enum EllipseStyle {
-    BackgroundColor(Value<Color>),
-    Border(Value<Option<(f32, Color)>>),
+#[derive(Default, Clone)]
+pub struct EllipseComponentStyle {
+    pub background_color: Option<Value<Color>>,
+    pub border: Option<Value<Option<(f32, Color)>>>,
 }
 
-impl Style<EllipseState> for EllipseStyle {
-    fn apply(&self, state: &mut EllipseState, props: &PropSet) -> bool {
-        match *self {
-            EllipseStyle::BackgroundColor(ref val) => {
-                style::update(&mut state.background_color, val.get(props))
-            },
-            EllipseStyle::Border(ref val) => style::update(&mut state.border, val.get(props)),
+impl ComponentStyle for EllipseComponentStyle {
+    type Component = EllipseComponent;
+    fn merge(&self, other: &Self) -> Self {
+        EllipseComponentStyle {
+            background_color: self.background_color.as_ref().or(other.background_color.as_ref()).cloned(),
+            border: self.border.as_ref().or(other.border.as_ref()).cloned(),
         }
+    }
+    fn component(self) -> Self::Component {
+        EllipseComponent {
+            background_color: self.background_color.unwrap_or(Value::from(BLACK)),
+            border: self.border.unwrap_or(Value::from(None)),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct EllipseComponent {
+    pub background_color: Value<Color>,
+    pub border: Value<Option<(f32, Color)>>,
+}
+
+impl Component for EllipseComponent {
+    fn name() -> String {
+        "rect".to_owned()
+    }
+}
+
+impl PropSelector<EllipseState> for EllipseComponent {
+    fn apply(&self, state: &mut EllipseState, props: &PropSet) -> bool {
+        style::update(&mut state.background_color, self.background_color.get(props)) |
+        style::update(&mut state.border, self.border.get(props))
     }
 }

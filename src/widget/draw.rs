@@ -6,64 +6,109 @@ use downcast_rs::Downcast;
 use render::RenderBuilder;
 use event::{EventHandler, EventArgs};
 use widget::property::PropSet;
-use widget::style::Style;
+use widget::style::PropSelector;
+use style::Component;
 
 use geometry::{Rect, Point};
 
 
-pub trait Draw: Downcast {
+pub trait Draw {
     fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder);
     fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
         bounds.contains(&cursor)
     }
 }
-impl_downcast!(Draw);
 
-type StyleFn = Fn(&mut Draw, &Any, &PropSet) -> bool;
+pub trait DrawComponent: Draw {
+    fn state(&self) -> &Any;
+    fn state_mut(&mut self) -> &mut Any;
+    fn apply_style(&mut self, props: &PropSet) -> bool;
+}
 
-pub(super) struct DrawStyle {
-    pub style: Box<Any>,
-    pub style_fn: Box<StyleFn>,
+pub struct DrawWrapper {
+    pub wrapper: Box<DrawComponent>,
 }
-pub(super) struct DrawWrapper {
-    pub state: Box<Draw>,
-    pub style: Option<DrawStyle>,
-}
+
 impl DrawWrapper {
-    pub fn new<T: Draw + 'static>(draw_state: T) -> Self
-    {
+    pub fn new<D, T: IntoDrawState<D> + 'static>(draw_state: T) -> Self {
         DrawWrapper {
-            state: Box::new(draw_state),
-            style: None,
+            wrapper: draw_state.draw_state()
         }
     }
-    pub fn new_with_style<T: Draw + 'static, S: Style<T> + 'static>(draw_state: T, style: S) -> Self
-    {
-        let style_fn = |draw_state: &mut Draw, style: &Any, props: &PropSet| -> bool {
-            let draw_state: &mut T = draw_state.downcast_mut().unwrap();
-            let style: &S = style.downcast_ref().unwrap();
-            style.apply(draw_state, props)
-        };
-        let style = Some(DrawStyle {
-            style: Box::new(style),
-            style_fn: Box::new(style_fn),
-        });
-        DrawWrapper {
-            state: Box::new(draw_state),
-            style: style,
+}
+
+impl Draw for DrawWrapper {
+    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
+        self.wrapper.is_under_cursor(bounds, cursor)
+    }
+    fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder) {
+        self.wrapper.draw(bounds, crop_to, renderer);
+    }
+}
+
+impl <D: Draw + Component + 'static> DrawComponent for D {
+    fn state(&self) -> &Any {
+        self
+    }
+    fn state_mut(&mut self) -> &mut Any {
+        self
+    }
+    fn apply_style(&mut self, props: &PropSet) -> bool {
+        false
+    }
+}
+
+pub trait IntoDrawState<D> {
+    fn draw_state(self) -> Box<DrawComponent>;
+}
+
+impl <D: Draw + DrawComponent + 'static> IntoDrawState<Box<DrawComponent>> for D {
+    fn draw_state(self) -> Box<DrawComponent> {
+        Box::new(self)
+    }
+}
+
+impl <P: PropSelector<D> + 'static, D: Draw + Default + 'static> IntoDrawState<Box<PropDrawWrapper<D>>> for P {
+    fn draw_state(self) -> Box<DrawComponent> {
+        Box::new(PropDrawWrapper::new(self))
+    }
+}
+
+pub struct PropDrawWrapper<D: Draw> {
+    state: D,
+    prop_selector: Box<PropSelector<D>>,
+}
+
+impl <D: Draw + Default + 'static> PropDrawWrapper<D> {
+    pub fn new<T: PropSelector<D> + 'static>(prop_selector: T) -> Self {
+        PropDrawWrapper {
+            state: D::default(),
+            prop_selector: Box::new(prop_selector),
         }
     }
-    pub fn apply_style(&mut self, props: &PropSet) -> bool {
-        if let Some(ref style) = self.style {
-            (style.style_fn)(self.state.as_mut(), style.style.as_ref(), props)
-        } else {
-            false
-        }
+}
+
+impl <D: Draw + Default + 'static> DrawComponent for PropDrawWrapper<D> {
+    fn state(&self) -> &Any {
+        &self.state
     }
-    pub fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
+    fn state_mut(&mut self) -> &mut Any {
+        &mut self.state
+    }
+    fn apply_style(&mut self, props: &PropSet) -> bool {
+        self.prop_selector.as_ref().apply(&mut self.state, props)
+    }
+}
+
+impl <D: Draw> Draw for PropDrawWrapper<D> {
+    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
         self.state.is_under_cursor(bounds, cursor)
     }
+    fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder) {
+        self.state.draw(bounds, crop_to, renderer);
+    }
 }
+
 
 pub struct DrawEventHandler<T, E> {
     draw_callback: Box<Fn(&mut T)>,

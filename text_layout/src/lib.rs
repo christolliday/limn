@@ -68,6 +68,12 @@ pub enum Wrap {
     Whitespace,
 }
 
+impl Default for Wrap {
+    fn default() -> Self {
+        Wrap::Whitespace
+    }
+}
+
 pub fn get_text_size(text: &str,
                      font: &Font,
                      font_size: f32,

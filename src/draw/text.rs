@@ -8,12 +8,13 @@ use geometry::{Size, Rect, RectExt, Vector};
 use render;
 use widget::draw::Draw;
 use widget::property::PropSet;
-use widget::style::{self, Value, Style};
+use widget::style::{self, Value, PropSelector};
 use color::*;
+use style::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 pub struct TextState {
     pub text: String,
     pub font: String,
@@ -23,26 +24,14 @@ pub struct TextState {
     pub wrap: Wrap,
     pub align: Align,
 }
-impl Default for TextState {
-    fn default() -> Self {
-        TextState {
-            text: "".to_owned(),
-            font: "NotoSans/NotoSans-Regular".to_owned(),
-            font_size: 24.0,
-            text_color: BLACK,
-            background_color: TRANSPARENT,
-            wrap: Wrap::Whitespace,
-            align: Align::Start,
-        }
+
+impl Component for TextState {
+    fn name() -> String {
+        String::from("text")
     }
 }
 
 impl TextState {
-    pub fn new(text: &str) -> Self {
-        let mut draw_state = TextState::default();
-        draw_state.text = text.to_owned();
-        draw_state
-    }
     pub fn measure(&self) -> Size {
         let line_height = self.line_height();
         let mut resources = resources();
@@ -152,27 +141,77 @@ impl Draw for TextState {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum TextStyle {
-    Text(Value<String>),
-    Font(Value<String>),
-    FontSize(Value<f32>),
-    TextColor(Value<Color>),
-    BackgroundColor(Value<Color>),
-    Wrap(Value<Wrap>),
-    Align(Value<Align>),
+#[derive(Default, Clone)]
+pub struct TextComponentStyle {
+    pub text: Option<Value<String>>,
+    pub font: Option<Value<String>>,
+    pub font_size: Option<Value<f32>>,
+    pub text_color: Option<Value<Color>>,
+    pub background_color: Option<Value<Color>>,
+    pub wrap: Option<Value<Wrap>>,
+    pub align: Option<Value<Align>>,
 }
 
-impl Style<TextState> for TextStyle {
-    fn apply(&self, state: &mut TextState, props: &PropSet) -> bool {
-        match *self {
-            TextStyle::Text(ref val) => style::update(&mut state.text, val.get(props)),
-            TextStyle::Font(ref val) => style::update(&mut state.font, val.get(props)),
-            TextStyle::FontSize(ref val) => style::update(&mut state.font_size, val.get(props)),
-            TextStyle::TextColor(ref val) => style::update(&mut state.text_color, val.get(props)),
-            TextStyle::BackgroundColor(ref val) => style::update(&mut state.background_color, val.get(props)),
-            TextStyle::Wrap(ref val) => style::update(&mut state.wrap, val.get(props)),
-            TextStyle::Align(ref val) => style::update(&mut state.align, val.get(props)),
+impl TextComponentStyle {
+    pub fn new(text: &str) -> Self {
+        TextComponentStyle {
+            text: Some(Value::from(text.to_owned())),
+            ..TextComponentStyle::default()
         }
+    }
+}
+
+impl ComponentStyle for TextComponentStyle {
+    type Component = TextComponent;
+    fn merge(&self, other: &Self) -> Self {
+        TextComponentStyle {
+            text: self.text.as_ref().or(other.text.as_ref()).cloned(),
+            font: self.font.as_ref().or(other.font.as_ref()).cloned(),
+            font_size: self.font_size.as_ref().or(other.font_size.as_ref()).cloned(),
+            text_color: self.text_color.as_ref().or(other.text_color.as_ref()).cloned(),
+            background_color: self.background_color.as_ref().or(other.background_color.as_ref()).cloned(),
+            wrap: self.wrap.as_ref().or(other.wrap.as_ref()).cloned(),
+            align: self.align.as_ref().or(other.align.as_ref()).cloned(),
+        }
+    }
+    fn component(self) -> Self::Component {
+        TextComponent {
+            text: self.text.unwrap_or(Value::from("".to_owned())),
+            font: self.font.unwrap_or(Value::from("NotoSans/NotoSans-Regular".to_owned())),
+            font_size: self.font_size.unwrap_or(Value::from(24.0)),
+            text_color: self.text_color.unwrap_or(Value::from(BLACK)),
+            background_color: self.background_color.unwrap_or(Value::from(TRANSPARENT)),
+            wrap: self.wrap.unwrap_or(Value::from(Wrap::Whitespace)),
+            align: self.align.unwrap_or(Value::from(Align::Start)),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct TextComponent {
+    pub text: Value<String>,
+    pub font: Value<String>,
+    pub font_size: Value<f32>,
+    pub text_color: Value<Color>,
+    pub background_color: Value<Color>,
+    pub wrap: Value<Wrap>,
+    pub align: Value<Align>,
+}
+
+impl Component for TextComponent {
+    fn name() -> String {
+        "text".to_owned()
+    }
+}
+
+impl PropSelector<TextState> for TextComponent {
+    fn apply(&self, state: &mut TextState, props: &PropSet) -> bool {
+        style::update(&mut state.text, self.text.get(props)) |
+        style::update(&mut state.font, self.font.get(props)) |
+        style::update(&mut state.font_size, self.font_size.get(props)) |
+        style::update(&mut state.text_color, self.text_color.get(props)) |
+        style::update(&mut state.background_color, self.background_color.get(props)) |
+        style::update(&mut state.wrap, self.wrap.get(props)) |
+        style::update(&mut state.align, self.align.get(props))
     }
 }

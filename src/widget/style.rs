@@ -66,27 +66,17 @@ impl<T: Clone> Value<T> {
     }
 }
 
-impl<D: Draw, S: Style<D>> Style<D> for Vec<S> {
-    fn apply(&self, draw_state: &mut D, props: &PropSet) -> bool {
-        let mut updated = false;
-        for field in self.iter() {
-            updated |= field.apply(draw_state, props);
-        }
-        updated
-    }
+use widget::draw::*;
+
+pub trait PropSelector<D: Draw + Default + 'static> {
+    fn apply(&self, state: &mut D, props: &PropSet) -> bool;
 }
 
-pub trait Style<D> {
-    fn apply(&self, state: &mut D, props: &PropSet) -> bool ;
-}
-
-pub fn apply_style<D, S: Style<D>>(state: &mut D, style: &[S], props: &PropSet) -> bool {
-    let mut updated = false;
-    for field in style.iter() {
-        updated |= field.apply(state, props);
+/* impl <D: Draw> PropSelector<D> for D {
+    fn apply(&self, _: &mut D, _: &PropSet) -> bool {
+        false
     }
-    updated
-}
+} */
 
 pub fn update<A: PartialEq>(val: &mut A, new_val: A) -> bool {
     if val != &new_val {
@@ -112,19 +102,6 @@ macro_rules! selector {
 }
 #[macro_export]
 macro_rules! style {
-    (parent: $parent:expr, $($type:path: $val:expr,)*) => {
-        style!(parent: $parent, $($type:path: $val:expr),*);
-    };
-    (parent: $parent:expr, $($type:path: $val:expr),*) => {
-        {
-            use $crate::widget::style::Value;
-            let mut style = $parent.clone();
-            $(
-                style.push($type(Value::from($val)));
-            )*
-            style
-        }
-    };
     ($($type:path: $val:expr,)*) => {
         style!($($type:path: $val:expr),*);
     };

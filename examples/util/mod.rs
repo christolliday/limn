@@ -3,13 +3,16 @@ extern crate env_logger;
 use limn::prelude::*;
 use limn::input::{EscKeyCloseHandler, DebugSettingsHandler};
 use limn::resources;
-use limn::widgets::button;
-use limn::widgets::text::StaticTextStyle;
+//use limn::widgets::button;
+//use limn::widgets::text::StaticTextStyle;
+use limn::draw::rect::RectComponentStyle;
 
 pub fn default_style() {
     let mut res = resources::resources();
-    res.theme.register_style_class("button_text", StaticTextStyle {
-        style: Some(button::STYLE_BUTTON_TEXT.clone()),
+    res.theme.register_style_class("rect", RectComponentStyle {
+        background_color: Some(Value::from(YELLOW)),
+        ..RectComponentStyle::default()
+        //style: Some(button::STYLE_BUTTON_TEXT.clone()),
     });
 }
 

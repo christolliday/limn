@@ -58,6 +58,12 @@ pub enum Align {
     End,
 }
 
+impl Default for Align {
+    fn default() -> Self {
+        Align::Start
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Range {
     /// The start of some `Range` along an axis.

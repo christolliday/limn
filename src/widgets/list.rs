@@ -2,9 +2,10 @@ use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widget::property::states::*;
+use widget::style::Value;
 use widgets::text::StaticTextStyle;
-use draw::rect::{RectState, RectStyle};
-use draw::text::TextStyle;
+use draw::rect::RectComponentStyle;
+use draw::text::TextComponentStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
 use layout::linear_layout::{LinearLayoutSettings, Orientation};
@@ -22,13 +23,15 @@ static COLOR_LIST_ITEM_MOUSEOVER: Color = GRAY_60;
 static COLOR_LIST_ITEM_SELECTED: Color = BLUE_HIGHLIGHT;
 
 lazy_static! {
-    pub static ref STYLE_LIST_ITEM: Vec<RectStyle> = {
-        style!(RectStyle::BackgroundColor: selector!(COLOR_LIST_ITEM_DEFAULT,
+    pub static ref STYLE_LIST_ITEM: RectComponentStyle = RectComponentStyle {
+        background_color: Some(Value::from(selector!(COLOR_LIST_ITEM_DEFAULT,
             SELECTED: COLOR_LIST_ITEM_SELECTED,
-            MOUSEOVER: COLOR_LIST_ITEM_MOUSEOVER))
+            MOUSEOVER: COLOR_LIST_ITEM_MOUSEOVER))),
+        ..RectComponentStyle::default()
     };
-    pub static ref STYLE_LIST_TEXT: Vec<TextStyle> = {
-        style!(TextStyle::TextColor: WHITE)
+    pub static ref STYLE_LIST_TEXT: TextComponentStyle = TextComponentStyle {
+        text_color: Some(Value::from(WHITE)),
+        ..TextComponentStyle::default()
     };
 }
 
@@ -155,16 +158,14 @@ impl WidgetBuilder {
 }
 
 pub fn default_text_adapter(text: String, list: &mut ListBuilder) -> WidgetBuilder {
-    let style = style!(parent: STYLE_LIST_TEXT, TextStyle::Text: text);
-    let text = StaticTextStyle {
-        style: Some(style),
-    };
-    let mut text_widget = WidgetBuilder::from_component(text);
+    let mut style = StaticTextStyle::default();
+    style.text(&text);
+    let mut text_widget = WidgetBuilder::from_component_style(style);
     text_widget.set_name("list_item_text");
 
     let mut item_widget = WidgetBuilder::new("list_item");
     item_widget
-        .set_draw_state_with_style(RectState::new(), STYLE_LIST_ITEM.clone())
+        .set_draw_style(STYLE_LIST_ITEM.clone())
         .enable_hover();
 
     text_widget.layout().add(align_left(&item_widget));

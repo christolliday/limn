@@ -4,11 +4,20 @@ use render::RenderBuilder;
 use widget::draw::Draw;
 use resources::resources;
 use geometry::{Rect, Size};
+use style::Component;
 
+#[derive(Clone)]
 pub struct ImageState {
     pub image: String,
     pub scale: Size,
 }
+
+impl Component for ImageState {
+    fn name() -> String {
+        String::from("image")
+    }
+}
+
 impl ImageState {
     pub fn new(image: &str) -> Self {
         ImageState {
@@ -25,6 +34,7 @@ impl ImageState {
         self.scale = scale;
     }
 }
+
 impl Draw for ImageState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let key = resources().get_image(&self.image).key;

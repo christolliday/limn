@@ -42,11 +42,11 @@ use render;
 use color::Color;
 use event::Target;
 use layout::UpdateLayout;
-use style::Component;
+use style::*;
 
 use self::property::{PropSet, Property};
-use self::draw::{Draw, DrawWrapper};
-use self::style::Style;
+use self::draw::*;
+use self::style::*;
 
 #[derive(Clone)]
 pub struct WidgetRef(pub Rc<RefCell<Widget>>);
@@ -312,9 +312,9 @@ pub struct DrawStateGuard<'a> {
 }
 
 impl<'a> DrawStateGuard<'a> {
-    pub fn downcast_ref<T: Draw>(&self) -> Option<&T> {
+    pub fn downcast_ref<T: Draw + 'static>(&self) -> Option<&T> {
         if let Some(ref draw_state) = self.guard.draw_state {
-            draw_state.state.as_ref().downcast_ref::<T>()
+            draw_state.wrapper.state().downcast_ref::<T>()
         } else {
             None
         }
@@ -382,7 +382,7 @@ impl Widget {
         let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
         renderer.builder.push_clip_id(clip_id);
         if let Some(draw_state) = self.draw_state.as_mut() {
-            draw_state.state.draw(bounds, crop_to, renderer);
+            draw_state.draw(bounds, crop_to, renderer);
         }
         if let Some(crop_to) = crop_to.intersection(&bounds) {
             for child in &self.children {
@@ -412,22 +412,22 @@ impl Widget {
     {
         if let Some(ref mut draw_state) = self.draw_state {
             self.has_updated = true;
-            let state = draw_state.state.as_mut().downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
+            let state = draw_state.wrapper.state_mut().downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
             f(state);
         }
     }
     fn apply_style(&mut self) -> bool {
         if let Some(ref mut draw_state) = self.draw_state {
-            if draw_state.apply_style(&self.props) {
+            if draw_state.wrapper.apply_style(&self.props) {
                 self.has_updated = true;
                 return true;
             }
         }
         false
     }
-    pub fn draw_state<T: Draw>(&self) -> Option<&T> {
+    pub fn draw_state<T: Draw + 'static>(&self) -> Option<&T> {
         if let Some(ref draw_state) = self.draw_state {
-            draw_state.state.as_ref().downcast_ref::<T>()
+            draw_state.wrapper.state().downcast_ref::<T>()
         } else {
             None
         }
@@ -450,13 +450,18 @@ impl WidgetBuilder {
         }
     }
 
-    pub fn from_component<T: Component>(component: T) -> Self {
+    pub fn from_component<T: Component + WidgetModifier>(component: T) -> Self {
         let name: String = T::name();
         let mut widget = WidgetBuilder {
             widget: WidgetRef::new(Widget::new(name)),
         };
         component.apply(&mut widget);
         widget
+    }
+
+    pub fn from_component_style<C: Component + WidgetModifier, T: ComponentStyle<Component = C>>(style: T) -> Self {
+        let component = style.component();
+        WidgetBuilder::from_component(component)
     }
 
     /// Clones the current widget
@@ -469,20 +474,24 @@ impl WidgetBuilder {
         self.widget.id()
     }
 
-    /// Applies a new `Draw`-State to the widget.
-    pub fn set_draw_state<T: Draw + 'static>(&mut self, draw_state: T) -> &mut Self {
+    pub fn set_draw_state<T: DrawComponent + 'static>(&mut self, draw_state: T) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
         self.widget.widget_mut().apply_style();
         self.widget.event(self::style::StyleUpdated);
         self
     }
 
-    /// Applies both a DrawState and a Style to the current widget
-    pub fn set_draw_state_with_style<T: Draw + 'static, S: Style<T> + 'static>(&mut self, draw_state: T, style: S) -> &mut Self {
-        self.widget.widget_mut().draw_state = Some(DrawWrapper::new_with_style(draw_state, style));
+    pub fn set_into_draw_state<D, T: IntoDrawState<D> + 'static>(&mut self, draw_state: T) -> &mut Self {
+        self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
         self.widget.widget_mut().apply_style();
         self.widget.event(self::style::StyleUpdated);
         self
+    }
+
+    pub fn set_draw_style<S, D: IntoDrawState<S> + Component + 'static, T: ComponentStyle<Component = D> + 'static>(&mut self, draw_state: T) -> &mut Self {
+        self.set_style_class(&D::name());
+        let styled = draw_state.resolve(self.style_class());
+        self.set_into_draw_state(styled)
     }
 
     /// Adds a handler to the current widget

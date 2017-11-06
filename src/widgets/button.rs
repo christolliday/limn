@@ -5,10 +5,11 @@ use event::EventArgs;
 use widget::WidgetBuilder;
 use widget::property::Property;
 use widget::property::states::*;
+use widget::style::Value;
 use input::mouse::WidgetMouseButton;
 use widgets::text::StaticTextStyle;
-use draw::rect::{RectState, RectStyle};
-use draw::text::TextStyle;
+use draw::rect::{RectState, RectComponentStyle};
+use draw::text::TextComponentStyle;
 use geometry::Size;
 use color::*;
 use style::*;
@@ -26,21 +27,21 @@ static BUTTON_BORDER_INACTIVE: (f32, Color) = (1.0, GRAY_70);
 
 
 lazy_static! {
-    pub static ref STYLE_BUTTON_RECT: Vec<RectStyle> = {
-        style!(
-            RectStyle::BackgroundColor: selector!(COLOR_BUTTON_DEFAULT,
-                ACTIVATED_PRESSED: COLOR_BUTTON_ACTIVATED_PRESSED,
-                ACTIVATED: COLOR_BUTTON_ACTIVATED,
-                PRESSED: COLOR_BUTTON_PRESSED,
-                MOUSEOVER: COLOR_BUTTON_MOUSEOVER,
-                INACTIVE: COLOR_BUTTON_INACTIVE),
-            RectStyle::CornerRadius: Some(5.0),
-            RectStyle::Border: selector!(Some(BUTTON_BORDER),
-                INACTIVE: Some(BUTTON_BORDER_INACTIVE))
-        )
+    pub static ref STYLE_BUTTON_RECT: RectComponentStyle = RectComponentStyle {
+        background_color: Some(Value::from(selector!(COLOR_BUTTON_DEFAULT,
+            ACTIVATED_PRESSED: COLOR_BUTTON_ACTIVATED_PRESSED,
+            ACTIVATED: COLOR_BUTTON_ACTIVATED,
+            PRESSED: COLOR_BUTTON_PRESSED,
+            MOUSEOVER: COLOR_BUTTON_MOUSEOVER,
+            INACTIVE: COLOR_BUTTON_INACTIVE))),
+        corner_radius: Some(Value::from(Some(5.0))),
+        border: Some(Value::from(selector!(Some(BUTTON_BORDER),
+            INACTIVE: Some(BUTTON_BORDER_INACTIVE)))),
     };
-    pub static ref STYLE_BUTTON_TEXT: Vec<TextStyle> = {
-        style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: COLOR_BUTTON_TEXT_INACTIVE))
+
+    pub static ref STYLE_BUTTON_TEXT: TextComponentStyle = TextComponentStyle {
+        text_color: Some(Value::from(selector!(BLACK, INACTIVE: COLOR_BUTTON_TEXT_INACTIVE))),
+        ..TextComponentStyle::default()
     };
 }
 
@@ -52,24 +53,29 @@ pub enum ToggleEvent {
 
 #[derive(Clone)]
 pub struct ButtonStyle {
-    rect: Option<Vec<RectStyle>>,
-    text: Option<Option<Vec<TextStyle>>>,
+    rect: Option<RectComponentStyle>,
+    text: Option<Option<TextComponentStyle>>,
     toggle: Option<bool>,
 }
 
 impl ButtonStyle {
-    pub fn rect_style(&mut self, rect: Vec<RectStyle>) {
+    pub fn rect_style(&mut self, rect: RectComponentStyle) {
         self.rect = Some(rect);
     }
-    pub fn text_style(&mut self, text: Option<Vec<TextStyle>>) {
+    pub fn text_style(&mut self, text: Option<TextComponentStyle>) {
         self.text = Some(text);
     }
     pub fn text(&mut self, text: &str) {
-        self.text = Some(Some(style!(TextStyle::Text: text.to_owned())));
+        self.text = Some(Some(TextComponentStyle {
+            text: Some(Value::from(text.to_owned())),
+            ..TextComponentStyle::default()
+        }));
     }
     pub fn toggle_text(&mut self, on_text: &str, off_text: &str) {
-        self.text = Some(Some(style!(TextStyle::Text:
-            selector!(on_text.to_owned(), ACTIVATED: off_text.to_owned()))));
+        self.text = Some(Some(TextComponentStyle {
+            text: Some(Value::from(selector!(on_text.to_owned(), ACTIVATED: off_text.to_owned()))),
+            ..TextComponentStyle::default()
+        }));
         self.toggle = Some(true);
     }
     pub fn toggle(&mut self, toggle: bool) {
@@ -92,7 +98,7 @@ impl ComponentStyle for ButtonStyle {
     fn merge(&self, other: &Self) -> Self {
         ButtonStyle {
             rect: self.rect.as_ref().or(other.rect.as_ref()).cloned(),
-            text: self.text.merge(&other.text),
+            text: self.text.as_ref().or(other.text.as_ref()).cloned(),
             toggle: self.toggle.as_ref().or(other.toggle.as_ref()).cloned(),
         }
     }
@@ -105,10 +111,10 @@ impl ComponentStyle for ButtonStyle {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct ButtonComponent {
-    rect: Vec<RectStyle>,
-    text: Option<Vec<TextStyle>>,
+    rect: RectComponentStyle,
+    text: Option<TextComponentStyle>,
     toggle: bool,
 }
 
@@ -116,10 +122,13 @@ impl Component for ButtonComponent {
     fn name() -> String {
         "button".to_owned()
     }
+}
+
+impl WidgetModifier for ButtonComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
         widget
             .set_style_class("button_rect")
-            .set_draw_state_with_style(RectState::new(), self.rect.clone())
+            .set_draw_style(self.rect.clone())
             .add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
                 if !args.widget.props().contains(&Property::Inactive) {
                     let &WidgetMouseButton(state, _) = event;
@@ -140,7 +149,7 @@ impl Component for ButtonComponent {
             let text = StaticTextStyle {
                 style: Some(text_style),
             };
-            text.apply(&mut button_text_widget);
+            text.component().apply(&mut button_text_widget);
             button_text_widget.layout().add(constraints![
                 bound_left(widget).padding(20.0),
                 bound_right(widget).padding(20.0),
