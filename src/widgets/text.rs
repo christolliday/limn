@@ -83,7 +83,6 @@ impl Component for StaticTextComponent {
 
 impl WidgetModifier for StaticTextComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
-        let text_draw_state = TextState::default();
         widget.set_draw_style(self.style.clone());
         widget.add_handler(TextUpdatedHandler::default());
     }

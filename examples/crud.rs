@@ -9,10 +9,10 @@ use limn::prelude::*;
 
 use limn::widgets::button::ButtonStyle;
 use limn::widgets::edit_text::{self, EditTextBuilder, TextUpdated};
-use limn::widgets::list::{ListBuilder, STYLE_LIST_ITEM};
+use limn::widgets::list::ListBuilder;
 use limn::widgets::scroll::ScrollBuilder;
 use limn::widgets::text::StaticTextStyle;
-use limn::draw::text::{TextState, TextComponentStyle};
+use limn::draw::text::TextComponentStyle;
 use limn::draw::rect::RectState;
 
 named_id!(PersonId);
@@ -98,26 +98,21 @@ impl PeopleHandler {
                 text_color: Some(Value::from(WHITE)),
                 ..TextComponentStyle::default()
             };
-            //style!(TextStyle::TextColor: WHITE);
-            //let text_draw_state = TextState::new(&self.person.name());
-            //let text_size = text_draw_state.measure();
             let mut list_item_widget = WidgetBuilder::new("list_item");
             list_item_widget
-                .set_draw_style(STYLE_LIST_ITEM.clone())
+                .set_style_class("list_item_rect")
                 .list_item(&self.widgets.list_widget)
                 .on_item_selected(move |args| {
                     args.ui.event(PeopleEvent::PersonSelected(Some(id)));
                 })
                 .enable_hover();
-            list_item_widget.layout().add(constraints![
-                //height(text_size.height),
-                match_width(&self.widgets.list_widget),
-            ]);
             let mut list_text_widget = WidgetBuilder::new("list_text");
             list_text_widget
                 .set_draw_style(text_style)
                 .add_handler(edit_text::text_change_handle);
-            list_text_widget.layout().add(center(&list_item_widget));
+            list_text_widget.layout().add(constraints![
+                match_height(&list_item_widget),
+                center(&list_item_widget)]);
             list_item_widget.add_child(list_text_widget);
             list_item_widget
         };
@@ -247,6 +242,7 @@ fn main() {
     delete_button.layout().add(to_right_of(&update_button).padding(20.0));
 
     let mut scroll_container = ScrollBuilder::new();
+    scroll_container.set_draw_state(RectState::default());
     scroll_container.layout().add(constraints![
         below(&button_container).padding(20.0),
         min_height(260.0),

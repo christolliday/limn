@@ -9,7 +9,7 @@ use widget::property::states::*;
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use draw::rect::RectComponentStyle;
-use draw::text::TextState;
+use draw::text::{TextState, TextComponentStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
 
@@ -74,7 +74,7 @@ impl Default for EditTextBuilder {
 
         let mut text_widget = WidgetBuilder::new("edit_text_text");
         text_widget
-            .set_draw_state(TextState::default())
+            .set_draw_style(TextComponentStyle::default())
             .add_handler(TextUpdatedHandler::default())
             .add_handler(edit_text_handle_char)
             .add_handler(text_change_handle);

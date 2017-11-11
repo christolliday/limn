@@ -12,8 +12,8 @@ use limn::input::mouse::WidgetMouseButton;
 use limn::widgets::button::{ButtonStyle, ToggleEvent};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue, SliderEvent};
 use limn::draw::text::TextComponentStyle;
-use limn::draw::rect::{RectState, RectComponentStyle};
-use limn::draw::ellipse::{EllipseState, EllipseComponentStyle};
+use limn::draw::rect::{RectComponentStyle};
+use limn::draw::ellipse::{EllipseComponentStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
@@ -27,7 +27,7 @@ impl SliderControl {
     fn new() -> Self {
         //let text_style = style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
         let mut widget = WidgetBuilder::new("slider_container");
-        let mut slider_title = StaticTextStyle {
+        let slider_title = StaticTextStyle {
             style: Some(TextComponentStyle {
                 text: Some(Value::from("Circle Size".to_owned())),
                 ..TextComponentStyle::default()
@@ -37,7 +37,7 @@ impl SliderControl {
         let mut slider_title = WidgetBuilder::from_component_style(slider_title);
         slider_title.set_name("slider_title");
         slider_title.layout().add(align_left(&widget));
-        let mut slider_value = StaticTextStyle {
+        let slider_value = StaticTextStyle {
             style: Some(TextComponentStyle {
                 align: Some(Value::from(Align::End)),
                 text: Some(Value::from("--".to_owned())),

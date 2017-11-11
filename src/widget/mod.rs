@@ -142,7 +142,7 @@ impl WidgetRef {
         where F: FnOnce(&mut T)
     {
         self.0.borrow_mut().update(f);
-        self.event(self::style::StyleUpdated);
+        self.event(StyleUpdated);
     }
     pub fn update_layout<F>(&self, f: F)
         where F: FnOnce(&mut Layout)
@@ -154,7 +154,7 @@ impl WidgetRef {
 
     pub fn apply_style(&mut self) {
         if self.0.borrow_mut().apply_style() {
-            self.event(self::style::StyleUpdated);
+            self.event(StyleUpdated);
         }
     }
 
@@ -453,8 +453,9 @@ impl WidgetBuilder {
     pub fn from_component<T: Component + WidgetModifier>(component: T) -> Self {
         let name: String = T::name();
         let mut widget = WidgetBuilder {
-            widget: WidgetRef::new(Widget::new(name)),
+            widget: WidgetRef::new(Widget::new(name.clone())),
         };
+        widget.set_style_class(&name);
         component.apply(&mut widget);
         widget
     }
@@ -477,19 +478,18 @@ impl WidgetBuilder {
     pub fn set_draw_state<T: DrawComponent + 'static>(&mut self, draw_state: T) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
         self.widget.widget_mut().apply_style();
-        self.widget.event(self::style::StyleUpdated);
+        self.widget.event(StyleUpdated);
         self
     }
 
     pub fn set_into_draw_state<D, T: IntoDrawState<D> + 'static>(&mut self, draw_state: T) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
         self.widget.widget_mut().apply_style();
-        self.widget.event(self::style::StyleUpdated);
+        self.widget.event(StyleUpdated);
         self
     }
 
     pub fn set_draw_style<S, D: IntoDrawState<S> + Component + 'static, T: ComponentStyle<Component = D> + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.set_style_class(&D::name());
         let styled = draw_state.resolve(self.style_class());
         self.set_into_draw_state(styled)
     }

@@ -206,12 +206,14 @@ impl Component for TextComponent {
 
 impl PropSelector<TextState> for TextComponent {
     fn apply(&self, state: &mut TextState, props: &PropSet) -> bool {
-        style::update(&mut state.text, self.text.get(props)) |
+        let res = style::update(&mut state.text, self.text.get(props)) |
         style::update(&mut state.font, self.font.get(props)) |
         style::update(&mut state.font_size, self.font_size.get(props)) |
         style::update(&mut state.text_color, self.text_color.get(props)) |
         style::update(&mut state.background_color, self.background_color.get(props)) |
         style::update(&mut state.wrap, self.wrap.get(props)) |
-        style::update(&mut state.align, self.align.get(props))
+        style::update(&mut state.align, self.align.get(props));
+
+        res
     }
 }

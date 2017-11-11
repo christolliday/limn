@@ -45,8 +45,6 @@ extern crate lazy_static;
 #[macro_use]
 extern crate maplit;
 #[macro_use]
-extern crate downcast_rs;
-#[macro_use]
 extern crate log;
 
 pub extern crate limn_text_layout as text_layout;

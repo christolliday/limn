@@ -8,7 +8,7 @@ use widget::property::states::*;
 use widget::style::Value;
 use input::mouse::WidgetMouseButton;
 use widgets::text::StaticTextStyle;
-use draw::rect::{RectState, RectComponentStyle};
+use draw::rect::RectComponentStyle;
 use draw::text::TextComponentStyle;
 use geometry::Size;
 use color::*;

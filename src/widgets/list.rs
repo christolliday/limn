@@ -1,15 +1,12 @@
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
-use widget::property::states::*;
-use widget::style::Value;
 use widgets::text::StaticTextStyle;
 use draw::rect::RectComponentStyle;
-use draw::text::TextComponentStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
-use layout::linear_layout::{LinearLayoutSettings, Orientation};
-use color::*;
+use layout::linear_layout::{LinearLayoutSettings, Orientation, ItemAlignment};
+use style::{ComponentStyle, WidgetModifier};
 
 pub struct ListItemSelected {
     widget: Option<WidgetRef>,
@@ -18,22 +15,6 @@ pub struct ListItemSelected {
 #[derive(Debug, Copy, Clone)]
 pub struct ItemSelected;
 
-static COLOR_LIST_ITEM_DEFAULT: Color = GRAY_30;
-static COLOR_LIST_ITEM_MOUSEOVER: Color = GRAY_60;
-static COLOR_LIST_ITEM_SELECTED: Color = BLUE_HIGHLIGHT;
-
-lazy_static! {
-    pub static ref STYLE_LIST_ITEM: RectComponentStyle = RectComponentStyle {
-        background_color: Some(Value::from(selector!(COLOR_LIST_ITEM_DEFAULT,
-            SELECTED: COLOR_LIST_ITEM_SELECTED,
-            MOUSEOVER: COLOR_LIST_ITEM_MOUSEOVER))),
-        ..RectComponentStyle::default()
-    };
-    pub static ref STYLE_LIST_TEXT: TextComponentStyle = TextComponentStyle {
-        text_color: Some(Value::from(WHITE)),
-        ..TextComponentStyle::default()
-    };
-}
 
 #[derive(Default)]
 pub struct ListHandler {
@@ -93,7 +74,8 @@ widget_wrapper!(ListBuilder);
 impl Default for ListBuilder {
     #[inline]
     fn default() -> Self {
-        let layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
+        let mut layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
+        layout_settings.item_align = ItemAlignment::Fill;
 
         let mut widget = WidgetBuilder::new("list");
 
@@ -160,12 +142,14 @@ impl WidgetBuilder {
 pub fn default_text_adapter(text: String, list: &mut ListBuilder) -> WidgetBuilder {
     let mut style = StaticTextStyle::default();
     style.text(&text);
-    let mut text_widget = WidgetBuilder::from_component_style(style);
-    text_widget.set_name("list_item_text");
+    let mut text_widget = WidgetBuilder::new("list_item_text");
+    text_widget.set_style_class("list_item_text");
+    style.component().apply(&mut text_widget);
 
-    let mut item_widget = WidgetBuilder::new("list_item");
+    let mut item_widget = WidgetBuilder::new("list_item_rect");
     item_widget
-        .set_draw_style(STYLE_LIST_ITEM.clone())
+        .set_style_class("list_item_rect")
+        .set_draw_style(RectComponentStyle::default())
         .enable_hover();
 
     text_widget.layout().add(align_left(&item_widget));

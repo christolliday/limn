@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate limn;
 extern crate lipsum;
 extern crate rand;
@@ -15,14 +16,13 @@ use limn::widgets::scroll::ScrollBuilder;
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
         .with_title("Limn list demo")
-        .with_min_dimensions(100, 100);
+        .with_min_dimensions(100, 300);
     let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
     let mut scroll_widget = ScrollBuilder::new();
     scroll_widget.layout().add(constraints![
         match_layout(&root).padding(50.0),
-        min_size(Size::new(300.0, 300.0)),
     ]);
 
     let mut list_widget = ListBuilder::new();
