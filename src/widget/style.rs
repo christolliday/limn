@@ -66,17 +66,9 @@ impl<T: Clone> Value<T> {
     }
 }
 
-use widget::draw::*;
-
 pub trait PropSelector<D: Draw + Default + 'static> {
     fn apply(&self, state: &mut D, props: &PropSet) -> bool;
 }
-
-/* impl <D: Draw> PropSelector<D> for D {
-    fn apply(&self, _: &mut D, _: &PropSet) -> bool {
-        false
-    }
-} */
 
 pub fn update<A: PartialEq>(val: &mut A, new_val: A) -> bool {
     if val != &new_val {

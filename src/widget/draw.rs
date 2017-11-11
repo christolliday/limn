@@ -1,8 +1,6 @@
 use std::any::Any;
 use std::marker::PhantomData;
 
-use downcast_rs::Downcast;
-
 use render::RenderBuilder;
 use event::{EventHandler, EventArgs};
 use widget::property::PropSet;
@@ -53,7 +51,7 @@ impl <D: Draw + Component + 'static> DrawComponent for D {
     fn state_mut(&mut self) -> &mut Any {
         self
     }
-    fn apply_style(&mut self, props: &PropSet) -> bool {
+    fn apply_style(&mut self, _: &PropSet) -> bool {
         false
     }
 }

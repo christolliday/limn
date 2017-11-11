@@ -1,7 +1,7 @@
 use webrender::api::*;
 
 use render::RenderBuilder;
-use widget::draw::{Draw, DrawComponent, IntoDrawState};
+use widget::draw::Draw;
 use resources::resources;
 use geometry::{Rect, RectExt, Size};
 use style::Component;
@@ -17,12 +17,6 @@ impl Component for GLCanvasState {
         "glcanvas".to_owned()
     }
 }
-
-/* impl IntoDrawState<Box<DrawComponent>> for GLCanvasState {
-    fn draw_state(self) -> Box<DrawComponent> {
-        Box::new(self)
-    }
-} */
 
 impl GLCanvasState {
     pub fn new(name: &str, texture_id: u64) -> GLCanvasState {

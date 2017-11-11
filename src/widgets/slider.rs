@@ -149,8 +149,8 @@ impl Into<WidgetBuilder> for SliderBuilder {
             BarStyle::Wide => None,
         };
         let bar_style = RectComponentStyle {
-            background_color: Some(Value::from(self.handle_color)),
-            corner_radius: Some(Value::from(Some(3.0))),
+            background_color: Some(Value::from(self.bar_color)),
+            corner_radius: Some(Value::from(corner_radius)),
             border: Some(Value::from(self.border)),
             ..RectComponentStyle::default()
         };
@@ -160,8 +160,6 @@ impl Into<WidgetBuilder> for SliderBuilder {
                 background_color: Some(Value::from(selector!(highlight, INACTIVE: self.bar_color))),
                 ..RectComponentStyle::default()
             }.merge(&bar_style)
-            //style!(parent: bar_style, RectStyle::BackgroundColor:
-            //    selector!(highlight, INACTIVE: self.bar_color))
         } else {
             bar_style.clone()
         };

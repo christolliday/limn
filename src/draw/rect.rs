@@ -25,6 +25,12 @@ impl Default for RectState {
     }
 }
 
+impl Component for RectState {
+    fn name() -> String {
+        String::from("rect")
+    }
+}
+
 impl RectState {
     pub fn new() -> Self {
         RectState::default()
@@ -77,7 +83,7 @@ impl ComponentStyle for RectComponentStyle {
     }
     fn component(self) -> Self::Component {
         RectComponent {
-            background_color: self.background_color.unwrap_or(Value::from(BLACK)),
+            background_color: self.background_color.unwrap_or(Value::from(WHITE)),
             corner_radius: self.corner_radius.unwrap_or(Value::from(None)),
             border: self.border.unwrap_or(Value::from(None)),
         }

@@ -6,7 +6,7 @@ mod util;
 use limn::prelude::*;
 
 use limn::widgets::scroll::ScrollBuilder;
-use limn::draw::rect::{RectState, RectComponentStyle};
+use limn::draw::rect::RectComponentStyle;
 
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
