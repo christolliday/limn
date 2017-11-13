@@ -34,7 +34,7 @@ use std::fmt;
 
 use render::RenderBuilder;
 use event::{self, EventHandler, EventArgs, EventHandlerWrapper};
-use layout::{Layout, LayoutVars, LayoutRef};
+use layout::{Layout, LayoutVars, LayoutRef, LayoutUpdated, VarType};
 use ui::Ui;
 use resources::{resources, WidgetId};
 use geometry::{Point, Rect};
@@ -49,7 +49,7 @@ use self::draw::*;
 use self::style::*;
 
 #[derive(Clone)]
-pub struct WidgetRef(pub Rc<RefCell<Widget>>);
+pub struct WidgetRef(Rc<RefCell<Widget>>);
 
 impl WidgetRef {
     fn new(widget: Widget) -> Self {
@@ -57,10 +57,10 @@ impl WidgetRef {
         event::event(Target::Root, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
-    pub fn widget_mut(&self) -> RefMut<Widget> {
+    fn widget_mut(&self) -> RefMut<Widget> {
         self.0.borrow_mut()
     }
-    pub fn widget(&self) -> Ref<Widget> {
+    fn widget(&self) -> Ref<Widget> {
         self.0.borrow()
     }
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
@@ -77,8 +77,25 @@ impl WidgetRef {
     pub fn layout(&mut self) -> LayoutGuard {
         LayoutGuard { guard: self.0.borrow() }
     }
+
+    pub(crate) fn layout_mut(&mut self) -> LayoutGuardMut {
+        LayoutGuardMut { guard: self.0.borrow_mut() }
+    }
     pub fn layout_vars(&self) -> LayoutVars {
         self.0.borrow().layout.vars
+    }
+    pub(crate) fn update_bounds(&mut self, var: VarType, value: f32) {
+        {
+            let mut widget = self.0.borrow_mut();
+            match var {
+                VarType::Left => widget.bounds.origin.x = value,
+                VarType::Top => widget.bounds.origin.y = value,
+                VarType::Width => widget.bounds.size.width = value,
+                VarType::Height => widget.bounds.size.height = value,
+                _ => (),
+            }
+        }
+        self.event(LayoutUpdated);
     }
     pub fn props(&self) -> PropsGuard {
         PropsGuard { guard: self.0.borrow() }
@@ -121,9 +138,6 @@ impl WidgetRef {
     }
     pub fn debug_color(&self) -> Option<Color> {
         self.0.borrow().debug_color
-    }
-    pub fn style_id(&self) -> Option<String> {
-        self.0.borrow().style_id.clone()
     }
     pub fn style_class(&self) -> Option<String> {
         self.0.borrow().style_class.clone()
@@ -240,6 +254,42 @@ impl WidgetRef {
         }
         handled
     }
+    pub fn draw(&mut self, crop_to: Rect, renderer: &mut RenderBuilder, debug: bool) {
+        self.draw_widget(crop_to, renderer);
+        if debug {
+            self.draw_debug(renderer);
+        }
+    }
+
+    pub fn is_under_cursor(&self, cursor: Point) -> bool {
+        if let Some(ref draw_state) = self.widget().draw_state {
+            draw_state.is_under_cursor(self.bounds(), cursor)
+        } else {
+            false
+        }
+    }
+
+    fn draw_widget(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
+        let bounds = self.bounds();
+        let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
+        renderer.builder.push_clip_id(clip_id);
+        if let Some(draw_state) = self.widget_mut().draw_state.as_mut() {
+            draw_state.draw(bounds, crop_to, renderer);
+        }
+        if let Some(crop_to) = crop_to.intersection(&bounds) {
+            for mut child in &mut self.children() {
+                child.draw_widget(crop_to, renderer);
+            }
+        }
+        renderer.builder.pop_clip_id();
+    }
+    fn draw_debug(&mut self, renderer: &mut RenderBuilder) {
+        let color = self.debug_color().unwrap_or(::color::GREEN);
+        render::draw_rect_outline(self.bounds(), color, renderer);
+        for child in &mut self.children() {
+            child.draw_debug(renderer);
+        }
+    }
 }
 
 impl PartialEq for WidgetRef {
@@ -322,7 +372,7 @@ impl<'a> DrawStateGuard<'a> {
 }
 
 #[derive(Clone)]
-pub struct WidgetWeak(pub Weak<RefCell<Widget>>);
+pub struct WidgetWeak(Weak<RefCell<Widget>>);
 
 impl WidgetWeak {
     pub fn upgrade(&self) -> Option<WidgetRef> {
@@ -335,11 +385,10 @@ impl WidgetWeak {
 }
 
 /// Internal Widget representation, usually handled through a `WidgetRef`.
-pub struct Widget {
+struct Widget {
     id: WidgetId,
     draw_state: Option<DrawWrapper>,
     props: PropSet,
-    style_id: Option<String>,
     style_class: Option<String>,
     has_updated: bool,
     pub(super) layout: Layout,
@@ -359,7 +408,6 @@ impl Widget {
             id: id,
             draw_state: None,
             props: PropSet::new(),
-            style_id: None,
             style_class: None,
             layout: Layout::new(id.0, Some(name.clone())),
             has_updated: false,
@@ -371,43 +419,7 @@ impl Widget {
             handlers: HashMap::new(),
         }
     }
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-    pub fn layout(&mut self) -> &mut Layout {
-        &mut self.layout
-    }
-    pub fn draw(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
-        let bounds = self.bounds;
-        let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
-        renderer.builder.push_clip_id(clip_id);
-        if let Some(draw_state) = self.draw_state.as_mut() {
-            draw_state.draw(bounds, crop_to, renderer);
-        }
-        if let Some(crop_to) = crop_to.intersection(&bounds) {
-            for child in &self.children {
-                let mut child = child.widget_mut();
-                child.draw(crop_to, renderer);
-            }
-        }
-        renderer.builder.pop_clip_id();
-    }
-    pub fn draw_debug(&mut self, renderer: &mut RenderBuilder) {
-        let color = self.debug_color.unwrap_or(::color::GREEN);
-        render::draw_rect_outline(self.bounds, color, renderer);
-        for child in &self.children {
-            child.widget_mut().draw_debug(renderer);
-        }
-    }
-
-    pub fn is_under_cursor(&self, cursor: Point) -> bool {
-        if let Some(ref draw_state) = self.draw_state {
-            draw_state.is_under_cursor(self.bounds, cursor)
-        } else {
-            false
-        }
-    }
-    pub fn update<F, T: Draw + 'static>(&mut self, f: F)
+    fn update<F, T: Draw + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
         if let Some(ref mut draw_state) = self.draw_state {
@@ -424,13 +436,6 @@ impl Widget {
             }
         }
         false
-    }
-    pub fn draw_state<T: Draw + 'static>(&self) -> Option<&T> {
-        if let Some(ref draw_state) = self.draw_state {
-            draw_state.wrapper.state().downcast_ref::<T>()
-        } else {
-            None
-        }
     }
 }
 
@@ -500,18 +505,11 @@ impl WidgetBuilder {
         self
     }
 
-    pub fn set_style_id(&mut self, style_id: &str) -> &mut Self {
-        self.widget.widget_mut().style_id = Some(style_id.to_owned());
-        self
-    }
     pub fn set_style_class(&mut self, style_class: &str) -> &mut Self {
         self.widget.widget_mut().style_class = Some(style_class.to_owned());
         self
     }
 
-    pub fn style_id(&self) -> Option<String> {
-        self.widget.style_id()
-    }
     pub fn style_class(&self) -> Option<String> {
         self.widget.style_class()
     }
