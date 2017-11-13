@@ -139,10 +139,7 @@ impl Ui {
         let (builder, resources) = {
             let mut renderer = self.render.render_builder(window_size);
             let crop_to = Rect::new(Point::zero(), Size::new(::std::f32::MAX, ::std::f32::MAX));
-            self.root.widget_mut().draw(crop_to, &mut renderer);
-            if self.debug_draw_bounds {
-                self.root.widget_mut().draw_debug(&mut renderer);
-            }
+            self.root.draw(crop_to, &mut renderer, self.debug_draw_bounds);
             (renderer.builder, renderer.resources)
         };
         self.render.set_display_list(builder, resources, window_size);
@@ -277,8 +274,7 @@ impl Iterator for WidgetsUnderCursor {
     type Item = WidgetRef;
     fn next(&mut self) -> Option<WidgetRef> {
         for widget_ref in self.dfs.by_ref() {
-            let widget = &widget_ref.widget();
-            if widget.is_under_cursor(self.point) {
+            if widget_ref.is_under_cursor(self.point) {
                 return Some(widget_ref.clone());
             }
         }
