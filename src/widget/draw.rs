@@ -4,7 +4,6 @@ use std::marker::PhantomData;
 use render::RenderBuilder;
 use event::{EventHandler, EventArgs};
 use widget::property::PropSet;
-use widget::style::PropSelector;
 use style::Component;
 
 use geometry::{Rect, Point};
@@ -28,9 +27,9 @@ pub struct DrawWrapper {
 }
 
 impl DrawWrapper {
-    pub fn new<D, T: IntoDrawState<D> + 'static>(draw_state: T) -> Self {
+    pub fn new<T: Draw + Component + 'static>(draw_state: T) -> Self {
         DrawWrapper {
-            wrapper: draw_state.draw_state()
+            wrapper: Box::new(draw_state)
         }
     }
 }
@@ -55,58 +54,6 @@ impl <D: Draw + Component + 'static> DrawComponent for D {
         false
     }
 }
-
-pub trait IntoDrawState<D> {
-    fn draw_state(self) -> Box<DrawComponent>;
-}
-
-impl <D: Draw + DrawComponent + 'static> IntoDrawState<Box<DrawComponent>> for D {
-    fn draw_state(self) -> Box<DrawComponent> {
-        Box::new(self)
-    }
-}
-
-impl <P: PropSelector<D> + 'static, D: Draw + Default + 'static> IntoDrawState<Box<PropDrawWrapper<D>>> for P {
-    fn draw_state(self) -> Box<DrawComponent> {
-        Box::new(PropDrawWrapper::new(self))
-    }
-}
-
-pub struct PropDrawWrapper<D: Draw> {
-    state: D,
-    prop_selector: Box<PropSelector<D>>,
-}
-
-impl <D: Draw + Default + 'static> PropDrawWrapper<D> {
-    pub fn new<T: PropSelector<D> + 'static>(prop_selector: T) -> Self {
-        PropDrawWrapper {
-            state: D::default(),
-            prop_selector: Box::new(prop_selector),
-        }
-    }
-}
-
-impl <D: Draw + Default + 'static> DrawComponent for PropDrawWrapper<D> {
-    fn state(&self) -> &Any {
-        &self.state
-    }
-    fn state_mut(&mut self) -> &mut Any {
-        &mut self.state
-    }
-    fn apply_style(&mut self, props: &PropSet) -> bool {
-        self.prop_selector.as_ref().apply(&mut self.state, props)
-    }
-}
-
-impl <D: Draw> Draw for PropDrawWrapper<D> {
-    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
-        self.state.is_under_cursor(bounds, cursor)
-    }
-    fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder) {
-        self.state.draw(bounds, crop_to, renderer);
-    }
-}
-
 
 pub struct DrawEventHandler<T, E> {
     draw_callback: Box<Fn(&mut T)>,

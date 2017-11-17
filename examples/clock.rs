@@ -13,7 +13,7 @@ use chrono::{Local, Timelike};
 
 use limn::webrender::api::*;
 use limn::prelude::*;
-use limn::draw::ellipse::EllipseComponent;
+use limn::draw::ellipse::EllipseState;
 
 type Radians = euclid::Radians<f32>;
 
@@ -96,12 +96,12 @@ struct ClockBuilder {
 impl ClockBuilder {
     fn new() -> Self {
 
-        let ellipse = EllipseComponent {
-            background_color: Value::from(WHITE),
-            border: Value::from(Some((2.0, BLACK))),
+        let ellipse = EllipseState {
+            background_color: WHITE,
+            border: Some((2.0, BLACK)),
         };
         let mut widget = WidgetBuilder::new("clock");
-        widget.set_into_draw_state(ellipse);
+        widget.set_draw_state(ellipse);
         widget.layout().add(size(Size::new(200.0, 200.0)));
 
         let hour_angle = || rotation((Local::now().hour() % 12) as f32 / 12.0);

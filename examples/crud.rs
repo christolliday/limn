@@ -94,8 +94,8 @@ impl PeopleHandler {
         self.people.insert(id, self.person.clone());
         let list_item_widget = {
             let text_style = TextComponentStyle {
-                text: Some(Value::from(self.person.name())),
-                text_color: Some(Value::from(WHITE)),
+                text: Some(self.person.name()),
+                text_color: Some(WHITE),
                 ..TextComponentStyle::default()
             };
             let mut list_item_widget = WidgetBuilder::new("list_item");

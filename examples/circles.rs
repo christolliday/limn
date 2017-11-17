@@ -9,7 +9,7 @@ use limn::glutin;
 use limn::prelude::*;
 
 use limn::input::mouse::WidgetMouseButton;
-use limn::widgets::button::{ButtonStyle, ToggleEvent};
+use limn::widgets::button::{ButtonStyle, ToggleButtonStyle, ToggleEvent};
 use limn::widgets::slider::{SliderBuilder, SetSliderValue, SliderEvent};
 use limn::draw::text::TextComponentStyle;
 use limn::draw::rect::{RectComponentStyle};
@@ -18,6 +18,7 @@ use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
 use limn::input::drag::DragEvent;
+use limn::resources;
 
 struct SliderControl {
     widget: WidgetBuilder,
@@ -29,7 +30,7 @@ impl SliderControl {
         let mut widget = WidgetBuilder::new("slider_container");
         let slider_title = StaticTextStyle {
             style: Some(TextComponentStyle {
-                text: Some(Value::from("Circle Size".to_owned())),
+                text: Some("Circle Size".to_owned()),
                 ..TextComponentStyle::default()
             })
         };
@@ -39,8 +40,8 @@ impl SliderControl {
         slider_title.layout().add(align_left(&widget));
         let slider_value = StaticTextStyle {
             style: Some(TextComponentStyle {
-                align: Some(Value::from(Align::End)),
-                text: Some(Value::from("--".to_owned())),
+                align: Some(Align::End),
+                text: Some("--".to_owned()),
                 ..TextComponentStyle::default()
             })
         };
@@ -101,9 +102,8 @@ impl ControlBar {
         layout_settings.padding = 10.0;
         layout_settings.item_align = ItemAlignment::Center;
         widget.linear_layout(layout_settings);
-        let mut create_button = ButtonStyle::default();
+        let mut create_button = ToggleButtonStyle::default();
         create_button.text("Create Circle");
-        create_button.toggle(true);
         let mut create_button = WidgetBuilder::from_component_style(create_button);
         create_button.add_handler(|event: &ToggleEvent, args: EventArgs| {
             match *event {
@@ -147,12 +147,19 @@ impl ControlBar {
 widget_wrapper!(ControlBar);
 
 fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
+    let mut widget = WidgetBuilder::new("circle");
     let style = EllipseComponentStyle {
-        background_color: Some(Value::from(selector!(WHITE, SELECTED: RED))),
-        border: Some(Value::from(Some((2.0, BLACK)))),
+        background_color: Some(WHITE),
+        border: Some(Some((2.0, BLACK))),
         ..EllipseComponentStyle::default()
     };
-    let mut widget = WidgetBuilder::new("circle");
+    {
+        let mut res = resources::resources();
+        res.theme.register_style_widget_prop(widget.id(), SELECTED.clone(), EllipseComponentStyle {
+            background_color: Some(RED),
+            ..EllipseComponentStyle::default()
+        });
+    }
     widget
         .set_draw_style(style)
         .make_draggable()
@@ -400,7 +407,7 @@ fn main() {
     ]);
     circle_canvas
         .set_draw_style(RectComponentStyle {
-            background_color: Some(Value::from(WHITE)),
+            background_color: Some(WHITE),
             ..RectComponentStyle::default()
         })
         .add_handler(|event: &ClickEvent, args: EventArgs| {

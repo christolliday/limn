@@ -1,7 +1,7 @@
 use cassowary::Constraint;
 
 use widget::WidgetBuilder;
-use widget::style::{Value, StyleUpdated};
+use widget::style::StyleUpdated;
 use draw::text::{TextState, TextComponentStyle};
 use event::{EventHandler, EventArgs};
 use layout::constraint::*;
@@ -39,7 +39,7 @@ pub struct StaticTextStyle {
 impl StaticTextStyle {
     pub fn text(&mut self, text: &str) {
         self.style = Some(TextComponentStyle {
-            text: Some(Value::from(text.to_owned())),
+            text: Some(text.to_owned()),
             ..TextComponentStyle::default()
         });
     }

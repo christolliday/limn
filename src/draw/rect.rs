@@ -2,8 +2,6 @@ use webrender::api::{LocalClip, BorderRadius, ComplexClipRegion, PrimitiveInfo};
 
 use render::RenderBuilder;
 use widget::draw::Draw;
-use widget::property::PropSet;
-use widget::style::{self, PropSelector, Value};
 use geometry::{Rect, RectExt};
 use color::*;
 use style::*;
@@ -65,15 +63,15 @@ impl Draw for RectState {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Copy, Clone)]
 pub struct RectComponentStyle {
-    pub background_color: Option<Value<Color>>,
-    pub corner_radius: Option<Value<Option<f32>>>,
-    pub border: Option<Value<Option<(f32, Color)>>>,
+    pub background_color: Option<Color>,
+    pub corner_radius: Option<Option<f32>>,
+    pub border: Option<Option<(f32, Color)>>,
 }
 
 impl ComponentStyle for RectComponentStyle {
-    type Component = RectComponent;
+    type Component = RectState;
     fn merge(&self, other: &Self) -> Self {
         RectComponentStyle {
             background_color: self.background_color.as_ref().or(other.background_color.as_ref()).cloned(),
@@ -82,31 +80,10 @@ impl ComponentStyle for RectComponentStyle {
         }
     }
     fn component(self) -> Self::Component {
-        RectComponent {
-            background_color: self.background_color.unwrap_or(Value::from(WHITE)),
-            corner_radius: self.corner_radius.unwrap_or(Value::from(None)),
-            border: self.border.unwrap_or(Value::from(None)),
+        RectState {
+            background_color: self.background_color.unwrap_or(WHITE),
+            corner_radius: self.corner_radius.unwrap_or(None),
+            border: self.border.unwrap_or(None),
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct RectComponent {
-    pub background_color: Value<Color>,
-    pub corner_radius: Value<Option<f32>>,
-    pub border: Value<Option<(f32, Color)>>,
-}
-
-impl Component for RectComponent {
-    fn name() -> String {
-        "rect".to_owned()
-    }
-}
-
-impl PropSelector<RectState> for RectComponent {
-    fn apply(&self, state: &mut RectState, props: &PropSet) -> bool {
-        style::update(&mut state.background_color, self.background_color.get(props)) |
-        style::update(&mut state.corner_radius, self.corner_radius.get(props)) |
-        style::update(&mut state.border, self.border.get(props))
     }
 }

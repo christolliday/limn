@@ -9,8 +9,6 @@ use input::drag::{DragEvent, DragState};
 use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
-use widget::property::states::*;
-use widget::style::Value;
 use draw::rect::RectComponentStyle;
 use draw::ellipse::EllipseComponentStyle;
 use geometry::{RectExt, Point};
@@ -130,15 +128,15 @@ impl Into<WidgetBuilder> for SliderBuilder {
         match self.handle_style {
             HandleStyle::Round => {
                 slider_handle.set_draw_style(EllipseComponentStyle {
-                    background_color: Some(Value::from(self.handle_color)),
-                    border: Some(Value::from(self.border)),
+                    background_color: Some(self.handle_color),
+                    border: Some(self.border),
                     ..EllipseComponentStyle::default()
                 });
             }
             HandleStyle::Square => {
                 slider_handle.set_draw_style(RectComponentStyle {
-                    background_color: Some(Value::from(self.handle_color)),
-                    border: Some(Value::from(self.border)),
+                    background_color: Some(self.handle_color),
+                    border: Some(self.border),
                     ..RectComponentStyle::default()
                 });
             }
@@ -149,15 +147,16 @@ impl Into<WidgetBuilder> for SliderBuilder {
             BarStyle::Wide => None,
         };
         let bar_style = RectComponentStyle {
-            background_color: Some(Value::from(self.bar_color)),
-            corner_radius: Some(Value::from(corner_radius)),
-            border: Some(Value::from(self.border)),
+            background_color: Some(self.bar_color),
+            corner_radius: Some(corner_radius),
+            border: Some(self.border),
             ..RectComponentStyle::default()
         };
 
         let pre_style = if let Some(highlight) = self.highlight {
             RectComponentStyle {
-                background_color: Some(Value::from(selector!(highlight, INACTIVE: self.bar_color))),
+                background_color: Some(highlight),
+                    //Value::from(selector!(highlight, INACTIVE: self.bar_color))),
                 ..RectComponentStyle::default()
             }.merge(&bar_style)
         } else {
