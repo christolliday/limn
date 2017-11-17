@@ -5,7 +5,6 @@ use cassowary::WeightedRelation::*;
 use layout::constraint::*;
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
-use widget::style::Value;
 use widgets::slider::{SliderBuilder, SetSliderValue};
 use geometry::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
@@ -80,7 +79,7 @@ impl ScrollBuilder {
             widget_ref.event(ScrollParentEvent::ScrollBarMovedY(value));
         });
         let corner_style = RectComponentStyle {
-            background_color: Some(Value::from(GRAY_70)),
+            background_color: Some(GRAY_70),
             ..RectComponentStyle::default()
         };
         let mut corner = WidgetBuilder::new("corner");

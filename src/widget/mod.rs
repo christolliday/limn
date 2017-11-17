@@ -105,16 +105,15 @@ impl WidgetRef {
         for mut child in self.children() {
             child.add_prop(property);
         }
-        self.apply_style();
     }
     pub fn remove_prop(&mut self, property: Property) {
         self.0.borrow_mut().props.remove(&property);
         for mut child in self.children() {
             child.remove_prop(property);
         }
-        self.apply_style();
     }
     pub fn draw_state(&mut self) -> DrawStateGuard {
+        self.update_draw_state();
         DrawStateGuard { guard: self.0.borrow_mut() }
     }
     pub fn downgrade(&self) -> WidgetWeak {
@@ -166,18 +165,11 @@ impl WidgetRef {
         event::event(Target::Root, UpdateLayout(self.clone()));
     }
 
-    pub fn apply_style(&mut self) {
-        if self.0.borrow_mut().apply_style() {
-            self.event(StyleUpdated);
-        }
-    }
-
     pub fn add_child<U: Into<WidgetRef>>(&mut self, child: U) -> &mut Self {
         let mut child = child.into();
         event::event(Target::Root, ::layout::UpdateLayout(child.clone()));
         child.widget_mut().parent = Some(self.downgrade());
         child.widget_mut().props.extend(self.props().iter().cloned());
-        child.apply_style();
         self.widget_mut().children.push(child.clone());
         self.update_layout(|layout| {
             child.update_layout(|child_layout| {
@@ -262,6 +254,7 @@ impl WidgetRef {
     }
 
     pub fn is_under_cursor(&self, cursor: Point) -> bool {
+        self.update_draw_state();
         if let Some(ref draw_state) = self.widget().draw_state {
             draw_state.is_under_cursor(self.bounds(), cursor)
         } else {
@@ -270,6 +263,7 @@ impl WidgetRef {
     }
 
     fn draw_widget(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
+        self.update_draw_state();
         let bounds = self.bounds();
         let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
         renderer.builder.push_clip_id(clip_id);
@@ -288,6 +282,26 @@ impl WidgetRef {
         render::draw_rect_outline(self.bounds(), color, renderer);
         for child in &mut self.children() {
             child.draw_debug(renderer);
+        }
+    }
+    fn style_updated(&self) {
+        self.widget_mut().style_updated = true;
+    }
+    fn props_updated(&self) {
+        self.widget_mut().props_updated = true;
+    }
+    fn update_draw_state(&self) {
+        let mut updated = false;
+        if self.widget().style_updated {
+            let res = resources();
+            let draw_state = res.theme.get_style(self.widget().style_type.unwrap(), self.style_class(), self.id());
+            self.widget_mut().draw_state = Some(draw_state);
+        }
+        if self.widget().props_updated {
+            updated |= self.0.borrow_mut().update_props();
+        }
+        if updated {
+            self.event(StyleUpdated);
         }
     }
 }
@@ -389,8 +403,11 @@ struct Widget {
     id: WidgetId,
     draw_state: Option<DrawWrapper>,
     props: PropSet,
+    style_type: Option<TypeId>,
     style_class: Option<String>,
     has_updated: bool,
+    style_updated: bool,
+    props_updated: bool,
     pub(super) layout: Layout,
     pub(super) bounds: Rect,
     name: String,
@@ -408,9 +425,12 @@ impl Widget {
             id: id,
             draw_state: None,
             props: PropSet::new(),
+            style_type: None,
             style_class: None,
             layout: Layout::new(id.0, Some(name.clone())),
             has_updated: false,
+            style_updated: false,
+            props_updated: false,
             bounds: Rect::zero(),
             name: name,
             debug_color: None,
@@ -428,7 +448,7 @@ impl Widget {
             f(state);
         }
     }
-    fn apply_style(&mut self) -> bool {
+    fn update_props(&mut self) -> bool {
         if let Some(ref mut draw_state) = self.draw_state {
             if draw_state.wrapper.apply_style(&self.props) {
                 self.has_updated = true;
@@ -480,23 +500,19 @@ impl WidgetBuilder {
         self.widget.id()
     }
 
-    pub fn set_draw_state<T: DrawComponent + 'static>(&mut self, draw_state: T) -> &mut Self {
+    pub fn set_draw_state<T: Draw + Component + 'static>(&mut self, draw_state: T) -> &mut Self {
         self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
-        self.widget.widget_mut().apply_style();
-        self.widget.event(StyleUpdated);
+        self.widget.props_updated();
         self
     }
 
-    pub fn set_into_draw_state<D, T: IntoDrawState<D> + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
-        self.widget.widget_mut().apply_style();
-        self.widget.event(StyleUpdated);
+    pub fn set_draw_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Send + 'static>(&mut self, draw_state: T) -> &mut Self {
+        self.widget.widget_mut().style_type = Some(TypeId::of::<T>());
+        let mut res = resources();
+        res.theme.register_widget_style(self.id(), draw_state);
+        self.widget.style_updated();
+        self.widget.props_updated();
         self
-    }
-
-    pub fn set_draw_style<S, D: IntoDrawState<S> + Component + 'static, T: ComponentStyle<Component = D> + 'static>(&mut self, draw_state: T) -> &mut Self {
-        let styled = draw_state.resolve(self.style_class());
-        self.set_into_draw_state(styled)
     }
 
     /// Adds a handler to the current widget
@@ -517,9 +533,10 @@ impl WidgetBuilder {
     /// Recursively sets a certain property on the current widget
     pub fn add_prop(&mut self, property: Property) -> &mut Self {
         self.widget.widget_mut().props.insert(property);
+        self.widget.props_updated();
         for child in &mut self.widget.widget_mut().children {
             child.widget_mut().props.insert(property);
-            child.apply_style();
+            child.props_updated();
         }
         self
     }
@@ -527,9 +544,10 @@ impl WidgetBuilder {
     /// Recursively removes a certain property on the current widget
     pub fn remove_prop(&mut self, property: &Property) -> &mut Self {
         self.widget.widget_mut().props.remove(property);
+        self.widget.props_updated();
         for child in &mut self.widget.widget_mut().children {
             child.widget_mut().props.remove(property);
-            child.apply_style();
+            child.props_updated();
         }
         self
     }
@@ -555,8 +573,8 @@ impl WidgetBuilder {
 }
 
 impl Into<WidgetRef> for WidgetBuilder {
-    fn into(mut self) -> WidgetRef {
-        self.widget.apply_style();
+    fn into(self) -> WidgetRef {
+        self.widget.update_draw_state();
         self.widget
     }
 }

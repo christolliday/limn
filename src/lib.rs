@@ -59,7 +59,6 @@ extern crate gleam;
 extern crate app_units;
 extern crate image;
 
-
 #[macro_use]
 pub mod event;
 /// Module for `WidgetBuilder` and callback handlers

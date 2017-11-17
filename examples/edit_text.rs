@@ -5,7 +5,7 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::button::{ButtonStyle, ToggleEvent};
+use limn::widgets::button::{ToggleButtonStyle, ToggleEvent};
 use limn::widgets::edit_text::EditTextBuilder;
 use limn::draw::text::TextState;
 
@@ -40,7 +40,7 @@ fn main() {
     edit_text_box.text_widget.add_handler(EditTextSettingsHandler);
 
     let edit_text_ref = edit_text_box.text_widget.widget_ref();
-    let mut h_align_button = ButtonStyle::default();
+    let mut h_align_button = ToggleButtonStyle::default();
     h_align_button.toggle_text("Right Align", "Left Align");
     let mut h_align_button = WidgetBuilder::from_component_style(h_align_button);
     h_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
@@ -56,7 +56,7 @@ fn main() {
 
     let edit_text_ref = edit_text_box.text_widget.widget_ref();
 
-    let mut v_align_button = ButtonStyle::default();
+    let mut v_align_button = ToggleButtonStyle::default();
     v_align_button.toggle_text("Wrap Word", "Wrap Char");
     let mut v_align_button = WidgetBuilder::from_component_style(v_align_button);
     v_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
