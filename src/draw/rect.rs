@@ -63,7 +63,7 @@ impl Draw for RectState {
     }
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct RectComponentStyle {
     pub background_color: Option<Color>,
     pub corner_radius: Option<Option<f32>>,

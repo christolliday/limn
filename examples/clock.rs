@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 #[macro_use]
 extern crate limn;
 extern crate euclid;
@@ -19,7 +20,7 @@ type Radians = euclid::Radians<f32>;
 
 struct ClockTick;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ClockHand {
     color: Color,
     width: f32,

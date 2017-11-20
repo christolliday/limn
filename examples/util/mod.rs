@@ -20,6 +20,10 @@ pub fn default_style() {
         align: Some(Align::Start),
         ..TextComponentStyle::default()
     });
+    res.theme.register_style_class_prop("static_text", INACTIVE.clone(), TextComponentStyle {
+        text_color: Some(GRAY_50),
+        ..TextComponentStyle::default()
+    });
     res.theme.register_style_class("list_item_rect", RectComponentStyle {
         background_color: Some(GRAY_30),
         ..RectComponentStyle::default()
@@ -35,6 +39,33 @@ pub fn default_style() {
     res.theme.register_style_class("list_item_text", TextComponentStyle {
         text_color: Some(WHITE),
         ..TextComponentStyle::default()
+    });
+    res.theme.register_style_class("button_rect", RectComponentStyle {
+        background_color: Some(GRAY_80),
+        corner_radius: Some(Some(5.0)),
+        border: Some(Some((1.0, GRAY_40))),
+        ..RectComponentStyle::default()
+    });
+    res.theme.register_style_class_prop("button_rect", INACTIVE.clone(), RectComponentStyle {
+        background_color: Some(GRAY_90),
+        border: Some(Some((1.0, GRAY_70))),
+        ..RectComponentStyle::default()
+    });
+    res.theme.register_style_class_prop("button_rect", ACTIVATED_PRESSED.clone(), RectComponentStyle {
+        background_color: Some(GRAY_30),
+        ..RectComponentStyle::default()
+    });
+    res.theme.register_style_class_prop("button_rect", ACTIVATED.clone(), RectComponentStyle {
+        background_color: Some(GRAY_40),
+        ..RectComponentStyle::default()
+    });
+    res.theme.register_style_class_prop("button_rect", PRESSED.clone(), RectComponentStyle {
+        background_color: Some(GRAY_60),
+        ..RectComponentStyle::default()
+    });
+    res.theme.register_style_class_prop("button_rect", MOUSEOVER.clone(), RectComponentStyle {
+        background_color: Some(GRAY_90),
+        ..RectComponentStyle::default()
     });
 }
 

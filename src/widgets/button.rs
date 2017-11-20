@@ -1,3 +1,5 @@
+use std::any::TypeId;
+
 use glutin;
 
 use layout::constraint::*;
@@ -10,40 +12,7 @@ use draw::rect::RectComponentStyle;
 use draw::text::TextComponentStyle;
 use geometry::Size;
 use style::*;
-use widget::property::PropSet;
 use widget::property::states::*;
-use resources;
-
-/* static COLOR_BUTTON_DEFAULT: Color = GRAY_80;
-static COLOR_BUTTON_PRESSED: Color = GRAY_60;
-static COLOR_BUTTON_ACTIVATED: Color = GRAY_40;
-static COLOR_BUTTON_ACTIVATED_PRESSED: Color = GRAY_30;
-static COLOR_BUTTON_INACTIVE: Color = GRAY_90;
-static COLOR_BUTTON_MOUSEOVER: Color = GRAY_90;
-static COLOR_BUTTON_TEXT_INACTIVE: Color = GRAY_70;
-
-static BUTTON_BORDER: (f32, Color) = (1.0, GRAY_40);
-static BUTTON_BORDER_INACTIVE: (f32, Color) = (1.0, GRAY_70);
-
-
-lazy_static! {
-    pub static ref STYLE_BUTTON_RECT: RectComponentStyle = RectComponentStyle {
-        background_color: Some(Value::from(selector!(COLOR_BUTTON_DEFAULT,
-            ACTIVATED_PRESSED: COLOR_BUTTON_ACTIVATED_PRESSED,
-            ACTIVATED: COLOR_BUTTON_ACTIVATED,
-            PRESSED: COLOR_BUTTON_PRESSED,
-            MOUSEOVER: COLOR_BUTTON_MOUSEOVER,
-            INACTIVE: COLOR_BUTTON_INACTIVE))),
-        corner_radius: Some(Value::from(Some(5.0))),
-        border: Some(Value::from(selector!(Some(BUTTON_BORDER),
-            INACTIVE: Some(BUTTON_BORDER_INACTIVE)))),
-    };
-
-    pub static ref STYLE_BUTTON_TEXT: TextComponentStyle = TextComponentStyle {
-        text_color: Some(Value::from(selector!(BLACK, INACTIVE: COLOR_BUTTON_TEXT_INACTIVE))),
-        ..TextComponentStyle::default()
-    };
-} */
 
 #[derive(Debug, Copy, Clone)]
 pub enum ToggleEvent {
@@ -75,7 +44,7 @@ impl ButtonStyle {
 impl Default for ButtonStyle {
     fn default() -> Self {
         ButtonStyle {
-            rect: None,//Some(STYLE_BUTTON_RECT.clone()),
+            rect: None,
             text: Some(None),
         }
     }
@@ -112,7 +81,7 @@ impl Component for ButtonComponent {
 impl WidgetModifier for ButtonComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
         widget
-            .set_style_class("button_rect")
+            .set_style_class(TypeId::of::<RectComponentStyle>(), "button_rect")
             .set_draw_style(self.rect.clone())
             .add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
                 if !args.widget.props().contains(&Property::Inactive) {
@@ -130,7 +99,7 @@ impl WidgetModifier for ButtonComponent {
         ]);
         if let Some(text_style) = self.text.clone() {
             let mut button_text_widget = WidgetBuilder::new("button_text");
-            button_text_widget.set_style_class("button_text");
+            button_text_widget.set_style_class(TypeId::of::<TextComponentStyle>(), "button_text");
             let text = StaticTextStyle {
                 style: Some(text_style),
             };
@@ -180,7 +149,7 @@ impl ToggleButtonStyle {
 impl Default for ToggleButtonStyle {
     fn default() -> Self {
         ToggleButtonStyle {
-            rect: None,//Some(STYLE_BUTTON_RECT.clone()),
+            rect: None,
             off_text: Some(None),
             on_text: Some(None),
         }
@@ -217,11 +186,10 @@ impl Component for ToggleButtonComponent {
         "button".to_owned()
     }
 }
-
 impl WidgetModifier for ToggleButtonComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
         widget
-            .set_style_class("button_rect")
+            .set_style_class(TypeId::of::<RectComponentStyle>(), "button_rect")
             .set_draw_style(self.rect.clone())
             .add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
                 if !args.widget.props().contains(&Property::Inactive) {
@@ -238,7 +206,7 @@ impl WidgetModifier for ToggleButtonComponent {
             shrink(),
         ]);
         let mut button_text_widget = WidgetBuilder::new("button_text");
-        button_text_widget.set_style_class("button_text");
+        button_text_widget.set_style_class(TypeId::of::<TextComponentStyle>(), "button_text");
         button_text_widget.layout().add(constraints![
             bound_left(widget).padding(20.0),
             bound_right(widget).padding(20.0),
@@ -247,12 +215,12 @@ impl WidgetModifier for ToggleButtonComponent {
             center(widget),
         ]);
         if let Some(text_style) = self.off_text.clone() {
-            let mut res = resources::resources();
-            res.theme.register_style_widget_prop(button_text_widget.id(), PropSet::new(), text_style);
+            let mut style = StaticTextStyle::default();
+            style.style(text_style);
+            style.component().apply(&mut button_text_widget);
         }
         if let Some(text_style) = self.on_text.clone() {
-            let mut res = resources::resources();
-            res.theme.register_style_widget_prop(button_text_widget.id(), ACTIVATED.clone(), text_style);
+            button_text_widget.set_draw_style_prop(ACTIVATED.clone(), text_style);
         }
         widget.add_child(button_text_widget);
         widget.add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {

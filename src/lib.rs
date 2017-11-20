@@ -37,6 +37,7 @@
 // ---- END CLIPPY CONFIG
 
 #![cfg_attr(feature="nightly", feature(core_intrinsics))]
+#![cfg_attr(feature="nightly", feature(get_type_id))]
 
 #[macro_use]
 extern crate limn_layout;

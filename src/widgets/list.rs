@@ -1,8 +1,11 @@
+use std::any::TypeId;
+
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widgets::text::StaticTextStyle;
 use draw::rect::RectComponentStyle;
+use draw::text::TextComponentStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
 use layout::linear_layout::{LinearLayoutSettings, Orientation, ItemAlignment};
@@ -143,12 +146,12 @@ pub fn default_text_adapter(text: String, list: &mut ListBuilder) -> WidgetBuild
     let mut style = StaticTextStyle::default();
     style.text(&text);
     let mut text_widget = WidgetBuilder::new("list_item_text");
-    text_widget.set_style_class("list_item_text");
+    text_widget.set_style_class(TypeId::of::<TextComponentStyle>(), "list_item_text");
     style.component().apply(&mut text_widget);
 
     let mut item_widget = WidgetBuilder::new("list_item_rect");
     item_widget
-        .set_style_class("list_item_rect")
+        .set_style_class(TypeId::of::<RectComponentStyle>(), "list_item_rect")
         .set_draw_style(RectComponentStyle::default())
         .enable_hover();
 

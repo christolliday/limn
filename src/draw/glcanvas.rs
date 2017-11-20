@@ -6,7 +6,7 @@ use resources::resources;
 use geometry::{Rect, RectExt, Size};
 use style::Component;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GLCanvasState {
     pub name: String,
     pub data: ImageData,

@@ -68,7 +68,7 @@ fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct EllipseComponentStyle {
     pub background_color: Option<Color>,
     pub border: Option<Option<(f32, Color)>>,
