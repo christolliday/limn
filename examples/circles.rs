@@ -1,8 +1,10 @@
+#[allow(unused_imports)]
 #[macro_use]
 extern crate limn;
 
 mod util;
 
+use std::any::TypeId;
 use std::collections::HashMap;
 
 use limn::glutin;
@@ -26,7 +28,6 @@ struct SliderControl {
 
 impl SliderControl {
     fn new() -> Self {
-        //let text_style = style!(TextStyle::TextColor: selector!(BLACK, INACTIVE: GRAY_50));
         let mut widget = WidgetBuilder::new("slider_container");
         let slider_title = StaticTextStyle {
             style: Some(TextComponentStyle {
@@ -34,9 +35,10 @@ impl SliderControl {
                 ..TextComponentStyle::default()
             })
         };
-        //slider_title.style(style!(parent: text_style, TextStyle::Text: "Circle Size".to_owned()));
         let mut slider_title = WidgetBuilder::from_component_style(slider_title);
-        slider_title.set_name("slider_title");
+        slider_title
+            .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
+            .set_name("slider_title");
         slider_title.layout().add(align_left(&widget));
         let slider_value = StaticTextStyle {
             style: Some(TextComponentStyle {
@@ -45,10 +47,9 @@ impl SliderControl {
                 ..TextComponentStyle::default()
             })
         };
-        //StaticTextStyle {}
-        //slider_value.style(style!(parent: text_style, TextStyle::Align: Align::End, TextStyle::Text: "--".to_owned()));
         let mut slider_value = WidgetBuilder::from_component_style(slider_value);
         slider_value
+            .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
             .set_name("slider_value")
             .add_handler(edit_text::text_change_handle);
         slider_value.layout().add(align_right(&widget));

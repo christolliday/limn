@@ -3,13 +3,12 @@ use std::marker::PhantomData;
 
 use render::RenderBuilder;
 use event::{EventHandler, EventArgs};
-use widget::property::PropSet;
 use style::Component;
 
 use geometry::{Rect, Point};
 
 
-pub trait Draw {
+pub trait Draw: ::std::fmt::Debug {
     fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder);
     fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
         bounds.contains(&cursor)
@@ -19,9 +18,9 @@ pub trait Draw {
 pub trait DrawComponent: Draw {
     fn state(&self) -> &Any;
     fn state_mut(&mut self) -> &mut Any;
-    fn apply_style(&mut self, props: &PropSet) -> bool;
 }
 
+#[derive(Debug)]
 pub struct DrawWrapper {
     pub wrapper: Box<DrawComponent>,
 }
@@ -49,9 +48,6 @@ impl <D: Draw + Component + 'static> DrawComponent for D {
     }
     fn state_mut(&mut self) -> &mut Any {
         self
-    }
-    fn apply_style(&mut self, _: &PropSet) -> bool {
-        false
     }
 }
 

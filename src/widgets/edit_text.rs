@@ -2,48 +2,74 @@ use cassowary::Constraint;
 
 use layout::constraint::ConstraintBuilder;
 use layout::constraint::*;
-use widget::style::StyleUpdated;
-use widget::WidgetBuilder;
+use widget::{WidgetBuilder, StyleUpdated};
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use draw::rect::RectComponentStyle;
 use draw::text::{TextState, TextComponentStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
+use widget::property::states::*;
 
 const BACKSPACE: char = '\u{8}';
 
-fn edit_text_handle_char(event: &WidgetReceivedCharacter, mut args: EventArgs) {
-    let &WidgetReceivedCharacter(char) = event;
-    let text = {
-        let bounds = args.widget.bounds();
-        let draw_state = args.widget.draw_state();
-        let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
-        let mut text = text_draw_state.text.clone();
-        match char {
-            BACKSPACE => {
-                text.pop();
-            }
-            _ => {
-                text.push(char);
-                if !text_draw_state.text_fits(&text, bounds) {
-                    text.pop();
-                }
-            }
-        }
-        text
-    };
-    args.widget.update(|state: &mut TextState| {
-        state.text = text.clone()
-    });
-    args.widget.event(TextUpdated(text.clone()));
+#[derive(Debug)]
+enum EditTextEvent {
+    WidgetReceivedCharacter(char),
+    TextUpdated(String),
+    StyleUpdated,
 }
 
-pub struct TextUpdated(pub String);
+#[derive(Default)]
+struct EditTextHandler {
+    text: String,
+}
+
+impl EventHandler<EditTextEvent> for EditTextHandler {
+    fn handle(&mut self, event: &EditTextEvent, mut args: EventArgs) {
+        match *event {
+            EditTextEvent::WidgetReceivedCharacter(char) => {
+                let text = {
+                    let bounds = args.widget.bounds();
+                    let draw_state = args.widget.draw_state();
+                    let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
+                    let mut text = text_draw_state.text.clone();
+                    match char {
+                        BACKSPACE => {
+                            text.pop();
+                        }
+                        _ => {
+                            text.push(char);
+                            if !text_draw_state.text_fits(&text, bounds) {
+                                text.pop();
+                            }
+                        }
+                    }
+                    text
+                };
+                args.widget.event(TextUpdated(text.clone()));
+            },
+            EditTextEvent::StyleUpdated => {
+                args.widget.update(|state: &mut TextState| {
+                    state.text = self.text.clone()
+                });
+            },
+            EditTextEvent::TextUpdated(ref text) => {
+                self.text = text.clone();
+                args.widget.update(|state: &mut TextState| {
+                    state.text = text.clone()
+                });
+            }
+        }
+    }
+}
 
 pub fn text_change_handle(event: &TextUpdated, mut args: EventArgs) {
     args.widget.update(|state: &mut TextState| state.text = event.0.clone());
 }
+
+pub struct TextUpdated(pub String);
+
 
 pub struct EditTextBuilder {
     pub widget: WidgetBuilder,
@@ -53,10 +79,8 @@ pub struct EditTextBuilder {
 impl Default for EditTextBuilder {
     fn default() -> Self {
         let default_border = Some((1.0, GRAY_70));
-        //let focused_border = Some((1.0, BLUE));
         let rect_style = RectComponentStyle {
             border: Some(default_border),
-                //Value::from(selector!(default_border, FOCUSED: focused_border))),
             corner_radius: Some(Some(3.0)),
             ..RectComponentStyle::default()
         };
@@ -71,12 +95,19 @@ impl Default for EditTextBuilder {
             })
             .make_focusable();
 
+        widget.set_draw_style_prop(FOCUSED.clone(), RectComponentStyle {
+            border: Some(Some((1.0, BLUE))),
+            ..RectComponentStyle::default()
+        });
+
         let mut text_widget = WidgetBuilder::new("edit_text_text");
         text_widget
             .set_draw_style(TextComponentStyle::default())
             .add_handler(TextUpdatedHandler::default())
-            .add_handler(edit_text_handle_char)
-            .add_handler(text_change_handle);
+            .add_handler(|event: &WidgetReceivedCharacter, args: EventArgs| args.widget.event(EditTextEvent::WidgetReceivedCharacter(event.0)))
+            .add_handler(|event: &TextUpdated, args: EventArgs| args.widget.event(EditTextEvent::TextUpdated(event.0.clone())))
+            .add_handler(|_: &StyleUpdated, args: EventArgs| args.widget.event(EditTextEvent::StyleUpdated))
+            .add_handler(EditTextHandler::default());
 
         text_widget.layout().add(constraints![
             align_left(&widget).padding(5.0),
@@ -116,25 +147,27 @@ impl Into<WidgetBuilder> for EditTextBuilder {
 
 #[derive(Default)]
 struct TextUpdatedHandler {
+    measured_height: f32,
     size_constraints: Vec<Constraint>,
 }
 
 impl EventHandler<StyleUpdated> for TextUpdatedHandler {
     fn handle(&mut self, _: &StyleUpdated, mut args: EventArgs) {
-        args.widget.update_layout(|layout| {
-            for constraint in self.size_constraints.drain(..) {
-                layout.remove_constraint(constraint);
-            }
-        });
         let line_height = {
             let draw_state = args.widget.draw_state();
             let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
             text_draw_state.line_height()
         };
-        let size_constraints = min_height(line_height).build(&args.widget.layout_vars());
-        args.widget.update_layout(|layout| {
-            layout.add(size_constraints.clone())
-        });
-        self.size_constraints = size_constraints;
+        if self.measured_height != line_height {
+            let size_constraints = min_height(line_height).build(&args.widget.layout_vars());
+            args.widget.update_layout(|layout| {
+                for constraint in self.size_constraints.drain(..) {
+                    layout.remove_constraint(constraint);
+                }
+                layout.add(size_constraints.clone())
+            });
+            self.size_constraints = size_constraints;
+            self.measured_height = line_height;
+        }
     }
 }

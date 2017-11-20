@@ -13,7 +13,7 @@ use draw::rect::RectComponentStyle;
 use draw::ellipse::EllipseComponentStyle;
 use geometry::{RectExt, Point};
 use color::*;
-use style::ComponentStyle;
+use widget::property::states::*;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Orientation {
@@ -153,17 +153,19 @@ impl Into<WidgetBuilder> for SliderBuilder {
             ..RectComponentStyle::default()
         };
 
-        let pre_style = if let Some(highlight) = self.highlight {
-            RectComponentStyle {
-                background_color: Some(highlight),
-                    //Value::from(selector!(highlight, INACTIVE: self.bar_color))),
-                ..RectComponentStyle::default()
-            }.merge(&bar_style)
-        } else {
-            bar_style.clone()
-        };
         let mut slider_bar_pre = WidgetBuilder::new("slider_bar_pre");
-        slider_bar_pre.set_draw_style(pre_style);
+        if let Some(highlight) = self.highlight {
+            slider_bar_pre.set_draw_style(RectComponentStyle {
+                background_color: Some(highlight),
+                ..bar_style
+            });
+            slider_bar_pre.set_draw_style_prop(INACTIVE.clone(), RectComponentStyle {
+                background_color: Some(self.bar_color),
+                ..RectComponentStyle::default()
+            });
+        } else {
+            slider_bar_pre.set_draw_style(bar_style);
+        }
 
         let mut slider_bar_post = WidgetBuilder::new("slider_bar_post");
         slider_bar_post.set_draw_style(bar_style);

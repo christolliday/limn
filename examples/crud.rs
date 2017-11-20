@@ -1,8 +1,10 @@
+#[allow(unused_imports)]
 #[macro_use]
 extern crate limn;
 
 mod util;
 
+use std::any::TypeId;
 use std::collections::HashMap;
 
 use limn::prelude::*;
@@ -13,7 +15,7 @@ use limn::widgets::list::ListBuilder;
 use limn::widgets::scroll::ScrollBuilder;
 use limn::widgets::text::StaticTextStyle;
 use limn::draw::text::TextComponentStyle;
-use limn::draw::rect::RectState;
+use limn::draw::rect::{RectState, RectComponentStyle};
 
 named_id!(PersonId);
 
@@ -95,24 +97,27 @@ impl PeopleHandler {
         let list_item_widget = {
             let text_style = TextComponentStyle {
                 text: Some(self.person.name()),
-                text_color: Some(WHITE),
                 ..TextComponentStyle::default()
+            };
+            let text_style = StaticTextStyle {
+                style: Some(text_style),
             };
             let mut list_item_widget = WidgetBuilder::new("list_item");
             list_item_widget
-                .set_style_class("list_item_rect")
+                .set_style_class(TypeId::of::<RectComponentStyle>(), "list_item_rect")
                 .list_item(&self.widgets.list_widget)
                 .on_item_selected(move |args| {
                     args.ui.event(PeopleEvent::PersonSelected(Some(id)));
                 })
                 .enable_hover();
-            let mut list_text_widget = WidgetBuilder::new("list_text");
+
+            let mut list_text_widget = WidgetBuilder::from_component_style(text_style);
             list_text_widget
-                .set_draw_style(text_style)
+                .set_style_class(TypeId::of::<TextComponentStyle>(), "list_item_text")
                 .add_handler(edit_text::text_change_handle);
             list_text_widget.layout().add(constraints![
                 match_height(&list_item_widget),
-                center(&list_item_widget)]);
+                align_left(&list_item_widget)]);
             list_item_widget.add_child(list_text_widget);
             list_item_widget
         };
@@ -245,6 +250,7 @@ fn main() {
     scroll_container.set_draw_state(RectState::default());
     scroll_container.layout().add(constraints![
         below(&button_container).padding(20.0),
+        match_width(&container),
         min_height(260.0),
     ]);
 

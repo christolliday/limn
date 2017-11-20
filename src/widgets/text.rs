@@ -1,38 +1,40 @@
 use cassowary::Constraint;
 
-use widget::WidgetBuilder;
-use widget::style::StyleUpdated;
+use widget::{WidgetBuilder, StateUpdated};
 use draw::text::{TextState, TextComponentStyle};
 use event::{EventHandler, EventArgs};
 use layout::constraint::*;
+use geometry::Size;
 
 #[derive(Default)]
 struct TextUpdatedHandler {
+    measured_size: Option<Size>,
     size_constraints: Vec<Constraint>,
 }
-impl EventHandler<StyleUpdated> for TextUpdatedHandler {
-    fn handle(&mut self, _: &StyleUpdated, mut args: EventArgs) {
-        args.widget.update_layout(|layout| {
-            for constraint in self.size_constraints.drain(..) {
-                layout.remove_constraint(constraint);
-            }
-        });
+impl EventHandler<StateUpdated> for TextUpdatedHandler {
+    fn handle(&mut self, _: &StateUpdated, mut args: EventArgs) {
         let text_size = {
             let draw_state = args.widget.draw_state();
             let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
             text_draw_state.measure()
         };
-        let size_constraints = size(text_size).build(&args.widget.layout_vars());
-        args.widget.update_layout(|layout| {
-            layout.add(size_constraints.clone());
-        });
-        self.size_constraints = size_constraints;
+        if self.measured_size.is_none() || self.measured_size.unwrap() != text_size {
+            let size_constraints = size(text_size).build(&args.widget.layout_vars());
+            args.widget.update_layout(|layout| {
+                for constraint in self.size_constraints.drain(..) {
+                    layout.remove_constraint(constraint);
+                }
+                layout.add(size_constraints.clone());
+            });
+            self.size_constraints = size_constraints;
+            self.measured_size = Some(text_size);
+        }
     }
 }
 
 use style::*;
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct StaticTextStyle {
     pub style: Option<TextComponentStyle>,
 }
@@ -45,14 +47,6 @@ impl StaticTextStyle {
     }
     pub fn style(&mut self, style: TextComponentStyle) {
         self.style = Some(style);
-    }
-}
-
-impl Default for StaticTextStyle {
-    fn default() -> Self {
-        StaticTextStyle {
-            style: None,
-        }
     }
 }
 
@@ -83,7 +77,7 @@ impl Component for StaticTextComponent {
 
 impl WidgetModifier for StaticTextComponent {
     fn apply(&self, widget: &mut WidgetBuilder) {
-        widget.set_draw_style(self.style.clone());
         widget.add_handler(TextUpdatedHandler::default());
+        widget.set_draw_style(self.style.clone());
     }
 }

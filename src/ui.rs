@@ -220,6 +220,13 @@ impl Ui {
             println!("{:?} {:?}", name, bounds);
         }
     }
+
+    pub fn print_widgets(&self) {
+        for widget_ref in self.widgets_bfs() {
+            let draw_state = &widget_ref.widget().draw_state;
+            println!("{:?}", draw_state);
+        }
+    }
 }
 
 #[derive(Clone)]

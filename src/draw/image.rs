@@ -6,7 +6,7 @@ use resources::resources;
 use geometry::{Rect, Size};
 use style::Component;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ImageState {
     pub image: String,
     pub scale: Size,

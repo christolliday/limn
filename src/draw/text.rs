@@ -139,7 +139,7 @@ impl Draw for TextState {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct TextComponentStyle {
     pub text: Option<String>,
     pub font: Option<String>,
