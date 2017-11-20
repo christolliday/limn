@@ -474,7 +474,7 @@ impl WidgetBuilder {
         }
     }
 
-    pub fn from_component<T: Component + WidgetModifier>(component: T) -> Self {
+    pub fn from_modifier<T: Component + WidgetModifier>(component: T) -> Self {
         let name: String = T::name();
         let mut widget = WidgetBuilder {
             widget: WidgetRef::new(Widget::new(name.clone())),
@@ -483,9 +483,12 @@ impl WidgetBuilder {
         widget
     }
 
-    pub fn from_component_style<C: Component + WidgetModifier, T: ComponentStyle<Component = C>>(style: T) -> Self {
-        let component = style.component();
-        WidgetBuilder::from_component(component)
+    pub fn from_modifier_style<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(style: T) -> Self {
+        let mut widget = WidgetBuilder::new(C::name());
+        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>());
+        let component = style.comp();
+        component.apply(&mut widget);
+        widget
     }
 
     /// Clones the current widget
@@ -513,7 +516,7 @@ impl WidgetBuilder {
     }
     pub fn set_draw_style_prop<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, draw_state: T) -> &mut Self {
         self.widget.widget_mut().style_type = Some(TypeId::of::<T>());
-        resources().theme.register_style_widget_prop(self.id(), props, draw_state);
+        resources().theme.register_widget_prop_style(self.id(), props, draw_state);
         self.widget.style_updated();
         self.widget.props_updated();
         self

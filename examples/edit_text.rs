@@ -43,7 +43,7 @@ fn main() {
     let edit_text_ref = edit_text_box.text_widget.widget_ref();
     let mut h_align_button = ToggleButtonStyle::default();
     h_align_button.toggle_text("Right Align", "Left Align");
-    let mut h_align_button = WidgetBuilder::from_component_style(h_align_button);
+    let mut h_align_button = WidgetBuilder::from_modifier_style(h_align_button);
     h_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
         match *event {
             ToggleEvent::On => {
@@ -59,7 +59,7 @@ fn main() {
 
     let mut v_align_button = ToggleButtonStyle::default();
     v_align_button.toggle_text("Wrap Word", "Wrap Char");
-    let mut v_align_button = WidgetBuilder::from_component_style(v_align_button);
+    let mut v_align_button = WidgetBuilder::from_modifier_style(v_align_button);
     v_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
         match *event {
             ToggleEvent::On => {

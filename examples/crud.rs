@@ -111,7 +111,7 @@ impl PeopleHandler {
                 })
                 .enable_hover();
 
-            let mut list_text_widget = WidgetBuilder::from_component_style(text_style);
+            let mut list_text_widget = WidgetBuilder::from_modifier_style(text_style);
             list_text_widget
                 .set_style_class(TypeId::of::<TextComponentStyle>(), "list_item_text")
                 .add_handler(edit_text::text_change_handle);
@@ -195,7 +195,7 @@ fn main() {
 
         let mut static_text = StaticTextStyle::default();
         static_text.text(title);
-        let mut static_text = WidgetBuilder::from_component_style(static_text);
+        let mut static_text = WidgetBuilder::from_modifier_style(static_text);
         static_text.layout().add(center_vertical(&name_container));
 
         let mut text_box = EditTextBuilder::new();
@@ -226,19 +226,19 @@ fn main() {
 
     let mut create_button = ButtonStyle::default();
     create_button.text("Create");
-    let mut create_button = WidgetBuilder::from_component_style(create_button);
+    let mut create_button = WidgetBuilder::from_modifier_style(create_button);
     create_button.add_prop(Property::Inactive);
 
     let mut update_button = ButtonStyle::default();
     update_button.text("Update");
-    let mut update_button = WidgetBuilder::from_component_style(update_button);
+    let mut update_button = WidgetBuilder::from_modifier_style(update_button);
     update_button.add_prop(Property::Inactive);
     update_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Update);
     });
     let mut delete_button = ButtonStyle::default();
     delete_button.text("Delete");
-    let mut delete_button = WidgetBuilder::from_component_style(delete_button);
+    let mut delete_button = WidgetBuilder::from_modifier_style(delete_button);
     delete_button.add_prop(Property::Inactive);
     delete_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Delete);
