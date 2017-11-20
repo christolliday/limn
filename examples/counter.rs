@@ -37,7 +37,7 @@ fn main() {
 
     let mut text_widget = StaticTextStyle::default();
     text_widget.text("0");
-    let mut text_widget = WidgetBuilder::from_component_style(text_widget);
+    let mut text_widget = WidgetBuilder::from_modifier_style(text_widget);
     text_widget.add_handler(CountHandler::default());
     text_widget.layout().add(constraints![
         center_vertical(&root),
@@ -45,7 +45,7 @@ fn main() {
 
     let mut button_widget = ButtonStyle::default();
     button_widget.text("Count");
-    let mut button_widget = WidgetBuilder::from_component_style(button_widget);
+    let mut button_widget = WidgetBuilder::from_modifier_style(button_widget);
     let text_widget_ref = text_widget.widget_ref();
     button_widget.add_handler(move |_: &ClickEvent, _: EventArgs| {
         text_widget_ref.event(CountEvent);

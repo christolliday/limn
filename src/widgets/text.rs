@@ -34,7 +34,7 @@ impl EventHandler<StateUpdated> for TextUpdatedHandler {
 
 use style::*;
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct StaticTextStyle {
     pub style: Option<TextComponentStyle>,
 }

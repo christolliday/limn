@@ -20,7 +20,7 @@ pub enum ToggleEvent {
     Off,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ButtonStyle {
     rect: Option<RectComponentStyle>,
     text: Option<Option<TextComponentStyle>>,
@@ -117,7 +117,7 @@ impl WidgetModifier for ButtonComponent {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ToggleButtonStyle {
     rect: Option<RectComponentStyle>,
     off_text: Option<Option<TextComponentStyle>>,

@@ -14,7 +14,7 @@ fn main() {
     let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
-    let mut image_widget = WidgetBuilder::from_component(ImageComponent::new("rust.png"));
+    let mut image_widget = WidgetBuilder::from_modifier(ImageComponent::new("rust.png"));
     image_widget.layout().add(constraints![
         center(&root),
         bound_by(&root).padding(50.0),

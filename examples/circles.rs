@@ -20,7 +20,6 @@ use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
 use limn::input::drag::DragEvent;
-use limn::resources;
 
 struct SliderControl {
     widget: WidgetBuilder,
@@ -35,7 +34,7 @@ impl SliderControl {
                 ..TextComponentStyle::default()
             })
         };
-        let mut slider_title = WidgetBuilder::from_component_style(slider_title);
+        let mut slider_title = WidgetBuilder::from_modifier_style(slider_title);
         slider_title
             .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
             .set_name("slider_title");
@@ -47,7 +46,7 @@ impl SliderControl {
                 ..TextComponentStyle::default()
             })
         };
-        let mut slider_value = WidgetBuilder::from_component_style(slider_value);
+        let mut slider_value = WidgetBuilder::from_modifier_style(slider_value);
         slider_value
             .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
             .set_name("slider_value")
@@ -105,7 +104,7 @@ impl ControlBar {
         widget.linear_layout(layout_settings);
         let mut create_button = ToggleButtonStyle::default();
         create_button.text("Create Circle");
-        let mut create_button = WidgetBuilder::from_component_style(create_button);
+        let mut create_button = WidgetBuilder::from_modifier_style(create_button);
         create_button.add_handler(|event: &ToggleEvent, args: EventArgs| {
             match *event {
                 ToggleEvent::On => {
@@ -118,14 +117,14 @@ impl ControlBar {
         });
         let mut undo_widget = ButtonStyle::default();
         undo_widget.text("Undo");
-        let mut undo_widget = WidgetBuilder::from_component_style(undo_widget);
+        let mut undo_widget = WidgetBuilder::from_modifier_style(undo_widget);
         undo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::Undo);
         });
 
         let mut redo_widget = ButtonStyle::default();
         redo_widget.text("Redo");
-        let mut redo_widget = WidgetBuilder::from_component_style(redo_widget);
+        let mut redo_widget = WidgetBuilder::from_modifier_style(redo_widget);
         redo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::Redo);
         });
@@ -149,20 +148,16 @@ widget_wrapper!(ControlBar);
 
 fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
     let mut widget = WidgetBuilder::new("circle");
-    let style = EllipseComponentStyle {
-        background_color: Some(WHITE),
-        border: Some(Some((2.0, BLACK))),
-        ..EllipseComponentStyle::default()
-    };
-    {
-        let mut res = resources::resources();
-        res.theme.register_style_widget_prop(widget.id(), SELECTED.clone(), EllipseComponentStyle {
+    widget
+        .set_draw_style(EllipseComponentStyle {
+            background_color: Some(WHITE),
+            border: Some(Some((2.0, BLACK))),
+            ..EllipseComponentStyle::default()
+        })
+        .set_draw_style_prop(SELECTED.clone(), EllipseComponentStyle {
             background_color: Some(RED),
             ..EllipseComponentStyle::default()
-        });
-    }
-    widget
-        .set_draw_style(style)
+        })
         .make_draggable()
         .add_handler(|event: &DragEvent, args: EventArgs| {
             args.widget.event(CircleEvent::Drag(*event));
