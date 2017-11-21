@@ -20,11 +20,10 @@ pub enum ToggleEvent {
     Off,
 }
 
-#[derive(Debug, Clone)]
-pub struct ButtonStyle {
-    rect: Option<RectComponentStyle>,
-    text: Option<Option<TextComponentStyle>>,
-}
+component_style!{pub struct ButtonComponent<name="button", style=ButtonStyle> {
+    rect: RectComponentStyle = RectComponentStyle::default(),
+    text: Option<TextComponentStyle> = None,
+}}
 
 impl ButtonStyle {
     pub fn rect_style(&mut self, rect: RectComponentStyle) {
@@ -38,43 +37,6 @@ impl ButtonStyle {
             text: Some(text.to_owned()),
             ..TextComponentStyle::default()
         }));
-    }
-}
-
-impl Default for ButtonStyle {
-    fn default() -> Self {
-        ButtonStyle {
-            rect: None,
-            text: Some(None),
-        }
-    }
-}
-
-impl ComponentStyle for ButtonStyle {
-    type Component = ButtonComponent;
-    fn merge(&self, other: &Self) -> Self {
-        ButtonStyle {
-            rect: self.rect.as_ref().or(other.rect.as_ref()).cloned(),
-            text: self.text.as_ref().or(other.text.as_ref()).cloned(),
-        }
-    }
-    fn component(self) -> Self::Component {
-        ButtonComponent {
-            rect: self.rect.unwrap_or(RectComponentStyle::default()),
-            text: self.text.unwrap_or(None),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct ButtonComponent {
-    rect: RectComponentStyle,
-    text: Option<TextComponentStyle>,
-}
-
-impl Component for ButtonComponent {
-    fn name() -> String {
-        "button".to_owned()
     }
 }
 

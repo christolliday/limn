@@ -70,7 +70,11 @@ impl Theme {
     }
 
     pub fn get_modifier_style(&self, style: Box<ModifierMergeStyle>, type_id: TypeId) -> Box<ModifierMergeStyle> {
-        style.merge(self.modifier_type_styles.get(&type_id).unwrap().clone())
+        if let Some(type_style) = self.modifier_type_styles.get(&type_id) {
+            style.merge(type_style.clone())
+        } else {
+            style
+        }
     }
 }
 
@@ -178,4 +182,55 @@ impl <T: WidgetModifier + Component + 'static, C: ComponentStyle<Component = T> 
     fn as_any(&self) -> &Any {
         self
     }
+}
+
+#[macro_export]
+macro_rules! component_style {
+    ( pub struct $component:ident <name=$name:expr, style=$style:ident> { $ ( $field:ident : $field_type:ty = $default:expr, ) * } ) => {
+        #[allow(missing_copy_implementations)]
+        #[derive(Clone, Debug)]
+        pub struct $component {
+            $(
+                pub $field: $field_type,
+            )*
+        }
+        impl Default for $component {
+            fn default() -> Self {
+                $component {
+                    $(
+                        $field: $default,
+                    )*
+                }
+            }
+        }
+        impl Component for $component {
+            fn name() -> String {
+                $name.to_owned()
+            }
+        }
+        #[allow(missing_copy_implementations)]
+        #[derive(Clone, Debug, Default)]
+        pub struct $style {
+            $(
+                pub $field: Option<$field_type>,
+            )*
+        }
+        impl ComponentStyle for $style {
+            type Component = $component;
+            fn merge(&self, other: &Self) -> Self {
+                $style {
+                    $(
+                        $field: self.$field.as_ref().or(other.$field.as_ref()).cloned(),
+                    )*
+                }
+            }
+            fn component(self) -> Self::Component {
+                $component {
+                    $(
+                        $field: self.$field.unwrap_or($default),
+                    )*
+                }
+            }
+        }
+    };
 }

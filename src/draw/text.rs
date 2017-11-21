@@ -12,22 +12,15 @@ use style::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 
-#[derive(Debug, Default, Clone)]
-pub struct TextState {
-    pub text: String,
-    pub font: String,
-    pub font_size: f32,
-    pub text_color: Color,
-    pub background_color: Color,
-    pub wrap: Wrap,
-    pub align: Align,
-}
-
-impl Component for TextState {
-    fn name() -> String {
-        String::from("text")
-    }
-}
+component_style!{pub struct TextState<name="text", style=TextComponentStyle> {
+    text: String = String::from(""),
+    font: String = String::from("NotoSans/NotoSans-Regular"),
+    font_size: f32 = 24.0,
+    text_color: Color = BLACK,
+    background_color: Color = TRANSPARENT,
+    wrap: Wrap = Wrap::Whitespace,
+    align: Align = Align::Start,
+}}
 
 impl TextState {
     pub fn measure(&self) -> Size {
@@ -136,51 +129,5 @@ impl Draw for TextState {
             self.text_color.into(),
             None,
         );
-    }
-}
-
-#[derive(Default, Clone, Debug)]
-pub struct TextComponentStyle {
-    pub text: Option<String>,
-    pub font: Option<String>,
-    pub font_size: Option<f32>,
-    pub text_color: Option<Color>,
-    pub background_color: Option<Color>,
-    pub wrap: Option<Wrap>,
-    pub align: Option<Align>,
-}
-
-impl TextComponentStyle {
-    pub fn new(text: &str) -> Self {
-        TextComponentStyle {
-            text: Some((text.to_owned())),
-            ..TextComponentStyle::default()
-        }
-    }
-}
-
-impl ComponentStyle for TextComponentStyle {
-    type Component = TextState;
-    fn merge(&self, other: &Self) -> Self {
-        TextComponentStyle {
-            text: self.text.as_ref().or(other.text.as_ref()).cloned(),
-            font: self.font.as_ref().or(other.font.as_ref()).cloned(),
-            font_size: self.font_size.as_ref().or(other.font_size.as_ref()).cloned(),
-            text_color: self.text_color.as_ref().or(other.text_color.as_ref()).cloned(),
-            background_color: self.background_color.as_ref().or(other.background_color.as_ref()).cloned(),
-            wrap: self.wrap.as_ref().or(other.wrap.as_ref()).cloned(),
-            align: self.align.as_ref().or(other.align.as_ref()).cloned(),
-        }
-    }
-    fn component(self) -> Self::Component {
-        TextState {
-            text: self.text.unwrap_or("".to_owned()),
-            font: self.font.unwrap_or("NotoSans/NotoSans-Regular".to_owned()),
-            font_size: self.font_size.unwrap_or(24.0),
-            text_color: self.text_color.unwrap_or(BLACK),
-            background_color: self.background_color.unwrap_or(TRANSPARENT),
-            wrap: self.wrap.unwrap_or(Wrap::Whitespace),
-            align: self.align.unwrap_or(Align::Start),
-        }
     }
 }
