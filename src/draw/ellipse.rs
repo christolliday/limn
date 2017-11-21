@@ -6,32 +6,10 @@ use geometry::{Rect, RectExt, Point, Size};
 use color::*;
 use style::*;
 
-#[derive(Debug, Copy, Clone)]
-pub struct EllipseState {
-    pub background_color: Color,
-    pub border: Option<(f32, Color)>,
-}
-
-impl Default for EllipseState {
-    fn default() -> Self {
-        EllipseState {
-            background_color: WHITE,
-            border: None,
-        }
-    }
-}
-
-impl EllipseState {
-    pub fn new() -> Self {
-        EllipseState::default()
-    }
-}
-
-impl Component for EllipseState {
-    fn name() -> String {
-        "ellipse".to_owned()
-    }
-}
+component_style!{pub struct EllipseState<name="ellipse", style=EllipseComponentStyle> {
+    background_color: Color = BLACK,
+    border: Option<(f32, Color)> = None,
+}}
 
 fn clip_ellipse(rect: Rect) -> LocalClip {
     let clip_region = ComplexClipRegion::new(rect, BorderRadius::uniform_size(rect.size / 2.0));
@@ -66,26 +44,4 @@ impl Draw for EllipseState {
 fn point_inside_ellipse(point: Point, center: Point, radius: Size) -> bool {
     (point.x - center.x).powi(2) / radius.width.powi(2) +
     (point.y - center.y).powi(2) / radius.height.powi(2) <= 1.0
-}
-
-#[derive(Default, Copy, Clone, Debug)]
-pub struct EllipseComponentStyle {
-    pub background_color: Option<Color>,
-    pub border: Option<Option<(f32, Color)>>,
-}
-
-impl ComponentStyle for EllipseComponentStyle {
-    type Component = EllipseState;
-    fn merge(&self, other: &Self) -> Self {
-        EllipseComponentStyle {
-            background_color: self.background_color.as_ref().or(other.background_color.as_ref()).cloned(),
-            border: self.border.as_ref().or(other.border.as_ref()).cloned(),
-        }
-    }
-    fn component(self) -> Self::Component {
-        EllipseState {
-            background_color: self.background_color.unwrap_or(BLACK),
-            border: self.border.unwrap_or(None),
-        }
-    }
 }

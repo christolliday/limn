@@ -36,6 +36,9 @@
 
 // ---- END CLIPPY CONFIG
 
+#![feature(trace_macros)]
+//trace_macros!(true);
+
 #![cfg_attr(feature="nightly", feature(core_intrinsics))]
 #![cfg_attr(feature="nightly", feature(get_type_id))]
 
@@ -61,6 +64,8 @@ extern crate app_units;
 extern crate image;
 
 #[macro_use]
+pub mod style;
+#[macro_use]
 pub mod event;
 /// Module for `WidgetBuilder` and callback handlers
 #[macro_use]
@@ -82,7 +87,6 @@ pub mod prelude;
 pub mod render;
 /// Wrapper around `glutin::Window`
 pub mod window;
-pub mod style;
 
 #[cfg(not(feature="nightly"))]
 fn type_name<T>() -> &'static str {

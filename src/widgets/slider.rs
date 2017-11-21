@@ -164,7 +164,7 @@ impl Into<WidgetBuilder> for SliderBuilder {
                 ..RectComponentStyle::default()
             });
         } else {
-            slider_bar_pre.set_draw_style(bar_style);
+            slider_bar_pre.set_draw_style(bar_style.clone());
         }
 
         let mut slider_bar_post = WidgetBuilder::new("slider_bar_post");
