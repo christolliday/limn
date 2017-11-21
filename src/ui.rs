@@ -108,6 +108,7 @@ impl Ui {
             });
         }
         self.needs_redraw = true;
+        self.update();
     }
 
     pub fn check_layout_changes(&mut self) {
