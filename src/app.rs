@@ -115,14 +115,10 @@ impl App {
             self.ui.update();
 
             if !self.ui.needs_redraw() && !self.ui.render.frame_ready() {
-                let mut events = Vec::new();
                 events_loop.run_forever(|window_event| {
-                    events.push(window_event);
+                    self.handle_window_event(window_event);
                     glutin::ControlFlow::Break
                 });
-                for event in events {
-                    self.handle_window_event(event);
-                }
             }
         }
     }
