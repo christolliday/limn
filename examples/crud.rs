@@ -11,7 +11,7 @@ use limn::prelude::*;
 
 use limn::widgets::button::ButtonStyle;
 use limn::widgets::edit_text::{self, EditTextBuilder, TextUpdated};
-use limn::widgets::list::ListBuilder;
+use limn::widgets::list::{ListBuilder, ListItemSelected};
 use limn::widgets::scroll::ScrollBuilder;
 use limn::widgets::text::StaticTextStyle;
 use limn::draw::text::TextComponentStyle;
@@ -198,7 +198,7 @@ fn main() {
         let mut static_text = WidgetBuilder::from_modifier_style(static_text);
         static_text.layout().add(center_vertical(&name_container));
 
-        let mut text_box = EditTextBuilder::new();
+        let mut text_box = WidgetBuilder::from_modifier(EditTextBuilder::default());
         text_box.layout().add(constraints![
             min_height(30.0),
             min_width(200.0),
@@ -214,11 +214,11 @@ fn main() {
 
     first_name_container.layout().add(align_top(&container));
     last_name_container.layout().add(below(&first_name_container).padding(20.0));
-    first_name_box.on_text_changed(|text, args| {
-        args.ui.event(PeopleEvent::ChangeFirstName(text.0.clone()));
+    first_name_box.add_handler(|event: &TextUpdated, args: EventArgs| {
+        args.ui.event(PeopleEvent::ChangeFirstName(event.0.clone()));
     });
-    last_name_box.on_text_changed(|text, args| {
-        args.ui.event(PeopleEvent::ChangeLastName(text.0.clone()));
+    last_name_box.add_handler(|event: &TextUpdated, args: EventArgs| {
+        args.ui.event(PeopleEvent::ChangeLastName(event.0.clone()));
     });
 
     let mut button_container = WidgetBuilder::new("button_container");
@@ -246,7 +246,10 @@ fn main() {
     update_button.layout().add(to_right_of(&create_button).padding(20.0));
     delete_button.layout().add(to_right_of(&update_button).padding(20.0));
 
-    let mut scroll_container = ScrollBuilder::new();
+    let mut scroll_container = ScrollBuilder::default();
+    let mut list_widget = WidgetBuilder::from_modifier(ListBuilder::default());
+    scroll_container.add_content(list_widget.widget_ref());
+    let mut scroll_container = WidgetBuilder::from_modifier(scroll_container);
     scroll_container.set_draw_state(RectState::default());
     scroll_container.layout().add(constraints![
         below(&button_container).padding(20.0),
@@ -254,9 +257,8 @@ fn main() {
         min_height(260.0),
     ]);
 
-    let mut list_widget = ListBuilder::new();
-    list_widget.on_item_selected(|selected, args| {
-        if selected.is_none() {
+    list_widget.add_handler(move |event: &ListItemSelected, args: EventArgs| {
+        if event.widget.is_none() {
             args.ui.event(PeopleEvent::PersonSelected(None));
         }
     });
@@ -275,7 +277,6 @@ fn main() {
     };
     first_name_container.add_child(first_name_box);
     last_name_container.add_child(last_name_box);
-    scroll_container.add_content(list_widget);
     button_container
         .add_child(create_button)
         .add_child(update_button)

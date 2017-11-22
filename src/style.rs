@@ -203,7 +203,7 @@ macro_rules! component_style {
                 }
             }
         }
-        impl Component for $component {
+        impl $crate::style::Component for $component {
             fn name() -> String {
                 $name.to_owned()
             }
@@ -215,7 +215,7 @@ macro_rules! component_style {
                 pub $field: Option<$field_type>,
             )*
         }
-        impl ComponentStyle for $style {
+        impl $crate::style::ComponentStyle for $style {
             type Component = $component;
             fn merge(&self, other: &Self) -> Self {
                 $style {

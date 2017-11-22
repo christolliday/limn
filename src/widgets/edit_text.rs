@@ -9,7 +9,9 @@ use draw::rect::RectComponentStyle;
 use draw::text::{TextState, TextComponentStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
+use widget::WidgetRef;
 use widget::property::states::*;
+use style::WidgetModifier;
 
 const BACKSPACE: char = '\u{8}';
 
@@ -20,18 +22,26 @@ enum EditTextEvent {
     StyleUpdated,
 }
 
-#[derive(Default)]
 struct EditTextHandler {
+    text_box: WidgetRef,
     text: String,
 }
 
+impl EditTextHandler {
+    fn update_text(&mut self) {
+        let text = self.text.clone();
+        self.text_box.update(|state: &mut TextState| {
+            state.text = text;
+        });
+    }
+}
 impl EventHandler<EditTextEvent> for EditTextHandler {
-    fn handle(&mut self, event: &EditTextEvent, mut args: EventArgs) {
+    fn handle(&mut self, event: &EditTextEvent, args: EventArgs) {
         match *event {
             EditTextEvent::WidgetReceivedCharacter(char) => {
                 let text = {
-                    let bounds = args.widget.bounds();
-                    let draw_state = args.widget.draw_state();
+                    let bounds = self.text_box.bounds();
+                    let draw_state = self.text_box.draw_state();
                     let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
                     let mut text = text_draw_state.text.clone();
                     match char {
@@ -47,18 +57,16 @@ impl EventHandler<EditTextEvent> for EditTextHandler {
                     }
                     text
                 };
+                self.text = text.clone();
+                self.update_text();
                 args.widget.event(TextUpdated(text.clone()));
             },
             EditTextEvent::StyleUpdated => {
-                args.widget.update(|state: &mut TextState| {
-                    state.text = self.text.clone()
-                });
+                self.update_text();
             },
             EditTextEvent::TextUpdated(ref text) => {
                 self.text = text.clone();
-                args.widget.update(|state: &mut TextState| {
-                    state.text = text.clone()
-                });
+                self.update_text();
             }
         }
     }
@@ -71,77 +79,58 @@ pub fn text_change_handle(event: &TextUpdated, mut args: EventArgs) {
 pub struct TextUpdated(pub String);
 
 
-pub struct EditTextBuilder {
-    pub widget: WidgetBuilder,
-    pub text_widget: WidgetBuilder,
-}
+component_style!{pub struct EditTextBuilder<name="scroll", style=EditTextStyle> {
+    rect: RectComponentStyle = RectComponentStyle {
+        border: Some(Some((1.0, GRAY_70))),
+        corner_radius: Some(Some(3.0)),
+        ..RectComponentStyle::default()
+    },
+    focused_rect: Option<RectComponentStyle> = Some(RectComponentStyle {
+        border: Some(Some((1.0, BLUE))),
+        ..RectComponentStyle::default()
+    }),
+}}
 
-impl Default for EditTextBuilder {
-    fn default() -> Self {
-        let default_border = Some((1.0, GRAY_70));
-        let rect_style = RectComponentStyle {
-            border: Some(default_border),
-            corner_radius: Some(Some(3.0)),
-            ..RectComponentStyle::default()
-        };
-        let mut widget = WidgetBuilder::new("edit_text");
+impl WidgetModifier for EditTextBuilder {
+    fn apply(&self, widget: &mut WidgetBuilder) {
+        let mut text_widget = WidgetBuilder::new("edit_text_text");
         widget
-            .set_draw_style(rect_style)
+            .set_draw_style(self.rect.clone())
             .add_handler(|_: &WidgetAttachedEvent, args: EventArgs| {
                 args.ui.event(KeyboardInputEvent::AddFocusable(args.widget));
             })
             .add_handler(|_: &WidgetDetachedEvent, args: EventArgs| {
                 args.ui.event(KeyboardInputEvent::RemoveFocusable(args.widget));
             })
+            .add_handler(EditTextHandler {
+                text_box: text_widget.widget_ref(),
+                text: "".to_owned(),
+            })
             .make_focusable();
 
-        widget.set_draw_style_prop(FOCUSED.clone(), RectComponentStyle {
-            border: Some(Some((1.0, BLUE))),
-            ..RectComponentStyle::default()
-        });
+        if let Some(ref focused_rect) = self.focused_rect {
+            widget.set_draw_style_prop(FOCUSED.clone(), focused_rect.clone());
+        }
 
-        let mut text_widget = WidgetBuilder::new("edit_text_text");
         text_widget
             .set_draw_style(TextComponentStyle::default())
-            .add_handler(TextUpdatedHandler::default())
-            .add_handler(|event: &WidgetReceivedCharacter, args: EventArgs| args.widget.event(EditTextEvent::WidgetReceivedCharacter(event.0)))
-            .add_handler(|event: &TextUpdated, args: EventArgs| args.widget.event(EditTextEvent::TextUpdated(event.0.clone())))
-            .add_handler(|_: &StyleUpdated, args: EventArgs| args.widget.event(EditTextEvent::StyleUpdated))
-            .add_handler(EditTextHandler::default());
+            .add_handler(TextUpdatedHandler::default());
+
+        let widget_ref = widget.widget_ref();
+        text_widget.add_handler(move |event: &WidgetReceivedCharacter, _: EventArgs| widget_ref.event(EditTextEvent::WidgetReceivedCharacter(event.0)));
+
+        let widget_ref = widget.widget_ref();
+        text_widget.add_handler(move |event: &TextUpdated, _: EventArgs| widget_ref.event(EditTextEvent::TextUpdated(event.0.clone())));
+
+        let widget_ref = widget.widget_ref();
+        text_widget.add_handler(move |_: &StyleUpdated, _: EventArgs| widget_ref.event(EditTextEvent::StyleUpdated));
 
         text_widget.layout().add(constraints![
-            align_left(&widget).padding(5.0),
-            align_top(&widget).padding(5.0),
-            bound_by(&widget).padding(5.0),
+            align_left(widget).padding(5.0),
+            align_top(widget).padding(5.0),
+            bound_by(widget).padding(5.0),
         ]);
-
-        EditTextBuilder {
-            widget: widget,
-            text_widget: text_widget,
-        }
-    }
-}
-impl EditTextBuilder {
-    /// Creates a new `EditTextBuilder`
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Sets the callback which is used on changing the edited text
-    pub fn on_text_changed<F>(&mut self, callback: F) -> &mut Self
-        where F: Fn(&TextUpdated, EventArgs) + 'static
-    {
-        self.text_widget.add_handler(callback);
-        self
-    }
-}
-
-widget_builder!(EditTextBuilder);
-
-impl Into<WidgetBuilder> for EditTextBuilder {
-    fn into(mut self) -> WidgetBuilder {
-        self.widget.add_child(self.text_widget);
-        self.widget
+        widget.add_child(text_widget);
     }
 }
 

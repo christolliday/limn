@@ -4,7 +4,6 @@ use render::RenderBuilder;
 use widget::draw::Draw;
 use geometry::{Rect, RectExt};
 use color::*;
-use style::*;
 
 component_style!{pub struct RectState<name="rect", style=RectComponentStyle> {
     background_color: Color = WHITE,

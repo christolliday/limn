@@ -12,7 +12,7 @@ use layout::linear_layout::{LinearLayoutSettings, Orientation, ItemAlignment};
 use style::{ComponentStyle, WidgetModifier};
 
 pub struct ListItemSelected {
-    widget: Option<WidgetRef>,
+    pub widget: Option<WidgetRef>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -68,61 +68,22 @@ impl EventHandler<ClickEvent> for ListItemHandler {
     }
 }
 
-pub struct ListBuilder {
-    pub widget: WidgetBuilder,
-}
-
-widget_wrapper!(ListBuilder);
-
-impl Default for ListBuilder {
-    #[inline]
-    fn default() -> Self {
+component_style!{pub struct ListBuilder<name="list", style=ListBuilderStyle> {
+    layout: LinearLayoutSettings = {
         let mut layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
         layout_settings.item_align = ItemAlignment::Fill;
+        layout_settings
+    },
+}}
 
-        let mut widget = WidgetBuilder::new("list");
+impl WidgetModifier for ListBuilder {
+    fn apply(&self, widget: &mut WidgetBuilder) {
+        let mut layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
+        layout_settings.item_align = ItemAlignment::Fill;
 
         widget.add_handler(ListHandler::new())
               .add_handler(&list_handle_deselect)
               .linear_layout(layout_settings);
-
-        ListBuilder {
-            widget: widget,
-        }
-    }
-}
-impl ListBuilder {
-
-    /// Creates a new `ListBuilder`
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Sets the closure to run when a list item is selected
-    pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
-        where F: Fn(Option<WidgetRef>, EventArgs) + 'static
-    {
-        self.widget.add_handler(move |event: &ListItemSelected, args: EventArgs| {
-            on_item_selected(event.widget.clone(), args);
-            if let Some(ref widget) = event.widget {
-                widget.event(ItemSelected);
-            }
-        });
-        self
-    }
-
-    /// Set the contents of the list
-    pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
-        where C: Iterator<Item=I>,
-              F: Fn(I, &mut ListBuilder) -> WidgetBuilder,
-    {
-        for item in contents {
-            let mut widget = build(item, self);
-            widget
-                .set_name("list_item")
-                .list_item(&self.widget.widget_ref());
-            self.widget.add_child(widget);
-        }
     }
 }
 
@@ -140,9 +101,22 @@ impl WidgetBuilder {
         });
         self
     }
+    /// Set the contents of the list
+    pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
+        where C: Iterator<Item=I>,
+              F: Fn(I, &mut WidgetBuilder) -> WidgetBuilder,
+    {
+        for item in contents {
+            let mut widget = build(item, self);
+            widget
+                .set_name("list_item")
+                .list_item(&self.widget_ref());
+            self.widget.add_child(widget);
+        }
+    }
 }
 
-pub fn default_text_adapter(text: String, list: &mut ListBuilder) -> WidgetBuilder {
+pub fn default_text_adapter(text: String, list: &mut WidgetBuilder) -> WidgetBuilder {
     let mut style = StaticTextStyle::default();
     style.text(&text);
     let mut text_widget = WidgetBuilder::new("list_item_text");

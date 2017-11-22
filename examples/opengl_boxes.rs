@@ -269,11 +269,13 @@ fn main() {
     });
 
     // And now the slider
-    let mut size_slider = SliderBuilder::new();
+    let mut size_slider = SliderBuilder::default();
     size_slider
         .set_range(0.8..1.2)
-        .set_value(scale.get())
-        .set_name("size_slider");
+        .set_value(scale.get());
+
+    let mut size_slider = WidgetBuilder::from_modifier(size_slider);
+    size_slider.set_name("size_slider");
     size_slider.layout().add(constraints![
         align_below(&gl_canvas).padding(10.0),
         align_left(&root).padding(10.0),

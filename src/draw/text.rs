@@ -8,7 +8,6 @@ use geometry::{Size, Rect, RectExt, Vector};
 use render;
 use widget::draw::Draw;
 use color::*;
-use style::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 

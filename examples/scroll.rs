@@ -16,10 +16,8 @@ fn main() {
     let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
-    let mut scroll_widget = ScrollBuilder::new();
+    let mut scroll_widget = ScrollBuilder::default();
     scroll_widget.add_scrollbar();
-    scroll_widget.layout().add(match_layout(&root).padding(50.0));
-
     let mut rect_container = WidgetBuilder::new("rect_container");
     rect_container.grid(3);
     rect_container.layout().add(size(Size::new(400.0, 400.0)));
@@ -44,7 +42,9 @@ fn main() {
         add_rect(BLACK);
     }
 
-    scroll_widget.add_content(rect_container);
+    scroll_widget.add_content(rect_container.widget_ref());
+    let mut scroll_widget = WidgetBuilder::from_modifier(scroll_widget);
+    scroll_widget.layout().add(match_layout(&root).padding(50.0));
     root.add_child(scroll_widget);
 
     app.main_loop(root);
