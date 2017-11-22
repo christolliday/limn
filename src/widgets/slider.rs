@@ -9,8 +9,8 @@ use input::drag::{DragEvent, DragState};
 use event::{EventHandler, EventArgs};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
-use draw::rect::RectComponentStyle;
-use draw::ellipse::EllipseComponentStyle;
+use draw::rect::RectStyle;
+use draw::ellipse::EllipseStyle;
 use geometry::{RectExt, Point};
 use color::*;
 use widget::property::states::*;
@@ -34,7 +34,7 @@ pub enum BarStyle {
     Wide,
 }
 
-component_style!{pub struct SliderBuilder<name="slider", style=SliderStyle> {
+component_style!{pub struct Slider<name="slider", style=SliderStyle> {
     orientation: Orientation = Orientation::Horizontal,
     range: Range<f32> = 0.0..1.0,
     init_value: Option<f32> = None,
@@ -48,7 +48,7 @@ component_style!{pub struct SliderBuilder<name="slider", style=SliderStyle> {
     width: f32 = 30.0,
 }}
 
-impl SliderBuilder {
+impl Slider {
     /// Sets the orientation of the slider to vertical
     pub fn make_vertical(&mut self) -> &mut Self {
         self.orientation = Orientation::Vertical;
@@ -82,23 +82,23 @@ impl SliderBuilder {
     }
 }
 
-impl WidgetModifier for SliderBuilder {
+impl WidgetModifier for Slider {
     fn apply(&self, widget: &mut WidgetBuilder) {
 
         let mut slider_handle = WidgetBuilder::new("slider_handle");
         match self.handle_style {
             HandleStyle::Round => {
-                slider_handle.set_draw_style(EllipseComponentStyle {
+                slider_handle.set_draw_style(EllipseStyle {
                     background_color: Some(self.handle_color),
                     border: Some(self.border),
-                    ..EllipseComponentStyle::default()
+                    ..EllipseStyle::default()
                 });
             }
             HandleStyle::Square => {
-                slider_handle.set_draw_style(RectComponentStyle {
+                slider_handle.set_draw_style(RectStyle {
                     background_color: Some(self.handle_color),
                     border: Some(self.border),
-                    ..RectComponentStyle::default()
+                    ..RectStyle::default()
                 });
             }
         };
@@ -107,22 +107,22 @@ impl WidgetModifier for SliderBuilder {
             BarStyle::NarrowRound => Some(3.0),
             BarStyle::Wide => None,
         };
-        let bar_style = RectComponentStyle {
+        let bar_style = RectStyle {
             background_color: Some(self.bar_color),
             corner_radius: Some(corner_radius),
             border: Some(self.border),
-            ..RectComponentStyle::default()
+            ..RectStyle::default()
         };
 
         let mut slider_bar_pre = WidgetBuilder::new("slider_bar_pre");
         if let Some(highlight) = self.highlight {
-            slider_bar_pre.set_draw_style(RectComponentStyle {
+            slider_bar_pre.set_draw_style(RectStyle {
                 background_color: Some(highlight),
                 ..bar_style
             });
-            slider_bar_pre.set_draw_style_prop(INACTIVE.clone(), RectComponentStyle {
+            slider_bar_pre.set_draw_style_prop(INACTIVE.clone(), RectStyle {
                 background_color: Some(self.bar_color),
-                ..RectComponentStyle::default()
+                ..RectStyle::default()
             });
         } else {
             slider_bar_pre.set_draw_style(bar_style.clone());

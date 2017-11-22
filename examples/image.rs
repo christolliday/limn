@@ -5,7 +5,7 @@ extern crate limn;
 mod util;
 
 use limn::prelude::*;
-use limn::widgets::image::ImageComponent;
+use limn::widgets::image::Image;
 
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
@@ -14,7 +14,7 @@ fn main() {
     let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
-    let mut image_widget = WidgetBuilder::from_modifier(ImageComponent::new("rust.png"));
+    let mut image_widget = WidgetBuilder::from_modifier(Image::new("rust.png"));
     image_widget.layout().add(constraints![
         center(&root),
         bound_by(&root).padding(50.0),

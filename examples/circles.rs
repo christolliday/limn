@@ -12,10 +12,10 @@ use limn::prelude::*;
 
 use limn::input::mouse::WidgetMouseButton;
 use limn::widgets::button::{ButtonStyle, ToggleButtonStyle, ToggleEvent};
-use limn::widgets::slider::{SliderBuilder, SetSliderValue, SliderEvent};
-use limn::draw::text::TextComponentStyle;
-use limn::draw::rect::{RectComponentStyle};
-use limn::draw::ellipse::{EllipseComponentStyle};
+use limn::widgets::slider::{Slider, SetSliderValue, SliderEvent};
+use limn::draw::text::TextStyle;
+use limn::draw::rect::{RectStyle};
+use limn::draw::ellipse::{EllipseStyle};
 use limn::widgets::edit_text::{self, TextUpdated};
 use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
@@ -25,30 +25,30 @@ use limn::input::drag::DragEvent;
 fn create_slider_control() -> WidgetBuilder {
     let mut widget = WidgetBuilder::new("slider_container");
     let slider_title = StaticTextStyle {
-        style: Some(TextComponentStyle {
+        style: Some(TextStyle {
             text: Some("Circle Size".to_owned()),
-            ..TextComponentStyle::default()
+            ..TextStyle::default()
         })
     };
     let mut slider_title = WidgetBuilder::from_modifier_style(slider_title);
     slider_title
-        .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
+        .set_style_class(TypeId::of::<TextStyle>(), "static_text")
         .set_name("slider_title");
     slider_title.layout().add(align_left(&widget));
     let slider_value = StaticTextStyle {
-        style: Some(TextComponentStyle {
+        style: Some(TextStyle {
             align: Some(Align::End),
             text: Some("--".to_owned()),
-            ..TextComponentStyle::default()
+            ..TextStyle::default()
         })
     };
     let mut slider_value = WidgetBuilder::from_modifier_style(slider_value);
     slider_value
-        .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
+        .set_style_class(TypeId::of::<TextStyle>(), "static_text")
         .set_name("slider_value")
         .add_handler(edit_text::text_change_handle);
     slider_value.layout().add(align_right(&widget));
-    let mut slider_widget = SliderBuilder::default();
+    let mut slider_widget = Slider::default();
     slider_widget.set_range(10.0..500.0);
     let mut slider_widget = WidgetBuilder::from_modifier(slider_widget);
     slider_widget.layout().add(constraints![
@@ -135,14 +135,14 @@ fn create_control_bar() -> (WidgetBuilder, ControlBarRefs) {
 fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
     let mut widget = WidgetBuilder::new("circle");
     widget
-        .set_draw_style(EllipseComponentStyle {
+        .set_draw_style(EllipseStyle {
             background_color: Some(WHITE),
             border: Some(Some((2.0, BLACK))),
-            ..EllipseComponentStyle::default()
+            ..EllipseStyle::default()
         })
-        .set_draw_style_prop(SELECTED.clone(), EllipseComponentStyle {
+        .set_draw_style_prop(SELECTED.clone(), EllipseStyle {
             background_color: Some(RED),
-            ..EllipseComponentStyle::default()
+            ..EllipseStyle::default()
         })
         .make_draggable()
         .add_handler(|event: &DragEvent, args: EventArgs| {
@@ -388,9 +388,9 @@ fn main() {
         match_width(&root),
     ]);
     circle_canvas
-        .set_draw_style(RectComponentStyle {
+        .set_draw_style(RectStyle {
             background_color: Some(WHITE),
-            ..RectComponentStyle::default()
+            ..RectStyle::default()
         })
         .add_handler(|event: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::ClickCanvas(event.position));

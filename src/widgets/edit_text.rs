@@ -5,8 +5,8 @@ use layout::constraint::*;
 use widget::{WidgetBuilder, StyleUpdated};
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
-use draw::rect::RectComponentStyle;
-use draw::text::{TextState, TextComponentStyle};
+use draw::rect::RectStyle;
+use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
 use widget::WidgetRef;
@@ -14,6 +14,8 @@ use widget::property::states::*;
 use style::WidgetModifier;
 
 const BACKSPACE: char = '\u{8}';
+
+pub struct TextUpdated(pub String);
 
 #[derive(Debug)]
 enum EditTextEvent {
@@ -35,31 +37,27 @@ impl EditTextHandler {
         });
     }
 }
+
 impl EventHandler<EditTextEvent> for EditTextHandler {
     fn handle(&mut self, event: &EditTextEvent, args: EventArgs) {
         match *event {
             EditTextEvent::WidgetReceivedCharacter(char) => {
-                let text = {
-                    let bounds = self.text_box.bounds();
-                    let draw_state = self.text_box.draw_state();
-                    let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
-                    let mut text = text_draw_state.text.clone();
-                    match char {
-                        BACKSPACE => {
-                            text.pop();
-                        }
-                        _ => {
-                            text.push(char);
-                            if !text_draw_state.text_fits(&text, bounds) {
-                                text.pop();
-                            }
+                match char {
+                    BACKSPACE => {
+                        self.text.pop();
+                    }
+                    _ => {
+                        self.text.push(char);
+                        let bounds = self.text_box.bounds();
+                        let draw_state = self.text_box.draw_state();
+                        let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
+                        if !text_draw_state.text_fits(&self.text, bounds) {
+                            self.text.pop();
                         }
                     }
-                    text
-                };
-                self.text = text.clone();
+                }
                 self.update_text();
-                args.widget.event(TextUpdated(text.clone()));
+                args.widget.event(TextUpdated(self.text.clone()));
             },
             EditTextEvent::StyleUpdated => {
                 self.update_text();
@@ -76,22 +74,19 @@ pub fn text_change_handle(event: &TextUpdated, mut args: EventArgs) {
     args.widget.update(|state: &mut TextState| state.text = event.0.clone());
 }
 
-pub struct TextUpdated(pub String);
-
-
-component_style!{pub struct EditTextBuilder<name="scroll", style=EditTextStyle> {
-    rect: RectComponentStyle = RectComponentStyle {
+component_style!{pub struct EditText<name="scroll", style=EditTextStyle> {
+    rect: RectStyle = RectStyle {
         border: Some(Some((1.0, GRAY_70))),
         corner_radius: Some(Some(3.0)),
-        ..RectComponentStyle::default()
+        ..RectStyle::default()
     },
-    focused_rect: Option<RectComponentStyle> = Some(RectComponentStyle {
+    focused_rect: Option<RectStyle> = Some(RectStyle {
         border: Some(Some((1.0, BLUE))),
-        ..RectComponentStyle::default()
+        ..RectStyle::default()
     }),
 }}
 
-impl WidgetModifier for EditTextBuilder {
+impl WidgetModifier for EditText {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let mut text_widget = WidgetBuilder::new("edit_text_text");
         widget
@@ -113,8 +108,8 @@ impl WidgetModifier for EditTextBuilder {
         }
 
         text_widget
-            .set_draw_style(TextComponentStyle::default())
-            .add_handler(TextUpdatedHandler::default());
+            .set_draw_style(TextStyle::default())
+            .add_handler(TextHeightHandler::default());
 
         let widget_ref = widget.widget_ref();
         text_widget.add_handler(move |event: &WidgetReceivedCharacter, _: EventArgs| widget_ref.event(EditTextEvent::WidgetReceivedCharacter(event.0)));
@@ -134,13 +129,14 @@ impl WidgetModifier for EditTextBuilder {
     }
 }
 
+// Ensures the edit text is at least tall enough to fit the text. Width is unconstrained.
 #[derive(Default)]
-struct TextUpdatedHandler {
+struct TextHeightHandler {
     measured_height: f32,
     size_constraints: Vec<Constraint>,
 }
 
-impl EventHandler<StyleUpdated> for TextUpdatedHandler {
+impl EventHandler<StyleUpdated> for TextHeightHandler {
     fn handle(&mut self, _: &StyleUpdated, mut args: EventArgs) {
         let line_height = {
             let draw_state = args.widget.draw_state();

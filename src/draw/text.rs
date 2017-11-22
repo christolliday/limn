@@ -11,7 +11,7 @@ use color::*;
 
 const DEBUG_LINE_BOUNDS: bool = false;
 
-component_style!{pub struct TextState<name="text", style=TextComponentStyle> {
+component_style!{pub struct TextState<name="text", style=TextStyle> {
     text: String = String::from(""),
     font: String = String::from("NotoSans/NotoSans-Regular"),
     font_size: f32 = 24.0,

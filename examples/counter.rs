@@ -35,9 +35,7 @@ fn main() {
         }
     }
 
-    let mut text_widget = StaticTextStyle::default();
-    text_widget.text("0");
-    let mut text_widget = WidgetBuilder::from_modifier_style(text_widget);
+    let mut text_widget = WidgetBuilder::from_modifier_style(StaticTextStyle::from_text("0"));
     text_widget.add_handler(CountHandler::default());
     text_widget.layout().add(constraints![
         center_vertical(&root),

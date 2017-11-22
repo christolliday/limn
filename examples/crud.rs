@@ -10,12 +10,12 @@ use std::collections::HashMap;
 use limn::prelude::*;
 
 use limn::widgets::button::ButtonStyle;
-use limn::widgets::edit_text::{self, EditTextBuilder, TextUpdated};
-use limn::widgets::list::{ListBuilder, ListItemSelected};
-use limn::widgets::scroll::ScrollBuilder;
+use limn::widgets::edit_text::{self, EditText, TextUpdated};
+use limn::widgets::list::{List, ListItemSelected};
+use limn::widgets::scroll::ScrollContainer;
 use limn::widgets::text::StaticTextStyle;
-use limn::draw::text::TextComponentStyle;
-use limn::draw::rect::{RectState, RectComponentStyle};
+use limn::draw::text::TextStyle;
+use limn::draw::rect::{RectState, RectStyle};
 
 named_id!(PersonId);
 
@@ -95,16 +95,16 @@ impl PeopleHandler {
         let id = self.id_gen.next_id();
         self.people.insert(id, self.person.clone());
         let list_item_widget = {
-            let text_style = TextComponentStyle {
+            let text_style = TextStyle {
                 text: Some(self.person.name()),
-                ..TextComponentStyle::default()
+                ..TextStyle::default()
             };
             let text_style = StaticTextStyle {
                 style: Some(text_style),
             };
             let mut list_item_widget = WidgetBuilder::new("list_item");
             list_item_widget
-                .set_style_class(TypeId::of::<RectComponentStyle>(), "list_item_rect")
+                .set_style_class(TypeId::of::<RectStyle>(), "list_item_rect")
                 .list_item(&self.widgets.list_widget)
                 .on_item_selected(move |args| {
                     args.ui.event(PeopleEvent::PersonSelected(Some(id)));
@@ -113,7 +113,7 @@ impl PeopleHandler {
 
             let mut list_text_widget = WidgetBuilder::from_modifier_style(text_style);
             list_text_widget
-                .set_style_class(TypeId::of::<TextComponentStyle>(), "list_item_text")
+                .set_style_class(TypeId::of::<TextStyle>(), "list_item_text")
                 .add_handler(edit_text::text_change_handle);
             list_text_widget.layout().add(constraints![
                 match_height(&list_item_widget),
@@ -193,12 +193,10 @@ fn main() {
         let mut name_container = WidgetBuilder::new("name_container");
         name_container.layout().add(match_width(container));
 
-        let mut static_text = StaticTextStyle::default();
-        static_text.text(title);
-        let mut static_text = WidgetBuilder::from_modifier_style(static_text);
+        let mut static_text = WidgetBuilder::from_modifier_style(StaticTextStyle::from_text(title));
         static_text.layout().add(center_vertical(&name_container));
 
-        let mut text_box = WidgetBuilder::from_modifier(EditTextBuilder::default());
+        let mut text_box = WidgetBuilder::from_modifier(EditText::default());
         text_box.layout().add(constraints![
             min_height(30.0),
             min_width(200.0),
@@ -246,8 +244,8 @@ fn main() {
     update_button.layout().add(to_right_of(&create_button).padding(20.0));
     delete_button.layout().add(to_right_of(&update_button).padding(20.0));
 
-    let mut scroll_container = ScrollBuilder::default();
-    let mut list_widget = WidgetBuilder::from_modifier(ListBuilder::default());
+    let mut scroll_container = ScrollContainer::default();
+    let mut list_widget = WidgetBuilder::from_modifier(List::default());
     scroll_container.add_content(list_widget.widget_ref());
     let mut scroll_container = WidgetBuilder::from_modifier(scroll_container);
     scroll_container.set_draw_state(RectState::default());
