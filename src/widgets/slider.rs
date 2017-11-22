@@ -14,6 +14,7 @@ use draw::ellipse::EllipseComponentStyle;
 use geometry::{RectExt, Point};
 use color::*;
 use widget::property::states::*;
+use style::WidgetModifier;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Orientation {
@@ -33,52 +34,21 @@ pub enum BarStyle {
     Wide,
 }
 
-#[derive(Debug)]
-pub struct SliderBuilder {
-    pub widget: WidgetBuilder,
-    pub slider_handle: WidgetBuilder,
-    pub orientation: Orientation,
-    pub range: Range<f32>,
-    pub init_value: Option<f32>,
-    pub variable_handle_size: bool,
-    pub handle_style: HandleStyle,
-    pub bar_style: BarStyle,
-    pub border: Option<(f32, Color)>,
-    pub bar_color: Color,
-    pub handle_color: Color,
-    pub highlight: Option<Color>,
-    pub width: f32,
-}
-
-impl Default for SliderBuilder {
-    #[inline]
-    fn default() -> Self {
-        let widget = WidgetBuilder::new("slider");
-
-        let slider_handle = WidgetBuilder::new("slider_handle");
-        SliderBuilder {
-            widget: widget,
-            slider_handle: slider_handle,
-            orientation: Orientation::Horizontal,
-            range: 0.0..1.0,
-            init_value: None,
-            variable_handle_size: false,
-            handle_style: HandleStyle::Round,
-            bar_style: BarStyle::NarrowRound,
-            border: Some((1.0, GRAY_30)),
-            bar_color: GRAY_70,
-            handle_color: GRAY_80,
-            highlight: Some(BLUE_HIGHLIGHT),
-            width: 30.0,
-        }
-    }
-}
+component_style!{pub struct SliderBuilder<name="slider", style=SliderStyle> {
+    orientation: Orientation = Orientation::Horizontal,
+    range: Range<f32> = 0.0..1.0,
+    init_value: Option<f32> = None,
+    variable_handle_size: bool = false,
+    handle_style: HandleStyle = HandleStyle::Round,
+    bar_style: BarStyle = BarStyle::NarrowRound,
+    border: Option<(f32, Color)> = Some((1.0, GRAY_30)),
+    bar_color: Color = GRAY_70,
+    handle_color: Color = GRAY_80,
+    highlight: Option<Color> = Some(BLUE_HIGHLIGHT),
+    width: f32 = 30.0,
+}}
 
 impl SliderBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Sets the orientation of the slider to vertical
     pub fn make_vertical(&mut self) -> &mut Self {
         self.orientation = Orientation::Vertical;
@@ -110,21 +80,12 @@ impl SliderBuilder {
         self.range = range;
         self
     }
-    pub fn on_value_changed<F>(&mut self, on_value_changed: F) -> &mut Self
-        where F: Fn(f32, &mut EventArgs) + 'static
-    {
-        self.add_handler(move |event: &SliderEvent, mut args: EventArgs| {
-            on_value_changed(event.value, &mut args);
-        });
-        self
-    }
 }
 
-widget_builder!(SliderBuilder);
-impl Into<WidgetBuilder> for SliderBuilder {
-    fn into(self) -> WidgetBuilder {
-        let (mut widget, mut slider_handle, orientation) = (self.widget, self.slider_handle, self.orientation);
+impl WidgetModifier for SliderBuilder {
+    fn apply(&self, widget: &mut WidgetBuilder) {
 
+        let mut slider_handle = WidgetBuilder::new("slider_handle");
         match self.handle_style {
             HandleStyle::Round => {
                 slider_handle.set_draw_style(EllipseComponentStyle {
@@ -178,22 +139,22 @@ impl Into<WidgetBuilder> for SliderBuilder {
         if !self.variable_handle_size {
             slider_handle.layout().add(aspect_ratio(1.0));
         }
-        match orientation {
+        match self.orientation {
             Orientation::Horizontal => {
                 widget.layout().add(height(self.width));
                 slider_bar_pre.layout().add(constraints![
                     height(bar_width),
-                    center_vertical(&widget),
-                    align_left(&widget).padding(bar_padding),
+                    center_vertical(widget),
+                    align_left(widget).padding(bar_padding),
                     to_left_of(&slider_handle).padding(-bar_padding),
                 ]);
                 slider_bar_post.layout().add(constraints![
                     height(bar_width),
-                    center_vertical(&widget),
-                    align_right(&widget).padding(bar_padding),
+                    center_vertical(widget),
+                    align_right(widget).padding(bar_padding),
                     to_right_of(&slider_handle).padding(-bar_padding),
                 ]);
-                slider_handle.layout().add(match_height(&widget));
+                slider_handle.layout().add(match_height(widget));
 
                 if self.variable_handle_size {
                     // STRONG + 1.0 for higher strength than handle position
@@ -205,18 +166,18 @@ impl Into<WidgetBuilder> for SliderBuilder {
                 widget.layout().add(width(self.width));
                 slider_bar_pre.layout().add(constraints![
                     width(bar_width),
-                    center_horizontal(&widget),
-                    align_top(&widget).padding(bar_padding),
+                    center_horizontal(widget),
+                    align_top(widget).padding(bar_padding),
                     above(&slider_handle).padding(-bar_padding),
                 ]);
                 slider_bar_post.layout().add(constraints![
                     width(bar_width),
-                    center_horizontal(&widget),
-                    align_bottom(&widget).padding(bar_padding),
+                    center_horizontal(widget),
+                    align_bottom(widget).padding(bar_padding),
                     below(&slider_handle).padding(-bar_padding),
                 ]);
 
-                slider_handle.layout().add(match_width(&widget));
+                slider_handle.layout().add(match_width(widget));
 
                 if self.variable_handle_size {
                     // STRONG + 1.0 for higher strength than handle position
@@ -251,12 +212,11 @@ impl Into<WidgetBuilder> for SliderBuilder {
             args.widget.event(SliderInputEvent::LayoutUpdated);
         });
         let widget_ref = widget.widget_ref();
-        widget.add_handler(SliderHandler::new(orientation, self.range, widget_ref.clone(), slider_handle.widget_ref(), self.init_value));
+        widget.add_handler(SliderHandler::new(self.orientation, self.range.clone(), widget_ref.clone(), slider_handle.widget_ref(), self.init_value));
 
         widget.add_child(slider_bar_pre);
         widget.add_child(slider_bar_post);
         widget.add_child(slider_handle);
-        widget
     }
 }
 

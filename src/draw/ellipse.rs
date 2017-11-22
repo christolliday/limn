@@ -4,7 +4,6 @@ use render::RenderBuilder;
 use widget::draw::Draw;
 use geometry::{Rect, RectExt, Point, Size};
 use color::*;
-use style::*;
 
 component_style!{pub struct EllipseState<name="ellipse", style=EllipseComponentStyle> {
     background_color: Color = BLACK,

@@ -222,6 +222,10 @@ impl WidgetRef {
         self.widget().children.clone()
     }
 
+    pub fn child(&self, name: &str) -> Option<WidgetRef> {
+        self.children().iter().find(|child| child.name() == name).cloned()
+    }
+
     pub fn event<T: 'static>(&self, data: T) {
         event::event(Target::Widget(self.clone()), data);
     }
@@ -491,12 +495,10 @@ impl WidgetBuilder {
         widget
     }
 
-    /// Clones the current widget
     pub fn widget_ref(&self) -> WidgetRef {
         self.widget.clone()
     }
 
-    /// Returns the ID of the current widget
     pub fn id(&self) -> WidgetId {
         self.widget.id()
     }
@@ -591,49 +593,4 @@ impl LayoutRef for WidgetBuilder {
     fn layout_ref(&self) -> LayoutVars {
         self.widget_ref().layout_vars()
     }
-}
-
-#[macro_export]
-macro_rules! widget_wrapper {
-    ($builder_type:ty) => {
-        widget_builder!($builder_type);
-        impl Into<$crate::widget::WidgetBuilder> for $builder_type {
-            fn into(self) -> WidgetBuilder {
-                self.widget
-            }
-        }
-    }
-}
-
-#[macro_export]
-macro_rules! widget_builder {
-    ($builder_type:ty) => {
-        impl $crate::widget::AsWidgetRef for $builder_type {
-            fn widget_ref(&self) -> $crate::widget::WidgetRef {
-                self.widget.widget_ref()
-            }
-        }
-        impl Into<$crate::widget::WidgetRef> for $builder_type {
-            fn into(self) -> $crate::widget::WidgetRef {
-                let builder: WidgetBuilder = self.into();
-                builder.into()
-            }
-        }
-        impl ::std::ops::Deref for $builder_type {
-            type Target = WidgetBuilder;
-            fn deref(&self) -> &WidgetBuilder {
-                &self.widget
-            }
-        }
-        impl ::std::ops::DerefMut for $builder_type {
-            fn deref_mut(&mut self) -> &mut WidgetBuilder {
-                &mut self.widget
-            }
-        }
-        impl $crate::layout::LayoutRef for $builder_type {
-            fn layout_ref(&self) -> $crate::layout::LayoutVars {
-                self.widget_ref().layout_vars()
-            }
-        }
-    };
 }

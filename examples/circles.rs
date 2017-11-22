@@ -21,130 +21,116 @@ use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
 use limn::input::drag::DragEvent;
 
-struct SliderControl {
-    widget: WidgetBuilder,
+
+fn create_slider_control() -> WidgetBuilder {
+    let mut widget = WidgetBuilder::new("slider_container");
+    let slider_title = StaticTextStyle {
+        style: Some(TextComponentStyle {
+            text: Some("Circle Size".to_owned()),
+            ..TextComponentStyle::default()
+        })
+    };
+    let mut slider_title = WidgetBuilder::from_modifier_style(slider_title);
+    slider_title
+        .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
+        .set_name("slider_title");
+    slider_title.layout().add(align_left(&widget));
+    let slider_value = StaticTextStyle {
+        style: Some(TextComponentStyle {
+            align: Some(Align::End),
+            text: Some("--".to_owned()),
+            ..TextComponentStyle::default()
+        })
+    };
+    let mut slider_value = WidgetBuilder::from_modifier_style(slider_value);
+    slider_value
+        .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
+        .set_name("slider_value")
+        .add_handler(edit_text::text_change_handle);
+    slider_value.layout().add(align_right(&widget));
+    let mut slider_widget = SliderBuilder::default();
+    slider_widget.set_range(10.0..500.0);
+    let mut slider_widget = WidgetBuilder::from_modifier(slider_widget);
+    slider_widget.layout().add(constraints![
+        min_width(300.0),
+        below(&slider_title).padding(10.0),
+        below(&slider_value).padding(10.0),
+        match_width(&widget),
+    ]);
+    let slider_value_ref = slider_value.widget_ref();
+    slider_widget.add_handler(move |event: &SliderEvent, args: EventArgs| {
+        slider_value_ref.event(TextUpdated((event.value as i32).to_string()));
+        args.ui.event(AppEvent::Resize(*event));
+    });
+    let slider_widget_ref = slider_widget.widget_ref();
+    let slider_value_ref = slider_value.widget_ref();
+    widget.add_handler(move |event: &SetSliderValue, _: EventArgs| {
+        let size = event.0;
+        slider_widget_ref.event(SetSliderValue(size));
+        slider_value_ref.event(TextUpdated((size as i32).to_string()));
+    });
+    widget
+        .add_child(slider_title)
+        .add_child(slider_value)
+        .add_child(slider_widget);
+    widget
 }
 
-impl SliderControl {
-    fn new() -> Self {
-        let mut widget = WidgetBuilder::new("slider_container");
-        let slider_title = StaticTextStyle {
-            style: Some(TextComponentStyle {
-                text: Some("Circle Size".to_owned()),
-                ..TextComponentStyle::default()
-            })
-        };
-        let mut slider_title = WidgetBuilder::from_modifier_style(slider_title);
-        slider_title
-            .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
-            .set_name("slider_title");
-        slider_title.layout().add(align_left(&widget));
-        let slider_value = StaticTextStyle {
-            style: Some(TextComponentStyle {
-                align: Some(Align::End),
-                text: Some("--".to_owned()),
-                ..TextComponentStyle::default()
-            })
-        };
-        let mut slider_value = WidgetBuilder::from_modifier_style(slider_value);
-        slider_value
-            .set_style_class(TypeId::of::<TextComponentStyle>(), "static_text")
-            .set_name("slider_value")
-            .add_handler(edit_text::text_change_handle);
-        slider_value.layout().add(align_right(&widget));
-        let mut slider_widget = SliderBuilder::new();
-        slider_widget
-            .set_range(10.0..500.0)
-            .set_name("slider_widget");
-        slider_widget.layout().add(constraints![
-            min_width(300.0),
-            below(&slider_title).padding(10.0),
-            below(&slider_value).padding(10.0),
-            match_width(&widget),
-        ]);
-
-        let slider_value_ref = slider_value.widget_ref();
-        slider_widget.add_handler(move |event: &SliderEvent, args: EventArgs| {
-            slider_value_ref.event(TextUpdated((event.value as i32).to_string()));
-            args.ui.event(AppEvent::Resize(*event));
-        });
-        let slider_widget_ref = slider_widget.widget_ref();
-        let slider_value_ref = slider_value.widget_ref();
-        widget.add_handler(move |event: &SetSliderValue, _: EventArgs| {
-            let size = event.0;
-            slider_widget_ref.event(SetSliderValue(size));
-            slider_value_ref.event(TextUpdated((size as i32).to_string()));
-        });
-        widget
-            .add_child(slider_title)
-            .add_child(slider_value)
-            .add_child(slider_widget);
-        SliderControl {
-            widget: widget,
-        }
-    }
-}
-widget_wrapper!(SliderControl);
-
-struct ControlBar {
-    widget: WidgetBuilder,
+struct ControlBarRefs {
     create: WidgetRef,
     undo: WidgetRef,
     redo: WidgetRef,
     slider: WidgetRef,
 }
 
-impl ControlBar {
-    fn new() -> Self {
-        let mut widget = WidgetBuilder::new("control_bar");
-        let mut layout_settings = LinearLayoutSettings::new(Orientation::Horizontal);
-        layout_settings.spacing = Spacing::Between;
-        layout_settings.padding = 10.0;
-        layout_settings.item_align = ItemAlignment::Center;
-        widget.linear_layout(layout_settings);
-        let mut create_button = ToggleButtonStyle::default();
-        create_button.text("Create Circle");
-        let mut create_button = WidgetBuilder::from_modifier_style(create_button);
-        create_button.add_handler(|event: &ToggleEvent, args: EventArgs| {
-            match *event {
-                ToggleEvent::On => {
-                    args.ui.event(AppEvent::SetCreateMode(true));
-                },
-                ToggleEvent::Off => {
-                    args.ui.event(AppEvent::SetCreateMode(false));
-                }
-            };
-        });
-        let mut undo_widget = ButtonStyle::default();
-        undo_widget.text("Undo");
-        let mut undo_widget = WidgetBuilder::from_modifier_style(undo_widget);
-        undo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
-            args.ui.event(AppEvent::Undo);
-        });
+fn create_control_bar() -> (WidgetBuilder, ControlBarRefs) {
+    let mut widget = WidgetBuilder::new("control_bar");
+    let mut layout_settings = LinearLayoutSettings::new(Orientation::Horizontal);
+    layout_settings.spacing = Spacing::Between;
+    layout_settings.padding = 10.0;
+    layout_settings.item_align = ItemAlignment::Center;
+    widget.linear_layout(layout_settings);
+    let mut create_button = ToggleButtonStyle::default();
+    create_button.text("Create Circle");
+    let mut create_button = WidgetBuilder::from_modifier_style(create_button);
+    create_button.add_handler(|event: &ToggleEvent, args: EventArgs| {
+        match *event {
+            ToggleEvent::On => {
+                args.ui.event(AppEvent::SetCreateMode(true));
+            },
+            ToggleEvent::Off => {
+                args.ui.event(AppEvent::SetCreateMode(false));
+            }
+        };
+    });
+    let mut undo_widget = ButtonStyle::default();
+    undo_widget.text("Undo");
+    let mut undo_widget = WidgetBuilder::from_modifier_style(undo_widget);
+    undo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
+        args.ui.event(AppEvent::Undo);
+    });
 
-        let mut redo_widget = ButtonStyle::default();
-        redo_widget.text("Redo");
-        let mut redo_widget = WidgetBuilder::from_modifier_style(redo_widget);
-        redo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
-            args.ui.event(AppEvent::Redo);
-        });
-        let slider_container = SliderControl::new();
-        let (create_ref, undo_ref, redo_ref, slider_ref) = (create_button.widget_ref(), undo_widget.widget_ref(), redo_widget.widget_ref(), slider_container.widget_ref());
-        widget
-            .add_child(create_button)
-            .add_child(undo_widget)
-            .add_child(redo_widget)
-            .add_child(slider_container);
-        ControlBar {
-            widget: widget,
-            create: create_ref,
-            undo: undo_ref,
-            redo: redo_ref,
-            slider: slider_ref,
-        }
-    }
+    let mut redo_widget = ButtonStyle::default();
+    redo_widget.text("Redo");
+    let mut redo_widget = WidgetBuilder::from_modifier_style(redo_widget);
+    redo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
+        args.ui.event(AppEvent::Redo);
+    });
+    let slider_container = create_slider_control();
+    let (create_ref, undo_ref, redo_ref, slider_ref) = (create_button.widget_ref(), undo_widget.widget_ref(), redo_widget.widget_ref(), slider_container.widget_ref());
+    widget
+        .add_child(create_button)
+        .add_child(undo_widget)
+        .add_child(redo_widget)
+        .add_child(slider_container);
+
+    (widget, ControlBarRefs {
+        create: create_ref,
+        undo: undo_ref,
+        redo: redo_ref,
+        slider: slider_ref,
+    })
 }
-widget_wrapper!(ControlBar);
 
 fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
     let mut widget = WidgetBuilder::new("circle");
@@ -243,7 +229,7 @@ struct AppEventHandler {
 }
 
 impl AppEventHandler {
-    fn new(circle_canvas_ref: WidgetRef, control_bar: &ControlBar) -> Self {
+    fn new(circle_canvas_ref: WidgetRef, control_bar: &ControlBarRefs) -> Self {
         let mut handler = AppEventHandler {
             circle_canvas_ref: circle_canvas_ref,
             create_ref: control_bar.create.clone(),
@@ -409,7 +395,7 @@ fn main() {
         .add_handler(|event: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::ClickCanvas(event.position));
         });
-    let mut control_bar = ControlBar::new();
+    let (mut control_bar, control_bar_refs) = create_control_bar();
     control_bar.layout().add(constraints![
         align_below(&circle_canvas).padding(10.0),
         align_left(&root).padding(10.0),
@@ -417,7 +403,7 @@ fn main() {
         align_bottom(&root).padding(10.0),
         height(100.0),
     ]);
-    app.add_handler(AppEventHandler::new(circle_canvas.widget_ref(), &control_bar));
+    app.add_handler(AppEventHandler::new(circle_canvas.widget_ref(), &control_bar_refs));
     app.add_handler(|event: &KeyboardInput, args: EventArgs| {
         if event.0.state == glutin::ElementState::Released {
             if let Some(glutin::VirtualKeyCode::Delete) = event.0.virtual_keycode {
