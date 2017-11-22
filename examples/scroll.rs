@@ -6,8 +6,8 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::scroll::ScrollBuilder;
-use limn::draw::rect::RectComponentStyle;
+use limn::widgets::scroll::ScrollContainer;
+use limn::draw::rect::RectStyle;
 
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
@@ -16,7 +16,7 @@ fn main() {
     let app = util::init(window_builder);
     let mut root = WidgetBuilder::new("root");
 
-    let mut scroll_widget = ScrollBuilder::default();
+    let mut scroll_widget = ScrollContainer::default();
     scroll_widget.add_scrollbar();
     let mut rect_container = WidgetBuilder::new("rect_container");
     rect_container.grid(3);
@@ -25,9 +25,9 @@ fn main() {
     {
         let mut add_rect = |color| {
             let mut rect = WidgetBuilder::new(format!("rect_{:?}", color));
-            rect.set_draw_style(RectComponentStyle {
+            rect.set_draw_style(RectStyle {
                 background_color: Some(color),
-                ..RectComponentStyle::default()
+                ..RectStyle::default()
             });
             rect_container.add_child(rect);
         };

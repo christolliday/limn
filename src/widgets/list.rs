@@ -4,12 +4,12 @@ use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use widgets::text::StaticTextStyle;
-use draw::rect::RectComponentStyle;
-use draw::text::TextComponentStyle;
+use draw::rect::RectStyle;
+use draw::text::TextStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
 use layout::linear_layout::{LinearLayoutSettings, Orientation, ItemAlignment};
-use style::{ComponentStyle, WidgetModifier};
+use style::{WidgetModifier, ComponentStyle};
 
 pub struct ListItemSelected {
     pub widget: Option<WidgetRef>,
@@ -18,16 +18,9 @@ pub struct ListItemSelected {
 #[derive(Debug, Copy, Clone)]
 pub struct ItemSelected;
 
-
 #[derive(Default)]
 pub struct ListHandler {
     selected: Option<WidgetRef>,
-}
-
-impl ListHandler {
-    pub fn new() -> Self {
-        Self::default()
-    }
 }
 
 impl EventHandler<ListItemSelected> for ListHandler {
@@ -40,11 +33,6 @@ impl EventHandler<ListItemSelected> for ListHandler {
         }
         self.selected = selected;
     }
-}
-
-#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-fn list_handle_deselect(_: &ClickEvent, args: EventArgs) {
-    args.widget.event(ListItemSelected { widget: None });
 }
 
 pub struct ListItemHandler {
@@ -68,27 +56,26 @@ impl EventHandler<ClickEvent> for ListItemHandler {
     }
 }
 
-component_style!{pub struct ListBuilder<name="list", style=ListBuilderStyle> {
-    layout: LinearLayoutSettings = {
+component_style!{pub struct List<name="list", style=ListStyle> {
+    layout_settings: LinearLayoutSettings = {
         let mut layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
         layout_settings.item_align = ItemAlignment::Fill;
         layout_settings
     },
 }}
 
-impl WidgetModifier for ListBuilder {
+impl WidgetModifier for List {
     fn apply(&self, widget: &mut WidgetBuilder) {
-        let mut layout_settings = LinearLayoutSettings::new(Orientation::Vertical);
-        layout_settings.item_align = ItemAlignment::Fill;
-
-        widget.add_handler(ListHandler::new())
-              .add_handler(&list_handle_deselect)
-              .linear_layout(layout_settings);
+        widget
+            .add_handler(ListHandler::default())
+            .add_handler(|_: &ClickEvent, args: EventArgs| {
+                args.widget.event(ListItemSelected { widget: None });
+            })
+            .linear_layout(self.layout_settings);
     }
 }
 
 impl WidgetBuilder {
-
     pub fn list_item(&mut self, parent_list: &WidgetRef) -> &mut Self {
         self.add_handler(ListItemHandler::new(parent_list.clone()))
     }
@@ -101,7 +88,7 @@ impl WidgetBuilder {
         });
         self
     }
-    /// Set the contents of the list
+
     pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
         where C: Iterator<Item=I>,
               F: Fn(I, &mut WidgetBuilder) -> WidgetBuilder,
@@ -117,16 +104,14 @@ impl WidgetBuilder {
 }
 
 pub fn default_text_adapter(text: String, list: &mut WidgetBuilder) -> WidgetBuilder {
-    let mut style = StaticTextStyle::default();
-    style.text(&text);
     let mut text_widget = WidgetBuilder::new("list_item_text");
-    text_widget.set_style_class(TypeId::of::<TextComponentStyle>(), "list_item_text");
-    style.component().apply(&mut text_widget);
+    text_widget.set_style_class(TypeId::of::<TextStyle>(), "list_item_text");
+    StaticTextStyle::from_text(&text).component().apply(&mut text_widget);
 
     let mut item_widget = WidgetBuilder::new("list_item_rect");
     item_widget
-        .set_style_class(TypeId::of::<RectComponentStyle>(), "list_item_rect")
-        .set_draw_style(RectComponentStyle::default())
+        .set_style_class(TypeId::of::<RectStyle>(), "list_item_rect")
+        .set_draw_style(RectStyle::default())
         .enable_hover();
 
     text_widget.layout().add(align_left(&item_widget));

@@ -1,17 +1,46 @@
 use cassowary::Constraint;
 
 use widget::{WidgetBuilder, StateUpdated};
-use draw::text::{TextState, TextComponentStyle};
+use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use layout::constraint::*;
 use geometry::Size;
+use style::WidgetModifier;
+
+component_style!{pub struct StaticText<name="static_text", style=StaticTextStyle> {
+    style: TextStyle = TextStyle::default(),
+}}
+
+impl StaticTextStyle {
+    pub fn from_style(style: TextStyle) -> Self {
+        StaticTextStyle {
+            style: Some(style),
+        }
+    }
+    pub fn from_text(text: &str) -> Self {
+        StaticTextStyle {
+            style: Some(TextStyle {
+                text: Some(text.to_owned()),
+                ..TextStyle::default()
+            }),
+        }
+    }
+}
+
+impl WidgetModifier for StaticText {
+    fn apply(&self, widget: &mut WidgetBuilder) {
+        widget.add_handler(TextSizeHandler::default());
+        widget.set_draw_style(self.style.clone());
+    }
+}
 
 #[derive(Default)]
-struct TextUpdatedHandler {
+struct TextSizeHandler {
     measured_size: Option<Size>,
     size_constraints: Vec<Constraint>,
 }
-impl EventHandler<StateUpdated> for TextUpdatedHandler {
+
+impl EventHandler<StateUpdated> for TextSizeHandler {
     fn handle(&mut self, _: &StateUpdated, mut args: EventArgs) {
         let text_size = {
             let draw_state = args.widget.draw_state();
@@ -29,55 +58,5 @@ impl EventHandler<StateUpdated> for TextUpdatedHandler {
             self.size_constraints = size_constraints;
             self.measured_size = Some(text_size);
         }
-    }
-}
-
-use style::*;
-
-#[derive(Debug, Default, Clone)]
-pub struct StaticTextStyle {
-    pub style: Option<TextComponentStyle>,
-}
-impl StaticTextStyle {
-    pub fn text(&mut self, text: &str) {
-        self.style = Some(TextComponentStyle {
-            text: Some(text.to_owned()),
-            ..TextComponentStyle::default()
-        });
-    }
-    pub fn style(&mut self, style: TextComponentStyle) {
-        self.style = Some(style);
-    }
-}
-
-impl ComponentStyle for StaticTextStyle {
-    type Component = StaticTextComponent;
-    fn merge(&self, other: &Self) -> Self {
-        StaticTextStyle {
-            style: self.style.as_ref().or(other.style.as_ref()).cloned(),
-        }
-    }
-    fn component(self) -> Self::Component {
-        StaticTextComponent {
-            style: self.style.unwrap(),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct StaticTextComponent {
-    style: TextComponentStyle,
-}
-
-impl Component for StaticTextComponent {
-    fn name() -> String {
-        "text".to_owned()
-    }
-}
-
-impl WidgetModifier for StaticTextComponent {
-    fn apply(&self, widget: &mut WidgetBuilder) {
-        widget.add_handler(TextUpdatedHandler::default());
-        widget.set_draw_style(self.style.clone());
     }
 }

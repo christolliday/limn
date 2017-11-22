@@ -14,7 +14,7 @@ pub struct GLCanvasState {
 
 impl Component for GLCanvasState {
     fn name() -> String {
-        "glcanvas".to_owned()
+        String::from("glcanvas")
     }
 }
 

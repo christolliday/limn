@@ -5,25 +5,25 @@ use layout::constraint::*;
 use style::*;
 
 #[derive(Debug, Clone)]
-pub struct ImageComponent {
+pub struct Image {
     file: String,
 }
 
-impl ImageComponent {
+impl Image {
     pub fn new(file: &str) -> Self {
-        ImageComponent {
+        Image {
             file: file.to_owned(),
         }
     }
 }
 
-impl Component for ImageComponent {
+impl Component for Image {
     fn name() -> String {
-        "image".to_owned()
+        String::from("image")
     }
 }
 
-impl WidgetModifier for ImageComponent {
+impl WidgetModifier for Image {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let image_draw_state = ImageState::new(&self.file);
         let image_size = image_draw_state.measure();

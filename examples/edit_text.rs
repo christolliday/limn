@@ -7,7 +7,7 @@ mod util;
 use limn::prelude::*;
 
 use limn::widgets::button::{ToggleButtonStyle, ToggleEvent};
-use limn::widgets::edit_text::EditTextBuilder;
+use limn::widgets::edit_text::EditText;
 use limn::draw::text::TextState;
 
 enum EditTextSettingsEvent {
@@ -37,7 +37,7 @@ fn main() {
     root.layout().add(min_size(Size::new(500.0, 500.0)));
     content_widget.layout().add(match_layout(&root).padding(20.0));
 
-    let mut edit_text_box = WidgetBuilder::from_modifier(EditTextBuilder::default());
+    let mut edit_text_box = WidgetBuilder::from_modifier(EditText::default());
     let mut edit_text = edit_text_box.widget_ref().child("edit_text_text").unwrap();
     edit_text.add_handler(EditTextSettingsHandler);
 

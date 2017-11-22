@@ -19,7 +19,7 @@ use euclid::{Vector3D, Transform3D};
 
 use limn::prelude::*;
 
-use limn::widgets::slider::{SliderBuilder, SliderEvent};
+use limn::widgets::slider::{Slider, SliderEvent};
 use limn::widgets::glcanvas::{GLCanvasBuilder, GLCanvasState};
 
 fn init_framebuffer(gl: &Rc<gl::Gl>) -> (GLuint, GLuint, GLuint) {
@@ -269,7 +269,7 @@ fn main() {
     });
 
     // And now the slider
-    let mut size_slider = SliderBuilder::default();
+    let mut size_slider = Slider::default();
     size_slider
         .set_range(0.8..1.2)
         .set_value(scale.get());

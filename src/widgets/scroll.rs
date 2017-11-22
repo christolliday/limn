@@ -5,22 +5,20 @@ use cassowary::WeightedRelation::*;
 use layout::constraint::*;
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
-use widgets::slider::{SliderBuilder, SliderEvent, SetSliderValue};
+use widgets::slider::{Slider, SliderEvent, SetSliderValue};
 use geometry::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
 use input::mouse::WidgetMouseWheel;
-use draw::rect::RectComponentStyle;
+use draw::rect::RectStyle;
 use color::*;
 use style::WidgetModifier;
 
-const FLOATING_POINT_ERROR: f32 = 0.0001;
-
-component_style!{pub struct ScrollBuilder<name="scroll", style=ScrollStyle> {
+component_style!{pub struct ScrollContainer<name="scroll", style=ScrollStyle> {
     content: Option<WidgetRef> = None,
     has_scrollbars: bool = false,
 }}
 
-impl ScrollBuilder {
+impl ScrollContainer {
     /// Set the scrollable content
     pub fn add_content(&mut self, widget: WidgetRef) -> &mut Self {
         self.content = Some(widget);
@@ -33,7 +31,7 @@ impl ScrollBuilder {
     }
 }
 
-impl WidgetModifier for ScrollBuilder {
+impl WidgetModifier for ScrollContainer {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let mut content_holder = WidgetBuilder::new("content_holder");
         content_holder.layout().no_container();
@@ -63,7 +61,7 @@ impl WidgetModifier for ScrollBuilder {
             });
         }
         let mut scrollbars = if self.has_scrollbars {
-            let mut scrollbar_h = SliderBuilder::default();
+            let mut scrollbar_h = Slider::default();
             scrollbar_h.scrollbar_style();
             let mut scrollbar_h = WidgetBuilder::from_modifier(scrollbar_h);
             scrollbar_h.set_name("scrollbar_h");
@@ -72,7 +70,7 @@ impl WidgetModifier for ScrollBuilder {
                 align_left(widget),
                 align_below(&content_holder),
             ]);
-            let mut scrollbar_v = SliderBuilder::default();
+            let mut scrollbar_v = Slider::default();
             scrollbar_v.make_vertical().scrollbar_style();
             let mut scrollbar_v = WidgetBuilder::from_modifier(scrollbar_v);
             scrollbar_v.set_name("scrollbar_v");
@@ -81,9 +79,9 @@ impl WidgetModifier for ScrollBuilder {
                 align_top(widget),
                 align_to_right_of(&content_holder),
             ]);
-            let corner_style = RectComponentStyle {
+            let corner_style = RectStyle {
                 background_color: Some(GRAY_70),
-                ..RectComponentStyle::default()
+                ..RectStyle::default()
             };
             let mut corner = WidgetBuilder::new("corner");
             corner.set_draw_style(corner_style);
@@ -245,7 +243,7 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
                     // update handle sizes
                     let mut visibility_updated = false;
 
-                    if width_ratio.is_finite() && (width_ratio - self.width_ratio).abs() > FLOATING_POINT_ERROR {
+                    if width_ratio.is_finite() && (width_ratio - self.width_ratio).abs() > ::std::f32::EPSILON {
                         let width = self.container_rect.width() * width_ratio;
                         scrollbars.h_handle.update_layout(|layout| {
                             layout.edit_width().set(width);
@@ -266,7 +264,7 @@ impl EventHandler<ScrollParentEvent> for ScrollParent {
                         }
                     }
 
-                    if height_ratio.is_finite() && (height_ratio - self.height_ratio).abs() > FLOATING_POINT_ERROR {
+                    if height_ratio.is_finite() && (height_ratio - self.height_ratio).abs() > ::std::f32::EPSILON {
                         let height = self.container_rect.height() * height_ratio;
                         scrollbars.v_handle.update_layout(|layout| {
                             layout.edit_height().set(height);
