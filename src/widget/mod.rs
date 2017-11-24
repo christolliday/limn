@@ -285,7 +285,7 @@ impl WidgetRef {
             draw_state.draw(bounds, crop_to, renderer);
         }
         if let Some(crop_to) = crop_to.intersection(&bounds) {
-            for mut child in &mut self.children() {
+            for child in &mut self.children() {
                 child.draw_widget(crop_to, renderer);
             }
         }
