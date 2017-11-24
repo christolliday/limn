@@ -36,7 +36,8 @@
 
 // ---- END CLIPPY CONFIG
 
-#![feature(trace_macros)]
+// uncomment to debug macros
+//#![feature(trace_macros)]
 //trace_macros!(true);
 
 #![cfg_attr(feature="nightly", feature(core_intrinsics))]
