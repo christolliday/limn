@@ -1,3 +1,50 @@
+/*!
+Contains types relevant to declaring styleable components, and the theming engine which allows styleable components to inherit values from an application theme.
+
+Styleable components are arbitrary structs that can inherit values from a theme by defining a style struct that can be converted into the original struct
+by implementing the trait `ComponentStyle`.
+
+Currently this can be used for structs that implement `Draw` and `WidgetModifier` and so can be used to style both drawable types,
+and complex widgets.
+
+The macro `component_style!` can be used to simplify defining styleable types:
+
+```
+component_style!{pub struct Button<name="button", style=ButtonStyle> {
+    rect: RectStyle = RectStyle::default(),
+    text: Option<TextStyle> = None,
+}}
+```
+
+This declares two structs:
+
+```
+struct Button {
+    rect: RectStyle,
+    text: Option<TextStyle>,
+}
+struct ButtonStyle {
+    rect: Option<RectStyle>,
+    text: Option<Option<TextStyle>>,
+}
+```
+
+and implements various traits on them, but most importantly:
+
+`impl ComponentStyle<Component = Button> for ButtonStyle`
+
+If you then implement `WidgetModifier` for `Button`, you can define how to initialize a button using the `rect` and `text` fields.
+Then by passing a `ButtonStyle` in place of a `Button` to initialize a widget, you can specify only the fields you want to be
+specific to that widget, with the remaining fields inherited from the theme.
+
+The theme will prioritize which values to use by (currently) simple specificity rules:
+
+-The specific style passed to a widget
+-Styles registered in the theme for named style classes that can be applied to widgets, eg. "alert_button"
+-The base style for the type, ie. `ButtonStyle`, registered in the theme
+-In values are found no where else, the default values specified in `component_style!`, in this example, `RectStyle::default()` and `None`
+*/
+
 use std::fmt::Debug;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
