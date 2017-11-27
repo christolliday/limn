@@ -50,7 +50,7 @@ impl WebRenderContext {
 
         let (mut renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
         let api = sender.create_api();
-        resources::init_resources(sender.create_api());
+        resources::init_resources(sender);
         let document_id = api.add_document(window.size_px());
 
         let frame_ready = Arc::new(AtomicBool::new(false));
