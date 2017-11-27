@@ -10,15 +10,21 @@ and complex widgets.
 The macro `component_style!` can be used to simplify defining styleable types:
 
 ```
+# #[macro_use] extern crate limn; fn main() {
+# use limn::draw::rect::RectStyle;
+# use limn::draw::text::TextStyle;
 component_style!{pub struct Button<name="button", style=ButtonStyle> {
     rect: RectStyle = RectStyle::default(),
     text: Option<TextStyle> = None,
 }}
+# }
 ```
 
 This declares two structs:
 
 ```
+# use limn::draw::rect::RectStyle;
+# use limn::draw::text::TextStyle;
 struct Button {
     rect: RectStyle,
     text: Option<TextStyle>,
