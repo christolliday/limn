@@ -79,10 +79,9 @@ impl WidgetModifier for ScrollContainer {
                 align_top(widget),
                 align_to_right_of(&content_holder),
             ]);
-            let corner_style = RectStyle {
-                background_color: Some(GRAY_70),
-                ..RectStyle::default()
-            };
+            let corner_style = style!(RectStyle {
+                background_color: GRAY_70,
+            });
             let mut corner = WidgetBuilder::new("corner");
             corner.set_draw_style(corner_style);
             corner.layout().add(constraints![

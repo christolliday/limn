@@ -27,10 +27,9 @@ impl ButtonStyle {
         self.text = Some(text);
     }
     pub fn text(&mut self, text: &str) {
-        self.text = Some(Some(TextStyle {
-            text: Some(text.to_owned()),
-            ..TextStyle::default()
-        }));
+        self.text = Some(Some(style!(TextStyle {
+            text: String::from(text),
+        })));
     }
 }
 
@@ -73,20 +72,17 @@ impl ToggleButtonStyle {
         self.rect = Some(rect);
     }
     pub fn text(&mut self, text: &str) {
-        self.off_text = Some(Some(TextStyle {
-            text: Some(text.to_owned()),
-            ..TextStyle::default()
-        }));
+        self.off_text = Some(Some(style!(TextStyle {
+            text: String::from(text),
+        })));
     }
     pub fn toggle_text(&mut self, off_text: &str, on_text: &str) {
-        self.off_text = Some(Some(TextStyle {
-            text: Some(off_text.to_owned()),
-            ..TextStyle::default()
-        }));
-        self.on_text = Some(Some(TextStyle {
-            text: Some(on_text.to_owned()),
-            ..TextStyle::default()
-        }));
+        self.off_text = Some(Some(style!(TextStyle {
+            text: String::from(off_text),
+        })));
+        self.on_text = Some(Some(style!(TextStyle {
+            text: String::from(on_text),
+        })));
     }
 }
 

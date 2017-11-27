@@ -287,3 +287,15 @@ macro_rules! component_style {
         }
     };
 }
+
+#[macro_export]
+macro_rules! style {
+    ( $style_type:ident { $( $field:ident: $value:expr, ) * } ) => {
+        $style_type {
+            $(
+                $field: Some($value),
+            )*
+            ..$style_type::default()
+        }
+    }
+}

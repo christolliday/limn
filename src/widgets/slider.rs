@@ -88,18 +88,16 @@ impl WidgetModifier for Slider {
         let mut slider_handle = WidgetBuilder::new("slider_handle");
         match self.handle_style {
             HandleStyle::Round => {
-                slider_handle.set_draw_style(EllipseStyle {
-                    background_color: Some(self.handle_color),
-                    border: Some(self.border),
-                    ..EllipseStyle::default()
-                });
+                slider_handle.set_draw_style(style!(EllipseStyle {
+                    background_color: self.handle_color,
+                    border: self.border,
+                }));
             }
             HandleStyle::Square => {
-                slider_handle.set_draw_style(RectStyle {
-                    background_color: Some(self.handle_color),
-                    border: Some(self.border),
-                    ..RectStyle::default()
-                });
+                slider_handle.set_draw_style(style!(RectStyle {
+                    background_color: self.handle_color,
+                    border: self.border,
+                }));
             }
         };
 
@@ -107,12 +105,11 @@ impl WidgetModifier for Slider {
             BarStyle::NarrowRound => Some(3.0),
             BarStyle::Wide => None,
         };
-        let bar_style = RectStyle {
-            background_color: Some(self.bar_color),
-            corner_radius: Some(corner_radius),
-            border: Some(self.border),
-            ..RectStyle::default()
-        };
+        let bar_style = style!(RectStyle {
+            background_color: self.bar_color,
+            corner_radius: corner_radius,
+            border: self.border,
+        });
 
         let mut slider_bar_pre = WidgetBuilder::new("slider_bar_pre");
         if let Some(highlight) = self.highlight {
@@ -120,10 +117,9 @@ impl WidgetModifier for Slider {
                 background_color: Some(highlight),
                 ..bar_style
             });
-            slider_bar_pre.set_draw_style_prop(INACTIVE.clone(), RectStyle {
-                background_color: Some(self.bar_color),
-                ..RectStyle::default()
-            });
+            slider_bar_pre.set_draw_style_prop(INACTIVE.clone(), style!(RectStyle {
+                background_color: self.bar_color,
+            }));
         } else {
             slider_bar_pre.set_draw_style(bar_style.clone());
         }

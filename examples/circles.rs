@@ -25,10 +25,9 @@ use limn::input::drag::DragEvent;
 fn create_slider_control() -> WidgetBuilder {
     let mut widget = WidgetBuilder::new("slider_container");
     let slider_title = StaticTextStyle {
-        style: Some(TextStyle {
-            text: Some("Circle Size".to_owned()),
-            ..TextStyle::default()
-        })
+        style: Some(style!(TextStyle {
+            text: String::from("Circle Size"),
+        }))
     };
     let mut slider_title = WidgetBuilder::from_modifier_style(slider_title);
     slider_title
@@ -36,11 +35,10 @@ fn create_slider_control() -> WidgetBuilder {
         .set_name("slider_title");
     slider_title.layout().add(align_left(&widget));
     let slider_value = StaticTextStyle {
-        style: Some(TextStyle {
-            align: Some(Align::End),
-            text: Some("--".to_owned()),
-            ..TextStyle::default()
-        })
+        style: Some(style!(TextStyle {
+            align: Align::End,
+            text: String::from("--"),
+        }))
     };
     let mut slider_value = WidgetBuilder::from_modifier_style(slider_value);
     slider_value
@@ -135,15 +133,13 @@ fn create_control_bar() -> (WidgetBuilder, ControlBarRefs) {
 fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
     let mut widget = WidgetBuilder::new("circle");
     widget
-        .set_draw_style(EllipseStyle {
-            background_color: Some(WHITE),
-            border: Some(Some((2.0, BLACK))),
-            ..EllipseStyle::default()
-        })
-        .set_draw_style_prop(SELECTED.clone(), EllipseStyle {
-            background_color: Some(RED),
-            ..EllipseStyle::default()
-        })
+        .set_draw_style(style!(EllipseStyle {
+            background_color: WHITE,
+            border: Some((2.0, BLACK)),
+        }))
+        .set_draw_style_prop(SELECTED.clone(), style!(EllipseStyle {
+            background_color: RED,
+        }))
         .make_draggable()
         .add_handler(|event: &DragEvent, args: EventArgs| {
             args.widget.event(CircleEvent::Drag(*event));
@@ -388,10 +384,9 @@ fn main() {
         match_width(&root),
     ]);
     circle_canvas
-        .set_draw_style(RectStyle {
-            background_color: Some(WHITE),
-            ..RectStyle::default()
-        })
+        .set_draw_style(style!(RectStyle {
+            background_color: WHITE,
+        }))
         .add_handler(|event: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::ClickCanvas(event.position));
         });

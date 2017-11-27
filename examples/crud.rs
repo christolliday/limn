@@ -95,10 +95,9 @@ impl PeopleHandler {
         let id = self.id_gen.next_id();
         self.people.insert(id, self.person.clone());
         let list_item_widget = {
-            let text_style = TextStyle {
-                text: Some(self.person.name()),
-                ..TextStyle::default()
-            };
+            let text_style = style!(TextStyle {
+                text: self.person.name(),
+            });
             let text_style = StaticTextStyle {
                 style: Some(text_style),
             };

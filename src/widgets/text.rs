@@ -19,10 +19,9 @@ impl StaticTextStyle {
     }
     pub fn from_text(text: &str) -> Self {
         StaticTextStyle {
-            style: Some(TextStyle {
-                text: Some(text.to_owned()),
-                ..TextStyle::default()
-            }),
+            style: Some(style!(TextStyle {
+                text: String::from(text),
+            })),
         }
     }
 }

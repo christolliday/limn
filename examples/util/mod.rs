@@ -15,62 +15,50 @@ pub fn default_style() {
 
     res.theme.register_type_style(EllipseStyle::default());
     res.theme.register_type_style(RectStyle::default());
-    res.theme.register_type_style(TextStyle {
-        font: Some(FontDescriptor::from_family("NotoSans")),
-        font_size: Some(24.0),
-        text_color: Some(BLACK),
-        background_color: Some(TRANSPARENT),
-        wrap: Some(Wrap::Whitespace),
-        align: Some(Align::Start),
-        ..TextStyle::default()
-    });
-    res.theme.register_class_prop_style("static_text", INACTIVE.clone(), TextStyle {
-        text_color: Some(GRAY_50),
-        ..TextStyle::default()
-    });
-    res.theme.register_class_style("list_item_rect", RectStyle {
-        background_color: Some(GRAY_30),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_prop_style("list_item_rect", SELECTED.clone(), RectStyle {
-        background_color: Some(BLUE_HIGHLIGHT),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_prop_style("list_item_rect", MOUSEOVER.clone(), RectStyle {
-        background_color: Some(GRAY_60),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_style("list_item_text", TextStyle {
-        text_color: Some(WHITE),
-        ..TextStyle::default()
-    });
-    res.theme.register_class_style("button_rect", RectStyle {
-        background_color: Some(GRAY_80),
-        corner_radius: Some(Some(5.0)),
-        border: Some(Some((1.0, GRAY_40))),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_prop_style("button_rect", INACTIVE.clone(), RectStyle {
-        background_color: Some(GRAY_90),
-        border: Some(Some((1.0, GRAY_70))),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_prop_style("button_rect", ACTIVATED_PRESSED.clone(), RectStyle {
-        background_color: Some(GRAY_30),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_prop_style("button_rect", ACTIVATED.clone(), RectStyle {
-        background_color: Some(GRAY_40),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_prop_style("button_rect", PRESSED.clone(), RectStyle {
-        background_color: Some(GRAY_60),
-        ..RectStyle::default()
-    });
-    res.theme.register_class_prop_style("button_rect", MOUSEOVER.clone(), RectStyle {
-        background_color: Some(GRAY_90),
-        ..RectStyle::default()
-    });
+    res.theme.register_type_style(style!(TextStyle {
+        font: FontDescriptor::from_family("NotoSans"),
+        font_size: 24.0,
+        text_color: BLACK,
+        background_color: TRANSPARENT,
+        wrap: Wrap::Whitespace,
+        align: Align::Start,
+    }));
+    res.theme.register_class_prop_style("static_text", INACTIVE.clone(), style!(TextStyle {
+        text_color: GRAY_50,
+    }));
+    res.theme.register_class_style("list_item_rect", style!(RectStyle {
+        background_color: GRAY_30,
+    }));
+    res.theme.register_class_prop_style("list_item_rect", SELECTED.clone(), style!(RectStyle {
+        background_color: BLUE_HIGHLIGHT,
+    }));
+    res.theme.register_class_prop_style("list_item_rect", MOUSEOVER.clone(), style!(RectStyle {
+        background_color: GRAY_60,
+    }));
+    res.theme.register_class_style("list_item_text", style!(TextStyle {
+        text_color: WHITE,
+    }));
+    res.theme.register_class_style("button_rect", style!(RectStyle {
+        background_color: GRAY_80,
+        corner_radius: Some(5.0),
+        border: Some((1.0, GRAY_40)),
+    }));
+    res.theme.register_class_prop_style("button_rect", INACTIVE.clone(), style!(RectStyle {
+        background_color: GRAY_90,
+        border: Some((1.0, GRAY_70)),
+    }));
+    res.theme.register_class_prop_style("button_rect", ACTIVATED_PRESSED.clone(), style!(RectStyle {
+        background_color: GRAY_30,
+    }));
+    res.theme.register_class_prop_style("button_rect", ACTIVATED.clone(), style!(RectStyle {
+        background_color: GRAY_40,
+    }));
+    res.theme.register_class_prop_style("button_rect", PRESSED.clone(), style!(RectStyle {
+        background_color: GRAY_60,
+    }));
+    res.theme.register_class_prop_style("button_rect", MOUSEOVER.clone(), style!(RectStyle {
+        background_color: GRAY_90,
+    }));
 }
 
 // Initialize a limn App with common handlers and set up logger

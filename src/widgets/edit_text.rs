@@ -75,15 +75,13 @@ pub fn text_change_handle(event: &TextUpdated, mut args: EventArgs) {
 }
 
 component_style!{pub struct EditText<name="scroll", style=EditTextStyle> {
-    rect: RectStyle = RectStyle {
-        border: Some(Some((1.0, GRAY_70))),
-        corner_radius: Some(Some(3.0)),
-        ..RectStyle::default()
-    },
-    focused_rect: Option<RectStyle> = Some(RectStyle {
-        border: Some(Some((1.0, BLUE))),
-        ..RectStyle::default()
+    rect: RectStyle = style!(RectStyle {
+        border: Some((1.0, GRAY_70)),
+        corner_radius: Some(3.0),
     }),
+    focused_rect: Option<RectStyle> = Some(style!(RectStyle {
+        border: Some((1.0, BLUE)),
+    })),
 }}
 
 impl WidgetModifier for EditText {
