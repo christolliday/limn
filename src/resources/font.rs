@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+use std::io;
 
 use rusttype;
-use font_loader::system_fonts;
+use font_loader::system_fonts::{self, FontProperty, FontPropertyBuilder};
 use app_units;
 use webrender::api::{RenderApi, ResourceUpdates, FontKey, FontInstanceKey};
 
@@ -14,75 +15,119 @@ pub struct FontInfo {
     pub info: Font,
 }
 
+/// Set of properties used to specify a font
+#[derive(Default, PartialEq, Eq, Hash, Clone, Debug)]
+pub struct FontDescriptor {
+    pub family_name: String,
+    pub italic: bool,
+    pub bold: bool,
+}
+
+impl FontDescriptor {
+    pub fn from_family(family_name: &str) -> Self {
+        FontDescriptor {
+            family_name: String::from(family_name),
+            ..FontDescriptor::default()
+        }
+    }
+    fn property(&self) -> FontProperty {
+        let mut builder = FontPropertyBuilder::new().family(&self.family_name);
+        if self.italic {
+            builder = builder.italic();
+        }
+        if self.bold {
+            builder = builder.bold();
+        }
+        builder.build()
+    }
+}
+
 #[derive(Default)]
 pub struct FontLoader {
     pub render: Option<RenderApi>,
-    pub fonts: HashMap<String, FontInfo>,
-    pub font_instances: HashMap<(String, app_units::Au), FontInstanceKey>,
+    pub font_info: HashMap<FontDescriptor, FontInfo>,
+    pub bundled_font_info: HashMap<FontDescriptor, FontInfo>,
+    pub font_instances: HashMap<(FontDescriptor, app_units::Au), FontInstanceKey>,
 }
 
 impl FontLoader {
     pub fn new() -> Self {
         FontLoader::default()
     }
-    #[deprecated(note = "may panic, instead of this use get_font_or_load_from_system or get_font_if_present")]
-    pub fn get_font(&mut self, name: &str) -> &FontInfo {
-        self.get_font_or_load_from_system(name).unwrap()
+
+    pub fn get_font(&mut self, descriptor: &FontDescriptor) -> &FontInfo {
+        self.get_font_info(descriptor).unwrap()
     }
 
-    pub fn get_font_if_present(&mut self, name: &str) -> Option<&FontInfo> {
-        self.fonts.get(name)
-    }
-
-    pub fn get_font_or_load_from_system(&mut self, name: &str) -> Result<&FontInfo, ::std::io::Error> {
-        if !self.fonts.contains_key(name) {
-            return self.add_font(name, try!(load_system_font_by_family_name(name)));
+    fn get_font_info(&mut self, descriptor: &FontDescriptor) -> Result<&FontInfo, io::Error> {
+        if self.bundled_font_info.contains_key(descriptor) {
+            Ok(&self.bundled_font_info[descriptor])
+        } else {
+            if !self.font_info.contains_key(descriptor) {
+                if let Ok(data) = system_fonts_load_data(&descriptor.property()) {
+                    let font_info = self.load_font(data)?;
+                    self.font_info.insert(descriptor.clone(), font_info);
+                } else {
+                    return Err(io::Error::new(io::ErrorKind::InvalidData, "No system font found"));
+                }
+            }
+            Ok(&self.font_info[descriptor])
         }
-        Ok(&self.fonts[name])
     }
 
-    pub fn add_font(&mut self, name: &str, font_bytes: Vec<u8>) -> Result<&FontInfo, ::std::io::Error> {
-        let font = try!(font_from_bytes(font_bytes.clone()));
-
-        let key = self.render.as_ref().unwrap().generate_font_key();
-        let mut resources = ResourceUpdates::new();
-        resources.add_raw_font(key, font_bytes, 0);
-
-        self.render.as_ref().unwrap().update_resources(resources);
-        let font_info = FontInfo { key: key, info: font };
-        self.fonts.insert(name.to_owned(), font_info);
-
-        Ok(&self.fonts[name])
-    }
-
-    pub fn get_font_instance(&mut self, name: &str, font_size: f32) -> &FontInstanceKey {
-        let font_key = self.get_font(name).key;
+    pub fn get_font_instance(&mut self, descriptor: &FontDescriptor, font_size: f32) -> &FontInstanceKey {
+        let font_key = self.get_font(descriptor).key;
         let size = app_units::Au::from_f32_px(text_layout::px_to_pt(font_size));
-        if !self.font_instances.contains_key(&(name.to_owned(), size)) {
-            let instance_key = self.render.as_ref().unwrap().generate_font_instance_key();
-            let mut resources = ResourceUpdates::new();
-            resources.add_font_instance(instance_key, font_key, size, None, None, Vec::new());
-            self.render.as_ref().unwrap().update_resources(resources);
-            self.font_instances.insert((name.to_owned(), size), instance_key);
+        let key = (descriptor.clone(), size);
+        if !self.font_instances.contains_key(&key) {
+            let instance_key = webrender_load_font_instance(self.render_api(), font_key, size);
+            self.font_instances.insert(key.clone(), instance_key);
         }
-        &self.font_instances[&(name.to_owned(), size)]
+        &self.font_instances[&key]
+    }
+
+    fn load_font(&mut self, data: Vec<u8>) -> Result<FontInfo, io::Error> {
+        let font_info = rusttype_load_font_info(data.clone())?;
+        let key = webrender_load_font(self.render_api(), data)?;
+        Ok(FontInfo { key: key, info: font_info })
+    }
+
+    pub fn register_font_data(&mut self, descriptor: FontDescriptor, data: Vec<u8>) {
+        let info = self.load_font(data).unwrap();
+        self.bundled_font_info.insert(descriptor.clone(), info);
+    }
+
+    fn render_api(&self) -> &RenderApi {
+        self.render.as_ref().unwrap()
     }
 }
 
-fn load_system_font_by_family_name(name: &str) -> Result<Vec<u8>, ::std::io::Error> {
-    let property = system_fonts::FontPropertyBuilder::new().family(name).build();
+fn webrender_load_font(render_api: &RenderApi, data: Vec<u8>) -> Result<FontKey, io::Error> {
+    let key = render_api.generate_font_key();
+    let mut resources = ResourceUpdates::new();
+    resources.add_raw_font(key, data, 0);
+    render_api.update_resources(resources);
+    Ok(key)
+}
+
+fn webrender_load_font_instance(render_api: &RenderApi, font_key: FontKey, size: app_units::Au) -> FontInstanceKey {
+    let instance_key = render_api.generate_font_instance_key();
+    let mut resources = ResourceUpdates::new();
+    resources.add_font_instance(instance_key, font_key, size, None, None, Vec::new());
+    render_api.update_resources(resources);
+    instance_key
+}
+
+fn system_fonts_load_data(property: &FontProperty) -> Result<Vec<u8>, io::Error> {
     let font = system_fonts::get(&property)
         .map(|tuple| tuple.0)
-        .ok_or(::std::io::Error::new(::std::io::ErrorKind::NotFound, "Font not found"));
+        .ok_or(io::Error::new(io::ErrorKind::NotFound, "Font not found"));
     font
 }
 
-fn font_from_bytes(bytes: Vec<u8>) -> Result<Font, ::std::io::Error> {
-    let collection = rusttype::FontCollection::from_bytes(bytes);
+/// Read font data to get font information, v_metrics, glyph info etc.
+fn rusttype_load_font_info(data: Vec<u8>) -> Result<Font, io::Error> {
+    let collection = rusttype::FontCollection::from_bytes(data);
     let mut font_iter = collection.into_fonts();
-    font_iter.next().ok_or(::std::io::Error::new(::std::io::ErrorKind::InvalidData, "Bad font format"))
-}
-
-pub fn load_font(name: &str) -> Result<Font, ::std::io::Error> {
-    font_from_bytes(try!(load_system_font_by_family_name(name)))
+    font_iter.next().ok_or(io::Error::new(io::ErrorKind::InvalidData, "Bad font format"))
 }
