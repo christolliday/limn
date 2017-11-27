@@ -4,6 +4,7 @@ use rusttype::{Scale, GlyphId, VMetrics};
 use render::RenderBuilder;
 use text_layout::{self, Wrap, Align};
 use resources::resources;
+use resources::font::FontDescriptor;
 use geometry::{Size, Rect, RectExt, Vector};
 use render;
 use widget::draw::Draw;
@@ -13,7 +14,7 @@ const DEBUG_LINE_BOUNDS: bool = false;
 
 component_style!{pub struct TextState<name="text", style=TextStyle> {
     text: String = String::from(""),
-    font: String = String::from("Sans"),
+    font: FontDescriptor = FontDescriptor::from_family("Verdana"),
     font_size: f32 = 24.0,
     text_color: Color = BLACK,
     background_color: Color = TRANSPARENT,
