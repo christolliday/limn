@@ -7,6 +7,7 @@ use limn::resources::font::FontDescriptor;
 use limn::draw::rect::RectStyle;
 use limn::draw::text::TextStyle;
 use limn::draw::ellipse::EllipseStyle;
+use limn::widgets::slider::*;
 
 pub fn default_style() {
     let mut res = resources::resources();
@@ -58,6 +59,16 @@ pub fn default_style() {
     }));
     res.theme.register_class_prop_style("button_rect", MOUSEOVER.clone(), style!(RectStyle {
         background_color: GRAY_90,
+    }));
+    res.theme.register_modifier_class_style("scrollbar_slider", style!(SliderStyle {
+        variable_handle_size: true,
+        handle_style: HandleStyle::Square,
+        bar_style: BarStyle::Wide,
+        border: None,
+        bar_color: GRAY_80,
+        handle_color: GRAY_70,
+        highlight: None,
+        width: 15.0,
     }));
 }
 

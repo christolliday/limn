@@ -20,16 +20,11 @@ component_style!{pub struct Button<name="button", style=ButtonStyle> {
 }}
 
 impl ButtonStyle {
-    pub fn rect_style(&mut self, rect: RectStyle) {
-        self.rect = Some(rect);
-    }
-    pub fn text_style(&mut self, text: Option<TextStyle>) {
-        self.text = Some(text);
-    }
-    pub fn text(&mut self, text: &str) {
-        self.text = Some(Some(style!(TextStyle {
-            text: String::from(text),
-        })));
+    pub fn from_text(text: &str) -> Self {
+        Self {
+            text: Some(Some(TextStyle::from_text(text))),
+            ..Self::default()
+        }
     }
 }
 

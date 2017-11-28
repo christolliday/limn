@@ -69,6 +69,7 @@ pub struct Theme {
     class_style_selectors: HashMap<(TypeId, String), LinkedHashMap<PropSet, Box<DrawMergeStyle>>>,
     widget_style_selectors: HashMap<(TypeId, WidgetId), LinkedHashMap<PropSet, Box<DrawMergeStyle>>>,
     modifier_type_styles: HashMap<TypeId, Box<ModifierMergeStyle>>,
+    modifier_class_styles: HashMap<(TypeId, String), Box<ModifierMergeStyle>>,
 }
 
 impl Theme {
@@ -80,6 +81,7 @@ impl Theme {
             class_style_selectors: HashMap::new(),
             widget_style_selectors: HashMap::new(),
             modifier_type_styles: HashMap::new(),
+            modifier_class_styles: HashMap::new(),
         }
     }
 
@@ -122,9 +124,18 @@ impl Theme {
         self.modifier_type_styles.insert(TypeId::of::<T>(), Box::new(style));
     }
 
-    pub fn get_modifier_style(&self, style: Box<ModifierMergeStyle>, type_id: TypeId) -> Box<ModifierMergeStyle> {
-        if let Some(type_style) = self.modifier_type_styles.get(&type_id) {
+    pub fn register_modifier_class_style<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(&mut self, class: &str, style: T) {
+        self.modifier_class_styles.insert((TypeId::of::<T>(), String::from(class)), Box::new(style));
+    }
+
+    pub fn get_modifier_style(&self, style: Box<ModifierMergeStyle>, type_id: TypeId, class: Option<String>) -> Box<ModifierMergeStyle> {
+        let style = if let Some(type_style) = self.modifier_type_styles.get(&type_id) {
             style.merge(type_style.clone())
+        } else {
+            style
+        };
+        if let Some(class_style) = class.and_then(|class| self.modifier_class_styles.get(&(type_id, class))) {
+            style.merge(class_style.clone())
         } else {
             style
         }

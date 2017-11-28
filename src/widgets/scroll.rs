@@ -5,7 +5,7 @@ use cassowary::WeightedRelation::*;
 use layout::constraint::*;
 use event::{EventArgs, EventHandler};
 use widget::{WidgetBuilder, WidgetRef};
-use widgets::slider::{Slider, SliderEvent, SetSliderValue};
+use widgets::slider::{SliderStyle, SliderEvent, SetSliderValue, Orientation};
 use geometry::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
 use input::mouse::WidgetMouseWheel;
@@ -61,29 +61,23 @@ impl WidgetModifier for ScrollContainer {
             });
         }
         let mut scrollbars = if self.has_scrollbars {
-            let mut scrollbar_h = Slider::default();
-            scrollbar_h.scrollbar_style();
-            let mut scrollbar_h = WidgetBuilder::from_modifier(scrollbar_h);
+            let mut scrollbar_h = WidgetBuilder::from_modifier_style_class(SliderStyle::default(), "scrollbar_slider");
             scrollbar_h.set_name("scrollbar_h");
             scrollbar_h.layout().add(constraints![
                 align_bottom(widget),
                 align_left(widget),
                 align_below(&content_holder),
             ]);
-            let mut scrollbar_v = Slider::default();
-            scrollbar_v.make_vertical().scrollbar_style();
-            let mut scrollbar_v = WidgetBuilder::from_modifier(scrollbar_v);
+            let mut scrollbar_v = WidgetBuilder::from_modifier_style_class(
+                style!(SliderStyle { orientation: Orientation::Vertical, }), "scrollbar_slider");
             scrollbar_v.set_name("scrollbar_v");
             scrollbar_v.layout().add(constraints![
                 align_right(widget),
                 align_top(widget),
                 align_to_right_of(&content_holder),
             ]);
-            let corner_style = style!(RectStyle {
-                background_color: GRAY_70,
-            });
             let mut corner = WidgetBuilder::new("corner");
-            corner.set_draw_style(corner_style);
+            corner.set_draw_style(style!(RectStyle { background_color: GRAY_70, }));
             corner.layout().add(constraints![
                 align_bottom(widget),
                 align_right(widget),

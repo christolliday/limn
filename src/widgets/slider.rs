@@ -55,19 +55,6 @@ impl Slider {
         self
     }
 
-    /// Sets the scrollbar style
-    pub fn scrollbar_style(&mut self) -> &mut Self {
-        self.variable_handle_size = true;
-        self.handle_style = HandleStyle::Square;
-        self.bar_style = BarStyle::Wide;
-        self.border = None;
-        self.bar_color = GRAY_80;
-        self.handle_color = GRAY_70;
-        self.highlight = None;
-        self.width = 15.0;
-        self
-    }
-
     pub fn set_width(&mut self, width: f32) -> &mut Self {
         self.width = width;
         self

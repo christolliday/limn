@@ -489,7 +489,14 @@ impl WidgetBuilder {
 
     pub fn from_modifier_style<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(style: T) -> Self {
         let mut widget = WidgetBuilder::new(C::name());
-        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>());
+        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>(), None);
+        let component = style.comp();
+        component.apply(&mut widget);
+        widget
+    }
+    pub fn from_modifier_style_class<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(style: T, class: &str) -> Self {
+        let mut widget = WidgetBuilder::new(C::name());
+        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>(), Some(String::from(class)));
         let component = style.comp();
         component.apply(&mut widget);
         widget

@@ -22,6 +22,15 @@ component_style!{pub struct TextState<name="text", style=TextStyle> {
     align: Align = Align::Start,
 }}
 
+impl TextStyle {
+    pub fn from_text(text: &str) -> Self {
+        Self {
+            text: Some(String::from(text)),
+            ..Self::default()
+        }
+    }
+}
+
 impl TextState {
     pub fn measure(&self) -> Size {
         let line_height = self.line_height();
