@@ -41,12 +41,13 @@ impl Window {
     /// Get the size of the client area of the window in actual pixels.
     /// This is the size of the framebuffer
     pub fn size_px(&self) -> DeviceUintSize {
-        let (width, height) = self.window.get_inner_size_pixels().unwrap();
+        let (width, height) = self.window.get_inner_size().unwrap();
         DeviceUintSize::new(width, height)
     }
     /// Get the size of the client area of the window in density independent pixels.
     pub fn size_dp(&self) -> Size {
-        let (width, height) = self.window.get_inner_size_points().unwrap();
-        Size::new(width as f32, height as f32)
+        let (width, height) = self.window.get_inner_size().unwrap();
+        let hidpi = self.hidpi_factor();
+        Size::new(width as f32 / hidpi, height as f32 / hidpi)
     }
 }
