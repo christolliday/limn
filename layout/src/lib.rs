@@ -8,8 +8,7 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
-#![warn(missing_copy_implementations,
-        trivial_numeric_casts,
+#![warn(trivial_numeric_casts,
         trivial_casts,
         unused_extern_crates,
         unused_import_braces,
