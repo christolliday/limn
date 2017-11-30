@@ -29,7 +29,7 @@ pub fn resources() -> MutexGuard<'static, Resources> {
 named_id!(WidgetId);
 
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct ImageInfo {
     pub key: ImageKey,
     pub info: ImageDescriptor,
@@ -110,27 +110,30 @@ impl Resources {
     }
 
     pub fn put_image(&mut self, name: &str, data: ImageData, descriptor: ImageDescriptor) -> &ImageInfo {
-        let key = self.render.as_ref().unwrap().generate_image_key();
+        let key = self.render_api().generate_image_key();
         let mut resources = ResourceUpdates::new();
         resources.add_image(key, descriptor, data, None);
-        self.render.as_ref().unwrap().update_resources(resources);
+        self.render_api().update_resources(resources);
         let image_info = ImageInfo { key: key, info: descriptor };
         self.images.insert(name.to_owned(), image_info);
         &self.images[name]
     }
 
-    pub fn update_image(&mut self, name: &str, data: ImageData, descriptor: ImageDescriptor) -> &ImageInfo {
-        let mut image_info = self.images.remove(name).expect("update image");
+    pub fn create_texture(&mut self, data: ImageData, descriptor: ImageDescriptor) -> ImageInfo {
+        let key = self.render_api().generate_image_key();
         let mut resources = ResourceUpdates::new();
-        resources.update_image(image_info.key, descriptor, data, None);
-        self.render.as_ref().unwrap().update_resources(resources);
-        image_info.info = descriptor;
-        self.images.insert(name.to_owned(), image_info);
-        &self.images[name]
+        resources.add_image(key, descriptor, data, None);
+        self.render_api().update_resources(resources);
+        ImageInfo { key: key, info: descriptor }
     }
+
     fn set_render_api(&mut self, render: RenderApiSender) {
         self.render = Some(render.create_api());
         self.font_loader.render = Some(render.create_api());
+    }
+
+    pub fn render_api(&self) -> &RenderApi {
+        self.render.as_ref().unwrap()
     }
 }
 fn load_image(file: &str) -> Result<(ImageData, ImageDescriptor), image::ImageError> {

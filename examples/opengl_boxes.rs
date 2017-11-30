@@ -230,7 +230,7 @@ fn main() {
     let mut root = WidgetBuilder::new("root");
 
     // Create an image that's connected to the texture we're rendering to
-    let mut gl_canvas = GLCanvasBuilder::new("gl_canvas", u64::from(tex));
+    let mut gl_canvas = GLCanvasBuilder::new(u64::from(tex));
     gl_canvas.layout().no_container();
     gl_canvas.layout().add(constraints![
         match_width(&root),
