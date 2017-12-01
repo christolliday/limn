@@ -1,18 +1,19 @@
 use widget::WidgetBuilder;
 use draw::image::ImageState;
 use layout::constraint::*;
+use resources::image::ImageSource;
 
 use style::*;
 
 #[derive(Debug, Clone)]
 pub struct Image {
-    file: String,
+    source: ImageSource,
 }
 
 impl Image {
-    pub fn new(file: &str) -> Self {
+    pub fn new(source: ImageSource) -> Self {
         Image {
-            file: file.to_owned(),
+            source: source,
         }
     }
 }
@@ -25,7 +26,7 @@ impl Component for Image {
 
 impl WidgetModifier for Image {
     fn apply(&self, widget: &mut WidgetBuilder) {
-        let image_draw_state = ImageState::new(&self.file);
+        let image_draw_state = ImageState::new(self.source.clone());
         let image_size = image_draw_state.measure();
         widget.set_name("image");
         widget.set_draw_state(image_draw_state);

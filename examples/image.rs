@@ -12,9 +12,11 @@ fn main() {
         .with_title("Limn image demo")
         .with_min_dimensions(100, 100);
     let app = util::init(window_builder);
+    resources().image_loader.load_image("rust", include_bytes!("../assets/images/rust.png").to_vec());
+
     let mut root = WidgetBuilder::new("root");
 
-    let mut image_widget = WidgetBuilder::from_modifier(Image::new("rust.png"));
+    let mut image_widget = WidgetBuilder::from_modifier(Image::new(ImageSource::bundled("rust")));
     image_widget.layout().add(constraints![
         center(&root),
         bound_by(&root).padding(50.0),

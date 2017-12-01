@@ -166,7 +166,7 @@ struct LimnExternalImageHandler;
 impl webrender::ExternalImageHandler for LimnExternalImageHandler {
     // Do not perform any actual locking since rendering happens on the main thread
     fn lock(&mut self, key: ExternalImageId, _channel_index: u8) -> webrender::ExternalImage {
-        let descriptor = resources::resources().texture_descriptors[&key.0];
+        let descriptor = resources::resources().image_loader.texture_descriptors[&key.0];
         webrender::ExternalImage {
             u0: 0.0,
             u1: descriptor.width as f32,
