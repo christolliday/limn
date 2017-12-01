@@ -50,6 +50,8 @@ extern crate lazy_static;
 extern crate maplit;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate failure;
 
 pub extern crate limn_text_layout as text_layout;
 pub extern crate cassowary;

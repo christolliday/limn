@@ -27,7 +27,7 @@ impl ImageState {
         }
     }
     pub fn measure(&self) -> Size {
-        let descriptor = resources().image_loader.get_image(&self.image).descriptor;
+        let descriptor = resources().image_loader.get_image(&self.image).unwrap().descriptor;
         Size::new(descriptor.width as f32, descriptor.height as f32)
     }
     pub fn scale(&mut self, scale: Size) {
@@ -37,7 +37,7 @@ impl ImageState {
 
 impl Draw for ImageState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
-        let key = resources().image_loader.get_image(&self.image).key;
+        let key = resources().image_loader.get_image(&self.image).unwrap().key;
         let info = PrimitiveInfo::new(bounds);
         renderer.builder.push_image(
             &info,
