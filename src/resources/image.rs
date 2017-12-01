@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use failure::Error;
+
 use webrender::api::{RenderApi, ResourceUpdates, ExternalImageId, ExternalImageData, ImageKey, ImageFormat, ImageData, ImageDescriptor};
 use image;
 use image::ImageError;
@@ -31,6 +33,12 @@ pub struct ImageInfo {
     pub descriptor: ImageDescriptor,
 }
 
+#[derive(Debug, Fail)]
+#[fail(display = "missing bundled image {}", name)]
+struct BundledImageMissingError {
+    name: String,
+}
+
 #[derive(Default)]
 pub struct ImageLoader {
     pub render: Option<RenderApi>,
@@ -45,25 +53,25 @@ impl ImageLoader {
         ImageLoader::default()
     }
 
-    pub fn get_image(&mut self, source: &ImageSource) -> &ImageInfo {
+    pub fn get_image(&mut self, source: &ImageSource) -> Result<&ImageInfo, Error> {
         if self.images.contains_key(source) {
-            &self.images[source]
+            Ok(&self.images[source])
         } else {
             let (data, descriptor) = match *source {
                 ImageSource::AbsolutePath(ref path) => {
-                    load_image_from_file(path).unwrap()
+                    load_image_from_file(path)?
                 },
                 ImageSource::AssetPath(ref relative_path) => {
                     let mut path = PathBuf::from(&self.assets_path);
                     path.push(relative_path);
-                    load_image_from_file(&path).unwrap()
+                    load_image_from_file(&path)?
                 },
                 ImageSource::Bundled(ref name) => {
-                    panic!("Missing bundle image {}", name)
+                    return Err(BundledImageMissingError { name: name.to_owned() }.into())
                 }
             };
 
-            self.put_image(source, data, descriptor)
+            Ok(self.put_image(source, data, descriptor))
         }
     }
 

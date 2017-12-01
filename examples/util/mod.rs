@@ -12,7 +12,7 @@ use limn::widgets::slider::*;
 pub fn default_style() {
     let mut res = resources::resources();
 
-    res.font_loader.register_font_data(FontDescriptor::from_family("NotoSans"), include_bytes!("../../assets/fonts/NotoSans/NotoSans-Regular.ttf").to_vec());
+    res.font_loader.register_font_data(FontDescriptor::from_family("NotoSans"), include_bytes!("../../assets/fonts/NotoSans/NotoSans-Regular.ttf").to_vec()).unwrap();
 
     res.theme.register_type_style(EllipseStyle::default());
     res.theme.register_type_style(RectStyle::default());
