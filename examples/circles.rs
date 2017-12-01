@@ -101,16 +101,12 @@ fn create_control_bar() -> (WidgetBuilder, ControlBarRefs) {
             }
         };
     });
-    let mut undo_widget = ButtonStyle::default();
-    undo_widget.text("Undo");
-    let mut undo_widget = WidgetBuilder::from_modifier_style(undo_widget);
+    let mut undo_widget = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Undo"));
     undo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(AppEvent::Undo);
     });
 
-    let mut redo_widget = ButtonStyle::default();
-    redo_widget.text("Redo");
-    let mut redo_widget = WidgetBuilder::from_modifier_style(redo_widget);
+    let mut redo_widget = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Redo"));
     redo_widget.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(AppEvent::Redo);
     });

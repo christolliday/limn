@@ -221,21 +221,15 @@ fn main() {
     let mut button_container = WidgetBuilder::new("button_container");
     button_container.layout().add(below(&last_name_container).padding(20.0));
 
-    let mut create_button = ButtonStyle::default();
-    create_button.text("Create");
-    let mut create_button = WidgetBuilder::from_modifier_style(create_button);
+    let mut create_button = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Create"));
     create_button.add_prop(Property::Inactive);
 
-    let mut update_button = ButtonStyle::default();
-    update_button.text("Update");
-    let mut update_button = WidgetBuilder::from_modifier_style(update_button);
+    let mut update_button = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Update"));
     update_button.add_prop(Property::Inactive);
     update_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Update);
     });
-    let mut delete_button = ButtonStyle::default();
-    delete_button.text("Delete");
-    let mut delete_button = WidgetBuilder::from_modifier_style(delete_button);
+    let mut delete_button = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Delete"));
     delete_button.add_prop(Property::Inactive);
     delete_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Delete);
