@@ -129,6 +129,9 @@ impl Draw for TextState {
                 }
             }
         }
+        if self.background_color != TRANSPARENT {
+            renderer.builder.push_rect(&PrimitiveInfo::new(bounds.clone()), self.background_color.into());
+        }
         let key = self.font_instance_key();
         let info = PrimitiveInfo::new(bounds);
         renderer.builder.push_text(
