@@ -80,7 +80,6 @@ impl App {
     }
 
     /// Updates the UI and redraws the window (the applications main loop)
-    /// Event handling currently blocks the whole UI
     pub fn main_loop(mut self, root: WidgetBuilder) {
         self.ui.root.add_child(root);
         let events_loop = Rc::clone(&self.events_loop);
@@ -92,14 +91,20 @@ impl App {
         self.ui.resize_window_to_fit();
         self.window_initialized = true;
         loop {
+            if !self.ui.needs_redraw() && !self.ui.render.frame_ready() {
+                events_loop.run_forever(|event| {
+                    self.handle_window_event(event);
+                    glutin::ControlFlow::Break
+                });
+            }
             events_loop.poll_events(|event| {
                 self.handle_window_event(event);
             });
+            self.handle_events();
             if self.ui.should_close() {
                 self.ui.render.deinit();
                 return;
             }
-            self.handle_events();
             let now = Instant::now();
             if now > self.next_frame_time {
                 let frame_length = Duration::new(0, 1_000_000_000 / 60);
@@ -113,17 +118,6 @@ impl App {
                 self.handle_events();
             }
             self.ui.update();
-
-            if !self.ui.needs_redraw() && !self.ui.render.frame_ready() {
-                let mut events = Vec::new();
-                events_loop.run_forever(|window_event| {
-                    events.push(window_event);
-                    glutin::ControlFlow::Break
-                });
-                for event in events {
-                    self.handle_window_event(event);
-                }
-            }
         }
     }
 
