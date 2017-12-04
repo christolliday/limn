@@ -4,9 +4,7 @@ use std::path::PathBuf;
 use failure::Error;
 
 use webrender::api::{RenderApi, ResourceUpdates, ExternalImageId, ExternalImageData, ImageKey, ImageFormat, ImageData, ImageDescriptor};
-use image;
-use image::ImageError;
-
+use image::{self, ImageError, DynamicImage, GenericImage};
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum ImageSource {
@@ -54,17 +52,25 @@ impl ImageLoader {
     }
 
     pub fn get_image(&mut self, source: &ImageSource) -> Result<&ImageInfo, Error> {
+        let image = self.get_image_internal(source);
+        if let Err(ref error) = image {
+            error!("Failed to load image from source {:?}. {}", source, error);
+        }
+        image
+    }
+
+    fn get_image_internal(&mut self, source: &ImageSource) -> Result<&ImageInfo, Error> {
         if self.images.contains_key(source) {
             Ok(&self.images[source])
         } else {
             let (data, descriptor) = match *source {
                 ImageSource::AbsolutePath(ref path) => {
-                    load_image_from_file(path)?
+                    prepare_image(image::open(&path)?)?
                 },
                 ImageSource::AssetPath(ref relative_path) => {
                     let mut path = PathBuf::from(&self.assets_path);
                     path.push(relative_path);
-                    load_image_from_file(&path)?
+                    prepare_image(image::open(&path)?)?
                 },
                 ImageSource::Bundled(ref name) => {
                     return Err(BundledImageMissingError { name: name.to_owned() }.into())
@@ -98,9 +104,16 @@ impl ImageLoader {
     }
 
     pub fn load_image(&mut self, name: &str, data: Vec<u8>) {
-        let (data, descriptor) = load_image_from_memory(data).unwrap();
+        if let Err(error) = self.load_image_internal(name, data) {
+            error!("Failed to load image from raw data {}", error);
+        }
+    }
+
+    fn load_image_internal(&mut self, name: &str, data: Vec<u8>) -> Result<(), Error> {
+        let (data, descriptor) = prepare_image(image::load_from_memory(&data)?)?;
         let image_info = self.create_image_resource(data, descriptor);
         self.images.insert(ImageSource::bundled(name), image_info);
+        Ok(())
     }
 
     fn render_api(&self) -> &RenderApi {
@@ -108,38 +121,14 @@ impl ImageLoader {
     }
 }
 
-fn load_image_from_memory(data: Vec<u8>) -> Result<(ImageData, ImageDescriptor), ImageError> {
-    use image::GenericImage;
-    let image = try!(image::load_from_memory(&data));
+fn prepare_image(image: DynamicImage) -> Result<(ImageData, ImageDescriptor), Error> {
     let image_dims = image.dimensions();
     let format = match image {
         image::ImageLuma8(_) => ImageFormat::A8,
         image::ImageRgb8(_) => ImageFormat::RGB8,
         image::ImageRgba8(_) => ImageFormat::BGRA8,
         image::ImageLumaA8(_) => {
-            return Err(ImageError::UnsupportedError("ImageLumaA8 unsupported".to_string()));
-        }
-    };
-    let mut bytes = image.raw_pixels();
-    if format == ImageFormat::BGRA8 {
-        premultiply(bytes.as_mut_slice());
-    }
-    let opaque = is_image_opaque(format, &bytes[..]);
-    let descriptor = ImageDescriptor::new(image_dims.0, image_dims.1, format, opaque);
-    let data = ImageData::new(bytes);
-    Ok((data, descriptor))
-}
-
-fn load_image_from_file(file: &PathBuf) -> Result<(ImageData, ImageDescriptor), ImageError> {
-    use image::GenericImage;
-    let image = try!(image::open(file));
-    let image_dims = image.dimensions();
-    let format = match image {
-        image::ImageLuma8(_) => ImageFormat::A8,
-        image::ImageRgb8(_) => ImageFormat::RGB8,
-        image::ImageRgba8(_) => ImageFormat::BGRA8,
-        image::ImageLumaA8(_) => {
-            return Err(ImageError::UnsupportedError("ImageLumaA8 unsupported".to_string()));
+            return Err(ImageError::UnsupportedError("ImageLumaA8 unsupported".to_string()).into());
         }
     };
     let mut bytes = image.raw_pixels();
