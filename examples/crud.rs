@@ -50,12 +50,12 @@ enum PeopleEvent {
 }
 
 struct Widgets {
-    list_widget: WidgetRef,
-    first_name_box: WidgetRef,
-    last_name_box: WidgetRef,
-    create_button: WidgetRef,
-    update_button: WidgetRef,
-    delete_button: WidgetRef,
+    list_widget: Widget,
+    first_name_box: Widget,
+    last_name_box: Widget,
+    create_button: Widget,
+    update_button: Widget,
+    delete_button: Widget,
 }
 struct PeopleHandler {
     widgets: Widgets,
@@ -63,7 +63,7 @@ struct PeopleHandler {
     id_gen: IdGen<PersonId>,
     person: Person,
     people: HashMap<PersonId, Person>,
-    people_widgets: HashMap<PersonId, WidgetRef>,
+    people_widgets: HashMap<PersonId, Widget>,
 }
 impl PeopleHandler {
     fn new(widgets: Widgets) -> Self {

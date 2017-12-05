@@ -4,14 +4,14 @@
 //! a list of references to it's children, a list of `EventHandler`s that receive and send events,
 //! and optionally a draw state struct that implements `Draw`.
 //!
-//! The tree consists of pointers to widgets called `WidgetRef`s. A widget can be constructed by creating a
-//! `WidgetBuilder`, which is a wrapper around a `WidgetRef` that allows for configuration and that signifies
+//! The tree consists of pointers to widgets called `Widget`s. A widget can be constructed by creating a
+//! `WidgetBuilder`, which is a wrapper around a `Widget` that allows for configuration and that signifies
 //! it hasn't yet been initialized and added to a parent widget.
 //!
 //! Creating a reusable widget definition can be achieved by creating a function that returns a `WidgetBuilder`,
 //! or, if the API for constructing the widget is more complex, a builder struct that implements
 //! `Into<WidgetBuilder>` that can be configured, before being converted into a `WidgetBuilder`, initializing
-//! the `WidgetBuilder` and attaching it's `WidgetRef` to a parent widget.
+//! the `WidgetBuilder` and attaching it's `Widget` to a parent widget.
 //!
 //! The root widget is just an ordinary widget that happens to be stored by the `Ui` so it can be drawn, and that
 //! has the size of the window as its bounding rectangle.
@@ -53,11 +53,11 @@ pub struct StateUpdated;
 pub struct StyleUpdated;
 
 #[derive(Clone)]
-pub struct WidgetRef(Rc<RefCell<WidgetInner>>);
+pub struct Widget(Rc<RefCell<WidgetInner>>);
 
-impl WidgetRef {
+impl Widget {
     fn new(widget: WidgetInner) -> Self {
-        let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
+        let widget_ref = Widget(Rc::new(RefCell::new(widget)));
         event::event(Target::Root, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
@@ -175,7 +175,7 @@ impl WidgetRef {
         event::event(Target::Root, UpdateLayout(self.clone()));
     }
 
-    pub fn add_child<U: Into<WidgetRef>>(&mut self, child: U) -> &mut Self {
+    pub fn add_child<U: Into<Widget>>(&mut self, child: U) -> &mut Self {
         let mut child = child.into();
         event::event(Target::Root, ::layout::UpdateLayout(child.clone()));
         child.widget_mut().parent = Some(self.downgrade());
@@ -192,7 +192,7 @@ impl WidgetRef {
         self
     }
 
-    pub fn remove_child(&mut self, child_ref: WidgetRef) {
+    pub fn remove_child(&mut self, child_ref: Widget) {
         let child_id = child_ref.id();
         self.update_layout(|layout| {
             child_ref.update_layout(|child_layout| {
@@ -214,15 +214,15 @@ impl WidgetRef {
         }
     }
 
-    pub fn parent(&self) -> Option<WidgetRef> {
+    pub fn parent(&self) -> Option<Widget> {
         self.widget().parent.as_ref().and_then(|parent| parent.upgrade())
     }
 
-    pub fn children(&self) -> Vec<WidgetRef> {
+    pub fn children(&self) -> Vec<Widget> {
         self.widget().children.clone()
     }
 
-    pub fn child(&self, name: &str) -> Option<WidgetRef> {
+    pub fn child(&self, name: &str) -> Option<Widget> {
         self.children().iter().find(|child| child.name() == name).cloned()
     }
 
@@ -318,21 +318,21 @@ impl WidgetRef {
     }
 }
 
-impl PartialEq for WidgetRef {
-    fn eq(&self, other: &WidgetRef) -> bool {
+impl PartialEq for Widget {
+    fn eq(&self, other: &Widget) -> bool {
         self.id() == other.id()
     }
 }
 
-impl Eq for WidgetRef {}
+impl Eq for Widget {}
 
-impl Hash for WidgetRef {
+impl Hash for Widget {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
 }
 
-impl ::std::fmt::Debug for WidgetRef {
+impl ::std::fmt::Debug for Widget {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.widget().name)
     }
@@ -349,7 +349,7 @@ impl<'b> Deref for LayoutGuard<'b> {
     }
 }
 
-impl LayoutRef for WidgetRef {
+impl LayoutRef for Widget {
     fn layout_ref(&self) -> LayoutVars {
         self.layout_vars()
     }
@@ -401,16 +401,16 @@ impl<'a> DrawStateGuard<'a> {
 pub struct WidgetWeak(Weak<RefCell<WidgetInner>>);
 
 impl WidgetWeak {
-    pub fn upgrade(&self) -> Option<WidgetRef> {
+    pub fn upgrade(&self) -> Option<Widget> {
         if let Some(widget_ref) = self.0.upgrade() {
-            Some(WidgetRef(widget_ref))
+            Some(Widget(widget_ref))
         } else {
             None
         }
     }
 }
 
-/// Internal Widget representation, usually handled through a `WidgetRef`.
+/// Internal Widget representation, usually handled through a `Widget`.
 pub(super) struct WidgetInner {
     id: WidgetId,
     pub(super) draw_state: Option<DrawWrapper>,
@@ -424,7 +424,7 @@ pub(super) struct WidgetInner {
     pub(super) bounds: Rect,
     name: String,
     debug_color: Option<Color>,
-    children: Vec<WidgetRef>,
+    children: Vec<Widget>,
     parent: Option<WidgetWeak>,
     handlers: HashMap<TypeId, Vec<Rc<RefCell<EventHandlerWrapper>>>>,
 }
@@ -465,7 +465,7 @@ impl WidgetInner {
 /// Used to initialize and modify a Widget before it's been added to a parent Widget
 #[derive(Debug, Clone)]
 pub struct WidgetBuilder {
-    pub widget: WidgetRef,
+    pub widget: Widget,
 }
 
 impl WidgetBuilder {
@@ -474,14 +474,14 @@ impl WidgetBuilder {
     /// The `WidgetBuilder` can then be referred to by name
     pub fn new<S: Into<String>>(name: S) -> Self {
         WidgetBuilder {
-            widget: WidgetRef::new(WidgetInner::new(name)),
+            widget: Widget::new(WidgetInner::new(name)),
         }
     }
 
     pub fn from_modifier<T: Component + WidgetModifier>(component: T) -> Self {
         let name: String = T::name();
         let mut widget = WidgetBuilder {
-            widget: WidgetRef::new(WidgetInner::new(name.clone())),
+            widget: Widget::new(WidgetInner::new(name.clone())),
         };
         component.apply(&mut widget);
         widget
@@ -502,7 +502,7 @@ impl WidgetBuilder {
         widget
     }
 
-    pub fn widget_ref(&self) -> WidgetRef {
+    pub fn widget_ref(&self) -> Widget {
         self.widget.clone()
     }
 
@@ -566,7 +566,7 @@ impl WidgetBuilder {
 
     /// Adds a child widget to the current Widget.
     /// Note that the child may be unconstrained.
-    pub fn add_child<U: Into<WidgetRef>>(&mut self, child: U) -> &mut Self {
+    pub fn add_child<U: Into<Widget>>(&mut self, child: U) -> &mut Self {
         self.widget.add_child(child);
         self
     }
@@ -579,19 +579,19 @@ impl WidgetBuilder {
     }
 }
 
-impl Into<WidgetRef> for WidgetBuilder {
-    fn into(self) -> WidgetRef {
+impl Into<Widget> for WidgetBuilder {
+    fn into(self) -> Widget {
         self.widget.update_draw_state();
         self.widget
     }
 }
 
-pub trait AsWidgetRef {
-    fn widget_ref(&self) -> WidgetRef;
+pub trait AsWidget {
+    fn widget_ref(&self) -> Widget;
 }
 
-impl AsWidgetRef for WidgetBuilder {
-    fn widget_ref(&self) -> WidgetRef {
+impl AsWidget for WidgetBuilder {
+    fn widget_ref(&self) -> Widget {
         self.widget.clone()
     }
 }

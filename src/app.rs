@@ -9,7 +9,7 @@ use glutin;
 use window::Window;
 use ui::Ui;
 use input::InputEvent;
-use widget::{WidgetBuilder, WidgetRef};
+use widget::{WidgetBuilder, Widget};
 use event::{self, EventHandler};
 use geometry::Size;
 
@@ -134,7 +134,7 @@ impl App {
         self
     }
 
-    pub fn get_root(&self) -> WidgetRef {
+    pub fn get_root(&self) -> Widget {
         self.ui.get_root()
     }
 

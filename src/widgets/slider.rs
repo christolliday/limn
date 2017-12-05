@@ -7,7 +7,7 @@ use layout::LayoutUpdated;
 use input::mouse::ClickEvent;
 use input::drag::{DragEvent, DragState};
 use event::{EventHandler, EventArgs};
-use widget::{WidgetBuilder, WidgetRef};
+use widget::{WidgetBuilder, Widget};
 use widget::property::Property;
 use draw::rect::RectStyle;
 use draw::ellipse::EllipseStyle;
@@ -208,15 +208,15 @@ multi_event!{impl EventHandler<SliderInputEvent> for SliderHandler {
 struct SliderHandler {
     orientation: Orientation,
     range: Range<f32>,
-    slider_ref: WidgetRef,
-    handle_ref: WidgetRef,
+    slider_ref: Widget,
+    handle_ref: Widget,
     drag_start_pos: f32,
     drag_start_val: f32,
     last_val: f32,
 }
 
 impl SliderHandler {
-    fn new(orientation: Orientation, range: Range<f32>, slider_ref: WidgetRef, handle_ref: WidgetRef, init_value: Option<f32>) -> Self {
+    fn new(orientation: Orientation, range: Range<f32>, slider_ref: Widget, handle_ref: Widget, init_value: Option<f32>) -> Self {
         let value = init_value.unwrap_or(range.start);
         let handler = SliderHandler {
             orientation: orientation,

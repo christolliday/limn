@@ -9,7 +9,7 @@ use draw::rect::RectStyle;
 use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
-use widget::WidgetRef;
+use widget::Widget;
 use widget::property::states::*;
 use style::WidgetModifier;
 
@@ -25,7 +25,7 @@ multi_event!{impl EventHandler<EditTextEvent> for EditTextHandler {
 }}
 
 struct EditTextHandler {
-    text_box: WidgetRef,
+    text_box: Widget,
     text: String,
 }
 

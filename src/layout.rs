@@ -7,7 +7,7 @@ use resources::WidgetId;
 
 use app::App;
 
-use widget::{WidgetRef, WidgetBuilder};
+use widget::{Widget, WidgetBuilder};
 use event::EventArgs;
 
 pub use self::solver::LimnSolver;
@@ -33,7 +33,7 @@ impl WidgetBuilder {
 }
 
 #[derive(Clone)]
-pub struct UpdateLayout(pub WidgetRef);
+pub struct UpdateLayout(pub Widget);
 #[derive(Debug, Copy, Clone)]
 pub struct ResizeWindow;
 #[derive(Debug, Clone)]

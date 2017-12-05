@@ -1,7 +1,7 @@
 use glutin;
 
 use event::{EventHandler, EventArgs};
-use widget::{WidgetBuilder, WidgetRef};
+use widget::{WidgetBuilder, Widget};
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use geometry::{Point, Vector};
 use app::App;
@@ -26,7 +26,7 @@ pub enum DragState {
 
 #[derive(Debug, Clone)]
 struct DragInputHandler {
-    widget: Option<WidgetRef>,
+    widget: Option<Widget>,
     position: Point,
     start_position: Point,
     prev_position: Point,
@@ -77,7 +77,7 @@ impl EventHandler<DragInputEvent> for DragInputHandler {
 
 #[derive(Debug, Clone)]
 enum DragInputEvent {
-    WidgetPressed(WidgetRef),
+    WidgetPressed(Widget),
     MouseMoved(Point),
     MouseReleased,
 }
