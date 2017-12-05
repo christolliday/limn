@@ -36,12 +36,12 @@ impl EventHandler<ListItemSelected> for ListHandler {
 }
 
 pub struct ListItemHandler {
-    list_id: WidgetRef,
+    list_widget: WidgetRef,
 }
 
 impl ListItemHandler {
-    pub fn new(list_id: WidgetRef) -> Self {
-        ListItemHandler { list_id: list_id }
+    pub fn new(list_widget: WidgetRef) -> Self {
+        ListItemHandler { list_widget: list_widget }
     }
 }
 
@@ -49,8 +49,9 @@ impl EventHandler<ClickEvent> for ListItemHandler {
     fn handle(&mut self, _: &ClickEvent, mut args: EventArgs) {
         if !args.widget.props().contains(&Property::Selected) {
             args.widget.add_prop(Property::Selected);
-            let event = ListItemSelected { widget: Some(args.widget) };
-            self.list_id.event(event);
+            let event = ListItemSelected { widget: Some(args.widget.clone()) };
+            self.list_widget.event(event);
+            args.widget.event(ItemSelected);
             *args.handled = true;
         }
     }

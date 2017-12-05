@@ -15,6 +15,7 @@ use style::WidgetModifier;
 
 const BACKSPACE: char = '\u{8}';
 
+#[derive(Debug, Clone)]
 pub struct TextUpdated(pub String);
 
 #[derive(Debug)]
@@ -68,10 +69,6 @@ impl EventHandler<EditTextEvent> for EditTextHandler {
             }
         }
     }
-}
-
-pub fn text_change_handle(event: &TextUpdated, mut args: EventArgs) {
-    args.widget.update(|state: &mut TextState| state.text = event.0.clone());
 }
 
 component_style!{pub struct EditText<name="scroll", style=EditTextStyle> {

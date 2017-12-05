@@ -16,7 +16,7 @@ use limn::widgets::slider::{Slider, SetSliderValue, SliderEvent};
 use limn::draw::text::TextStyle;
 use limn::draw::rect::{RectStyle};
 use limn::draw::ellipse::{EllipseStyle};
-use limn::widgets::edit_text::{self, TextUpdated};
+use limn::widgets::edit_text::TextUpdated;
 use limn::widgets::text::StaticTextStyle;
 use limn::input::keyboard::KeyboardInput;
 use limn::input::drag::DragEvent;
@@ -43,8 +43,7 @@ fn create_slider_control() -> WidgetBuilder {
     let mut slider_value = WidgetBuilder::from_modifier_style(slider_value);
     slider_value
         .set_style_class(TypeId::of::<TextStyle>(), "static_text")
-        .set_name("slider_value")
-        .add_handler(edit_text::text_change_handle);
+        .set_name("slider_value");
     slider_value.layout().add(align_right(&widget));
     let mut slider_widget = Slider::default();
     slider_widget.set_range(10.0..500.0);
