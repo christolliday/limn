@@ -22,14 +22,6 @@ pub struct WidgetMouseWheel(pub glutin::MouseScrollDelta);
 pub struct WidgetMouseButton(pub glutin::ElementState, pub glutin::MouseButton);
 
 #[derive(Debug, Copy, Clone)]
-pub enum MouseInputEvent {
-    LayoutChanged,
-    MouseMoved(Point),
-    MouseButton(glutin::ElementState, glutin::MouseButton),
-    MouseWheel(glutin::MouseScrollDelta),
-}
-
-#[derive(Debug, Copy, Clone)]
 pub struct ClickEvent {
     pub position: Point,
 }
@@ -41,7 +33,6 @@ struct MouseController {
 }
 
 impl MouseController {
-
     /// Creates a new MouseController
     pub fn new() -> Self {
         MouseController {
@@ -62,56 +53,47 @@ impl MouseController {
         }
         self.widget_under_mouse = widget_under_cursor;
     }
-}
-impl EventHandler<MouseInputEvent> for MouseController {
-    fn handle(&mut self, event: &MouseInputEvent, args: EventArgs) {
 
-        match *event {
-            MouseInputEvent::LayoutChanged => {
-                self.check_widget_under_cursor(args);
+    fn layout_changed(&mut self, _: &LayoutChanged, args: EventArgs) {
+        self.check_widget_under_cursor(args);
+    }
+
+    fn mouse_moved(&mut self, event: &MouseMoved, args: EventArgs) {
+        let &MouseMoved(mouse) = event;
+        self.mouse = mouse;
+        self.check_widget_under_cursor(args);
+    }
+
+    fn mouse_button(&mut self, event: &MouseButton, _: EventArgs) {
+        let &MouseButton(state, button) = event;
+        if let Some(ref widget_under) = self.widget_under_mouse {
+            widget_under.event_bubble_up(WidgetMouseButton(state, button));
+            if (state == glutin::ElementState::Released) && (button == glutin::MouseButton::Left) {
+                let event = ClickEvent { position: self.mouse };
+                widget_under.event_bubble_up(event);
             }
-            MouseInputEvent::MouseMoved(mouse) => {
-                self.mouse = mouse;
-                self.check_widget_under_cursor(args);
-            }
-            MouseInputEvent::MouseButton(state, button) => {
-                if let Some(ref widget_under) = self.widget_under_mouse {
-                    widget_under.event_bubble_up(WidgetMouseButton(state, button));
-                    if (state == glutin::ElementState::Released) && (button == glutin::MouseButton::Left) {
-                        let event = ClickEvent { position: self.mouse };
-                        widget_under.event_bubble_up(event);
-                    }
-                }
-            }
-            MouseInputEvent::MouseWheel(mouse_scroll_delta) => {
-                if let Some(ref widget_under) = self.widget_under_mouse {
-                    widget_under.event_bubble_up(WidgetMouseWheel(mouse_scroll_delta));
-                }
-            }
+        }
+    }
+
+    fn mouse_wheel(&mut self, event: &MouseWheel, _: EventArgs) {
+        let &MouseWheel(mouse_scroll_delta) = event;
+        if let Some(ref widget_under) = self.widget_under_mouse {
+            widget_under.event_bubble_up(WidgetMouseWheel(mouse_scroll_delta));
         }
     }
 }
 
+multi_event!{impl EventHandler<MouseControllerEvent> for MouseController {
+    LayoutChanged => layout_changed,
+    MouseMoved => mouse_moved,
+    MouseButton => mouse_button,
+    MouseWheel => mouse_wheel,
+}}
+
 impl App {
     pub fn add_mouse_handlers(&mut self) {
-        // adapters to create MouseInputEvents for MouseController
-        self.add_handler(| _: &LayoutChanged, args: EventArgs| {
-            args.widget.event(MouseInputEvent::LayoutChanged);
-        });
-        self.add_handler(|event: &MouseMoved, args: EventArgs| {
-            let &MouseMoved(mouse) = event;
-            args.widget.event(MouseInputEvent::MouseMoved(mouse));
-        });
-        self.add_handler(|event: &MouseButton, args: EventArgs| {
-            let &MouseButton(state, button) = event;
-            args.widget.event(MouseInputEvent::MouseButton(state, button));
-        });
-        self.add_handler(|event: &MouseWheel, args: EventArgs| {
-            let &MouseWheel(scroll) = event;
-            args.widget.event(MouseInputEvent::MouseWheel(scroll));
-        });
-
         self.add_handler(MouseController::new());
+        MouseController::add_adapters(&mut self.get_root());
     }
 }
 

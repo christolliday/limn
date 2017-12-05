@@ -18,12 +18,11 @@ const BACKSPACE: char = '\u{8}';
 #[derive(Debug, Clone)]
 pub struct TextUpdated(pub String);
 
-#[derive(Debug)]
-enum EditTextEvent {
-    WidgetReceivedCharacter(char),
-    TextUpdated(String),
-    StyleUpdated,
-}
+multi_event!{impl EventHandler<EditTextEvent> for EditTextHandler {
+    WidgetReceivedCharacter => received_char,
+    TextUpdated => text_updated,
+    StyleUpdated => style_updated,
+}}
 
 struct EditTextHandler {
     text_box: WidgetRef,
@@ -37,37 +36,35 @@ impl EditTextHandler {
             state.text = text;
         });
     }
-}
 
-impl EventHandler<EditTextEvent> for EditTextHandler {
-    fn handle(&mut self, event: &EditTextEvent, args: EventArgs) {
-        match *event {
-            EditTextEvent::WidgetReceivedCharacter(char) => {
-                match char {
-                    BACKSPACE => {
-                        self.text.pop();
-                    }
-                    _ => {
-                        self.text.push(char);
-                        let bounds = self.text_box.bounds();
-                        let draw_state = self.text_box.draw_state();
-                        let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
-                        if !text_draw_state.text_fits(&self.text, bounds) {
-                            self.text.pop();
-                        }
-                    }
+    fn received_char(&mut self, event: &WidgetReceivedCharacter, args: EventArgs) {
+        let &WidgetReceivedCharacter(char) = event;
+        match char {
+            BACKSPACE => {
+                self.text.pop();
+            }
+            _ => {
+                self.text.push(char);
+                let bounds = self.text_box.bounds();
+                let draw_state = self.text_box.draw_state();
+                let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
+                if !text_draw_state.text_fits(&self.text, bounds) {
+                    self.text.pop();
                 }
-                self.update_text();
-                args.widget.event(TextUpdated(self.text.clone()));
-            },
-            EditTextEvent::StyleUpdated => {
-                self.update_text();
-            },
-            EditTextEvent::TextUpdated(ref text) => {
-                self.text = text.clone();
-                self.update_text();
             }
         }
+        self.update_text();
+        args.widget.event(TextUpdated(self.text.clone()));
+    }
+
+    fn text_updated(&mut self, event: &TextUpdated, _: EventArgs) {
+        let &TextUpdated(ref text) = event;
+        self.text = text.clone();
+        self.update_text();
+    }
+
+    fn style_updated(&mut self, _: &StyleUpdated, _: EventArgs) {
+        self.update_text();
     }
 }
 
@@ -97,6 +94,7 @@ impl WidgetModifier for EditText {
                 text: "".to_owned(),
             })
             .make_focusable();
+        EditTextHandler::add_adapters(&mut widget.widget_ref());
 
         if let Some(ref focused_rect) = self.focused_rect {
             widget.set_draw_style_prop(FOCUSED.clone(), focused_rect.clone());
@@ -105,15 +103,6 @@ impl WidgetModifier for EditText {
         text_widget
             .set_draw_style(TextStyle::default())
             .add_handler(TextHeightHandler::default());
-
-        let widget_ref = widget.widget_ref();
-        text_widget.add_handler(move |event: &WidgetReceivedCharacter, _: EventArgs| widget_ref.event(EditTextEvent::WidgetReceivedCharacter(event.0)));
-
-        let widget_ref = widget.widget_ref();
-        text_widget.add_handler(move |event: &TextUpdated, _: EventArgs| widget_ref.event(EditTextEvent::TextUpdated(event.0.clone())));
-
-        let widget_ref = widget.widget_ref();
-        text_widget.add_handler(move |_: &StyleUpdated, _: EventArgs| widget_ref.event(EditTextEvent::StyleUpdated));
 
         text_widget.layout().add(constraints![
             align_left(widget).padding(5.0),

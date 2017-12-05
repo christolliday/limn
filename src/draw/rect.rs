@@ -14,6 +14,7 @@ component_style!{pub struct RectState<name="rect", style=RectStyle> {
 impl Draw for RectState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         // rounding is a hack to prevent bug in webrender that produces artifacts around the corners
+        //let bounds = Rect::new(bounds.origin.round(), bounds.size.round());
         let bounds = bounds.round();
         if let Some((width, color)) = self.border {
             let width = if width < 2.0 { 2.0 } else { width };

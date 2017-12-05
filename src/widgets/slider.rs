@@ -11,7 +11,7 @@ use widget::{WidgetBuilder, WidgetRef};
 use widget::property::Property;
 use draw::rect::RectStyle;
 use draw::ellipse::EllipseStyle;
-use geometry::{RectExt, Point};
+use geometry::RectExt;
 use color::*;
 use widget::property::states::*;
 use style::WidgetModifier;
@@ -169,33 +169,14 @@ impl WidgetModifier for Slider {
                 }
             }
         }
+        slider_handle.make_draggable();
 
         let widget_ref = widget.widget_ref();
-        slider_handle
-            .add_handler(move |event: &DragEvent, _: EventArgs| {
-                widget_ref.event(SliderInputEvent::Drag(*event));
-            })
-            .make_draggable();
-
-        let widget_ref = widget.widget_ref();
-        slider_bar_pre.add_handler(move |event: &ClickEvent, _: EventArgs| {
-            widget_ref.event(SliderInputEvent::Click(event.position));
-        });
-        let widget_ref = widget.widget_ref();
-        slider_bar_post.add_handler(move |event: &ClickEvent, _: EventArgs| {
-            widget_ref.event(SliderInputEvent::Click(event.position));
-        });
-        widget.add_handler(move |event: &SetSliderValue, args: EventArgs| {
-            args.widget.event(SliderInputEvent::SetValue(event.0));
-        });
-        widget.add_handler(move |event: &SetSliderRange, args: EventArgs| {
-            args.widget.event(SliderInputEvent::SetRange(event.0.clone()));
-        });
-        widget.add_handler(move |_: &LayoutUpdated, args: EventArgs| {
-            args.widget.event(SliderInputEvent::LayoutUpdated);
-        });
-        let widget_ref = widget.widget_ref();
-        widget.add_handler(SliderHandler::new(self.orientation, self.range.clone(), widget_ref.clone(), slider_handle.widget_ref(), self.init_value));
+        forward_event!(DragEvent: slider_handle -> widget_ref);
+        forward_event!(ClickEvent: slider_bar_pre -> widget_ref);
+        forward_event!(ClickEvent: slider_bar_post -> widget_ref);
+        widget.add_handler(SliderHandler::new(self.orientation, self.range.clone(), widget_ref, slider_handle.widget_ref(), self.init_value));
+        SliderHandler::add_adapters(&mut widget.widget_ref());
 
         widget.add_child(slider_bar_pre);
         widget.add_child(slider_bar_post);
@@ -212,16 +193,16 @@ pub struct SliderEvent {
 
 #[derive(Debug, Copy, Clone)]
 pub struct SetSliderValue(pub f32);
+#[derive(Debug, Clone)]
 pub struct SetSliderRange(pub Range<f32>);
 
-#[derive(Debug, Clone)]
-enum SliderInputEvent {
-    Drag(DragEvent),
-    Click(Point),
-    SetValue(f32),
-    SetRange(Range<f32>),
-    LayoutUpdated,
-}
+multi_event!{impl EventHandler<SliderInputEvent> for SliderHandler {
+    DragEvent => drag,
+    ClickEvent => click_bar,
+    SetSliderValue => set_value,
+    SetSliderRange => set_range,
+    LayoutUpdated => layout_updated,
+}}
 
 #[derive(Debug, Clone)]
 struct SliderHandler {
@@ -305,75 +286,73 @@ impl SliderHandler {
             }
         });
     }
-}
 
-impl EventHandler<SliderInputEvent> for SliderHandler {
-    fn handle(&mut self, event: &SliderInputEvent, args: EventArgs) {
-        match *event {
-            SliderInputEvent::Drag(ref event) => {
-                if args.widget.props().contains(&Property::Inactive) {
-                    return;
-                }
-                let &DragEvent { ref state, offset, .. } = event;
-                let offset = if let Orientation::Horizontal = self.orientation {
-                    offset.x
-                } else {
-                    offset.y
-                };
-                if *state == DragState::Start {
-                    self.drag_start_pos = self.handle_range().start;
-                    self.drag_start_val = self.get_value_for_pos(self.handle_range().start + self.handle_size() / 2.0);
-                } else {
-                    let handle_start = self.drag_start_pos + offset;
-                    let position = self.clamp_position(handle_start + self.handle_size() / 2.0);
-                    let value = self.get_value_for_pos(position);
-                    self.update_handle_pos(value);
-                    let dragging = *state != DragState::End;
-                    let event = SliderEvent {
-                        value: value,
-                        offset: value - self.drag_start_val,
-                        dragging: dragging,
-                    };
-                    self.slider_ref.event(event);
-                    if !dragging {
-                        self.last_val = value;
-                    }
-                }
-            }
-            SliderInputEvent::Click(point) => {
-                if args.widget.props().contains(&Property::Inactive) {
-                    return;
-                }
-                let position = if let Orientation::Horizontal = self.orientation {
-                    point.x
-                } else {
-                    point.y
-                };
-                let position = self.clamp_position(position);
-                let value = self.get_value_for_pos(position);
-                self.update_handle_pos(value);
-                let event = SliderEvent {
-                    value: value,
-                    offset: value - self.last_val,
-                    dragging: false,
-                };
-                self.slider_ref.event(event);
+    fn drag(&mut self, event: &DragEvent, args: EventArgs) {
+        if args.widget.props().contains(&Property::Inactive) {
+            return;
+        }
+        let &DragEvent { ref state, offset, .. } = event;
+        let offset = if let Orientation::Horizontal = self.orientation {
+            offset.x
+        } else {
+            offset.y
+        };
+        if *state == DragState::Start {
+            self.drag_start_pos = self.handle_range().start;
+            self.drag_start_val = self.get_value_for_pos(self.handle_range().start + self.handle_size() / 2.0);
+        } else {
+            let handle_start = self.drag_start_pos + offset;
+            let position = self.clamp_position(handle_start + self.handle_size() / 2.0);
+            let value = self.get_value_for_pos(position);
+            self.update_handle_pos(value);
+            let dragging = *state != DragState::End;
+            let event = SliderEvent {
+                value: value,
+                offset: value - self.drag_start_val,
+                dragging: dragging,
+            };
+            self.slider_ref.event(event);
+            if !dragging {
                 self.last_val = value;
             }
-            SliderInputEvent::SetValue(value) => {
-                if value.is_finite() {
-                    self.last_val = value;
-                    self.update_handle_pos(value);
-                }
-            },
-            SliderInputEvent::SetRange(ref range) => {
-                self.range = range.clone();
-                self.last_val = range.start;
-                self.update_handle_pos(range.start);
-            },
-            SliderInputEvent::LayoutUpdated => {
-                self.update_handle_pos(self.last_val);
-            }
         }
+    }
+
+    fn click_bar(&mut self, event: &ClickEvent, args: EventArgs) {
+        if args.widget.props().contains(&Property::Inactive) {
+            return;
+        }
+        let position = if let Orientation::Horizontal = self.orientation {
+            event.position.x
+        } else {
+            event.position.y
+        };
+        let position = self.clamp_position(position);
+        let value = self.get_value_for_pos(position);
+        self.update_handle_pos(value);
+        let event = SliderEvent {
+            value: value,
+            offset: value - self.last_val,
+            dragging: false,
+        };
+        self.slider_ref.event(event);
+        self.last_val = value;
+    }
+
+    fn set_value(&mut self, event: &SetSliderValue, _: EventArgs) {
+        let SetSliderValue(value) = *event;
+        if value.is_finite() {
+            self.last_val = value;
+            self.update_handle_pos(value);
+        }
+    }
+    fn set_range(&mut self, event: &SetSliderRange, _: EventArgs) {
+        let &SetSliderRange(ref range) = event;
+        self.range = range.clone();
+        self.last_val = range.start;
+        self.update_handle_pos(range.start);
+    }
+    fn layout_updated(&mut self, _: &LayoutUpdated, _: EventArgs) {
+        self.update_handle_pos(self.last_val);
     }
 }

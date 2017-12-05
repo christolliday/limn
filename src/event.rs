@@ -235,3 +235,52 @@ impl Iterator for GlobalQueue {
         self.queue.pop_front()
     }
 }
+
+/// Simplifies setting up an EventHandler that can receive multiple events. Generates an event enum and matches each event to a method on the handler.
+/// Also creates an associated method on the handler, `add_adapters` that should be called when the handler is added to a widget, to add the "adapter"
+/// handlers that redirect each event to the main event handler.
+#[macro_export]
+macro_rules! multi_event {
+    ( impl EventHandler< $multi_event:ident > for $handler:ident { $ ( $event_type:ident => $event_method:ident, ) * } ) => {
+        enum $multi_event {
+            $(
+                $event_type($event_type),
+            )*
+        }
+        impl $handler {
+            fn add_adapters(widget: &mut WidgetRef) {
+                $(
+                    widget.add_handler(|event: &$event_type, args: EventArgs| {
+                        args.widget.event($multi_event::$event_type(event.clone()));
+                    });
+                )*
+            }
+        }
+        impl EventHandler<$multi_event> for $handler {
+            fn handle(&mut self, event: &$multi_event, args: EventArgs) {
+                match *event { $(
+                    $multi_event::$event_type(ref event) => self.$event_method(event, args),
+                )* }
+            }
+        }
+    }
+}
+
+/// Specifies a handler that redirects events from one widget to another.
+/// Optionally you can specify a closure that modifies the event.
+#[macro_export]
+macro_rules! forward_event {
+    ( $event:ty : $source:ident -> $destination:ident ) => {
+        let destination = $destination.clone();
+        $source.add_handler(move |event: &$event, _: EventArgs| {
+            destination.event(event.clone());
+        });
+    };
+    ( $event:ty : $closure:expr ; $source:ident -> $destination:ident ) => {
+        let closure: Box<Fn(&$event, EventArgs) -> _> = Box::new($closure);
+        let destination = $destination.clone();
+        $source.add_handler(move |event: &$event, args: EventArgs| {
+            destination.event(closure(event, args));
+        });
+    }
+}

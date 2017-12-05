@@ -36,6 +36,7 @@ impl WidgetBuilder {
 pub struct UpdateLayout(pub WidgetRef);
 #[derive(Debug, Copy, Clone)]
 pub struct ResizeWindow;
+#[derive(Debug, Clone)]
 pub struct LayoutChanged(pub Vec<(usize, VarType, f64)>);
 #[derive(Debug, Copy, Clone)]
 pub struct LayoutUpdated;

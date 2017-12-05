@@ -9,7 +9,7 @@ use glutin;
 use window::Window;
 use ui::Ui;
 use input::InputEvent;
-use widget::WidgetBuilder;
+use widget::{WidgetBuilder, WidgetRef};
 use event::{self, EventHandler};
 use geometry::Size;
 
@@ -132,6 +132,10 @@ impl App {
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
         self.ui.get_root().add_handler(handler);
         self
+    }
+
+    pub fn get_root(&self) -> WidgetRef {
+        self.ui.get_root()
     }
 
     pub fn window(&self) -> ::std::cell::Ref<Window> {
