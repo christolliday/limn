@@ -101,7 +101,7 @@ impl PeopleHandler {
             let text_style = StaticTextStyle {
                 style: Some(text_style),
             };
-            let mut list_item_widget = WidgetBuilder::new("list_item");
+            let mut list_item_widget = Widget::new("list_item");
             list_item_widget
                 .set_style_class(TypeId::of::<RectStyle>(), "list_item_rect")
                 .list_item(&self.widgets.list_widget)
@@ -110,7 +110,7 @@ impl PeopleHandler {
                 })
                 .enable_hover();
 
-            let mut list_text_widget = WidgetBuilder::from_modifier_style(text_style);
+            let mut list_text_widget = Widget::from_modifier_style(text_style);
             list_text_widget
                 .set_style_class(TypeId::of::<TextStyle>(), "list_item_text");
             list_text_widget.layout().add(constraints![
@@ -119,7 +119,7 @@ impl PeopleHandler {
             list_item_widget.add_child(list_text_widget);
             list_item_widget
         };
-        self.people_widgets.insert(id, list_item_widget.widget_ref());
+        self.people_widgets.insert(id, list_item_widget.clone());
         self.widgets.list_widget.add_child(list_item_widget);
     }
 }
@@ -181,20 +181,20 @@ fn main() {
         .with_title("Limn CRUD demo")
         .with_min_dimensions(100, 100);
     let mut app = util::init(window_builder);
-    let mut root = WidgetBuilder::new("root");
+    let mut root = Widget::new("root");
 
     root.layout().add(min_size(Size::new(300.0, 300.0)));
-    let mut container = WidgetBuilder::new("container");
+    let mut container = Widget::new("container");
     container.layout().add(bound_by(&root).padding(20.0));
 
-    let create_name_group = |title, container: &mut WidgetBuilder| {
-        let mut name_container = WidgetBuilder::new("name_container");
+    let create_name_group = |title, container: &mut Widget| {
+        let mut name_container = Widget::new("name_container");
         name_container.layout().add(match_width(container));
 
-        let mut static_text = WidgetBuilder::from_modifier_style(StaticTextStyle::from_text(title));
+        let mut static_text = Widget::from_modifier_style(StaticTextStyle::from_text(title));
         static_text.layout().add(center_vertical(&name_container));
 
-        let mut text_box = WidgetBuilder::from_modifier(EditText::default());
+        let mut text_box = Widget::from_modifier(EditText::default());
         text_box.layout().add(constraints![
             min_height(30.0),
             min_width(200.0),
@@ -217,18 +217,18 @@ fn main() {
         args.ui.event(PeopleEvent::ChangeLastName(event.0.clone()));
     });
 
-    let mut button_container = WidgetBuilder::new("button_container");
+    let mut button_container = Widget::new("button_container");
     button_container.layout().add(below(&last_name_container).padding(20.0));
 
-    let mut create_button = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Create"));
+    let mut create_button = Widget::from_modifier_style(ButtonStyle::from_text("Create"));
     create_button.add_prop(Property::Inactive);
 
-    let mut update_button = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Update"));
+    let mut update_button = Widget::from_modifier_style(ButtonStyle::from_text("Update"));
     update_button.add_prop(Property::Inactive);
     update_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Update);
     });
-    let mut delete_button = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Delete"));
+    let mut delete_button = Widget::from_modifier_style(ButtonStyle::from_text("Delete"));
     delete_button.add_prop(Property::Inactive);
     delete_button.add_handler(|_: &ClickEvent, args: EventArgs| {
         args.ui.event(PeopleEvent::Delete);
@@ -237,9 +237,9 @@ fn main() {
     delete_button.layout().add(to_right_of(&update_button).padding(20.0));
 
     let mut scroll_container = ScrollContainer::default();
-    let mut list_widget = WidgetBuilder::from_modifier(List::default());
-    scroll_container.add_content(list_widget.widget_ref());
-    let mut scroll_container = WidgetBuilder::from_modifier(scroll_container);
+    let mut list_widget = Widget::from_modifier(List::default());
+    scroll_container.add_content(list_widget.clone());
+    let mut scroll_container = Widget::from_modifier(scroll_container);
     scroll_container.set_draw_state(RectState::default());
     scroll_container.layout().add(constraints![
         below(&button_container).padding(20.0),
@@ -258,12 +258,12 @@ fn main() {
         args.ui.event(PeopleEvent::Add);
     });
     let widgets = Widgets {
-        list_widget: list_widget.widget_ref(),
-        first_name_box: first_name_box.widget_ref(),
-        last_name_box: last_name_box.widget_ref(),
-        create_button: create_button.widget_ref(),
-        update_button: update_button.widget_ref(),
-        delete_button: delete_button.widget_ref(),
+        list_widget: list_widget,
+        first_name_box: first_name_box.clone(),
+        last_name_box: last_name_box.clone(),
+        create_button: create_button.clone(),
+        update_button: update_button.clone(),
+        delete_button: delete_button.clone(),
     };
     first_name_container.add_child(first_name_box);
     last_name_container.add_child(last_name_box);

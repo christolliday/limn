@@ -1,4 +1,4 @@
-use widget::WidgetBuilder;
+use widget::Widget;
 use draw::image::ImageState;
 use layout::constraint::*;
 use resources::image::ImageSource;
@@ -25,7 +25,7 @@ impl Component for Image {
 }
 
 impl WidgetModifier for Image {
-    fn apply(&self, widget: &mut WidgetBuilder) {
+    fn apply(&self, widget: &mut Widget) {
         let image_draw_state = ImageState::new(self.source.clone());
         let image_size = image_draw_state.measure();
         widget.set_name("image");

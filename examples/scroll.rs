@@ -14,17 +14,17 @@ fn main() {
         .with_title("Limn scroll demo")
         .with_min_dimensions(300, 300);
     let app = util::init(window_builder);
-    let mut root = WidgetBuilder::new("root");
+    let mut root = Widget::new("root");
 
     let mut scroll_widget = ScrollContainer::default();
     scroll_widget.add_scrollbar();
-    let mut rect_container = WidgetBuilder::new("rect_container");
+    let mut rect_container = Widget::new("rect_container");
     rect_container.grid(3);
     rect_container.layout().add(size(Size::new(400.0, 400.0)));
 
     {
         let mut add_rect = |color| {
-            let mut rect = WidgetBuilder::new(format!("rect_{:?}", color));
+            let mut rect = Widget::new(format!("rect_{:?}", color));
             rect.set_draw_style(style!(RectStyle {
                 background_color: color,
             }));
@@ -41,8 +41,8 @@ fn main() {
         add_rect(BLACK);
     }
 
-    scroll_widget.add_content(rect_container.widget_ref());
-    let mut scroll_widget = WidgetBuilder::from_modifier(scroll_widget);
+    scroll_widget.add_content(rect_container);
+    let mut scroll_widget = Widget::from_modifier(scroll_widget);
     scroll_widget.layout().add(match_layout(&root).padding(50.0));
     root.add_child(scroll_widget);
 

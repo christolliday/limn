@@ -2,14 +2,13 @@ use cassowary::Constraint;
 
 use layout::constraint::ConstraintBuilder;
 use layout::constraint::*;
-use widget::{WidgetBuilder, StyleUpdated};
+use widget::{Widget, StyleUpdated};
 use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
 use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
 use draw::rect::RectStyle;
 use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
-use widget::Widget;
 use widget::property::states::*;
 use style::WidgetModifier;
 
@@ -79,8 +78,8 @@ component_style!{pub struct EditText<name="scroll", style=EditTextStyle> {
 }}
 
 impl WidgetModifier for EditText {
-    fn apply(&self, widget: &mut WidgetBuilder) {
-        let mut text_widget = WidgetBuilder::new("edit_text_text");
+    fn apply(&self, widget: &mut Widget) {
+        let mut text_widget = Widget::new("edit_text_text");
         widget
             .set_draw_style(self.rect.clone())
             .add_handler(|_: &WidgetAttachedEvent, args: EventArgs| {
@@ -90,11 +89,11 @@ impl WidgetModifier for EditText {
                 args.ui.event(KeyboardInputEvent::RemoveFocusable(args.widget));
             })
             .add_handler(EditTextHandler {
-                text_box: text_widget.widget_ref(),
+                text_box: text_widget.clone(),
                 text: "".to_owned(),
             })
             .make_focusable();
-        EditTextHandler::add_adapters(&mut widget.widget_ref());
+        EditTextHandler::add_adapters(widget);
 
         if let Some(ref focused_rect) = self.focused_rect {
             widget.set_draw_style_prop(FOCUSED.clone(), focused_rect.clone());
@@ -129,12 +128,11 @@ impl EventHandler<StyleUpdated> for TextHeightHandler {
         };
         if self.measured_height != line_height {
             let size_constraints = min_height(line_height).build(&args.widget.layout_vars());
-            args.widget.update_layout(|layout| {
-                for constraint in self.size_constraints.drain(..) {
-                    layout.remove_constraint(constraint);
-                }
-                layout.add(size_constraints.clone())
-            });
+            let mut layout = args.widget.layout();
+            for constraint in self.size_constraints.drain(..) {
+                layout.remove_constraint(constraint);
+            }
+            layout.add(size_constraints.clone());
             self.size_constraints = size_constraints;
             self.measured_height = line_height;
         }

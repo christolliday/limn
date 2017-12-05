@@ -227,7 +227,7 @@ fn main() {
     let prog = init_boxes_shader(&gl);
     let (model, box_count) = init_boxes_model(&gl);
 
-    let mut root = WidgetBuilder::new("root");
+    let mut root = Widget::new("root");
 
     // Create an image that's connected to the texture we're rendering to
     let mut gl_canvas = GLCanvasBuilder::new(u64::from(tex));
@@ -244,7 +244,7 @@ fn main() {
 
     // Render frames in the app loop
     let scale_c = Rc::clone(&scale); // The slider will take the original
-    let mut gl_canvas_ref = gl_canvas.widget_ref();
+    let mut gl_canvas_ref = gl_canvas.clone();
     app.add_handler(move |_: &FrameEvent, args: EventArgs| {
         gl.bind_framebuffer(gl::FRAMEBUFFER, fb);
 
@@ -274,7 +274,7 @@ fn main() {
         .set_range(0.8..1.2)
         .set_value(scale.get());
 
-    let mut size_slider = WidgetBuilder::from_modifier(size_slider);
+    let mut size_slider = Widget::from_modifier(size_slider);
     size_slider.set_name("size_slider");
     size_slider.layout().add(constraints![
         align_below(&gl_canvas).padding(10.0),

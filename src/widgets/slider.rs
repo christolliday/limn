@@ -7,7 +7,7 @@ use layout::LayoutUpdated;
 use input::mouse::ClickEvent;
 use input::drag::{DragEvent, DragState};
 use event::{EventHandler, EventArgs};
-use widget::{WidgetBuilder, Widget};
+use widget::Widget;
 use widget::property::Property;
 use draw::rect::RectStyle;
 use draw::ellipse::EllipseStyle;
@@ -70,9 +70,9 @@ impl Slider {
 }
 
 impl WidgetModifier for Slider {
-    fn apply(&self, widget: &mut WidgetBuilder) {
+    fn apply(&self, widget: &mut Widget) {
 
-        let mut slider_handle = WidgetBuilder::new("slider_handle");
+        let mut slider_handle = Widget::new("slider_handle");
         match self.handle_style {
             HandleStyle::Round => {
                 slider_handle.set_draw_style(style!(EllipseStyle {
@@ -98,7 +98,7 @@ impl WidgetModifier for Slider {
             border: self.border,
         });
 
-        let mut slider_bar_pre = WidgetBuilder::new("slider_bar_pre");
+        let mut slider_bar_pre = Widget::new("slider_bar_pre");
         if let Some(highlight) = self.highlight {
             slider_bar_pre.set_draw_style(RectStyle {
                 background_color: Some(highlight),
@@ -111,7 +111,7 @@ impl WidgetModifier for Slider {
             slider_bar_pre.set_draw_style(bar_style.clone());
         }
 
-        let mut slider_bar_post = WidgetBuilder::new("slider_bar_post");
+        let mut slider_bar_post = Widget::new("slider_bar_post");
         slider_bar_post.set_draw_style(bar_style);
 
         let (bar_width, bar_padding) = match self.bar_style {
@@ -171,12 +171,13 @@ impl WidgetModifier for Slider {
         }
         slider_handle.make_draggable();
 
-        let widget_ref = widget.widget_ref();
-        forward_event!(DragEvent: slider_handle -> widget_ref);
-        forward_event!(ClickEvent: slider_bar_pre -> widget_ref);
-        forward_event!(ClickEvent: slider_bar_post -> widget_ref);
-        widget.add_handler(SliderHandler::new(self.orientation, self.range.clone(), widget_ref, slider_handle.widget_ref(), self.init_value));
-        SliderHandler::add_adapters(&mut widget.widget_ref());
+        forward_event!(DragEvent: slider_handle -> widget);
+        forward_event!(ClickEvent: slider_bar_pre -> widget);
+        forward_event!(ClickEvent: slider_bar_post -> widget);
+        let widget_c = widget.clone();
+        let handle_c = slider_handle.clone();
+        widget.add_handler(SliderHandler::new(self.orientation, self.range.clone(), widget_c, handle_c, self.init_value));
+        SliderHandler::add_adapters(widget);
 
         widget.add_child(slider_bar_pre);
         widget.add_child(slider_bar_post);
@@ -218,7 +219,7 @@ struct SliderHandler {
 impl SliderHandler {
     fn new(orientation: Orientation, range: Range<f32>, slider_ref: Widget, handle_ref: Widget, init_value: Option<f32>) -> Self {
         let value = init_value.unwrap_or(range.start);
-        let handler = SliderHandler {
+        let mut handler = SliderHandler {
             orientation: orientation,
             range: range,
             slider_ref: slider_ref,
@@ -274,17 +275,16 @@ impl SliderHandler {
         let max = slider_range.end - handle_size / 2.0;
         f32::min(f32::max(handle_pos, min), max)
     }
-    fn update_handle_pos(&self, value: f32) {
+    fn update_handle_pos(&mut self, value: f32) {
         let value = (value - self.range.start) / (self.range.end - self.range.start);
         let range_of_motion = self.slider_size() - self.handle_size();
         let handle_start = self.slider_range().start + value * range_of_motion;
-        self.handle_ref.update_layout(|layout| {
-            if let Orientation::Horizontal = self.orientation {
-                layout.edit_left().set(handle_start).strength(WEAK);
-            } else {
-                layout.edit_top().set(handle_start).strength(WEAK);
-            }
-        });
+        let mut layout = self.handle_ref.layout();
+        if let Orientation::Horizontal = self.orientation {
+            layout.edit_left().set(handle_start).strength(WEAK);
+        } else {
+            layout.edit_top().set(handle_start).strength(WEAK);
+        }
     }
 
     fn drag(&mut self, event: &DragEvent, args: EventArgs) {
@@ -353,6 +353,7 @@ impl SliderHandler {
         self.update_handle_pos(range.start);
     }
     fn layout_updated(&mut self, _: &LayoutUpdated, _: EventArgs) {
-        self.update_handle_pos(self.last_val);
+        let last_val = self.last_val;
+        self.update_handle_pos(last_val);
     }
 }

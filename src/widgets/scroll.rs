@@ -4,7 +4,7 @@ use cassowary::WeightedRelation::*;
 
 use layout::constraint::*;
 use event::{EventArgs, EventHandler};
-use widget::{WidgetBuilder, Widget};
+use widget::Widget;
 use widgets::slider::{SliderStyle, SliderEvent, SetSliderValue, Orientation};
 use geometry::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
@@ -32,37 +32,34 @@ impl ScrollContainer {
 }
 
 impl WidgetModifier for ScrollContainer {
-    fn apply(&self, widget: &mut WidgetBuilder) {
-        let mut content_holder = WidgetBuilder::new("content_holder");
+    fn apply(&self, widget: &mut Widget) {
+        let mut content_holder = Widget::new("content_holder");
         content_holder.layout().no_container();
         let mut content = self.content.clone().expect("Scroll bar has no content");
-        let widget_ref = content_holder.widget_ref();
-        forward_event!(LayoutUpdated: |_, args| ContentLayoutUpdated(args.widget.bounds()); content -> widget_ref);
+        forward_event!(LayoutUpdated: |_, args| ContentLayoutUpdated(args.widget.bounds()); content -> content_holder);
         content_holder.layout().add(constraints![
             match_layout(widget).strength(STRONG)
         ]);
         {
             let content_holder = &content_holder.layout().vars;
-            content.update_layout(|layout| {
-                layout.add(constraints![
-                    LAYOUT.left | LE(REQUIRED) | content_holder.left,
-                    LAYOUT.top | LE(REQUIRED) | content_holder.top,
-                    LAYOUT.left | EQ(WEAK) | content_holder.left,
-                    LAYOUT.top | EQ(WEAK) | content_holder.top,
-                    LAYOUT.right | GE(STRONG) | content_holder.right,
-                    LAYOUT.bottom | GE(STRONG) | content_holder.bottom,
-                ]);
-            });
+            content.layout().add(constraints![
+                LAYOUT.left | LE(REQUIRED) | content_holder.left,
+                LAYOUT.top | LE(REQUIRED) | content_holder.top,
+                LAYOUT.left | EQ(WEAK) | content_holder.left,
+                LAYOUT.top | EQ(WEAK) | content_holder.top,
+                LAYOUT.right | GE(STRONG) | content_holder.right,
+                LAYOUT.bottom | GE(STRONG) | content_holder.bottom,
+            ]);
         }
         let mut scrollbars = if self.has_scrollbars {
-            let mut scrollbar_h = WidgetBuilder::from_modifier_style_class(SliderStyle::default(), "scrollbar_slider");
+            let mut scrollbar_h = Widget::from_modifier_style_class(SliderStyle::default(), "scrollbar_slider");
             scrollbar_h.set_name("scrollbar_h");
             scrollbar_h.layout().add(constraints![
                 align_bottom(widget),
                 align_left(widget),
                 align_below(&content_holder),
             ]);
-            let mut scrollbar_v = WidgetBuilder::from_modifier_style_class(
+            let mut scrollbar_v = Widget::from_modifier_style_class(
                 style!(SliderStyle { orientation: Orientation::Vertical, }), "scrollbar_slider");
             scrollbar_v.set_name("scrollbar_v");
             scrollbar_v.layout().add(constraints![
@@ -70,7 +67,7 @@ impl WidgetModifier for ScrollContainer {
                 align_top(widget),
                 align_to_right_of(&content_holder),
             ]);
-            let mut corner = WidgetBuilder::new("corner");
+            let mut corner = Widget::new("corner");
             corner.set_draw_style(style!(RectStyle { background_color: GRAY_70, }));
             corner.layout().add(constraints![
                 align_bottom(widget),
@@ -81,9 +78,8 @@ impl WidgetModifier for ScrollContainer {
                 match_width(&scrollbar_v),
             ]);
 
-            let widget_ref = content_holder.widget_ref();
-            forward_event!(SliderEvent: |event, _| ScrollBarMoved::Horizontal(event.value); scrollbar_h -> widget_ref);
-            forward_event!(SliderEvent: |event, _| ScrollBarMoved::Vertical(event.value); scrollbar_v -> widget_ref);
+            forward_event!(SliderEvent: |event, _| ScrollBarMoved::Horizontal(event.value); scrollbar_h -> content_holder);
+            forward_event!(SliderEvent: |event, _| ScrollBarMoved::Vertical(event.value); scrollbar_v -> content_holder);
 
             Some((corner, scrollbar_h, scrollbar_v))
         } else {
@@ -92,10 +88,10 @@ impl WidgetModifier for ScrollContainer {
 
         let mut scroll_parent_handler = ScrollParent::new(&mut content);
         if let Some((ref mut corner, ref mut scrollbar_h, ref mut scrollbar_v)) = scrollbars {
-            scroll_parent_handler.scrollbars = Some(ScrollBars::new(scrollbar_h, scrollbar_v, corner.widget_ref()));
+            scroll_parent_handler.scrollbars = Some(ScrollBars::new(scrollbar_h.clone(), scrollbar_v.clone(), corner.clone()));
         }
         content_holder.add_handler(scroll_parent_handler);
-        ScrollParent::add_adapters(&mut content_holder.widget_ref());
+        ScrollParent::add_adapters(&mut content_holder);
 
         content_holder.add_child(content);
         if scrollbars.is_some() {
@@ -126,13 +122,15 @@ struct ScrollBars {
     v_handle: Widget,
 }
 impl ScrollBars {
-    fn new(scrollbar_h: &mut WidgetBuilder, scrollbar_v: &mut WidgetBuilder, corner: Widget) -> Self {
+    fn new(scrollbar_h: Widget, scrollbar_v: Widget, corner: Widget) -> Self {
+        let h_handle = scrollbar_h.child("slider_handle").unwrap();
+        let v_handle = scrollbar_v.child("slider_handle").unwrap();
         ScrollBars {
-            scrollbar_h: scrollbar_h.widget_ref(),
-            scrollbar_v: scrollbar_v.widget_ref(),
+            scrollbar_h: scrollbar_h,
+            scrollbar_v: scrollbar_v,
             corner: corner,
-            h_handle: scrollbar_h.widget_ref().child("slider_handle").unwrap(),
-            v_handle: scrollbar_v.widget_ref().child("slider_handle").unwrap(),
+            h_handle: h_handle,
+            v_handle: v_handle,
         }
     }
 }
@@ -211,51 +209,47 @@ impl ScrollParent {
 
             if width_ratio.is_finite() && (width_ratio - self.width_ratio).abs() > ::std::f32::EPSILON {
                 let width = self.container_rect.width() * width_ratio;
-                scrollbars.h_handle.update_layout(|layout| {
-                    layout.edit_width().set(width);
-                });
-                let scrollbar_hidden = scrollbars.scrollbar_h.layout().hidden;
+                let mut layout = scrollbars.h_handle.layout();
+                layout.edit_width().set(width);
+                let mut layout = scrollbars.scrollbar_h.layout();
+                let scrollbar_hidden = layout.hidden;
                 let hide_scrollbar = width_ratio >= 1.0 && !scrollbar_hidden;
                 let show_scrollbar = width_ratio < 1.0 && scrollbar_hidden;
                 if hide_scrollbar | show_scrollbar {
                     visibility_updated |= true;
-                    scrollbars.scrollbar_h.update_layout(|layout| {
-                        if hide_scrollbar {
-                            layout.hide();
-                        }
-                        if show_scrollbar {
-                            layout.show();
-                        }
-                    });
+                    if hide_scrollbar {
+                        layout.hide();
+                    }
+                    if show_scrollbar {
+                        layout.show();
+                    }
                 }
             }
 
             if height_ratio.is_finite() && (height_ratio - self.height_ratio).abs() > ::std::f32::EPSILON {
                 let height = self.container_rect.height() * height_ratio;
-                scrollbars.v_handle.update_layout(|layout| {
-                    layout.edit_height().set(height);
-                });
-                let scrollbar_hidden = scrollbars.scrollbar_v.layout().hidden;
+                let mut layout = scrollbars.v_handle.layout();
+                layout.edit_height().set(height);
+                let scrollbar_hidden = layout.hidden;
                 let hide_scrollbar = height_ratio >= 1.0 && !scrollbar_hidden;
                 let show_scrollbar = height_ratio < 1.0 && scrollbar_hidden;
                 if hide_scrollbar | show_scrollbar {
                     visibility_updated |= true;
-                    scrollbars.scrollbar_v.update_layout(|layout| {
-                        if hide_scrollbar {
-                            layout.hide();
-                        }
-                        if show_scrollbar {
-                            layout.show();
-                        }
-                    });
+                    let mut layout = scrollbars.scrollbar_v.layout();
+                    if hide_scrollbar {
+                        layout.hide();
+                    }
+                    if show_scrollbar {
+                        layout.show();
+                    }
                 }
             }
 
             if visibility_updated {
                 if !scrollbars.scrollbar_h.layout().hidden && !scrollbars.scrollbar_v.layout().hidden {
-                    scrollbars.corner.update_layout(|layout| layout.show());
+                    scrollbars.corner.layout().show();
                 } else {
-                    scrollbars.corner.update_layout(|layout| layout.hide());
+                    scrollbars.corner.layout().hide();
                 }
             }
         }
@@ -293,15 +287,13 @@ impl ScrollParent {
 
     fn move_content_x(&mut self) {
         let scroll_to = self.container_rect.left() + self.offset.x;
-        self.scrollable.update_layout(|layout| {
-            layout.edit_left().set(scroll_to);
-        });
+        let mut layout = self.scrollable.layout();
+        layout.edit_left().set(scroll_to);
     }
     fn move_content_y(&mut self) {
         let scroll_to = self.container_rect.top() + self.offset.y;
-        self.scrollable.update_layout(|layout| {
-            layout.edit_top().set(scroll_to);
-        });
+        let mut layout = self.scrollable.layout();
+        layout.edit_top().set(scroll_to);
     }
     fn move_slider_x(&mut self) {
         if let Some(ref mut scrollbars) = self.scrollbars {

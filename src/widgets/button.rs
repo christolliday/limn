@@ -4,7 +4,7 @@ use glutin;
 
 use layout::constraint::*;
 use event::EventArgs;
-use widget::WidgetBuilder;
+use widget::Widget;
 use widget::property::Property;
 use input::mouse::WidgetMouseButton;
 use widgets::text::StaticTextStyle;
@@ -29,7 +29,7 @@ impl ButtonStyle {
 }
 
 impl WidgetModifier for Button {
-    fn apply(&self, widget: &mut WidgetBuilder) {
+    fn apply(&self, widget: &mut Widget) {
         widget
             .set_style_class(TypeId::of::<RectStyle>(), "button_rect")
             .set_draw_style(self.rect.clone())
@@ -40,7 +40,7 @@ impl WidgetModifier for Button {
             shrink(),
         ]);
         if let Some(text_style) = self.text.clone() {
-            let mut button_text_widget = WidgetBuilder::new("button_text");
+            let mut button_text_widget = Widget::new("button_text");
             button_text_widget.set_style_class(TypeId::of::<TextStyle>(), "button_text");
             StaticTextStyle::from_style(text_style).component().apply(&mut button_text_widget);
             button_text_widget.layout().add(constraints![
@@ -82,7 +82,7 @@ impl ToggleButtonStyle {
 }
 
 impl WidgetModifier for ToggleButton {
-    fn apply(&self, widget: &mut WidgetBuilder) {
+    fn apply(&self, widget: &mut Widget) {
         widget
             .set_style_class(TypeId::of::<RectStyle>(), "button_rect")
             .set_draw_style(self.rect.clone())
@@ -92,7 +92,7 @@ impl WidgetModifier for ToggleButton {
             min_size(Size::new(70.0, 30.0)),
             shrink(),
         ]);
-        let mut button_text_widget = WidgetBuilder::new("button_text");
+        let mut button_text_widget = Widget::new("button_text");
         button_text_widget.set_style_class(TypeId::of::<TextStyle>(), "button_text");
         button_text_widget.layout().add(constraints![
             bound_left(widget).padding(20.0),
@@ -118,7 +118,7 @@ pub enum ToggleEvent {
     Off,
 }
 
-impl WidgetBuilder {
+impl Widget {
     fn enable_press(&mut self) -> &mut Self {
         self.add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
             if !args.widget.props().contains(&Property::Inactive) {

@@ -4,7 +4,7 @@
 //! By creating types implementing `EventHandler` you can define reusable behaviour that can be applied to any widget,
 //! or any application.
 //!
-//! Handlers can be added to a widget using `WidgetBuilder::add_handler`, or to the root widget using `Ui::add_handler`.
+//! Handlers can be added to a widget using `Widget::add_handler`, or to the root widget using `Ui::add_handler`.
 //! Typically handlers in the root widget are used to interface with the outside world or manage application global
 //! state. Input events are always sent to the root widget first, which has handlers that can redirect them to the
 //! appropriate widgets, the widget under the mouse, or the widget that has keyboard focus, for example.

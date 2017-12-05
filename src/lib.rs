@@ -70,7 +70,7 @@ extern crate font_loader;
 pub mod style;
 #[macro_use]
 pub mod event;
-/// Module for `WidgetBuilder` and callback handlers
+/// Module for `Widget` and callback handlers
 #[macro_use]
 pub mod widget;
 /// Module for layout / resizing handlers and layout solving

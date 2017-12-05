@@ -12,7 +12,7 @@ use glutin;
 
 use window::Window;
 use app::App;
-use widget::{Widget, WidgetBuilder};
+use widget::Widget;
 use layout::{LimnSolver, LayoutChanged, LayoutVars, ExactFrame};
 use layout::constraint::*;
 use geometry::{Point, Rect, Size};
@@ -40,7 +40,7 @@ pub struct Ui {
 
 impl Ui {
     pub(super) fn new(mut window: Window, events_loop: &glutin::EventsLoop) -> Self {
-        let mut root = WidgetBuilder::new("window");
+        let mut root = Widget::new("window");
         root.layout().set_container(ExactFrame);
         root.layout().add(top_left(Point::zero()));
         // x will crash if window size set to (0, 0)
@@ -93,19 +93,17 @@ impl Ui {
             let window_constraints = root.layout().create_constraint(size(window_dims));
             {
                 let window_constraints = window_constraints.clone();
-                root.update_layout(|layout| {
-                    for constraint in self.window_constraints.drain(..) {
-                        layout.remove_constraint(constraint);
-                    }
-                    layout.add(window_constraints);
-                });
+                let mut layout = root.layout();
+                for constraint in self.window_constraints.drain(..) {
+                    layout.remove_constraint(constraint);
+                }
+                layout.add(window_constraints);
             }
             self.window_constraints = window_constraints;
         } else {
-            root.update_layout(|layout| {
-                layout.edit_right().set(window_dims.width).strength(REQUIRED - 1.0);
-                layout.edit_bottom().set(window_dims.height).strength(REQUIRED - 1.0);
-            });
+            let mut layout = root.layout();
+            layout.edit_right().set(window_dims.width).strength(REQUIRED - 1.0);
+            layout.edit_bottom().set(window_dims.height).strength(REQUIRED - 1.0);
         }
         self.needs_redraw = true;
     }

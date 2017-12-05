@@ -55,7 +55,7 @@ use std::fmt::Debug;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-use widget::WidgetBuilder;
+use widget::Widget;
 use resources::WidgetId;
 use widget::draw::{DrawWrapper, Draw};
 use widget::property::PropSet;
@@ -171,7 +171,7 @@ pub trait ComponentStyle: Clone + 'static {
 }
 
 pub trait WidgetModifier {
-    fn apply(&self, widget: &mut WidgetBuilder);
+    fn apply(&self, widget: &mut Widget);
 }
 
 impl <T: Component + 'static> ComponentStyle for T {
