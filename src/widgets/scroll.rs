@@ -35,15 +35,9 @@ impl WidgetModifier for ScrollContainer {
     fn apply(&self, widget: &mut WidgetBuilder) {
         let mut content_holder = WidgetBuilder::new("content_holder");
         content_holder.layout().no_container();
-        let widget_ref = content_holder.widget_ref();
-        content_holder.add_handler(move |_: &LayoutUpdated, _: EventArgs| {
-            widget_ref.event(ScrollParentEvent::ContainerLayoutUpdated);
-        });
         let mut content = self.content.clone().expect("Scroll bar has no content");
         let widget_ref = content_holder.widget_ref();
-        content.add_handler(move |_: &LayoutUpdated, args: EventArgs| {
-            widget_ref.event(ScrollParentEvent::ContentLayoutUpdated(args.widget.bounds()));
-        });
+        forward_event!(LayoutUpdated: |_, args| ContentLayoutUpdated(args.widget.bounds()); content -> widget_ref);
         content_holder.layout().add(constraints![
             match_layout(widget).strength(STRONG)
         ]);
@@ -86,14 +80,10 @@ impl WidgetModifier for ScrollContainer {
                 match_height(&scrollbar_h),
                 match_width(&scrollbar_v),
             ]);
+
             let widget_ref = content_holder.widget_ref();
-            scrollbar_h.add_handler(move |event: &SliderEvent, _: EventArgs| {
-                widget_ref.event(ScrollParentEvent::ScrollBarMovedX(event.value));
-            });
-            let widget_ref = content_holder.widget_ref();
-            scrollbar_v.add_handler(move |event: &SliderEvent, _: EventArgs| {
-                widget_ref.event(ScrollParentEvent::ScrollBarMovedY(event.value));
-            });
+            forward_event!(SliderEvent: |event, _| ScrollBarMoved::Horizontal(event.value); scrollbar_h -> widget_ref);
+            forward_event!(SliderEvent: |event, _| ScrollBarMoved::Vertical(event.value); scrollbar_v -> widget_ref);
 
             Some((corner, scrollbar_h, scrollbar_v))
         } else {
@@ -105,9 +95,8 @@ impl WidgetModifier for ScrollContainer {
             scroll_parent_handler.scrollbars = Some(ScrollBars::new(scrollbar_h, scrollbar_v, corner.widget_ref()));
         }
         content_holder.add_handler(scroll_parent_handler);
-        content_holder.add_handler(|event: &WidgetMouseWheel, args: EventArgs| {
-            args.widget.event(ScrollParentEvent::WidgetMouseWheel(*event));
-        });
+        ScrollParent::add_adapters(&mut content_holder.widget_ref());
+
         content_holder.add_child(content);
         if scrollbars.is_some() {
             content_holder.layout().add(constraints![
@@ -148,13 +137,21 @@ impl ScrollBars {
     }
 }
 
-enum ScrollParentEvent {
-    ContainerLayoutUpdated,
-    ContentLayoutUpdated(Rect),
-    WidgetMouseWheel(WidgetMouseWheel),
-    ScrollBarMovedX(f32),
-    ScrollBarMovedY(f32),
+#[derive(Clone)]
+struct ContentLayoutUpdated(Rect);
+#[derive(Clone)]
+enum ScrollBarMoved {
+    Horizontal(f32),
+    Vertical(f32),
 }
+
+multi_event!{impl EventHandler<ScrollParentEvent> for ScrollParent {
+    LayoutUpdated => container_layout_updated,
+    ContentLayoutUpdated => content_layout_updated,
+    WidgetMouseWheel => widget_mouse_wheel,
+    ScrollBarMoved => scrollbar_moved,
+}}
+
 struct ScrollParent {
     scrollable: WidgetRef,
     content_rect: Rect,
@@ -165,6 +162,7 @@ struct ScrollParent {
     offset: Vector,
     pub scrollbars: Option<ScrollBars>,
 }
+
 impl ScrollParent {
     fn new(scrollable: &mut WidgetRef) -> Self {
         ScrollParent {
@@ -178,6 +176,121 @@ impl ScrollParent {
             scrollbars: None,
         }
     }
+
+    fn container_layout_updated(&mut self, _: &LayoutUpdated, args: EventArgs) {
+        self.container_rect = args.widget.bounds();
+        self.update_bounds();
+    }
+
+    fn content_layout_updated(&mut self, event: &ContentLayoutUpdated, _: EventArgs) {
+        self.content_rect = event.0;
+        self.update_bounds();
+    }
+
+    fn update_bounds(&mut self) {
+        let scrollable_area = self.content_rect.size - self.container_rect.size;
+        let content_offset = self.content_rect.origin - self.container_rect.origin;
+        if content_offset != self.offset || scrollable_area != self.scrollable_area {
+            self.offset = content_offset;
+            self.scrollable_area = scrollable_area;
+            if self.scrollable_area.width > 0.0 {
+                self.move_slider_x();
+            }
+            if self.scrollable_area.height > 0.0 {
+                self.move_slider_y();
+            }
+        }
+
+
+        let width_ratio = self.container_rect.width() / self.content_rect.width();
+        let height_ratio = self.container_rect.height() / self.content_rect.height();
+        if let Some(ref mut scrollbars) = self.scrollbars {
+
+            // update handle sizes
+            let mut visibility_updated = false;
+
+            if width_ratio.is_finite() && (width_ratio - self.width_ratio).abs() > ::std::f32::EPSILON {
+                let width = self.container_rect.width() * width_ratio;
+                scrollbars.h_handle.update_layout(|layout| {
+                    layout.edit_width().set(width);
+                });
+                let scrollbar_hidden = scrollbars.scrollbar_h.layout().hidden;
+                let hide_scrollbar = width_ratio >= 1.0 && !scrollbar_hidden;
+                let show_scrollbar = width_ratio < 1.0 && scrollbar_hidden;
+                if hide_scrollbar | show_scrollbar {
+                    visibility_updated |= true;
+                    scrollbars.scrollbar_h.update_layout(|layout| {
+                        if hide_scrollbar {
+                            layout.hide();
+                        }
+                        if show_scrollbar {
+                            layout.show();
+                        }
+                    });
+                }
+            }
+
+            if height_ratio.is_finite() && (height_ratio - self.height_ratio).abs() > ::std::f32::EPSILON {
+                let height = self.container_rect.height() * height_ratio;
+                scrollbars.v_handle.update_layout(|layout| {
+                    layout.edit_height().set(height);
+                });
+                let scrollbar_hidden = scrollbars.scrollbar_v.layout().hidden;
+                let hide_scrollbar = height_ratio >= 1.0 && !scrollbar_hidden;
+                let show_scrollbar = height_ratio < 1.0 && scrollbar_hidden;
+                if hide_scrollbar | show_scrollbar {
+                    visibility_updated |= true;
+                    scrollbars.scrollbar_v.update_layout(|layout| {
+                        if hide_scrollbar {
+                            layout.hide();
+                        }
+                        if show_scrollbar {
+                            layout.show();
+                        }
+                    });
+                }
+            }
+
+            if visibility_updated {
+                if !scrollbars.scrollbar_h.layout().hidden && !scrollbars.scrollbar_v.layout().hidden {
+                    scrollbars.corner.update_layout(|layout| layout.show());
+                } else {
+                    scrollbars.corner.update_layout(|layout| layout.hide());
+                }
+            }
+        }
+        self.width_ratio = width_ratio;
+        self.height_ratio = height_ratio;
+    }
+
+    fn widget_mouse_wheel(&mut self, event: &WidgetMouseWheel, _: EventArgs) {
+        let &WidgetMouseWheel(mouse_wheel) = event;
+        let scroll = get_scroll(mouse_wheel);
+        if self.scrollable_area.width > 0.0 {
+            self.offset.x = f32::min(0.0, f32::max(-self.scrollable_area.width, self.offset.x + scroll.x));
+            self.move_content_x();
+            self.move_slider_x();
+        }
+        if self.scrollable_area.height > 0.0 {
+            self.offset.y = f32::min(0.0, f32::max(-self.scrollable_area.height, self.offset.y + scroll.y));
+            self.move_content_y();
+            self.move_slider_y();
+        }
+    }
+
+    fn scrollbar_moved(&mut self, event: &ScrollBarMoved, _: EventArgs) {
+        match *event {
+            ScrollBarMoved::Horizontal(offset) => {
+                self.offset.x = -offset * self.scrollable_area.width;
+                self.move_content_x();
+            }
+            ScrollBarMoved::Vertical(offset) => {
+                self.offset.y = -offset * self.scrollable_area.height;
+                self.move_content_y();
+            }
+        }
+    }
+
     fn move_content_x(&mut self) {
         let scroll_to = self.container_rect.left() + self.offset.x;
         self.scrollable.update_layout(|layout| {
@@ -203,116 +316,7 @@ impl ScrollParent {
         }
     }
 }
-impl EventHandler<ScrollParentEvent> for ScrollParent {
-    fn handle(&mut self, event: &ScrollParentEvent, args: EventArgs) {
-        match *event {
-            ScrollParentEvent::ContainerLayoutUpdated | ScrollParentEvent::ContentLayoutUpdated(_) => {
 
-                if let ScrollParentEvent::ContentLayoutUpdated(rect) = *event {
-                    self.content_rect = rect
-                }
-                if let ScrollParentEvent::ContainerLayoutUpdated = *event {
-                    self.container_rect = args.widget.bounds();
-                }
-
-                let scrollable_area = self.content_rect.size - self.container_rect.size;
-                let content_offset = self.content_rect.origin - self.container_rect.origin;
-                if content_offset != self.offset || scrollable_area != self.scrollable_area {
-                    self.offset = content_offset;
-                    self.scrollable_area = scrollable_area;
-                    if self.scrollable_area.width > 0.0 {
-                        self.move_slider_x();
-                    }
-                    if self.scrollable_area.height > 0.0 {
-                        self.move_slider_y();
-                    }
-                }
-
-
-                let width_ratio = self.container_rect.width() / self.content_rect.width();
-                let height_ratio = self.container_rect.height() / self.content_rect.height();
-                if let Some(ref mut scrollbars) = self.scrollbars {
-
-                    // update handle sizes
-                    let mut visibility_updated = false;
-
-                    if width_ratio.is_finite() && (width_ratio - self.width_ratio).abs() > ::std::f32::EPSILON {
-                        let width = self.container_rect.width() * width_ratio;
-                        scrollbars.h_handle.update_layout(|layout| {
-                            layout.edit_width().set(width);
-                        });
-                        let scrollbar_hidden = scrollbars.scrollbar_h.layout().hidden;
-                        let hide_scrollbar = width_ratio >= 1.0 && !scrollbar_hidden;
-                        let show_scrollbar = width_ratio < 1.0 && scrollbar_hidden;
-                        if hide_scrollbar | show_scrollbar {
-                            visibility_updated |= true;
-                            scrollbars.scrollbar_h.update_layout(|layout| {
-                                if hide_scrollbar {
-                                    layout.hide();
-                                }
-                                if show_scrollbar {
-                                    layout.show();
-                                }
-                            });
-                        }
-                    }
-
-                    if height_ratio.is_finite() && (height_ratio - self.height_ratio).abs() > ::std::f32::EPSILON {
-                        let height = self.container_rect.height() * height_ratio;
-                        scrollbars.v_handle.update_layout(|layout| {
-                            layout.edit_height().set(height);
-                        });
-                        let scrollbar_hidden = scrollbars.scrollbar_v.layout().hidden;
-                        let hide_scrollbar = height_ratio >= 1.0 && !scrollbar_hidden;
-                        let show_scrollbar = height_ratio < 1.0 && scrollbar_hidden;
-                        if hide_scrollbar | show_scrollbar {
-                            visibility_updated |= true;
-                            scrollbars.scrollbar_v.update_layout(|layout| {
-                                if hide_scrollbar {
-                                    layout.hide();
-                                }
-                                if show_scrollbar {
-                                    layout.show();
-                                }
-                            });
-                        }
-                    }
-
-                    if visibility_updated {
-                        if !scrollbars.scrollbar_h.layout().hidden && !scrollbars.scrollbar_v.layout().hidden {
-                            scrollbars.corner.update_layout(|layout| layout.show());
-                        } else {
-                            scrollbars.corner.update_layout(|layout| layout.hide());
-                        }
-                    }
-                }
-                self.width_ratio = width_ratio;
-                self.height_ratio = height_ratio;
-            }
-            ScrollParentEvent::WidgetMouseWheel(ref mouse_wheel) => {
-                let scroll = get_scroll(mouse_wheel.0);
-                if self.scrollable_area.width > 0.0 {
-                    self.offset.x = f32::min(0.0, f32::max(-self.scrollable_area.width, self.offset.x + scroll.x));
-                    self.move_content_x();
-                    self.move_slider_x();
-                }
-                if self.scrollable_area.height > 0.0 {
-                    self.offset.y = f32::min(0.0, f32::max(-self.scrollable_area.height, self.offset.y + scroll.y));
-                    self.move_content_y();
-                    self.move_slider_y();
-                }
-            }
-            ScrollParentEvent::ScrollBarMovedX(ref offset) => {
-                self.offset.x = -offset * self.scrollable_area.width;
-                self.move_content_x();
-            }
-            ScrollParentEvent::ScrollBarMovedY(ref offset) => {
-                self.offset.y = -offset * self.scrollable_area.height;
-                self.move_content_y();
-            }
-        }
-    }
-}
 fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
     let vec = match event {
         glutin::MouseScrollDelta::LineDelta(x, y) |
