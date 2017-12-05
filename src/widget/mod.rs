@@ -53,18 +53,18 @@ pub struct StateUpdated;
 pub struct StyleUpdated;
 
 #[derive(Clone)]
-pub struct WidgetRef(Rc<RefCell<Widget>>);
+pub struct WidgetRef(Rc<RefCell<WidgetInner>>);
 
 impl WidgetRef {
-    fn new(widget: Widget) -> Self {
+    fn new(widget: WidgetInner) -> Self {
         let widget_ref = WidgetRef(Rc::new(RefCell::new(widget)));
         event::event(Target::Root, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
-    fn widget_mut(&self) -> RefMut<Widget> {
+    fn widget_mut(&self) -> RefMut<WidgetInner> {
         self.0.borrow_mut()
     }
-    pub(super) fn widget(&self) -> Ref<Widget> {
+    pub(super) fn widget(&self) -> Ref<WidgetInner> {
         self.0.borrow()
     }
     pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
@@ -339,7 +339,7 @@ impl ::std::fmt::Debug for WidgetRef {
 }
 
 pub struct LayoutGuard<'a> {
-    guard: Ref<'a, Widget>
+    guard: Ref<'a, WidgetInner>
 }
 
 impl<'b> Deref for LayoutGuard<'b> {
@@ -356,7 +356,7 @@ impl LayoutRef for WidgetRef {
 }
 
 pub struct LayoutGuardMut<'a> {
-    guard: RefMut<'a, Widget>
+    guard: RefMut<'a, WidgetInner>
 }
 
 impl<'b> Deref for LayoutGuardMut<'b> {
@@ -373,7 +373,7 @@ impl<'b> DerefMut for LayoutGuardMut<'b> {
 }
 
 pub struct PropsGuard<'a> {
-    guard: Ref<'a, Widget>
+    guard: Ref<'a, WidgetInner>
 }
 
 impl<'b> Deref for PropsGuard<'b> {
@@ -384,7 +384,7 @@ impl<'b> Deref for PropsGuard<'b> {
 }
 
 pub struct DrawStateGuard<'a> {
-    guard: RefMut<'a, Widget>
+    guard: RefMut<'a, WidgetInner>
 }
 
 impl<'a> DrawStateGuard<'a> {
@@ -398,7 +398,7 @@ impl<'a> DrawStateGuard<'a> {
 }
 
 #[derive(Clone)]
-pub struct WidgetWeak(Weak<RefCell<Widget>>);
+pub struct WidgetWeak(Weak<RefCell<WidgetInner>>);
 
 impl WidgetWeak {
     pub fn upgrade(&self) -> Option<WidgetRef> {
@@ -411,7 +411,7 @@ impl WidgetWeak {
 }
 
 /// Internal Widget representation, usually handled through a `WidgetRef`.
-pub(super) struct Widget {
+pub(super) struct WidgetInner {
     id: WidgetId,
     pub(super) draw_state: Option<DrawWrapper>,
     props: PropSet,
@@ -429,11 +429,11 @@ pub(super) struct Widget {
     handlers: HashMap<TypeId, Vec<Rc<RefCell<EventHandlerWrapper>>>>,
 }
 
-impl Widget {
+impl WidgetInner {
     fn new<S: Into<String>>(name: S) -> Self {
         let id = resources().widget_id();
         let name: String = name.into();
-        Widget {
+        WidgetInner {
             id: id,
             draw_state: None,
             props: PropSet::new(),
@@ -474,14 +474,14 @@ impl WidgetBuilder {
     /// The `WidgetBuilder` can then be referred to by name
     pub fn new<S: Into<String>>(name: S) -> Self {
         WidgetBuilder {
-            widget: WidgetRef::new(Widget::new(name)),
+            widget: WidgetRef::new(WidgetInner::new(name)),
         }
     }
 
     pub fn from_modifier<T: Component + WidgetModifier>(component: T) -> Self {
         let name: String = T::name();
         let mut widget = WidgetBuilder {
-            widget: WidgetRef::new(Widget::new(name.clone())),
+            widget: WidgetRef::new(WidgetInner::new(name.clone())),
         };
         component.apply(&mut widget);
         widget
