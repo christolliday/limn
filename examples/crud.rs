@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use limn::prelude::*;
 
 use limn::widgets::button::ButtonStyle;
-use limn::widgets::edit_text::{self, EditText, TextUpdated};
+use limn::widgets::edit_text::{EditText, TextUpdated};
 use limn::widgets::list::{List, ListItemSelected};
 use limn::widgets::scroll::ScrollContainer;
 use limn::widgets::text::StaticTextStyle;
@@ -112,8 +112,7 @@ impl PeopleHandler {
 
             let mut list_text_widget = WidgetBuilder::from_modifier_style(text_style);
             list_text_widget
-                .set_style_class(TypeId::of::<TextStyle>(), "list_item_text")
-                .add_handler(edit_text::text_change_handle);
+                .set_style_class(TypeId::of::<TextStyle>(), "list_item_text");
             list_text_widget.layout().add(constraints![
                 match_height(&list_item_widget),
                 align_left(&list_item_widget)]);
