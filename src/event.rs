@@ -11,13 +11,13 @@
 //!
 //! There are different ways events can be dispatched:
 //!
-//! - `WidgetRef::event`
+//! - `Widget::event`
 //!
 //!   send an event to a single widget.
-//! - `WidgetRef::event_subtree`
+//! - `Widget::event_subtree`
 //!
 //!   send an event to a widget and recursively send it to all it's children.
-//! - `WidgetRef::event_bubble_up`
+//! - `Widget::event_bubble_up`
 //!
 //!   send an event to a widget, then send it to the widgets parent either until you
 //! reach the root or some widget marks it as handled.
@@ -30,7 +30,7 @@
 //! UI state. This means to keep your app responsive, any event handler that needs to block or do long running work must do
 //! it on another thread, either by spawning or notifying a thread, which can then send an event back to the UI when it's
 //! ready. The `event_global` helper method makes this easier, it is equivalent to `Ui::event` but requires the event be
-//! `Send` and can be called from any thread, without a reference to the `Ui`. `WidgetRef` and any other types that can
+//! `Send` and can be called from any thread, without a reference to the `Ui`. `Widget` and any other types that can
 //! modify the UI are not thread safe, so can't currently be referenced from other threads, so if any specific widgets need
 //! to be notified from another thread, it's necessary to add a handler to the root widget to forward events.
 //!
@@ -45,7 +45,7 @@ use std::collections::VecDeque;
 use glutin::{EventsLoop, EventsLoopProxy};
 
 use ui::Ui;
-use widget::WidgetRef;
+use widget::Widget;
 
 /// Defines the different targets that events can be delivered to.
 /// An event will be sent to all handlers that match both the Target,
@@ -53,12 +53,12 @@ use widget::WidgetRef;
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub(crate) enum Target {
     /// Sends an event to a specific widget
-    Widget(WidgetRef),
+    Widget(Widget),
     /// Sends an event to every descendant of a specific widget
-    SubTree(WidgetRef),
+    SubTree(Widget),
     /// Sends an event to a widget and continues sending to it's
     /// ancestors until an event handler marks the event as handled
-    BubbleUp(WidgetRef),
+    BubbleUp(Widget),
     /// Sends an event to the root widget
     Root,
 }
@@ -99,7 +99,7 @@ impl Iterator for Queue {
 /// that holds it, the `Ui`, and a flag to notify the dispatcher that
 /// the event has been handled (in the case the event is bubbling up)
 pub struct EventArgs<'a> {
-    pub widget: WidgetRef,
+    pub widget: Widget,
     pub ui: &'a mut Ui,
     pub handled: &'a mut bool,
 }
@@ -248,7 +248,7 @@ macro_rules! multi_event {
             )*
         }
         impl $handler {
-            fn add_adapters(widget: &mut WidgetRef) {
+            fn add_adapters(widget: &mut Widget) {
                 $(
                     widget.add_handler(|event: &$event_type, args: EventArgs| {
                         args.widget.event($multi_event::$event_type(event.clone()));

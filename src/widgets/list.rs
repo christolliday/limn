@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
 use event::{EventArgs, EventHandler};
-use widget::{WidgetBuilder, WidgetRef};
+use widget::{WidgetBuilder, Widget};
 use widget::property::Property;
 use widgets::text::StaticTextStyle;
 use draw::rect::RectStyle;
@@ -12,7 +12,7 @@ use layout::linear_layout::{LinearLayoutSettings, Orientation, ItemAlignment};
 use style::{WidgetModifier, ComponentStyle};
 
 pub struct ListItemSelected {
-    pub widget: Option<WidgetRef>,
+    pub widget: Option<Widget>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -20,7 +20,7 @@ pub struct ItemSelected;
 
 #[derive(Default)]
 pub struct ListHandler {
-    selected: Option<WidgetRef>,
+    selected: Option<Widget>,
 }
 
 impl EventHandler<ListItemSelected> for ListHandler {
@@ -36,11 +36,11 @@ impl EventHandler<ListItemSelected> for ListHandler {
 }
 
 pub struct ListItemHandler {
-    list_widget: WidgetRef,
+    list_widget: Widget,
 }
 
 impl ListItemHandler {
-    pub fn new(list_widget: WidgetRef) -> Self {
+    pub fn new(list_widget: Widget) -> Self {
         ListItemHandler { list_widget: list_widget }
     }
 }
@@ -77,7 +77,7 @@ impl WidgetModifier for List {
 }
 
 impl WidgetBuilder {
-    pub fn list_item(&mut self, parent_list: &WidgetRef) -> &mut Self {
+    pub fn list_item(&mut self, parent_list: &Widget) -> &mut Self {
         self.add_handler(ListItemHandler::new(parent_list.clone()))
     }
 

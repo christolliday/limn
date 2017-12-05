@@ -74,10 +74,10 @@ fn create_slider_control() -> WidgetBuilder {
 }
 
 struct ControlBarRefs {
-    create: WidgetRef,
-    undo: WidgetRef,
-    redo: WidgetRef,
-    slider: WidgetRef,
+    create: Widget,
+    undo: Widget,
+    redo: Widget,
+    slider: Widget,
 }
 
 fn create_control_bar() -> (WidgetBuilder, ControlBarRefs) {
@@ -125,7 +125,7 @@ fn create_control_bar() -> (WidgetBuilder, ControlBarRefs) {
     })
 }
 
-fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut WidgetRef) -> WidgetRef {
+fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut Widget) -> Widget {
     let mut widget = WidgetBuilder::new("circle");
     widget
         .set_draw_style(style!(EllipseStyle {
@@ -204,14 +204,14 @@ struct Circle {
 named_id!(CircleId);
 
 struct AppEventHandler {
-    circle_canvas_ref: WidgetRef,
-    create_ref: WidgetRef,
-    undo_ref: WidgetRef,
-    redo_ref: WidgetRef,
-    slider_ref: WidgetRef,
+    circle_canvas_ref: Widget,
+    create_ref: Widget,
+    undo_ref: Widget,
+    redo_ref: Widget,
+    slider_ref: Widget,
 
     id_gen: IdGen<CircleId>,
-    circle_widgets: HashMap<CircleId, WidgetRef>,
+    circle_widgets: HashMap<CircleId, Widget>,
     create_mode: bool,
     circles: HashMap<CircleId, Circle>,
     undo_queue: Vec<Change>,
@@ -220,7 +220,7 @@ struct AppEventHandler {
 }
 
 impl AppEventHandler {
-    fn new(circle_canvas_ref: WidgetRef, control_bar: &ControlBarRefs) -> Self {
+    fn new(circle_canvas_ref: Widget, control_bar: &ControlBarRefs) -> Self {
         let mut handler = AppEventHandler {
             circle_canvas_ref: circle_canvas_ref,
             create_ref: control_bar.create.clone(),

@@ -4,7 +4,7 @@ use cassowary::WeightedRelation::*;
 
 use layout::constraint::*;
 use event::{EventArgs, EventHandler};
-use widget::{WidgetBuilder, WidgetRef};
+use widget::{WidgetBuilder, Widget};
 use widgets::slider::{SliderStyle, SliderEvent, SetSliderValue, Orientation};
 use geometry::{Size, Vector, Rect, RectExt};
 use layout::{LayoutUpdated, LAYOUT};
@@ -14,13 +14,13 @@ use color::*;
 use style::WidgetModifier;
 
 component_style!{pub struct ScrollContainer<name="scroll", style=ScrollStyle> {
-    content: Option<WidgetRef> = None,
+    content: Option<Widget> = None,
     has_scrollbars: bool = false,
 }}
 
 impl ScrollContainer {
     /// Set the scrollable content
-    pub fn add_content(&mut self, widget: WidgetRef) -> &mut Self {
+    pub fn add_content(&mut self, widget: Widget) -> &mut Self {
         self.content = Some(widget);
         self
     }
@@ -119,14 +119,14 @@ impl WidgetModifier for ScrollContainer {
 
 #[allow(dead_code)]
 struct ScrollBars {
-    scrollbar_h: WidgetRef,
-    scrollbar_v: WidgetRef,
-    corner: WidgetRef,
-    h_handle: WidgetRef,
-    v_handle: WidgetRef,
+    scrollbar_h: Widget,
+    scrollbar_v: Widget,
+    corner: Widget,
+    h_handle: Widget,
+    v_handle: Widget,
 }
 impl ScrollBars {
-    fn new(scrollbar_h: &mut WidgetBuilder, scrollbar_v: &mut WidgetBuilder, corner: WidgetRef) -> Self {
+    fn new(scrollbar_h: &mut WidgetBuilder, scrollbar_v: &mut WidgetBuilder, corner: Widget) -> Self {
         ScrollBars {
             scrollbar_h: scrollbar_h.widget_ref(),
             scrollbar_v: scrollbar_v.widget_ref(),
@@ -153,7 +153,7 @@ multi_event!{impl EventHandler<ScrollParentEvent> for ScrollParent {
 }}
 
 struct ScrollParent {
-    scrollable: WidgetRef,
+    scrollable: Widget,
     content_rect: Rect,
     container_rect: Rect,
     width_ratio: f32,
@@ -164,7 +164,7 @@ struct ScrollParent {
 }
 
 impl ScrollParent {
-    fn new(scrollable: &mut WidgetRef) -> Self {
+    fn new(scrollable: &mut Widget) -> Self {
         ScrollParent {
             scrollable: scrollable.clone(),
             content_rect: Rect::zero(),

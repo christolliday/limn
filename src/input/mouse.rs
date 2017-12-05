@@ -4,7 +4,7 @@ use glutin;
 
 use event::{EventHandler, EventArgs};
 use geometry::Point;
-use widget::{WidgetRef, WidgetBuilder};
+use widget::{Widget, WidgetBuilder};
 use widget::property::Property;
 use layout::LayoutChanged;
 use app::App;
@@ -29,7 +29,7 @@ pub struct ClickEvent {
 #[derive(Debug, Clone)]
 struct MouseController {
     pub mouse: Point,
-    pub widget_under_mouse: Option<WidgetRef>,
+    pub widget_under_mouse: Option<Widget>,
 }
 
 impl MouseController {
