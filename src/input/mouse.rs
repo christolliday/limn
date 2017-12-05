@@ -4,7 +4,7 @@ use glutin;
 
 use event::{EventHandler, EventArgs};
 use geometry::Point;
-use widget::{Widget, WidgetBuilder};
+use widget::Widget;
 use widget::property::Property;
 use layout::LayoutChanged;
 use app::App;
@@ -103,7 +103,7 @@ pub enum MouseOverEvent {
     Out,
 }
 
-impl WidgetBuilder {
+impl Widget {
     pub fn enable_hover(&mut self) -> &mut Self {
         self.add_handler(|event: &MouseOverEvent, mut args: EventArgs| {
             match *event {

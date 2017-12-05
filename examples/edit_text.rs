@@ -31,20 +31,20 @@ fn main() {
         .with_title("Limn edit text demo")
         .with_min_dimensions(100, 100);
     let app = util::init(window_builder);
-    let mut root = WidgetBuilder::new("root");
+    let mut root = Widget::new("root");
 
-    let mut content_widget = WidgetBuilder::new("content");
+    let mut content_widget = Widget::new("content");
     root.layout().add(min_size(Size::new(500.0, 500.0)));
     content_widget.layout().add(match_layout(&root).padding(20.0));
 
-    let mut edit_text_box = WidgetBuilder::from_modifier(EditText::default());
-    let mut edit_text = edit_text_box.widget_ref().child("edit_text_text").unwrap();
+    let mut edit_text_box = Widget::from_modifier(EditText::default());
+    let mut edit_text = edit_text_box.child("edit_text_text").unwrap();
     edit_text.add_handler(EditTextSettingsHandler);
 
     let edit_text_ref = edit_text.clone();
     let mut h_align_button = ToggleButtonStyle::default();
     h_align_button.toggle_text("Right Align", "Left Align");
-    let mut h_align_button = WidgetBuilder::from_modifier_style(h_align_button);
+    let mut h_align_button = Widget::from_modifier_style(h_align_button);
     h_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
         match *event {
             ToggleEvent::On => {
@@ -59,7 +59,7 @@ fn main() {
     let edit_text_ref = edit_text.clone();
     let mut v_align_button = ToggleButtonStyle::default();
     v_align_button.toggle_text("Wrap Word", "Wrap Char");
-    let mut v_align_button = WidgetBuilder::from_modifier_style(v_align_button);
+    let mut v_align_button = Widget::from_modifier_style(v_align_button);
     v_align_button.add_handler(move |event: &ToggleEvent, _: EventArgs| {
         match *event {
             ToggleEvent::On => {

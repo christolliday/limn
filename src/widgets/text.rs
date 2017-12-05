@@ -1,6 +1,6 @@
 use cassowary::Constraint;
 
-use widget::{WidgetBuilder, StateUpdated, StyleUpdated};
+use widget::{Widget, StateUpdated, StyleUpdated};
 use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use layout::constraint::*;
@@ -28,7 +28,7 @@ impl StaticTextStyle {
 }
 
 impl WidgetModifier for StaticText {
-    fn apply(&self, widget: &mut WidgetBuilder) {
+    fn apply(&self, widget: &mut Widget) {
         widget.add_handler(TextSizeHandler::default());
         widget.add_handler(TextUpdateHandler::default());
         widget.add_handler(|_: &StyleUpdated, args: EventArgs| {
@@ -86,12 +86,11 @@ impl EventHandler<StateUpdated> for TextSizeHandler {
         };
         if self.measured_size.is_none() || self.measured_size.unwrap() != text_size {
             let size_constraints = size(text_size).build(&args.widget.layout_vars());
-            args.widget.update_layout(|layout| {
-                for constraint in self.size_constraints.drain(..) {
-                    layout.remove_constraint(constraint);
-                }
-                layout.add(size_constraints.clone());
-            });
+            let mut layout = args.widget.layout();
+            for constraint in self.size_constraints.drain(..) {
+                layout.remove_constraint(constraint);
+            }
+            layout.add(size_constraints.clone());
             self.size_constraints = size_constraints;
             self.measured_size = Some(text_size);
         }

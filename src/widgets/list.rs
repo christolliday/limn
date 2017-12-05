@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
 use event::{EventArgs, EventHandler};
-use widget::{WidgetBuilder, Widget};
+use widget::Widget;
 use widget::property::Property;
 use widgets::text::StaticTextStyle;
 use draw::rect::RectStyle;
@@ -66,7 +66,7 @@ component_style!{pub struct List<name="list", style=ListStyle> {
 }}
 
 impl WidgetModifier for List {
-    fn apply(&self, widget: &mut WidgetBuilder) {
+    fn apply(&self, widget: &mut Widget) {
         widget
             .add_handler(ListHandler::default())
             .add_handler(|_: &ClickEvent, args: EventArgs| {
@@ -76,7 +76,7 @@ impl WidgetModifier for List {
     }
 }
 
-impl WidgetBuilder {
+impl Widget {
     pub fn list_item(&mut self, parent_list: &Widget) -> &mut Self {
         self.add_handler(ListItemHandler::new(parent_list.clone()))
     }
@@ -92,24 +92,24 @@ impl WidgetBuilder {
 
     pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
         where C: Iterator<Item=I>,
-              F: Fn(I, &mut WidgetBuilder) -> WidgetBuilder,
+              F: Fn(I, &mut Widget) -> Widget,
     {
         for item in contents {
             let mut widget = build(item, self);
             widget
                 .set_name("list_item")
-                .list_item(&self.widget_ref());
-            self.widget.add_child(widget);
+                .list_item(&self);
+            self.add_child(widget);
         }
     }
 }
 
-pub fn default_text_adapter(text: String, list: &mut WidgetBuilder) -> WidgetBuilder {
-    let mut text_widget = WidgetBuilder::new("list_item_text");
+pub fn default_text_adapter(text: String, list: &mut Widget) -> Widget {
+    let mut text_widget = Widget::new("list_item_text");
     text_widget.set_style_class(TypeId::of::<TextStyle>(), "list_item_text");
     StaticTextStyle::from_text(&text).component().apply(&mut text_widget);
 
-    let mut item_widget = WidgetBuilder::new("list_item_rect");
+    let mut item_widget = Widget::new("list_item_rect");
     item_widget
         .set_style_class(TypeId::of::<RectStyle>(), "list_item_rect")
         .set_draw_style(RectStyle::default())

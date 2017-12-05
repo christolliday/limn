@@ -18,7 +18,7 @@ fn main() {
         .with_min_dimensions(100, 100);
     let app = util::init(window_builder);
 
-    let mut root = WidgetBuilder::new("root");
+    let mut root = Widget::new("root");
     root.layout().add(min_size(Size::new(200.0, 100.0)));
     let mut layout_settings = LinearLayoutSettings::new(Orientation::Horizontal);
     layout_settings.spacing = Spacing::Around;
@@ -35,14 +35,14 @@ fn main() {
         }
     }
 
-    let mut text_widget = WidgetBuilder::from_modifier_style(StaticTextStyle::from_text("0"));
+    let mut text_widget = Widget::from_modifier_style(StaticTextStyle::from_text("0"));
     text_widget.add_handler(CountHandler::default());
     text_widget.layout().add(constraints![
         center_vertical(&root),
     ]);
 
-    let mut button_widget = WidgetBuilder::from_modifier_style(ButtonStyle::from_text("Count"));
-    let text_widget_ref = text_widget.widget_ref();
+    let mut button_widget = Widget::from_modifier_style(ButtonStyle::from_text("Count"));
+    let text_widget_ref = text_widget.clone();
     button_widget.add_handler(move |_: &ClickEvent, _: EventArgs| {
         text_widget_ref.event(CountEvent);
     });

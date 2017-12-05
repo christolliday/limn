@@ -1,7 +1,7 @@
 use glutin;
 
 use event::{EventHandler, EventArgs};
-use widget::{WidgetBuilder, Widget};
+use widget::Widget;
 use input::mouse::{MouseMoved, MouseButton, WidgetMouseButton};
 use geometry::{Point, Vector};
 use app::App;
@@ -82,7 +82,7 @@ enum DragInputEvent {
     MouseReleased,
 }
 
-impl WidgetBuilder {
+impl Widget {
     /// Make a widget receive drag events.
     pub fn make_draggable(&mut self) -> &mut Self {
         self.add_handler(|event: &WidgetMouseButton, args: EventArgs| {

@@ -9,7 +9,7 @@ use glutin;
 use window::Window;
 use ui::Ui;
 use input::InputEvent;
-use widget::{WidgetBuilder, Widget};
+use widget::Widget;
 use event::{self, EventHandler};
 use geometry::Size;
 
@@ -80,7 +80,7 @@ impl App {
     }
 
     /// Updates the UI and redraws the window (the applications main loop)
-    pub fn main_loop(mut self, root: WidgetBuilder) {
+    pub fn main_loop(mut self, root: Widget) {
         self.ui.root.add_child(root);
         let events_loop = Rc::clone(&self.events_loop);
         let mut events_loop = events_loop.borrow_mut();

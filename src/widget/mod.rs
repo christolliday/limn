@@ -1,22 +1,13 @@
 //! Types used to create and manage widgets.
 //!
-//! Limn UIs exist as a tree of widgets, each of which consists of a bounding rectangle,
+//! Limn UIs exist as a tree of `Widget`s, each of which consists of a bounding rectangle,
 //! a list of references to it's children, a list of `EventHandler`s that receive and send events,
 //! and optionally a draw state struct that implements `Draw`.
-//!
-//! The tree consists of pointers to widgets called `Widget`s. A widget can be constructed by creating a
-//! `WidgetBuilder`, which is a wrapper around a `Widget` that allows for configuration and that signifies
-//! it hasn't yet been initialized and added to a parent widget.
-//!
-//! Creating a reusable widget definition can be achieved by creating a function that returns a `WidgetBuilder`,
-//! or, if the API for constructing the widget is more complex, a builder struct that implements
-//! `Into<WidgetBuilder>` that can be configured, before being converted into a `WidgetBuilder`, initializing
-//! the `WidgetBuilder` and attaching it's `Widget` to a parent widget.
 //!
 //! The root widget is just an ordinary widget that happens to be stored by the `Ui` so it can be drawn, and that
 //! has the size of the window as its bounding rectangle.
 //!
-//! Creating a user interface consists of constructing a widget tree, then passing the `WidgetBuilder` root of
+//! Creating a user interface consists of constructing a widget tree, then passing the `Widget` root of
 //! that tree to a limn `App`, which will attach it to the `Ui` root widget for you and begin the event loop.
 
 pub mod property;
@@ -56,12 +47,67 @@ pub struct StyleUpdated;
 pub struct Widget(Rc<RefCell<WidgetInner>>);
 
 impl Widget {
-    fn new(widget: WidgetInner) -> Self {
+    /// Creates a new, named `Widget`, ex. "glcanvas".
+    /// The `Widget` can then be referred to by name
+    pub fn new<S: Into<String>>(name: S) -> Self {
+        Widget::new_inner(WidgetInner::new(name))
+    }
+
+    pub fn from_modifier<T: Component + WidgetModifier>(component: T) -> Self {
+        let name: String = T::name();
+        let mut widget = Widget::new_inner(WidgetInner::new(name));
+        component.apply(&mut widget);
+        widget
+    }
+
+    pub fn from_modifier_style<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(style: T) -> Self {
+        let mut widget = Widget::new(C::name());
+        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>(), None);
+        let component = style.comp();
+        component.apply(&mut widget);
+        widget
+    }
+    pub fn from_modifier_style_class<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(style: T, class: &str) -> Self {
+        let mut widget = Widget::new(C::name());
+        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>(), Some(String::from(class)));
+        let component = style.comp();
+        component.apply(&mut widget);
+        widget
+    }
+
+    pub fn set_draw_state<T: Draw + Component + 'static>(&mut self, draw_state: T) -> &mut Self {
+        self.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
+        self.props_updated();
+        self
+    }
+
+    pub fn set_draw_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, draw_state: T) -> &mut Self {
+        self.widget_mut().style_type = Some(TypeId::of::<T>());
+        resources().theme.register_widget_style(self.id(), draw_state);
+        self.style_updated();
+        self.props_updated();
+        self
+    }
+    pub fn set_draw_style_prop<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, draw_state: T) -> &mut Self {
+        self.widget_mut().style_type = Some(TypeId::of::<T>());
+        resources().theme.register_widget_prop_style(self.id(), props, draw_state);
+        self.style_updated();
+        self.props_updated();
+        self
+    }
+
+    pub fn set_style_class(&mut self, style_type: TypeId, style_class: &str) -> &mut Self {
+        self.widget_mut().style_type = Some(style_type);
+        self.widget_mut().style_class = Some(style_class.to_owned());
+        self
+    }
+
+    fn new_inner(widget: WidgetInner) -> Self {
         let widget_ref = Widget(Rc::new(RefCell::new(widget)));
         event::event(Target::Root, ::ui::RegisterWidget(widget_ref.clone()));
         widget_ref
     }
-    fn widget_mut(&self) -> RefMut<WidgetInner> {
+    pub(super) fn widget_mut(&self) -> RefMut<WidgetInner> {
         self.0.borrow_mut()
     }
     pub(super) fn widget(&self) -> Ref<WidgetInner> {
@@ -78,11 +124,9 @@ impl Widget {
             .push(Rc::new(RefCell::new(handler)));
         self
     }
-    pub fn layout(&mut self) -> LayoutGuard {
-        LayoutGuard { guard: self.0.borrow() }
-    }
 
-    pub(crate) fn layout_mut(&mut self) -> LayoutGuardMut {
+    pub fn layout(&mut self) -> LayoutGuardMut {
+        event::event(Target::Root, UpdateLayout(self.clone()));
         LayoutGuardMut { guard: self.0.borrow_mut() }
     }
     pub fn layout_vars(&self) -> LayoutVars {
@@ -167,13 +211,6 @@ impl Widget {
         self.0.borrow_mut().update(f);
         self.event(StateUpdated);
     }
-    pub fn update_layout<F>(&self, f: F)
-        where F: FnOnce(&mut Layout)
-    {
-        let layout = &mut self.0.borrow_mut().layout;
-        f(layout);
-        event::event(Target::Root, UpdateLayout(self.clone()));
-    }
 
     pub fn add_child<U: Into<Widget>>(&mut self, child: U) -> &mut Self {
         let mut child = child.into();
@@ -181,31 +218,23 @@ impl Widget {
         child.widget_mut().parent = Some(self.downgrade());
         child.widget_mut().props.extend(self.props().iter().cloned());
         self.widget_mut().children.push(child.clone());
-        self.update_layout(|layout| {
-            child.update_layout(|child_layout| {
-                layout.add_child(child_layout);
-            });
-        });
+        self.layout().add_child(child.layout().deref_mut());
         self.event(::ui::WidgetAttachedEvent);
         self.event(::ui::ChildAttachedEvent(self.id(), child.layout().vars));
         self.event(::ui::ChildrenUpdatedEvent::Added(child));
         self
     }
 
-    pub fn remove_child(&mut self, child_ref: Widget) {
-        let child_id = child_ref.id();
-        self.update_layout(|layout| {
-            child_ref.update_layout(|child_layout| {
-                layout.remove_child(child_layout);
-            });
-        });
+    pub fn remove_child(&mut self, mut child: Widget) {
+        let child_id = child.id();
+        self.layout().remove_child(child.layout().deref_mut());
         let mut widget = self.widget_mut();
         if let Some(index) = widget.children.iter().position(|widget| widget.id() == child_id) {
             widget.children.remove(index);
         }
-        self.event(::ui::ChildrenUpdatedEvent::Removed(child_ref.clone()));
-        child_ref.event(::ui::WidgetDetachedEvent);
-        event::event(Target::Root, ::ui::RemoveWidget(child_ref.clone()));
+        self.event(::ui::ChildrenUpdatedEvent::Removed(child.clone()));
+        child.event(::ui::WidgetDetachedEvent);
+        event::event(Target::Root, ::ui::RemoveWidget(child.clone()));
     }
 
     pub fn remove_widget(&mut self) {
@@ -459,145 +488,5 @@ impl WidgetInner {
             let state = draw_state.wrapper.state_mut().downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
             f(state);
         }
-    }
-}
-
-/// Used to initialize and modify a Widget before it's been added to a parent Widget
-#[derive(Debug, Clone)]
-pub struct WidgetBuilder {
-    pub widget: Widget,
-}
-
-impl WidgetBuilder {
-
-    /// Creates a new, named `WidgetBuilder`, ex. "glcanvas".
-    /// The `WidgetBuilder` can then be referred to by name
-    pub fn new<S: Into<String>>(name: S) -> Self {
-        WidgetBuilder {
-            widget: Widget::new(WidgetInner::new(name)),
-        }
-    }
-
-    pub fn from_modifier<T: Component + WidgetModifier>(component: T) -> Self {
-        let name: String = T::name();
-        let mut widget = WidgetBuilder {
-            widget: Widget::new(WidgetInner::new(name.clone())),
-        };
-        component.apply(&mut widget);
-        widget
-    }
-
-    pub fn from_modifier_style<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(style: T) -> Self {
-        let mut widget = WidgetBuilder::new(C::name());
-        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>(), None);
-        let component = style.comp();
-        component.apply(&mut widget);
-        widget
-    }
-    pub fn from_modifier_style_class<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(style: T, class: &str) -> Self {
-        let mut widget = WidgetBuilder::new(C::name());
-        let style = resources().theme.get_modifier_style(Box::new(style), TypeId::of::<T>(), Some(String::from(class)));
-        let component = style.comp();
-        component.apply(&mut widget);
-        widget
-    }
-
-    pub fn widget_ref(&self) -> Widget {
-        self.widget.clone()
-    }
-
-    pub fn id(&self) -> WidgetId {
-        self.widget.id()
-    }
-
-    pub fn set_draw_state<T: Draw + Component + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
-        self.widget.props_updated();
-        self
-    }
-
-    pub fn set_draw_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget.widget_mut().style_type = Some(TypeId::of::<T>());
-        resources().theme.register_widget_style(self.id(), draw_state);
-        self.widget.style_updated();
-        self.widget.props_updated();
-        self
-    }
-    pub fn set_draw_style_prop<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, draw_state: T) -> &mut Self {
-        self.widget.widget_mut().style_type = Some(TypeId::of::<T>());
-        resources().theme.register_widget_prop_style(self.id(), props, draw_state);
-        self.widget.style_updated();
-        self.widget.props_updated();
-        self
-    }
-
-    /// Adds a handler to the current widget
-    pub fn add_handler<E: 'static, T: EventHandler<E> + 'static>(&mut self, handler: T) -> &mut Self {
-        self.widget.add_handler(handler);
-        self
-    }
-
-    pub fn set_style_class(&mut self, style_type: TypeId, style_class: &str) -> &mut Self {
-        self.widget.widget_mut().style_type = Some(style_type);
-        self.widget.widget_mut().style_class = Some(style_class.to_owned());
-        self
-    }
-
-    pub fn style_class(&self) -> Option<String> {
-        self.widget.style_class()
-    }
-
-    /// Recursively sets a certain property on the current widget
-    pub fn add_prop(&mut self, property: Property) -> &mut Self {
-        self.widget.add_prop(property);
-        self
-    }
-
-    /// Recursively removes a certain property on the current widget
-    pub fn remove_prop(&mut self, property: Property) -> &mut Self {
-        self.widget.remove_prop(property);
-        self
-    }
-
-    /// Performs the layout on the current widget
-    pub fn layout(&mut self) -> LayoutGuardMut {
-        LayoutGuardMut { guard: self.widget.0.borrow_mut() }
-    }
-
-    /// Adds a child widget to the current Widget.
-    /// Note that the child may be unconstrained.
-    pub fn add_child<U: Into<Widget>>(&mut self, child: U) -> &mut Self {
-        self.widget.add_child(child);
-        self
-    }
-
-    /// Sets the name of the WidgetBuilder
-    pub fn set_name(&mut self, name: &str) -> &mut Self {
-        self.widget.widget_mut().name = name.to_owned();
-        self.widget.widget_mut().layout.name = Some(name.to_owned());
-        self
-    }
-}
-
-impl Into<Widget> for WidgetBuilder {
-    fn into(self) -> Widget {
-        self.widget.update_draw_state();
-        self.widget
-    }
-}
-
-pub trait AsWidget {
-    fn widget_ref(&self) -> Widget;
-}
-
-impl AsWidget for WidgetBuilder {
-    fn widget_ref(&self) -> Widget {
-        self.widget.clone()
-    }
-}
-
-impl LayoutRef for WidgetBuilder {
-    fn layout_ref(&self) -> LayoutVars {
-        self.widget_ref().layout_vars()
     }
 }

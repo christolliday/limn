@@ -92,7 +92,7 @@ fn rotation(fraction: f32) -> Radians {
 }
 
 struct ClockBuilder {
-    widget: WidgetBuilder,
+    widget: Widget,
 }
 impl ClockBuilder {
     fn new() -> Self {
@@ -101,26 +101,26 @@ impl ClockBuilder {
             background_color: WHITE,
             border: Some((2.0, BLACK)),
         };
-        let mut widget = WidgetBuilder::new("clock");
+        let mut widget = Widget::new("clock");
         widget.set_draw_state(ellipse);
         widget.layout().add(size(Size::new(200.0, 200.0)));
 
         let hour_angle = || rotation((Local::now().hour() % 12) as f32 / 12.0);
         let minute_angle = || rotation(Local::now().minute() as f32 / 60.0);
         let second_angle = || rotation(Local::now().second() as f32 / 60.0);
-        let mut hour_widget = WidgetBuilder::new("hours");
+        let mut hour_widget = Widget::new("hours");
         hour_widget
             .set_draw_state(ClockHand::new(BLACK, 4.0, 60.0, hour_angle()))
             .add_handler(DrawEventHandler::new(ClockTick, move |state: &mut ClockHand| {
                 state.rotation = hour_angle()
             }));
-        let mut minute_widget = WidgetBuilder::new("minutes");
+        let mut minute_widget = Widget::new("minutes");
         minute_widget
             .set_draw_state(ClockHand::new(BLACK, 3.0, 90.0, minute_angle()))
             .add_handler(DrawEventHandler::new(ClockTick, move |state: &mut ClockHand| {
                 state.rotation = minute_angle()
             }));
-        let mut second_widget = WidgetBuilder::new("seconds");
+        let mut second_widget = Widget::new("seconds");
         second_widget
             .set_draw_state(ClockHand::new(RED, 2.0, 80.0, second_angle()))
             .add_handler(DrawEventHandler::new(ClockTick, move |state: &mut ClockHand| {
@@ -141,14 +141,14 @@ fn main() {
         .with_title("Limn clock demo")
         .with_min_dimensions(100, 100);
     let mut app = util::init(window_builder);
-    let mut root = WidgetBuilder::new("root");
+    let mut root = Widget::new("root");
 
     let mut clock = ClockBuilder::new().widget;
     clock.layout().add(constraints![
         center(&root),
         bound_by(&root).padding(50.0),
     ]);
-    let clock_ref = clock.widget_ref();
+    let clock_ref = clock.clone();
     root.add_child(clock);
 
     thread::spawn(move || loop {

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use stable_bst::map::TreeMap;
 use stable_bst::Bound::{Excluded, Unbounded};
 
-use widget::{Widget, WidgetBuilder};
+use widget::Widget;
 use widget::property::Property;
 use input::mouse::ClickEvent;
 use event::{EventHandler, EventArgs};
@@ -112,7 +112,7 @@ pub enum KeyboardInputEvent {
     ReceivedCharacter(ReceivedCharacter),
 }
 
-impl WidgetBuilder {
+impl Widget {
     pub fn make_focusable(&mut self) -> &mut Self {
         self.add_handler(|_: &ClickEvent, args: EventArgs| {
             args.ui.get_root().event(KeyboardInputEvent::FocusChange(Some(args.widget)));
