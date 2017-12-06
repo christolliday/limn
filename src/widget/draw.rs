@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::marker::PhantomData;
 
 use mopa;
@@ -6,53 +5,18 @@ use webrender::api::*;
 
 use render::RenderBuilder;
 use event::{EventHandler, EventArgs};
-use style::Component;
 
 use geometry::{Rect, Point};
 
 
-pub trait Draw: ::std::fmt::Debug {
+pub trait Draw: ::std::fmt::Debug + mopa::Any {
     fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder);
     fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
         bounds.contains(&cursor)
     }
 }
 
-pub trait DrawComponent: Draw {
-    fn state(&self) -> &Any;
-    fn state_mut(&mut self) -> &mut Any;
-}
-
-#[derive(Debug)]
-pub struct DrawWrapper {
-    pub wrapper: Box<DrawComponent>,
-}
-
-impl DrawWrapper {
-    pub fn new<T: Draw + Component + 'static>(draw_state: T) -> Self {
-        DrawWrapper {
-            wrapper: Box::new(draw_state)
-        }
-    }
-}
-
-impl Draw for DrawWrapper {
-    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
-        self.wrapper.is_under_cursor(bounds, cursor)
-    }
-    fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder) {
-        self.wrapper.draw(bounds, crop_to, renderer);
-    }
-}
-
-impl <D: Draw + Component + 'static> DrawComponent for D {
-    fn state(&self) -> &Any {
-        self
-    }
-    fn state_mut(&mut self) -> &mut Any {
-        self
-    }
-}
+mopafy!(Draw);
 
 pub struct DrawEventHandler<T, E> {
     draw_callback: Box<Fn(&mut T)>,

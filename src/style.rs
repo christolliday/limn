@@ -57,7 +57,7 @@ use std::collections::HashMap;
 
 use widget::Widget;
 use resources::WidgetId;
-use widget::draw::{DrawWrapper, Draw};
+use widget::draw::Draw;
 use widget::property::PropSet;
 
 use linked_hash_map::LinkedHashMap;
@@ -101,7 +101,7 @@ impl Theme {
         self.widget_style_selectors.entry((TypeId::of::<T>(), widget_id)).or_insert_with(LinkedHashMap::new).insert(props, Box::new(style));
     }
 
-    pub fn get_style(&self, type_id: TypeId, class: Option<String>, widget_id: WidgetId, props: PropSet) -> DrawWrapper {
+    pub fn get_style(&self, type_id: TypeId, class: Option<String>, widget_id: WidgetId, props: PropSet) -> Box<Draw> {
         let mut style = self.type_styles.get(&type_id).unwrap().clone();
         if let Some(class) = class {
             if let Some(class_style) = self.class_styles.get(&(type_id, class.clone())) {
@@ -185,12 +185,12 @@ impl <T: Component + 'static> ComponentStyle for T {
 }
 
 trait DrawStyle {
-    fn wrapper(self: Box<Self>) -> DrawWrapper;
+    fn wrapper(self: Box<Self>) -> Box<Draw>;
 }
 
 pub trait DrawMergeStyle: Debug + Send {
     fn merge(self: Box<Self>, lower: Box<DrawMergeStyle>) -> Box<DrawMergeStyle>;
-    fn wrapper(self: Box<Self>) -> DrawWrapper;
+    fn wrapper(self: Box<Self>) -> Box<Draw>;
     fn box_clone(&self) -> Box<DrawMergeStyle>;
     fn as_any(&self) -> &Any;
 }
@@ -207,8 +207,8 @@ impl <T: Draw + Component + 'static, C: ComponentStyle<Component = T> + Debug + 
         let lower = lower.as_any().downcast_ref::<C>().unwrap();
         Box::new(upper.merge(lower))
     }
-    fn wrapper(self: Box<Self>) -> DrawWrapper {
-        DrawWrapper::new(self.component())
+    fn wrapper(self: Box<Self>) -> Box<Draw> {
+        Box::new(self.component())
     }
     fn box_clone(&self) -> Box<DrawMergeStyle> {
         Box::new((*self).clone())
