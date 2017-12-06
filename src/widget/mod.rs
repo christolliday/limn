@@ -76,7 +76,7 @@ impl Widget {
     }
 
     pub fn set_draw_state<T: Draw + Component + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget_mut().draw_state = Some(DrawWrapper::new(draw_state));
+        self.widget_mut().draw_state = Some(Box::new(draw_state));
         self.props_updated();
         self
     }
@@ -437,7 +437,7 @@ pub struct DrawStateGuard<'a> {
 impl<'a> DrawStateGuard<'a> {
     pub fn downcast_ref<T: Draw + 'static>(&self) -> Option<&T> {
         if let Some(ref draw_state) = self.guard.draw_state {
-            draw_state.wrapper.state().downcast_ref::<T>()
+            draw_state.downcast_ref::<T>()
         } else {
             None
         }
@@ -462,7 +462,7 @@ use widget::draw::DrawModifier;
 /// Internal Widget representation, usually handled through a `Widget`.
 pub(super) struct WidgetInner {
     id: WidgetId,
-    pub(super) draw_state: Option<DrawWrapper>,
+    pub(super) draw_state: Option<Box<Draw>>,
     draw_modifiers: HashMap<TypeId, Box<DrawModifier>>,
     props: PropSet,
     style_type: Option<TypeId>,
@@ -507,7 +507,7 @@ impl WidgetInner {
     {
         if let Some(ref mut draw_state) = self.draw_state {
             self.has_updated = true;
-            let state = draw_state.wrapper.state_mut().downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
+            let state = draw_state.downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
             f(state);
         }
     }
