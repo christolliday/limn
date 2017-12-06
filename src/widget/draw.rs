@@ -1,6 +1,9 @@
 use std::any::Any;
 use std::marker::PhantomData;
 
+use mopa;
+use webrender::api::*;
+
 use render::RenderBuilder;
 use event::{EventHandler, EventArgs};
 use style::Component;
@@ -70,5 +73,45 @@ impl<T: Draw + 'static, E> EventHandler<E> for DrawEventHandler<T, E> {
         args.widget.update(|state: &mut T| {
             (self.draw_callback)(state);
         });
+    }
+}
+
+pub trait DrawModifier: mopa::Any {
+    fn push(&self, renderer: &mut RenderBuilder);
+    fn pop(&self, renderer: &mut RenderBuilder);
+}
+
+mopafy!(DrawModifier);
+
+pub struct OpacityModifier {
+    pub alpha: f32,
+}
+
+impl Default for OpacityModifier {
+    fn default() -> Self {
+        OpacityModifier {
+            alpha: 1.0,
+        }
+    }
+}
+
+impl DrawModifier for OpacityModifier {
+    fn push(&self, renderer: &mut RenderBuilder) {
+        if self.alpha != 1.0 {
+            renderer.builder.push_stacking_context(
+                &PrimitiveInfo::new(Rect::zero()),
+                ScrollPolicy::Fixed,
+                None,
+                TransformStyle::Flat,
+                None,
+                MixBlendMode::Normal,
+                vec![FilterOp::Opacity(PropertyBinding::Value(self.alpha), self.alpha)],
+            );
+        }
+    }
+    fn pop(&self, renderer: &mut RenderBuilder) {
+        if self.alpha != 1.0 {
+            renderer.builder.pop_stacking_context();
+        }
     }
 }
