@@ -10,7 +10,7 @@ use glutin::ElementState;
 use webrender;
 
 use event::{EventHandler, EventArgs};
-use input::mouse::{MouseMoved, MouseButton, MouseWheel};
+use input::mouse::{MouseMoved, MouseButton, MouseWheel, CursorLeftWindow};
 use input::keyboard::{KeyboardInput, ReceivedCharacter};
 use geometry::Point;
 use app::App;
@@ -35,6 +35,9 @@ impl App {
                 glutin::WindowEvent::CursorMoved { position, .. } => {
                     let point = Point::new(position.0 as f32, position.1 as f32);
                     args.widget.event(MouseMoved(point));
+                }
+                glutin::WindowEvent::CursorLeft { .. } => {
+                    args.widget.event(CursorLeftWindow);
                 }
                 glutin::WindowEvent::KeyboardInput { input, .. } => {
                     let key_input = KeyboardInput(input);
