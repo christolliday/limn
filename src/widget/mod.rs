@@ -96,6 +96,11 @@ impl Widget {
         self
     }
 
+    pub fn add_modifier<M: DrawModifier + 'static>(&mut self, modifier: M) -> &mut Self {
+        self.widget_mut().draw_modifiers.insert(TypeId::of::<M>(), Box::new(modifier));
+        self
+    }
+
     pub fn set_style_class(&mut self, style_type: TypeId, style_class: &str) -> &mut Self {
         self.widget_mut().style_type = Some(style_type);
         self.widget_mut().style_class = Some(style_class.to_owned());
@@ -212,6 +217,13 @@ impl Widget {
         self.event(StateUpdated);
     }
 
+    pub fn update_modifier<F, T: DrawModifier + 'static>(&mut self, f: F)
+        where F: FnOnce(&mut T)
+    {
+        self.0.borrow_mut().update_modifier(f);
+        self.event(StateUpdated);
+    }
+
     pub fn add_child<U: Into<Widget>>(&mut self, child: U) -> &mut Self {
         let mut child = child.into();
         event::event(Target::Root, ::layout::UpdateLayout(child.clone()));
@@ -310,6 +322,9 @@ impl Widget {
         let bounds = self.bounds();
         let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
         renderer.builder.push_clip_id(clip_id);
+        for (_, modifier) in &self.widget().draw_modifiers {
+            modifier.push(renderer);
+        }
         if let Some(draw_state) = self.widget_mut().draw_state.as_mut() {
             draw_state.draw(bounds, crop_to, renderer);
         }
@@ -317,6 +332,9 @@ impl Widget {
             for child in &mut self.children() {
                 child.draw_widget(crop_to, renderer);
             }
+        }
+        for (_, modifier) in &self.widget().draw_modifiers {
+            modifier.pop(renderer);
         }
         renderer.builder.pop_clip_id();
     }
@@ -439,10 +457,13 @@ impl WidgetWeak {
     }
 }
 
+use widget::draw::DrawModifier;
+
 /// Internal Widget representation, usually handled through a `Widget`.
 pub(super) struct WidgetInner {
     id: WidgetId,
     pub(super) draw_state: Option<DrawWrapper>,
+    draw_modifiers: HashMap<TypeId, Box<DrawModifier>>,
     props: PropSet,
     style_type: Option<TypeId>,
     style_class: Option<String>,
@@ -465,6 +486,7 @@ impl WidgetInner {
         WidgetInner {
             id: id,
             draw_state: None,
+            draw_modifiers: HashMap::new(),
             props: PropSet::new(),
             style_type: None,
             style_class: None,
@@ -487,6 +509,14 @@ impl WidgetInner {
             self.has_updated = true;
             let state = draw_state.wrapper.state_mut().downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
             f(state);
+        }
+    }
+    fn update_modifier<F, T: DrawModifier + Any + 'static>(&mut self, f: F)
+        where F: FnOnce(&mut T)
+    {
+        if let Some(draw_modifier) = self.draw_modifiers.get_mut(&TypeId::of::<T>()) {
+            self.has_updated = true;
+            f(draw_modifier.downcast_mut::<T>().unwrap());
         }
     }
 }

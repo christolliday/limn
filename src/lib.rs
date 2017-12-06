@@ -52,6 +52,8 @@ extern crate maplit;
 extern crate log;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate mopa;
 
 pub extern crate limn_text_layout as text_layout;
 pub extern crate cassowary;
