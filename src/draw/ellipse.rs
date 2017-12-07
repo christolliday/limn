@@ -22,11 +22,12 @@ impl Draw for EllipseState {
             push_ellipse(renderer, bounds, bounds, self.background_color);
         };
     }
-    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
-        let radius = Size::new(bounds.width() / 2.0, bounds.height() / 2.0);
-        let center = Point::new(bounds.left() + radius.width, bounds.top() + radius.height);
-        point_inside_ellipse(cursor, center, radius)
-    }
+}
+
+pub fn cursor_hit(bounds: Rect, cursor: Point) -> bool {
+    let radius = Size::new(bounds.width() / 2.0, bounds.height() / 2.0);
+    let center = Point::new(bounds.left() + radius.width, bounds.top() + radius.height);
+    point_inside_ellipse(cursor, center, radius)
 }
 
 fn clip_ellipse(rect: Rect) -> LocalClip {

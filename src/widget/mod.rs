@@ -76,23 +76,30 @@ impl Widget {
     }
 
     pub fn set_draw_state<T: Draw + Component + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget_mut().draw_state = Some(Box::new(draw_state));
+        self.widget_mut().draw_state.state = Some(Box::new(draw_state));
         self.props_updated();
         self
     }
 
     pub fn set_draw_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget_mut().style_type = Some(TypeId::of::<T>());
+        self.widget_mut().draw_state.style_type = Some(TypeId::of::<T>());
         resources().theme.register_widget_style(self.id(), draw_state);
         self.style_updated();
         self.props_updated();
+        self.update_draw_state();
         self
     }
     pub fn set_draw_style_prop<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, draw_state: T) -> &mut Self {
-        self.widget_mut().style_type = Some(TypeId::of::<T>());
+        self.widget_mut().draw_state.style_type = Some(TypeId::of::<T>());
         resources().theme.register_widget_prop_style(self.id(), props, draw_state);
         self.style_updated();
         self.props_updated();
+        self.update_draw_state();
+        self
+    }
+
+    pub fn set_cursor_hit_fn<F: Fn(Rect, Point) -> bool + 'static>(&mut self, cursor_hit_fn: F) -> &mut Self {
+        self.widget_mut().cursor_hit_fn = Some(Box::new(cursor_hit_fn));
         self
     }
 
@@ -102,8 +109,9 @@ impl Widget {
     }
 
     pub fn set_style_class(&mut self, style_type: TypeId, style_class: &str) -> &mut Self {
-        self.widget_mut().style_type = Some(style_type);
-        self.widget_mut().style_class = Some(style_class.to_owned());
+        self.widget_mut().draw_state.style_type = Some(style_type);
+        self.widget_mut().draw_state.style_class = Some(style_class.to_owned());
+        self.update_draw_state();
         self
     }
 
@@ -172,7 +180,6 @@ impl Widget {
         }
     }
     pub fn draw_state(&mut self) -> DrawStateGuard {
-        self.update_draw_state();
         DrawStateGuard { guard: self.0.borrow_mut() }
     }
     pub fn downgrade(&self) -> WidgetWeak {
@@ -196,9 +203,6 @@ impl Widget {
     }
     pub fn debug_color(&self) -> Option<Color> {
         self.0.borrow().debug_color
-    }
-    pub fn style_class(&self) -> Option<String> {
-        self.0.borrow().style_class.clone()
     }
     pub fn has_updated(&self) -> bool {
         self.0.borrow().has_updated
@@ -309,23 +313,21 @@ impl Widget {
     }
 
     pub fn is_under_cursor(&self, cursor: Point) -> bool {
-        self.update_draw_state();
-        if let Some(ref draw_state) = self.widget().draw_state {
-            draw_state.is_under_cursor(self.bounds(), cursor)
+        if let Some(ref cursor_hit_fn) = self.widget().cursor_hit_fn {
+            (cursor_hit_fn)(self.bounds(), cursor)
         } else {
-            false
+            self.bounds().contains(&cursor)
         }
     }
 
     fn draw_widget(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
-        self.update_draw_state();
         let bounds = self.bounds();
         let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
         renderer.builder.push_clip_id(clip_id);
         for (_, modifier) in &self.widget().draw_modifiers {
             modifier.push(renderer);
         }
-        if let Some(draw_state) = self.widget_mut().draw_state.as_mut() {
+        if let Some(draw_state) = self.widget_mut().draw_state.state.as_mut() {
             draw_state.draw(bounds, crop_to, renderer);
         }
         if let Some(crop_to) = crop_to.intersection(&bounds) {
@@ -352,10 +354,10 @@ impl Widget {
         self.widget_mut().props_updated = true;
     }
     fn update_draw_state(&self) {
-        if (self.widget().style_updated | self.widget().props_updated) && self.widget().style_type.is_some() {
+        if (self.widget().style_updated | self.widget().props_updated) && self.widget().draw_state.style_type.is_some() {
             let res = resources();
-            let draw_state = res.theme.get_style(self.widget().style_type.unwrap(), self.style_class(), self.id(), (*self.props()).clone());
-            self.widget_mut().draw_state = Some(draw_state);
+            let draw_state = res.theme.get_style(self.widget().draw_state.style_type.unwrap(), self.widget().draw_state.style_class.clone(), self.id(), (*self.props()).clone());
+            self.widget_mut().draw_state.state = Some(draw_state);
             self.event(StyleUpdated);
             self.event(StateUpdated);
             self.widget_mut().style_updated = false;
@@ -436,7 +438,7 @@ pub struct DrawStateGuard<'a> {
 
 impl<'a> DrawStateGuard<'a> {
     pub fn downcast_ref<T: Draw + 'static>(&self) -> Option<&T> {
-        if let Some(ref draw_state) = self.guard.draw_state {
+        if let Some(ref draw_state) = self.guard.draw_state.state {
             draw_state.downcast_ref::<T>()
         } else {
             None
@@ -459,14 +461,20 @@ impl WidgetWeak {
 
 use widget::draw::DrawModifier;
 
+#[derive(Default, Debug)]
+pub struct DrawState {
+    style_type: Option<TypeId>,
+    style_class: Option<String>,
+    state: Option<Box<Draw>>,
+}
+
 /// Internal Widget representation, usually handled through a `Widget`.
 pub(super) struct WidgetInner {
     id: WidgetId,
-    pub(super) draw_state: Option<Box<Draw>>,
+    pub(super) draw_state: DrawState,
     draw_modifiers: HashMap<TypeId, Box<DrawModifier>>,
+    cursor_hit_fn: Option<Box<Fn(Rect, Point) -> bool>>,
     props: PropSet,
-    style_type: Option<TypeId>,
-    style_class: Option<String>,
     has_updated: bool,
     style_updated: bool,
     props_updated: bool,
@@ -485,11 +493,10 @@ impl WidgetInner {
         let name: String = name.into();
         WidgetInner {
             id: id,
-            draw_state: None,
+            draw_state: DrawState::default(),
             draw_modifiers: HashMap::new(),
+            cursor_hit_fn: None,
             props: PropSet::new(),
-            style_type: None,
-            style_class: None,
             layout: Layout::new(id.0, Some(name.clone())),
             has_updated: true,
             style_updated: false,
@@ -505,7 +512,7 @@ impl WidgetInner {
     fn update<F, T: Draw + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
-        if let Some(ref mut draw_state) = self.draw_state {
+        if let Some(ref mut draw_state) = self.draw_state.state {
             self.has_updated = true;
             let state = draw_state.downcast_mut::<T>().expect("Called update on widget with wrong draw_state type");
             f(state);

@@ -6,14 +6,11 @@ use webrender::api::*;
 use render::RenderBuilder;
 use event::{EventHandler, EventArgs};
 
-use geometry::{Rect, Point};
+use geometry::Rect;
 
 
 pub trait Draw: ::std::fmt::Debug + mopa::Any {
     fn draw(&mut self, bounds: Rect, crop_to: Rect, renderer: &mut RenderBuilder);
-    fn is_under_cursor(&self, bounds: Rect, cursor: Point) -> bool {
-        bounds.contains(&cursor)
-    }
 }
 
 mopafy!(Draw);
