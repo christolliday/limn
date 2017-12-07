@@ -16,7 +16,7 @@ use limn::widgets::button::{ButtonStyle, ToggleButtonStyle, ToggleEvent};
 use limn::widgets::slider::{Slider, SetSliderValue, SliderEvent};
 use limn::draw::text::TextStyle;
 use limn::draw::rect::{RectStyle};
-use limn::draw::ellipse::{EllipseStyle};
+use limn::draw::ellipse::{self, EllipseStyle};
 use limn::widgets::edit_text::TextUpdated;
 use limn::widgets::text::StaticTextStyle;
 use limn::widget::draw::OpacityModifier;
@@ -144,6 +144,7 @@ fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut Widget) -> Widg
             background_color: RED,
         }))
         .add_modifier(OpacityModifier::default())
+        .set_cursor_hit_fn(ellipse::cursor_hit)
         .make_draggable()
         .add_handler(|event: &DragEvent, args: EventArgs| {
             args.widget.event(CircleEvent::Drag(*event));
