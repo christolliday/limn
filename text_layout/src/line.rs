@@ -430,7 +430,7 @@ fn next_break_by_character(text: &str,
 
 /// Returns the next index at which the text will break by either:
 /// - A newline character.
-/// - A line wrap at the beginning of the whitespace that preceeds the first word
+/// - A line wrap at the beginning of the whitespace that precedes the first word
 /// exceeding the `max_width`.
 /// - A line wrap at the beginning of the first character exceeding the `max_width`,
 /// if no whitespace appears for `max_width` characters.
