@@ -96,7 +96,7 @@ impl<'a, 'b> Iterator for SelectedGlyphRects<'a, 'b> {
 }
 
 
-/// Yields an iteraor yielding `Rect`s for each selected character in each line of text within
+/// Yields an iterator yielding `Rect`s for each selected character in each line of text within
 /// the given iterator yielding char `Rect`s.
 ///
 /// Given some `start` and `end` indices, only `Rect`s for `char`s between these two indices
@@ -112,7 +112,7 @@ pub struct SelectedGlyphRectsPerLine<'a, I> {
 impl<'a, I> SelectedGlyphRectsPerLine<'a, I>
     where I: Iterator<Item = (&'a str, Rect)>
 {
-    /// Produces an iterator that yields iteraors yielding `Rect`s for each selected character in
+    /// Produces an iterator that yields iterators yielding `Rect`s for each selected character in
     /// each line of text within the given iterator yielding char `Rect`s.
     ///
     /// Given some `start` and `end` indices, only `Rect`s for `char`s between these two indices
