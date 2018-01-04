@@ -68,15 +68,15 @@ impl ToggleButtonStyle {
     }
     pub fn text(&mut self, text: &str) {
         self.off_text = Some(Some(style!(TextStyle {
-            text: String::from(text),
+            text: String::from(text)
         })));
     }
     pub fn toggle_text(&mut self, off_text: &str, on_text: &str) {
         self.off_text = Some(Some(style!(TextStyle {
-            text: String::from(off_text),
+            text: String::from(off_text)
         })));
         self.on_text = Some(Some(style!(TextStyle {
-            text: String::from(on_text),
+            text: String::from(on_text)
         })));
     }
 }

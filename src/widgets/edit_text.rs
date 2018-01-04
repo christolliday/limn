@@ -70,10 +70,10 @@ impl EditTextHandler {
 component_style!{pub struct EditText<name="scroll", style=EditTextStyle> {
     rect: RectStyle = style!(RectStyle {
         border: Some((1.0, GRAY_70)),
-        corner_radius: Some(3.0),
+        corner_radius: Some(3.0)
     }),
     focused_rect: Option<RectStyle> = Some(style!(RectStyle {
-        border: Some((1.0, BLUE)),
+        border: Some((1.0, BLUE))
     })),
 }}
 

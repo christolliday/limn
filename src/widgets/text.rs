@@ -21,7 +21,7 @@ impl StaticTextStyle {
     pub fn from_text(text: &str) -> Self {
         StaticTextStyle {
             style: Some(style!(TextStyle {
-                text: String::from(text),
+                text: String::from(text)
             })),
         }
     }

@@ -77,13 +77,13 @@ impl WidgetModifier for Slider {
             HandleStyle::Round => {
                 slider_handle.set_draw_style(style!(EllipseStyle {
                     background_color: self.handle_color,
-                    border: self.border,
+                    border: self.border
                 }));
             }
             HandleStyle::Square => {
                 slider_handle.set_draw_style(style!(RectStyle {
                     background_color: self.handle_color,
-                    border: self.border,
+                    border: self.border
                 }));
             }
         };
@@ -95,7 +95,7 @@ impl WidgetModifier for Slider {
         let bar_style = style!(RectStyle {
             background_color: self.bar_color,
             corner_radius: corner_radius,
-            border: self.border,
+            border: self.border
         });
 
         let mut slider_bar_pre = Widget::new("slider_bar_pre");
@@ -105,7 +105,7 @@ impl WidgetModifier for Slider {
                 ..bar_style
             });
             slider_bar_pre.set_draw_style_prop(INACTIVE.clone(), style!(RectStyle {
-                background_color: self.bar_color,
+                background_color: self.bar_color
             }));
         } else {
             slider_bar_pre.set_draw_style(bar_style.clone());
