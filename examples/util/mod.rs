@@ -22,43 +22,43 @@ pub fn default_style() {
         text_color: BLACK,
         background_color: TRANSPARENT,
         wrap: Wrap::Whitespace,
-        align: Align::Start,
+        align: Align::Start
     }));
     res.theme.register_class_prop_style("static_text", INACTIVE.clone(), style!(TextStyle {
-        text_color: GRAY_50,
+        text_color: GRAY_50
     }));
     res.theme.register_class_style("list_item_rect", style!(RectStyle {
-        background_color: GRAY_30,
+        background_color: GRAY_30
     }));
     res.theme.register_class_prop_style("list_item_rect", SELECTED.clone(), style!(RectStyle {
-        background_color: BLUE_HIGHLIGHT,
+        background_color: BLUE_HIGHLIGHT
     }));
     res.theme.register_class_prop_style("list_item_rect", MOUSEOVER.clone(), style!(RectStyle {
-        background_color: GRAY_60,
+        background_color: GRAY_60
     }));
     res.theme.register_class_style("list_item_text", style!(TextStyle {
-        text_color: WHITE,
+        text_color: WHITE
     }));
     res.theme.register_class_style("button_rect", style!(RectStyle {
         background_color: GRAY_80,
         corner_radius: Some(5.0),
-        border: Some((1.0, GRAY_40)),
+        border: Some((1.0, GRAY_40))
     }));
     res.theme.register_class_prop_style("button_rect", INACTIVE.clone(), style!(RectStyle {
         background_color: GRAY_90,
-        border: Some((1.0, GRAY_70)),
+        border: Some((1.0, GRAY_70))
     }));
     res.theme.register_class_prop_style("button_rect", ACTIVATED_PRESSED.clone(), style!(RectStyle {
-        background_color: GRAY_30,
+        background_color: GRAY_30
     }));
     res.theme.register_class_prop_style("button_rect", ACTIVATED.clone(), style!(RectStyle {
-        background_color: GRAY_40,
+        background_color: GRAY_40
     }));
     res.theme.register_class_prop_style("button_rect", PRESSED.clone(), style!(RectStyle {
-        background_color: GRAY_60,
+        background_color: GRAY_60
     }));
     res.theme.register_class_prop_style("button_rect", MOUSEOVER.clone(), style!(RectStyle {
-        background_color: GRAY_90,
+        background_color: GRAY_90
     }));
     res.theme.register_modifier_class_style("scrollbar_slider", style!(SliderStyle {
         variable_handle_size: true,
@@ -68,7 +68,7 @@ pub fn default_style() {
         bar_color: GRAY_80,
         handle_color: GRAY_70,
         highlight: None,
-        width: 15.0,
+        width: 15.0
     }));
 }
 

@@ -60,7 +60,7 @@ impl WidgetModifier for ScrollContainer {
                 align_below(&content_holder),
             ]);
             let mut scrollbar_v = Widget::from_modifier_style_class(
-                style!(SliderStyle { orientation: Orientation::Vertical, }), "scrollbar_slider");
+                style!(SliderStyle { orientation: Orientation::Vertical }), "scrollbar_slider");
             scrollbar_v.set_name("scrollbar_v");
             scrollbar_v.layout().add(constraints![
                 align_right(widget),
@@ -68,7 +68,7 @@ impl WidgetModifier for ScrollContainer {
                 align_to_right_of(&content_holder),
             ]);
             let mut corner = Widget::new("corner");
-            corner.set_draw_style(style!(RectStyle { background_color: GRAY_70, }));
+            corner.set_draw_style(style!(RectStyle { background_color: GRAY_70 }));
             corner.layout().add(constraints![
                 align_bottom(widget),
                 align_right(widget),

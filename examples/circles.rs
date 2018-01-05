@@ -26,7 +26,7 @@ fn create_slider_control() -> Widget {
     let mut widget = Widget::new("slider_container");
     let slider_title = StaticTextStyle {
         style: Some(style!(TextStyle {
-            text: String::from("Circle Size"),
+            text: String::from("Circle Size")
         }))
     };
     let mut slider_title = Widget::from_modifier_style(slider_title);
@@ -37,7 +37,7 @@ fn create_slider_control() -> Widget {
     let slider_value = StaticTextStyle {
         style: Some(style!(TextStyle {
             align: Align::End,
-            text: String::from("--"),
+            text: String::from("--")
         }))
     };
     let mut slider_value = Widget::from_modifier_style(slider_value);
@@ -130,10 +130,10 @@ fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut Widget) -> Widg
     widget
         .set_draw_style(style!(EllipseStyle {
             background_color: WHITE,
-            border: Some((2.0, BLACK)),
+            border: Some((2.0, BLACK))
         }))
         .set_draw_style_prop(SELECTED.clone(), style!(EllipseStyle {
-            background_color: RED,
+            background_color: RED
         }))
         .make_draggable()
         .add_handler(|event: &DragEvent, args: EventArgs| {
@@ -379,7 +379,7 @@ fn main() {
     ]);
     circle_canvas
         .set_draw_style(style!(RectStyle {
-            background_color: WHITE,
+            background_color: WHITE
         }))
         .add_handler(|event: &ClickEvent, args: EventArgs| {
             args.ui.event(AppEvent::ClickCanvas(event.position));
