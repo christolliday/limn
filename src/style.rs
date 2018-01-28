@@ -56,7 +56,6 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 use widget::Widget;
-use resources::WidgetId;
 use widget::draw::Draw;
 use widget::property::PropSet;
 
@@ -65,9 +64,7 @@ use linked_hash_map::LinkedHashMap;
 pub struct Theme {
     type_styles: HashMap<TypeId, Box<DrawMergeStyle>>,
     class_styles: HashMap<(TypeId, String), Box<DrawMergeStyle>>,
-    widget_styles: HashMap<(TypeId, WidgetId), Box<DrawMergeStyle>>,
     class_style_selectors: HashMap<(TypeId, String), LinkedHashMap<PropSet, Box<DrawMergeStyle>>>,
-    widget_style_selectors: HashMap<(TypeId, WidgetId), LinkedHashMap<PropSet, Box<DrawMergeStyle>>>,
     modifier_type_styles: HashMap<TypeId, Box<ModifierMergeStyle>>,
     modifier_class_styles: HashMap<(TypeId, String), Box<ModifierMergeStyle>>,
 }
@@ -77,9 +74,7 @@ impl Theme {
         Theme {
             type_styles: HashMap::new(),
             class_styles: HashMap::new(),
-            widget_styles: HashMap::new(),
             class_style_selectors: HashMap::new(),
-            widget_style_selectors: HashMap::new(),
             modifier_type_styles: HashMap::new(),
             modifier_class_styles: HashMap::new(),
         }
@@ -91,17 +86,11 @@ impl Theme {
     pub fn register_class_style<S: Draw + Component + 'static, T: ComponentStyle<Component = S> + Debug + Send + 'static>(&mut self, class: &str, style: T) {
         self.class_styles.insert((TypeId::of::<T>(), class.to_owned()), Box::new(style));
     }
-    pub fn register_widget_style<S: Draw + Component + 'static, T: ComponentStyle<Component = S> + Debug + Send + 'static>(&mut self, widget_id: WidgetId, style: T) {
-        self.widget_styles.insert((TypeId::of::<T>(), widget_id), Box::new(style));
-    }
     pub fn register_class_prop_style<S: Draw + Component + 'static, T: ComponentStyle<Component = S> + Debug + Send + 'static>(&mut self, class: &str, props: PropSet, style: T) {
         self.class_style_selectors.entry((TypeId::of::<T>(), class.to_owned())).or_insert_with(LinkedHashMap::new).insert(props, Box::new(style));
     }
-    pub fn register_widget_prop_style<S: Draw + Component + 'static, T: ComponentStyle<Component = S> + Debug + Send + 'static>(&mut self, widget_id: WidgetId, props: PropSet, style: T) {
-        self.widget_style_selectors.entry((TypeId::of::<T>(), widget_id)).or_insert_with(LinkedHashMap::new).insert(props, Box::new(style));
-    }
 
-    pub fn get_style(&self, type_id: TypeId, class: Option<String>, widget_id: WidgetId, props: PropSet) -> Box<Draw> {
+    pub fn get_style(&self, widget_style: &Option<Box<DrawMergeStyle>>, widget_selector: &LinkedHashMap<PropSet, Box<DrawMergeStyle>>, type_id: TypeId, class: Option<String>, props: PropSet) -> Box<Draw> {
         let mut style = self.type_styles.get(&type_id).unwrap().clone();
         if let Some(class) = class {
             if let Some(class_style) = self.class_styles.get(&(type_id, class.clone())) {
@@ -111,12 +100,10 @@ impl Theme {
                 style = selector.select(style, &props);
             }
         }
-        if let Some(widget_style) = self.widget_styles.get(&(type_id, widget_id)) {
+        if let Some(widget_style) = widget_style.as_ref() {
             style = widget_style.clone().merge(style.clone());
         }
-        if let Some(selector) = self.widget_style_selectors.get(&(type_id, widget_id)) {
-            style = selector.select(style, &props);
-        }
+        style = widget_selector.select(style, &props);
         style.wrapper()
     }
 
@@ -309,7 +296,7 @@ macro_rules! style {
             ..$style_type::default()
         }
     };
-    ( $style_type:ident { $( $field:ident: $value:expr, ) * } ) => { 
+    ( $style_type:ident { $( $field:ident: $value:expr, ) * } ) => {
         style!($style_type { $($field: $value),* })
-    };  
+    };
 }

@@ -76,24 +76,25 @@ impl Widget {
     }
 
     pub fn set_draw_state<T: Draw + Component + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget_mut().draw_state.state = Some(Box::new(draw_state));
-        self.props_updated();
+        self.widget_mut().draw_state.set_draw_state(draw_state);
         self
     }
 
     pub fn set_draw_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget_mut().draw_state.style_type = Some(TypeId::of::<T>());
-        resources().theme.register_widget_style(self.id(), draw_state);
-        self.style_updated();
-        self.props_updated();
+        self.widget_mut().draw_state.set_draw_style(draw_state);
+        self.widget_mut().draw_state.style_updated();
         self.update_draw_state();
         self
     }
     pub fn set_draw_style_prop<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, draw_state: T) -> &mut Self {
-        self.widget_mut().draw_state.style_type = Some(TypeId::of::<T>());
-        resources().theme.register_widget_prop_style(self.id(), props, draw_state);
-        self.style_updated();
+        self.widget_mut().draw_state.set_draw_style_prop(props, draw_state);
         self.props_updated();
+        self.update_draw_state();
+        self
+    }
+
+    pub fn set_style_class<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, draw_state: T, style_class: &str) -> &mut Self {
+        self.widget_mut().draw_state.set_style_class(style_class, draw_state);
         self.update_draw_state();
         self
     }
@@ -105,13 +106,6 @@ impl Widget {
 
     pub fn add_modifier<M: DrawModifier + 'static>(&mut self, modifier: M) -> &mut Self {
         self.widget_mut().draw_modifiers.insert(TypeId::of::<M>(), Box::new(modifier));
-        self
-    }
-
-    pub fn set_style_class(&mut self, style_type: TypeId, style_class: &str) -> &mut Self {
-        self.widget_mut().draw_state.style_type = Some(style_type);
-        self.widget_mut().draw_state.style_class = Some(style_class.to_owned());
-        self.update_draw_state();
         self
     }
 
@@ -213,7 +207,6 @@ impl Widget {
     pub fn bounds(&self) -> Rect {
         self.0.borrow().bounds
     }
-
     pub fn update<F, T: Draw + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
@@ -347,22 +340,17 @@ impl Widget {
             child.draw_debug(renderer);
         }
     }
-    fn style_updated(&self) {
-        self.widget_mut().style_updated = true;
-    }
     fn props_updated(&self) {
         self.widget_mut().props_updated = true;
     }
     fn update_draw_state(&self) {
-        if (self.widget().style_updated | self.widget().props_updated) && self.widget().draw_state.style_type.is_some() {
-            let res = resources();
-            let draw_state = res.theme.get_style(self.widget().draw_state.style_type.unwrap(), self.widget().draw_state.style_class.clone(), self.id(), (*self.props()).clone());
-            self.widget_mut().draw_state.state = Some(draw_state);
+        if self.widget().has_updated | self.widget().props_updated | self.widget().draw_state.needs_update() {
+            let props = (*self.props()).clone();
+            self.widget_mut().draw_state.update(props);
             self.event(StyleUpdated);
             self.event(StateUpdated);
-            self.widget_mut().style_updated = false;
-            self.widget_mut().props_updated = false;
             self.widget_mut().has_updated = true;
+            self.widget_mut().props_updated = false;
         }
     }
 }
@@ -460,13 +448,8 @@ impl WidgetWeak {
 }
 
 use widget::draw::DrawModifier;
-
-#[derive(Default, Debug)]
-pub struct DrawState {
-    style_type: Option<TypeId>,
-    style_class: Option<String>,
-    state: Option<Box<Draw>>,
-}
+pub mod style;
+use self::style::DrawState;
 
 /// Internal Widget representation, usually handled through a `Widget`.
 pub(super) struct WidgetInner {
@@ -476,7 +459,6 @@ pub(super) struct WidgetInner {
     cursor_hit_fn: Option<Box<Fn(Rect, Point) -> bool>>,
     props: PropSet,
     has_updated: bool,
-    style_updated: bool,
     props_updated: bool,
     pub(super) layout: Layout,
     pub(super) bounds: Rect,
@@ -499,7 +481,6 @@ impl WidgetInner {
             props: PropSet::new(),
             layout: Layout::new(id.0, Some(name.clone())),
             has_updated: true,
-            style_updated: false,
             props_updated: true,
             bounds: Rect::zero(),
             name: name,

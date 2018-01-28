@@ -1,5 +1,3 @@
-use std::any::TypeId;
-
 use glutin;
 
 use layout::constraint::*;
@@ -31,7 +29,7 @@ impl ButtonStyle {
 impl WidgetModifier for Button {
     fn apply(&self, widget: &mut Widget) {
         widget
-            .set_style_class(TypeId::of::<RectStyle>(), "button_rect")
+            .set_style_class(RectStyle::default(), "button_rect")
             .set_draw_style(self.rect.clone())
             .enable_press()
             .enable_hover();
@@ -41,7 +39,7 @@ impl WidgetModifier for Button {
         ]);
         if let Some(text_style) = self.text.clone() {
             let mut button_text_widget = Widget::new("button_text");
-            button_text_widget.set_style_class(TypeId::of::<TextStyle>(), "button_text");
+            button_text_widget.set_style_class(TextStyle::default(), "button_text");
             StaticTextStyle::from_style(text_style).component().apply(&mut button_text_widget);
             button_text_widget.layout().add(constraints![
                 bound_left(widget).padding(20.0),
@@ -71,7 +69,7 @@ impl ToggleButtonStyle {
             text: String::from(text),
         })));
     }
-    pub fn toggle_text(&mut self, off_text: &str, on_text: &str) {
+    pub fn toggle_text(&mut self, on_text: &str, off_text: &str) {
         self.off_text = Some(Some(style!(TextStyle {
             text: String::from(off_text),
         })));
@@ -84,7 +82,7 @@ impl ToggleButtonStyle {
 impl WidgetModifier for ToggleButton {
     fn apply(&self, widget: &mut Widget) {
         widget
-            .set_style_class(TypeId::of::<RectStyle>(), "button_rect")
+            .set_style_class(RectStyle::default(), "button_rect")
             .set_draw_style(self.rect.clone())
             .enable_press()
             .enable_hover();
@@ -93,7 +91,7 @@ impl WidgetModifier for ToggleButton {
             shrink(),
         ]);
         let mut button_text_widget = Widget::new("button_text");
-        button_text_widget.set_style_class(TypeId::of::<TextStyle>(), "button_text");
+        button_text_widget.set_style_class(TextStyle::default(), "button_text");
         button_text_widget.layout().add(constraints![
             bound_left(widget).padding(20.0),
             bound_right(widget).padding(20.0),
@@ -101,11 +99,11 @@ impl WidgetModifier for ToggleButton {
             bound_bottom(widget).padding(10.0),
             center(widget),
         ]);
-        if let Some(ref text_style) = self.off_text {
-            StaticTextStyle::from_style(text_style.clone()).component().apply(&mut button_text_widget);
+        if let Some(ref off_style) = self.off_text {
+            StaticTextStyle::from_style(off_style.clone()).component().apply(&mut button_text_widget);
         }
-        if let Some(text_style) = self.on_text.clone() {
-            button_text_widget.set_draw_style_prop(ACTIVATED.clone(), text_style);
+        if let Some(on_style) = self.on_text.clone() {
+            button_text_widget.set_draw_style_prop(ACTIVATED.clone(), on_style);
         }
         widget.add_child(button_text_widget);
         widget.enable_toggle();
