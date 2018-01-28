@@ -1,5 +1,3 @@
-use std::any::TypeId;
-
 use event::{EventArgs, EventHandler};
 use widget::Widget;
 use widget::property::Property;
@@ -106,13 +104,12 @@ impl Widget {
 
 pub fn default_text_adapter(text: String, list: &mut Widget) -> Widget {
     let mut text_widget = Widget::new("list_item_text");
-    text_widget.set_style_class(TypeId::of::<TextStyle>(), "list_item_text");
+    text_widget.set_style_class(TextStyle::default(), "list_item_text");
     StaticTextStyle::from_text(&text).component().apply(&mut text_widget);
 
     let mut item_widget = Widget::new("list_item_rect");
     item_widget
-        .set_style_class(TypeId::of::<RectStyle>(), "list_item_rect")
-        .set_draw_style(RectStyle::default())
+        .set_style_class(RectStyle::default(), "list_item_rect")
         .enable_hover();
 
     text_widget.layout().add(align_left(&item_widget));

@@ -81,8 +81,11 @@ impl EventHandler<StateUpdated> for TextSizeHandler {
     fn handle(&mut self, _: &StateUpdated, mut args: EventArgs) {
         let text_size = {
             let draw_state = args.widget.draw_state();
-            let text_draw_state = draw_state.downcast_ref::<TextState>().unwrap();
-            text_draw_state.measure()
+            if let Some(state) = draw_state.downcast_ref::<TextState>() {
+                state.measure()
+            } else {
+                Size::zero()
+            }
         };
         if self.measured_size.is_none() || self.measured_size.unwrap() != text_size {
             let size_constraints = size(text_size).build(&args.widget.layout_vars());
