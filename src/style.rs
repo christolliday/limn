@@ -58,15 +58,16 @@ use std::collections::HashMap;
 use widget::Widget;
 use widget::draw::Draw;
 use widget::property::PropSet;
+use widget::style::DrawStyle;
 
 use linked_hash_map::LinkedHashMap;
 
 pub struct Theme {
-    type_styles: HashMap<TypeId, Box<DrawMergeStyle>>,
-    class_styles: HashMap<(TypeId, String), Box<DrawMergeStyle>>,
-    class_style_selectors: HashMap<(TypeId, String), LinkedHashMap<PropSet, Box<DrawMergeStyle>>>,
-    modifier_type_styles: HashMap<TypeId, Box<ModifierMergeStyle>>,
-    modifier_class_styles: HashMap<(TypeId, String), Box<ModifierMergeStyle>>,
+    type_styles: HashMap<TypeId, Box<DrawComponentStyle>>,
+    class_styles: HashMap<(TypeId, String), Box<DrawComponentStyle>>,
+    class_style_selectors: HashMap<(TypeId, String), LinkedHashMap<PropSet, Box<DrawComponentStyle>>>,
+    modifier_type_styles: HashMap<TypeId, Box<ModifierComponentStyle>>,
+    modifier_class_styles: HashMap<(TypeId, String), Box<ModifierComponentStyle>>,
 }
 
 impl Theme {
@@ -90,20 +91,23 @@ impl Theme {
         self.class_style_selectors.entry((TypeId::of::<T>(), class.to_owned())).or_insert_with(LinkedHashMap::new).insert(props, Box::new(style));
     }
 
-    pub fn get_style(&self, widget_style: &Option<Box<DrawMergeStyle>>, widget_selector: &LinkedHashMap<PropSet, Box<DrawMergeStyle>>, type_id: TypeId, class: Option<String>, props: PropSet) -> Box<Draw> {
+    pub fn get_style(&self, widget_style: &DrawStyle, props: PropSet) -> Box<Draw> {
+        let type_id = widget_style.type_id;
         let mut style = self.type_styles.get(&type_id).unwrap().clone();
-        if let Some(class) = class {
+        if let Some(ref class) = widget_style.class {
             if let Some(class_style) = self.class_styles.get(&(type_id, class.clone())) {
                 style = class_style.clone().merge(style.clone());
             }
-            if let Some(selector) = self.class_style_selectors.get(&(type_id, class)) {
+            if let Some(selector) = self.class_style_selectors.get(&(type_id, class.clone())) {
                 style = selector.select(style, &props);
             }
         }
-        if let Some(widget_style) = widget_style.as_ref() {
+        if let Some(widget_style) = widget_style.style.as_ref() {
             style = widget_style.clone().merge(style.clone());
         }
-        style = widget_selector.select(style, &props);
+        if let Some(ref selector) = widget_style.selector {
+            style = selector.select(style, &props);
+        }
         style.wrapper()
     }
 
@@ -115,7 +119,7 @@ impl Theme {
         self.modifier_class_styles.insert((TypeId::of::<T>(), String::from(class)), Box::new(style));
     }
 
-    pub fn get_modifier_style(&self, style: Box<ModifierMergeStyle>, type_id: TypeId, class: Option<String>) -> Box<ModifierMergeStyle> {
+    pub fn get_modifier_style(&self, style: Box<ModifierComponentStyle>, type_id: TypeId, class: Option<String>) -> Box<ModifierComponentStyle> {
         let style = if let Some(type_style) = self.modifier_type_styles.get(&type_id) {
             style.merge(type_style.clone())
         } else {
@@ -130,10 +134,10 @@ impl Theme {
 }
 
 trait Selector {
-    fn select(&self, style: Box<DrawMergeStyle>, props: &PropSet) -> Box<DrawMergeStyle>;
+    fn select(&self, style: Box<DrawComponentStyle>, props: &PropSet) -> Box<DrawComponentStyle>;
 }
-impl Selector for LinkedHashMap<PropSet, Box<DrawMergeStyle>> {
-    fn select(&self, mut style: Box<DrawMergeStyle>, props: &PropSet) -> Box<DrawMergeStyle> {
+impl Selector for LinkedHashMap<PropSet, Box<DrawComponentStyle>> {
+    fn select(&self, mut style: Box<DrawComponentStyle>, props: &PropSet) -> Box<DrawComponentStyle> {
         if self.contains_key(&props) {
             style = self.get(&props).unwrap().clone().merge(style.clone());
         } else {
@@ -171,25 +175,21 @@ impl <T: Component + 'static> ComponentStyle for T {
     }
 }
 
-trait DrawStyle {
+pub trait DrawComponentStyle: Debug + Send {
+    fn merge(self: Box<Self>, lower: Box<DrawComponentStyle>) -> Box<DrawComponentStyle>;
     fn wrapper(self: Box<Self>) -> Box<Draw>;
-}
-
-pub trait DrawMergeStyle: Debug + Send {
-    fn merge(self: Box<Self>, lower: Box<DrawMergeStyle>) -> Box<DrawMergeStyle>;
-    fn wrapper(self: Box<Self>) -> Box<Draw>;
-    fn box_clone(&self) -> Box<DrawMergeStyle>;
+    fn box_clone(&self) -> Box<DrawComponentStyle>;
     fn as_any(&self) -> &Any;
 }
 
-impl Clone for Box<DrawMergeStyle> {
+impl Clone for Box<DrawComponentStyle> {
     fn clone(&self) -> Self {
         self.box_clone()
     }
 }
 
-impl <T: Draw + Component + 'static, C: ComponentStyle<Component = T> + Debug + Send> DrawMergeStyle for C {
-    fn merge(self: Box<Self>, lower: Box<DrawMergeStyle>) -> Box<DrawMergeStyle> {
+impl <T: Draw + Component + 'static, C: ComponentStyle<Component = T> + Debug + Send> DrawComponentStyle for C {
+    fn merge(self: Box<Self>, lower: Box<DrawComponentStyle>) -> Box<DrawComponentStyle> {
         let upper = self.as_any().downcast_ref::<C>().unwrap();
         let lower = lower.as_any().downcast_ref::<C>().unwrap();
         Box::new(upper.merge(lower))
@@ -197,7 +197,7 @@ impl <T: Draw + Component + 'static, C: ComponentStyle<Component = T> + Debug + 
     fn wrapper(self: Box<Self>) -> Box<Draw> {
         Box::new(self.component())
     }
-    fn box_clone(&self) -> Box<DrawMergeStyle> {
+    fn box_clone(&self) -> Box<DrawComponentStyle> {
         Box::new((*self).clone())
     }
     fn as_any(&self) -> &Any {
@@ -205,21 +205,21 @@ impl <T: Draw + Component + 'static, C: ComponentStyle<Component = T> + Debug + 
     }
 }
 
-pub trait ModifierMergeStyle: Debug + Send {
-    fn merge(self: Box<Self>, lower: Box<ModifierMergeStyle>) -> Box<ModifierMergeStyle>;
+pub trait ModifierComponentStyle: Debug + Send {
+    fn merge(self: Box<Self>, lower: Box<ModifierComponentStyle>) -> Box<ModifierComponentStyle>;
     fn comp(self: Box<Self>) -> Box<WidgetModifier>;
-    fn box_clone(&self) -> Box<ModifierMergeStyle>;
+    fn box_clone(&self) -> Box<ModifierComponentStyle>;
     fn as_any(&self) -> &Any;
 }
 
-impl Clone for Box<ModifierMergeStyle> {
+impl Clone for Box<ModifierComponentStyle> {
     fn clone(&self) -> Self {
         self.box_clone()
     }
 }
 
-impl <T: WidgetModifier + Component + 'static, C: ComponentStyle<Component = T> + Debug + Send> ModifierMergeStyle for C {
-    fn merge(self: Box<Self>, lower: Box<ModifierMergeStyle>) -> Box<ModifierMergeStyle> {
+impl <T: WidgetModifier + Component + 'static, C: ComponentStyle<Component = T> + Debug + Send> ModifierComponentStyle for C {
+    fn merge(self: Box<Self>, lower: Box<ModifierComponentStyle>) -> Box<ModifierComponentStyle> {
         let upper = self.as_any().downcast_ref::<C>().unwrap();
         let lower = lower.as_any().downcast_ref::<C>().unwrap();
         Box::new(upper.merge(lower))
@@ -227,7 +227,7 @@ impl <T: WidgetModifier + Component + 'static, C: ComponentStyle<Component = T> 
     fn comp(self: Box<Self>) -> Box<WidgetModifier> {
         Box::new(self.component())
     }
-    fn box_clone(&self) -> Box<ModifierMergeStyle> {
+    fn box_clone(&self) -> Box<ModifierComponentStyle> {
         Box::new((*self).clone())
     }
     fn as_any(&self) -> &Any {
