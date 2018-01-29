@@ -12,6 +12,7 @@
 
 pub mod property;
 pub mod draw;
+pub mod style;
 
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
@@ -33,6 +34,9 @@ use color::Color;
 use event::Target;
 use layout::UpdateLayout;
 use style::*;
+
+use widget::draw::DrawModifier;
+use self::style::{DrawState, DrawStyle};
 
 use self::property::{PropSet, Property};
 use self::draw::*;
@@ -80,21 +84,8 @@ impl Widget {
         self
     }
 
-    pub fn set_draw_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, draw_state: T) -> &mut Self {
-        self.widget_mut().draw_state.set_draw_style(draw_state);
-        self.widget_mut().draw_state.style_updated();
-        self.update_draw_state();
-        self
-    }
-    pub fn set_draw_style_prop<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, draw_state: T) -> &mut Self {
-        self.widget_mut().draw_state.set_draw_style_prop(props, draw_state);
-        self.props_updated();
-        self.update_draw_state();
-        self
-    }
-
-    pub fn set_style_class<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, draw_state: T, style_class: &str) -> &mut Self {
-        self.widget_mut().draw_state.set_style_class(style_class, draw_state);
+    pub fn set_draw_style<I: Into<DrawStyle>>(&mut self, style: I) -> &mut Self {
+        self.widget_mut().draw_state.set_draw_style(style.into());
         self.update_draw_state();
         self
     }
@@ -432,6 +423,13 @@ impl<'a> DrawStateGuard<'a> {
             None
         }
     }
+    pub fn style(&mut self) -> Option<&mut DrawStyle> {
+        if let Some(ref mut style) = self.guard.draw_state.style {
+            Some(style)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -446,10 +444,6 @@ impl WidgetWeak {
         }
     }
 }
-
-use widget::draw::DrawModifier;
-pub mod style;
-use self::style::DrawState;
 
 /// Internal Widget representation, usually handled through a `Widget`.
 pub(super) struct WidgetInner {

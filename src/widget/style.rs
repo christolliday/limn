@@ -3,20 +3,55 @@ use std::fmt;
 use std::fmt::Debug;
 
 use linked_hash_map::LinkedHashMap;
-use style::DrawMergeStyle;
+use style::DrawComponentStyle;
 use style::ComponentStyle;
 use style::Component;
 use widget::property::PropSet;
 use widget::draw::Draw;
 use resources::resources;
 
+
+pub struct DrawStyle {
+    pub style: Option<Box<DrawComponentStyle>>,
+    pub selector: Option<LinkedHashMap<PropSet, Box<DrawComponentStyle>>>,
+    pub class: Option<String>,
+    pub type_id: TypeId,
+}
+
+impl DrawStyle {
+    pub fn new<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(style: T) -> Self {
+        DrawStyle {
+            style: Some(Box::new(style)),
+            selector: None,
+            class: None,
+            type_id: TypeId::of::<T>(),
+        }
+    }
+    pub fn from_class<T: 'static>(class: &str) -> Self {
+        DrawStyle {
+            style: None,
+            selector: None,
+            class: Some(class.to_owned()),
+            type_id: TypeId::of::<T>(),
+        }
+    }
+    pub fn prop_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, style: T) {
+        self.selector.get_or_insert_with(LinkedHashMap::default).insert(props, Box::new(style));
+    }
+    pub fn set_class(&mut self, class: &str) {
+        self.class = Some(class.to_owned());
+    }
+}
+
+impl <D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Send + Debug + 'static> From<T> for DrawStyle {
+    fn from(w: T) -> DrawStyle {
+        DrawStyle::new(w)
+    }
+}
+
 #[derive(Default)]
 pub struct DrawState {
-    pub style_spec: Option<StyleSpec>,
-    pub style: Option<Box<DrawMergeStyle>>,
-    pub style_selector: LinkedHashMap<PropSet, Box<DrawMergeStyle>>,
-
-    pub style_class: Option<String>,
+    pub style: Option<DrawStyle>,
     pub state: Option<Box<Draw>>,
 
     style_updated: bool,
@@ -28,21 +63,6 @@ impl Debug for DrawState {
     }
 }
 
-pub struct StyleSpec {
-    get_style_fn: Box<Fn(&Option<Box<DrawMergeStyle>>, &LinkedHashMap<PropSet, Box<DrawMergeStyle>>, Option<String>, PropSet) -> Box<Draw>>,
-}
-
-impl StyleSpec {
-    fn new<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(_: &T) -> Self {
-        let get_style_fn = |style: &_, selector: &_, class, props| {
-            let res = resources();
-            res.theme.get_style(style, selector, TypeId::of::<T>(), class, props)
-        };
-        StyleSpec {
-            get_style_fn: Box::new(get_style_fn),
-        }
-    }
-}
 impl DrawState {
 
     pub fn style_updated(&mut self) {
@@ -50,8 +70,9 @@ impl DrawState {
     }
 
     pub fn update(&mut self, props: PropSet) {
-        if let Some(style_spec) = self.style_spec.as_ref() {
-            let draw_state = (style_spec.get_style_fn)(&self.style, &self.style_selector, self.style_class.clone(), props);
+        if let Some(style) = self.style.as_ref() {
+            let res = resources();
+            let draw_state = res.theme.get_style(style, props);
             self.state = Some(draw_state);
             self.style_updated = false;
         }
@@ -65,20 +86,8 @@ impl DrawState {
         self.style_updated();
         self
     }
-    pub fn set_draw_style<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, style: T) {
-        self.style_spec = Some(StyleSpec::new(&style));
-        self.style = Some(Box::new(style));
+    pub fn set_draw_style(&mut self, style: DrawStyle) {
+        self.style = Some(style);
         self.style_updated();
-    }
-
-
-    pub fn set_draw_style_prop<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, props: PropSet, style: T) {
-        self.style_selector.insert(props, Box::new(style));
-        self.style_updated();
-    }
-
-    pub fn set_style_class<D: Draw + Component + 'static, T: ComponentStyle<Component = D> + Debug + Send + 'static>(&mut self, style_class: &str, style: T) {
-        self.style_spec = Some(StyleSpec::new(&style));
-        self.style_class = Some(style_class.to_owned());
     }
 }

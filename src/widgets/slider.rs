@@ -9,6 +9,7 @@ use input::drag::{DragEvent, DragState};
 use event::{EventHandler, EventArgs};
 use widget::Widget;
 use widget::property::Property;
+use widget::style::DrawStyle;
 use draw::rect::RectStyle;
 use draw::ellipse::EllipseStyle;
 use geometry::RectExt;
@@ -100,13 +101,14 @@ impl WidgetModifier for Slider {
 
         let mut slider_bar_pre = Widget::new("slider_bar_pre");
         if let Some(highlight) = self.highlight {
-            slider_bar_pre.set_draw_style(RectStyle {
+            let mut style = DrawStyle::from(RectStyle {
                 background_color: Some(highlight),
                 ..bar_style
             });
-            slider_bar_pre.set_draw_style_prop(INACTIVE.clone(), style!(RectStyle {
+            style.prop_style(INACTIVE.clone(), style!(RectStyle {
                 background_color: self.bar_color,
             }));
+            slider_bar_pre.set_draw_style(style);
         } else {
             slider_bar_pre.set_draw_style(bar_style.clone());
         }

@@ -10,6 +10,7 @@ use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
 use widget::property::states::*;
+use widget::style::DrawStyle;
 use style::WidgetModifier;
 
 const BACKSPACE: char = '\u{8}';
@@ -80,8 +81,8 @@ component_style!{pub struct EditText<name="scroll", style=EditTextStyle> {
 impl WidgetModifier for EditText {
     fn apply(&self, widget: &mut Widget) {
         let mut text_widget = Widget::new("edit_text_text");
+        let mut draw_style = DrawStyle::from(self.rect.clone());
         widget
-            .set_draw_style(self.rect.clone())
             .add_handler(|_: &WidgetAttachedEvent, args: EventArgs| {
                 args.ui.event(KeyboardInputEvent::AddFocusable(args.widget));
             })
@@ -96,11 +97,12 @@ impl WidgetModifier for EditText {
         EditTextHandler::add_adapters(widget);
 
         if let Some(ref focused_rect) = self.focused_rect {
-            widget.set_draw_style_prop(FOCUSED.clone(), focused_rect.clone());
+            draw_style.prop_style(FOCUSED.clone(), focused_rect.clone());
         }
+        widget.set_draw_style(draw_style);
 
         text_widget
-            .set_draw_style(TextStyle::default())
+            .set_draw_style(DrawStyle::from(TextStyle::default()))
             .add_handler(TextHeightHandler::default());
 
         text_widget.layout().add(constraints![
