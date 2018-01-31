@@ -4,7 +4,6 @@ extern crate limn;
 
 mod util;
 
-use std::any::TypeId;
 use std::collections::HashMap;
 
 use limn::prelude::*;
@@ -103,7 +102,7 @@ impl PeopleHandler {
             };
             let mut list_item_widget = Widget::new("list_item");
             list_item_widget
-                .set_style_class(TypeId::of::<RectStyle>(), "list_item_rect")
+                .set_draw_style(DrawStyle::from_class::<RectStyle>("list_item_rect"))
                 .list_item(&self.widgets.list_widget)
                 .on_item_selected(move |args| {
                     args.ui.event(PeopleEvent::PersonSelected(Some(id)));
@@ -112,7 +111,7 @@ impl PeopleHandler {
 
             let mut list_text_widget = Widget::from_modifier_style(text_style);
             list_text_widget
-                .set_style_class(TypeId::of::<TextStyle>(), "list_item_text");
+                .set_draw_style(DrawStyle::from_class::<RectStyle>("list_item_text"));
             list_text_widget.layout().add(constraints![
                 match_height(&list_item_widget),
                 align_left(&list_item_widget)]);

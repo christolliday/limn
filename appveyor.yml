@@ -12,4 +12,4 @@ install:
 build: false
 
 test_script:
-  - cargo test --all --verbose
+  - RUST_TEST_THREADS=1 cargo test --all --verbose

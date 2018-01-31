@@ -91,9 +91,9 @@ impl Theme {
         self.class_style_selectors.entry((TypeId::of::<T>(), class.to_owned())).or_insert_with(LinkedHashMap::new).insert(props, Box::new(style));
     }
 
-    pub fn get_style(&self, widget_style: &DrawStyle, props: PropSet) -> Box<Draw> {
+    pub fn get_style(&self, widget_style: &DrawStyle, props: PropSet) -> Box<DrawComponentStyle> {
         let type_id = widget_style.type_id;
-        let mut style = self.type_styles.get(&type_id).unwrap().clone();
+        let mut style = self.type_styles.get(&type_id).expect("Missing default style for type").clone();
         if let Some(ref class) = widget_style.class {
             if let Some(class_style) = self.class_styles.get(&(type_id, class.clone())) {
                 style = class_style.clone().merge(style.clone());
@@ -108,7 +108,7 @@ impl Theme {
         if let Some(ref selector) = widget_style.selector {
             style = selector.select(style, &props);
         }
-        style.wrapper()
+        style
     }
 
     pub fn register_modifier_type_style<C: Component + WidgetModifier + 'static, T: ComponentStyle<Component = C> + Debug + Send>(&mut self, style: T) {

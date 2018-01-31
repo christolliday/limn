@@ -85,7 +85,8 @@ impl Widget {
     }
 
     pub fn set_draw_style<I: Into<DrawStyle>>(&mut self, style: I) -> &mut Self {
-        self.widget_mut().draw_state.set_draw_style(style.into());
+        let style = style.into();
+        self.widget_mut().draw_state.set_draw_style(style);
         self.update_draw_state();
         self
     }
