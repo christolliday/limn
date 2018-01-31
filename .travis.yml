@@ -9,7 +9,7 @@ os:
   - osx
 
 script:
-  - cargo test --all --verbose
+  - RUST_TEST_THREADS=1 cargo test --all --verbose
 
 after_success:
   - |

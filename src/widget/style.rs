@@ -10,7 +10,7 @@ use widget::property::PropSet;
 use widget::draw::Draw;
 use resources::resources;
 
-
+#[derive(Debug)]
 pub struct DrawStyle {
     pub style: Option<Box<DrawComponentStyle>>,
     pub selector: Option<LinkedHashMap<PropSet, Box<DrawComponentStyle>>>,
@@ -40,6 +40,36 @@ impl DrawStyle {
     }
     pub fn set_class(&mut self, class: &str) {
         self.class = Some(class.to_owned());
+    }
+    pub fn resolve(&self, props: PropSet) -> Box<DrawComponentStyle> {
+        let res = resources();
+        res.theme.get_style(self, props)
+    }
+    pub fn merge(&mut self, other: DrawStyle) {
+        if let Some(other_style) = other.style {
+            if let Some(style) = self.style.clone() {
+                self.style = Some(other_style.merge(style));
+            } else {
+                self.style = Some(other_style);
+            }
+        }
+        if let Some(mut other_selector) = other.selector {
+            if self.selector.is_none() {
+                self.selector = Some(LinkedHashMap::new());
+            }
+            let selector = self.selector.as_mut().unwrap();
+            for entry in other_selector.entries() {
+                if selector.contains_key(entry.key()) {
+                    let style = selector.get(entry.key()).unwrap().clone();
+                    selector.insert(entry.key().clone(), style.merge(entry.get().clone()));
+                } else {
+                    selector.insert(entry.key().clone(), entry.get().clone());
+                }
+            }
+        }
+        if let Some(other_class) = other.class {
+            self.class = Some(other_class);
+        }
     }
 }
 
@@ -71,9 +101,7 @@ impl DrawState {
 
     pub fn update(&mut self, props: PropSet) {
         if let Some(style) = self.style.as_ref() {
-            let res = resources();
-            let draw_state = res.theme.get_style(style, props);
-            self.state = Some(draw_state);
+            self.state = Some(style.resolve(props).wrapper());
             self.style_updated = false;
         }
     }
@@ -86,8 +114,15 @@ impl DrawState {
         self.style_updated();
         self
     }
-    pub fn set_draw_style(&mut self, style: DrawStyle) {
-        self.style = Some(style);
+    pub fn set_draw_style(&mut self, new_style: DrawStyle) {
+        if let Some(ref mut style) = self.style {
+            style.merge(new_style);
+        } else {
+            self.style = Some(new_style);
+        }
         self.style_updated();
+    }
+    pub fn get_state<T: Draw>(&self) -> &T {
+        self.state.as_ref().unwrap().downcast_ref::<T>().unwrap()
     }
 }

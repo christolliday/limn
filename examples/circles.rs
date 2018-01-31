@@ -4,7 +4,6 @@ extern crate limn;
 
 mod util;
 
-use std::any::TypeId;
 use std::collections::HashMap;
 use std::ops::Range;
 
@@ -33,7 +32,7 @@ fn create_slider_control<F: FnMut(&SliderEvent, EventArgs) + 'static>(title: &st
     };
     let mut slider_title = Widget::from_modifier_style(slider_title);
     slider_title
-        .set_style_class(TypeId::of::<TextStyle>(), "static_text")
+        .set_draw_style(DrawStyle::from_class::<TextStyle>("static_text"))
         .set_name("slider_title");
     slider_title.layout().add(align_left(&widget));
     let slider_value = StaticTextStyle {
@@ -44,7 +43,7 @@ fn create_slider_control<F: FnMut(&SliderEvent, EventArgs) + 'static>(title: &st
     };
     let mut slider_value = Widget::from_modifier_style(slider_value);
     slider_value
-        .set_style_class(TypeId::of::<TextStyle>(), "static_text")
+        .set_draw_style(DrawStyle::from_class::<TextStyle>("static_text"))
         .set_name("slider_value");
     slider_value.layout().add(align_right(&widget));
     let mut slider_widget = Slider::default();
@@ -134,15 +133,17 @@ fn create_control_bar() -> (Widget, ControlBarRefs) {
 }
 
 fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut Widget) -> Widget {
+
+    let mut draw_style = DrawStyle::from(style!(EllipseStyle {
+        background_color: WHITE,
+        border: Some((2.0, BLACK)),
+    }));
+    draw_style.prop_style(SELECTED.clone(), style!(EllipseStyle {
+        background_color: RED,
+    }));
     let mut widget = Widget::new("circle");
     widget
-        .set_draw_style(style!(EllipseStyle {
-            background_color: WHITE,
-            border: Some((2.0, BLACK)),
-        }))
-        .set_draw_style_prop(SELECTED.clone(), style!(EllipseStyle {
-            background_color: RED,
-        }))
+        .set_draw_style(draw_style)
         .add_modifier(OpacityModifier::default())
         .set_cursor_hit_fn(ellipse::cursor_hit)
         .make_draggable()
