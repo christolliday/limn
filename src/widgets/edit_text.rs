@@ -10,8 +10,7 @@ use draw::text::{TextState, TextStyle};
 use event::{EventHandler, EventArgs};
 use color::*;
 use widget::property::states::*;
-use widget::style::DrawStyle;
-use style::WidgetModifier;
+use style::{WidgetModifier, DrawStyle};
 
 const BACKSPACE: char = '\u{8}';
 

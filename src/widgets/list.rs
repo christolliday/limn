@@ -1,14 +1,13 @@
 use event::{EventArgs, EventHandler};
 use widget::Widget;
 use widget::property::Property;
-use widget::style::DrawStyle;
 use widgets::text::StaticTextStyle;
 use draw::rect::RectStyle;
 use draw::text::TextStyle;
 use input::mouse::ClickEvent;
 use layout::constraint::*;
 use layout::linear_layout::{LinearLayoutSettings, Orientation, ItemAlignment};
-use style::{WidgetModifier, ComponentStyle};
+use style::{WidgetModifier, ComponentStyle, DrawStyle};
 
 pub struct ListItemSelected {
     pub widget: Option<Widget>,

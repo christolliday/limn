@@ -4,7 +4,6 @@ use layout::constraint::*;
 use event::EventArgs;
 use widget::Widget;
 use widget::property::Property;
-use widget::style::DrawStyle;
 use input::mouse::WidgetMouseButton;
 use widgets::text::StaticTextStyle;
 use draw::rect::RectStyle;
