@@ -9,13 +9,12 @@ use input::drag::{DragEvent, DragState};
 use event::{EventHandler, EventArgs};
 use widget::Widget;
 use widget::property::Property;
-use widget::style::DrawStyle;
 use draw::rect::RectStyle;
 use draw::ellipse::EllipseStyle;
 use geometry::RectExt;
 use color::*;
 use widget::property::states::*;
-use style::WidgetModifier;
+use style::{WidgetModifier, DrawStyle};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Orientation {

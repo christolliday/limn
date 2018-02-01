@@ -12,7 +12,6 @@
 
 pub mod property;
 pub mod draw;
-pub mod style;
 
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
@@ -36,7 +35,6 @@ use layout::UpdateLayout;
 use style::*;
 
 use widget::draw::DrawModifier;
-use self::style::{DrawState, DrawStyle};
 
 use self::property::{PropSet, Property};
 use self::draw::*;
