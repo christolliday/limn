@@ -97,14 +97,14 @@ impl Theme {
         let mut style = self.type_styles.get(&type_id).expect("Missing default style for type").clone();
         if let Some(ref class) = widget_style.class {
             if let Some(class_style) = self.class_styles.get(&(type_id, class.clone())) {
-                style = class_style.clone().merge(style.clone());
+                style = class_style.clone().box_merge(style.clone());
             }
             if let Some(selector) = self.class_style_selectors.get(&(type_id, class.clone())) {
                 style = selector.select(style, &props);
             }
         }
         if let Some(widget_style) = widget_style.style.as_ref() {
-            style = widget_style.clone().merge(style.clone());
+            style = widget_style.clone().box_merge(style.clone());
         }
         if let Some(ref selector) = widget_style.selector {
             style = selector.select(style, &props);
@@ -122,12 +122,12 @@ impl Theme {
 
     pub fn get_modifier_style(&self, style: Box<ModifierComponentStyle>, type_id: TypeId, class: Option<String>) -> Box<ModifierComponentStyle> {
         let style = if let Some(type_style) = self.modifier_type_styles.get(&type_id) {
-            style.merge(type_style.clone())
+            style.box_merge(type_style.clone())
         } else {
             style
         };
         if let Some(class_style) = class.and_then(|class| self.modifier_class_styles.get(&(type_id, class))) {
-            style.merge(class_style.clone())
+            style.box_merge(class_style.clone())
         } else {
             style
         }
@@ -140,24 +140,27 @@ trait Selector {
 impl Selector for LinkedHashMap<PropSet, Box<DrawComponentStyle>> {
     fn select(&self, mut style: Box<DrawComponentStyle>, props: &PropSet) -> Box<DrawComponentStyle> {
         if self.contains_key(&props) {
-            style = self.get(&props).unwrap().clone().merge(style.clone());
+            style = self.get(&props).unwrap().clone().box_merge(style.clone());
         } else {
             if let Some(new_style) = self.iter().find(|&(matcher_props, _)| {
                 matcher_props.is_subset(&props)
             }).map(|(_, val)| val) {
-                style = new_style.clone().merge(style.clone());
+                style = new_style.clone().box_merge(style.clone());
             }
         }
         style
     }
 }
 
+/// A type that implements Component is any type that can have values stored in and retrieved from the Theme
 pub trait Component: Clone {
     fn name() -> String;
 }
 
+/// ComponentStyle corresponds to the style type for a given Component, or the set of optional values that can be merged
+/// with other ComponentStyles, from the theme, for instance, to produce a Component
 pub trait ComponentStyle: Clone + 'static {
-    type Component: Sized;
+    type Component: Component + Sized;
     fn merge(&self, other: &Self) -> Self;
     fn component(self) -> Self::Component;
 }
@@ -176,65 +179,44 @@ impl <T: Component + 'static> ComponentStyle for T {
     }
 }
 
-pub trait DrawComponentStyle: Debug + Send {
-    fn merge(self: Box<Self>, lower: Box<DrawComponentStyle>) -> Box<DrawComponentStyle>;
-    fn wrapper(self: Box<Self>) -> Box<Draw>;
-    fn box_clone(&self) -> Box<DrawComponentStyle>;
-    fn as_any(&self) -> &Any;
-}
 
-impl Clone for Box<DrawComponentStyle> {
-    fn clone(&self) -> Self {
-        self.box_clone()
-    }
-}
-
-impl <T: Draw + Component + 'static, C: ComponentStyle<Component = T> + Debug + Send> DrawComponentStyle for C {
-    fn merge(self: Box<Self>, lower: Box<DrawComponentStyle>) -> Box<DrawComponentStyle> {
-        let upper = self.as_any().downcast_ref::<C>().unwrap();
-        let lower = lower.as_any().downcast_ref::<C>().unwrap();
-        Box::new(upper.merge(lower))
-    }
-    fn wrapper(self: Box<Self>) -> Box<Draw> {
-        Box::new(self.component())
-    }
-    fn box_clone(&self) -> Box<DrawComponentStyle> {
-        Box::new((*self).clone())
-    }
-    fn as_any(&self) -> &Any {
-        self
-    }
-}
-
-pub trait ModifierComponentStyle: Debug + Send {
-    fn merge(self: Box<Self>, lower: Box<ModifierComponentStyle>) -> Box<ModifierComponentStyle>;
-    fn comp(self: Box<Self>) -> Box<WidgetModifier>;
-    fn box_clone(&self) -> Box<ModifierComponentStyle>;
-    fn as_any(&self) -> &Any;
-}
-
-impl Clone for Box<ModifierComponentStyle> {
-    fn clone(&self) -> Self {
-        self.box_clone()
+/// Internal macro to create a wrapper trait for styles for a given trait, allows creating boxed trait objects that are both `ComponentStyle` and the given wrapped trait
+/// I think this can be removed if https://github.com/rust-lang/rfcs/issues/2035 is implemented
+macro_rules! component_style_wrapper {
+    ( $wrapped_trait:ident, $wrapper_trait:ident ) => {
+        pub trait $wrapper_trait: Debug + Send {
+            fn box_merge(self: Box<Self>, lower: Box<$wrapper_trait>) -> Box<$wrapper_trait>;
+            fn box_component(self: Box<Self>) -> Box<$wrapped_trait>;
+            fn box_clone(&self) -> Box<$wrapper_trait>;
+            fn as_any(&self) -> &Any;
+        }
+        impl Clone for Box<$wrapper_trait> {
+            fn clone(&self) -> Self {
+                self.box_clone()
+            }
+        }
+        impl <T: $wrapped_trait + Component + 'static, C: ComponentStyle<Component = T> + Debug + Send> $wrapper_trait for C {
+            fn box_merge(self: Box<Self>, lower: Box<$wrapper_trait>) -> Box<$wrapper_trait> {
+                let upper = self.as_any().downcast_ref::<C>().unwrap();
+                let lower = lower.as_any().downcast_ref::<C>().unwrap();
+                Box::new(upper.merge(lower))
+            }
+            fn box_component(self: Box<Self>) -> Box<$wrapped_trait> {
+                Box::new(self.component())
+            }
+            fn box_clone(&self) -> Box<$wrapper_trait> {
+                Box::new((*self).clone())
+            }
+            fn as_any(&self) -> &Any {
+                self
+            }
+        }
     }
 }
 
-impl <T: WidgetModifier + Component + 'static, C: ComponentStyle<Component = T> + Debug + Send> ModifierComponentStyle for C {
-    fn merge(self: Box<Self>, lower: Box<ModifierComponentStyle>) -> Box<ModifierComponentStyle> {
-        let upper = self.as_any().downcast_ref::<C>().unwrap();
-        let lower = lower.as_any().downcast_ref::<C>().unwrap();
-        Box::new(upper.merge(lower))
-    }
-    fn comp(self: Box<Self>) -> Box<WidgetModifier> {
-        Box::new(self.component())
-    }
-    fn box_clone(&self) -> Box<ModifierComponentStyle> {
-        Box::new((*self).clone())
-    }
-    fn as_any(&self) -> &Any {
-        self
-    }
-}
+component_style_wrapper!(Draw, DrawComponentStyle);
+component_style_wrapper!(WidgetModifier, ModifierComponentStyle);
+
 
 #[derive(Debug)]
 pub struct DrawStyle {
@@ -272,9 +254,10 @@ impl DrawStyle {
         res.theme.get_style(self, props)
     }
     pub fn merge(&mut self, other: DrawStyle) {
+        // todo: clean up
         if let Some(other_style) = other.style {
             if let Some(style) = self.style.clone() {
-                self.style = Some(other_style.merge(style));
+                self.style = Some(other_style.box_merge(style));
             } else {
                 self.style = Some(other_style);
             }
@@ -287,7 +270,7 @@ impl DrawStyle {
             for entry in other_selector.entries() {
                 if selector.contains_key(entry.key()) {
                     let style = selector.get(entry.key()).unwrap().clone();
-                    selector.insert(entry.key().clone(), style.merge(entry.get().clone()));
+                    selector.insert(entry.key().clone(), style.box_merge(entry.get().clone()));
                 } else {
                     selector.insert(entry.key().clone(), entry.get().clone());
                 }
@@ -327,7 +310,7 @@ impl DrawState {
 
     pub fn update(&mut self, props: PropSet) {
         if let Some(style) = self.style.as_ref() {
-            self.state = Some(style.resolve(props).wrapper());
+            self.state = Some(style.resolve(props).box_component());
             self.style_updated = false;
         }
     }
