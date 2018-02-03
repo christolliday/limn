@@ -124,11 +124,10 @@ impl ImageLoader {
 fn prepare_image(image: DynamicImage) -> Result<(ImageData, ImageDescriptor), Error> {
     let image_dims = image.dimensions();
     let format = match image {
-        image::ImageLuma8(_) => ImageFormat::A8,
-        image::ImageRgb8(_) => ImageFormat::RGB8,
+        image::ImageLuma8(_) => ImageFormat::R8,
         image::ImageRgba8(_) => ImageFormat::BGRA8,
-        image::ImageLumaA8(_) => {
-            return Err(ImageError::UnsupportedError("ImageLumaA8 unsupported".to_string()).into());
+        _ => {
+            return Err(ImageError::UnsupportedError("ImageFormat unsupported".to_string()).into());
         }
     };
     let mut bytes = image.raw_pixels();
@@ -153,9 +152,8 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
             }
             is_opaque
         }
-        ImageFormat::RGB8 | ImageFormat::RG8 => true,
-        ImageFormat::A8 => false,
-        ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
+        ImageFormat::R8 => true,
+        _ => unreachable!(),
     }
 }
 

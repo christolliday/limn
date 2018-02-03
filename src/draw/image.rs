@@ -44,6 +44,7 @@ impl Draw for ImageState {
             bounds.size,
             LayoutSize::zero(),
             ImageRendering::Auto,
+            AlphaType::Alpha,
             key,
         );
     }

@@ -305,7 +305,7 @@ impl Widget {
 
     fn draw_widget(&mut self, crop_to: Rect, renderer: &mut RenderBuilder) {
         let bounds = self.bounds();
-        let clip_id = renderer.builder.define_clip(None, bounds, vec![], None);
+        let clip_id = renderer.builder.define_clip(bounds, vec![], None);
         renderer.builder.push_clip_id(clip_id);
         for (_, modifier) in &self.widget().draw_modifiers {
             modifier.push(renderer);
