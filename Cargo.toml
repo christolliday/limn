@@ -25,7 +25,7 @@ webrender = { git = "https://github.com/servo/webrender", rev = "bcdcd6aa7794e14
 stb_truetype = "0.2.1"
 app_units = "0.5"
 rusttype = "0.2.1"
-glutin = { git = "https://github.com/christolliday/glutin", branch = "new_winit" }
+glutin = "0.12.0"
 image = "0.16"
 
 lazy_static = "0.2.2"
