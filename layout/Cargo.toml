@@ -11,7 +11,7 @@ homepage = "https://github.com/christolliday/limn"
 
 [dependencies]
 cassowary = "0.3.0"
-euclid = "0.15.1"
+euclid = "0.16"
 log = "0.3"
 lazy_static = "0.2.2"
 

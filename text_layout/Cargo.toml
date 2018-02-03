@@ -11,4 +11,4 @@ homepage = "https://github.com/christolliday/limn"
 
 [dependencies]
 rusttype = "0.2.1"
-euclid = "0.15.1"
+euclid = "0.16"

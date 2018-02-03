@@ -24,9 +24,9 @@ impl GLCanvasState {
         let data = ExternalImageData {
             id: ExternalImageId(texture_id),
             channel_index: 0,
-            image_type: ExternalImageType::Texture2DHandle,
+            image_type: ExternalImageType::TextureHandle(TextureTarget::Default),
         };
-        let descriptor = ImageDescriptor::new(0, 0, ImageFormat::RGB8, true);
+        let descriptor = ImageDescriptor::new(0, 0, ImageFormat::BGRA8, true);
         let image_info = resources().image_loader.create_image_resource(ImageData::External(data), descriptor);
         GLCanvasState {
             data: data,
@@ -45,7 +45,7 @@ impl Draw for GLCanvasState {
         let descriptor = self.image_info.descriptor;
         let (bounds_width, bounds_height) = (bounds.width() as u32, bounds.height() as u32);
         if bounds_width != descriptor.width || bounds_height != descriptor.height {
-            let descriptor = ImageDescriptor::new(bounds_width, bounds_height, ImageFormat::RGB8, true);
+            let descriptor = ImageDescriptor::new(bounds_width, bounds_height, ImageFormat::BGRA8, true);
             resources().image_loader.update_texture(self.image_info.key, descriptor, self.data);
             self.image_info.descriptor = descriptor;
         }
@@ -54,6 +54,7 @@ impl Draw for GLCanvasState {
             bounds.size,
             LayoutSize::zero(),
             ImageRendering::Auto,
+            AlphaType::Alpha,
             self.image_info.key,
         );
     }

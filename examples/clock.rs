@@ -16,7 +16,7 @@ use limn::webrender::api::*;
 use limn::prelude::*;
 use limn::draw::ellipse::EllipseState;
 
-type Radians = euclid::Radians<f32>;
+type Angle = euclid::Angle<f32>;
 
 struct ClockTick;
 
@@ -25,7 +25,7 @@ pub struct ClockHand {
     color: Color,
     width: f32,
     length: f32,
-    rotation: Radians,
+    rotation: Angle,
 }
 
 impl Default for ClockHand {
@@ -34,7 +34,7 @@ impl Default for ClockHand {
             color: BLACK,
             width: 0.0,
             length: 0.0,
-            rotation: Radians::new(0.0),
+            rotation: Angle::radians(0.0),
         }
     }
 }
@@ -46,7 +46,7 @@ impl Component for ClockHand {
 }
 
 impl ClockHand {
-    pub fn new(color: Color, width: f32, length: f32, rotation: Radians) -> Self {
+    pub fn new(color: Color, width: f32, length: f32, rotation: Angle) -> Self {
         ClockHand {
             color: color,
             width: width,
@@ -59,7 +59,7 @@ impl ClockHand {
 impl Draw for ClockHand {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let transform = rotation_transform(&bounds.center(),
-            self.rotation + Radians::new(f32::consts::PI));
+            self.rotation + Angle::radians(f32::consts::PI));
         renderer.builder.push_stacking_context(
             &PrimitiveInfo::new(Rect::zero()),
             ScrollPolicy::Fixed,
@@ -80,15 +80,15 @@ impl Draw for ClockHand {
     }
 }
 
-fn rotation_transform(origin: &LayoutPoint, rotation: Radians) -> LayoutTransform {
+fn rotation_transform(origin: &LayoutPoint, rotation: Angle) -> LayoutTransform {
     let pre_transform = LayoutTransform::create_translation(origin.x, origin.y, 0.0);
     let post_transform = LayoutTransform::create_translation(-origin.x, -origin.y, -0.0);
     let transform = LayoutTransform::identity().pre_rotate(0.0, 0.0, 1.0, -rotation);
     pre_transform.pre_mul(&transform).pre_mul(&post_transform)
 }
 
-fn rotation(fraction: f32) -> Radians {
-    Radians::new(2.0 * f32::consts::PI * fraction)
+fn rotation(fraction: f32) -> Angle {
+    Angle::radians(2.0 * f32::consts::PI * fraction)
 }
 
 struct ClockBuilder {

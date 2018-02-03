@@ -62,7 +62,10 @@ impl WebRenderContext {
         let root_background_color = ColorF::new(0.8, 0.8, 0.8, 1.0);
 
         let pipeline_id = PipelineId(0, 0);
-        api.set_root_pipeline(document_id, pipeline_id);
+        let mut txn = Transaction::new();
+        txn.set_root_pipeline(pipeline_id);
+        api.send_transaction(document_id, txn);
+
         WebRenderContext {
             renderer: renderer,
             render_api: api,
@@ -85,18 +88,21 @@ impl WebRenderContext {
         }
     }
     pub fn set_display_list(&mut self, builder: DisplayListBuilder, resources: ResourceUpdates, window_size: LayoutSize) {
-        self.render_api.set_display_list(
-            self.document_id,
+        let mut txn = Transaction::new();
+        txn.set_display_list(
             self.epoch,
             Some(self.root_background_color),
             window_size,
             builder.finalize(),
             true,
-            resources
         );
+        txn.update_resources(resources);
+        self.render_api.send_transaction(self.document_id, txn);
     }
     pub fn generate_frame(&mut self) {
-        self.render_api.generate_frame(self.document_id, None);
+        let mut txn = Transaction::new();
+        txn.generate_frame();
+        self.render_api.send_transaction(self.document_id, txn);
     }
     pub fn frame_ready(&mut self) -> bool {
         self.frame_ready.load(atomic::Ordering::Acquire)
@@ -169,10 +175,10 @@ impl webrender::ExternalImageHandler for LimnExternalImageHandler {
     fn lock(&mut self, key: ExternalImageId, _channel_index: u8) -> webrender::ExternalImage {
         let descriptor = resources::resources().image_loader.texture_descriptors[&key.0];
         webrender::ExternalImage {
-            u0: 0.0,
-            u1: descriptor.width as f32,
-            v1: 0.0,
-            v0: descriptor.height as f32,
+            uv: TexelRect {
+                uv0: TypedPoint2D::zero(),
+                uv1: TypedPoint2D::<f32, DevicePixel>::new(descriptor.width as f32, descriptor.height as f32),
+            },
             source: webrender::ExternalImageSource::NativeTexture(key.0 as _),
         }
     }
