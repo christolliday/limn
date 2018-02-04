@@ -18,7 +18,6 @@ use limn::draw::rect::{RectStyle};
 use limn::draw::ellipse::{self, EllipseStyle};
 use limn::widgets::edit_text::TextUpdated;
 use limn::widgets::text::StaticTextStyle;
-use limn::widget::draw::OpacityModifier;
 use limn::input::keyboard::KeyboardInput;
 use limn::input::drag::DragEvent;
 
@@ -144,7 +143,7 @@ fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut Widget) -> Widg
     let mut widget = Widget::new("circle");
     widget
         .set_draw_style(draw_style)
-        .add_modifier(OpacityModifier::default())
+        .add_filter(OpacityFilter::default())
         .set_cursor_hit_fn(ellipse::cursor_hit)
         .make_draggable()
         .add_handler(|event: &DragEvent, args: EventArgs| {
@@ -173,8 +172,8 @@ impl EventHandler<CircleEvent> for CircleHandler {
     fn handle(&mut self, event: &CircleEvent, mut args: EventArgs) {
         match *event {
             CircleEvent::Update(center, size, alpha) => {
-                args.widget.update_modifier(|modifier: &mut OpacityModifier| {
-                    modifier.alpha = alpha;
+                args.widget.update_filter(|filter: &mut OpacityFilter| {
+                    filter.alpha = alpha;
                 });
                 let mut layout = args.widget.layout();
                 layout.edit_top().set(center.y - size / 2.0);

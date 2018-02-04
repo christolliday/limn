@@ -12,6 +12,7 @@
 
 pub mod property;
 pub mod draw;
+pub mod filter;
 
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
@@ -34,7 +35,7 @@ use event::Target;
 use layout::UpdateLayout;
 use style::*;
 
-use widget::draw::DrawModifier;
+use widget::filter::Filter;
 
 use self::property::{PropSet, Property};
 use self::draw::*;
@@ -94,8 +95,8 @@ impl Widget {
         self
     }
 
-    pub fn add_modifier<M: DrawModifier + 'static>(&mut self, modifier: M) -> &mut Self {
-        self.widget_mut().draw_modifiers.insert(TypeId::of::<M>(), Box::new(modifier));
+    pub fn add_filter<M: Filter + 'static>(&mut self, filter: M) -> &mut Self {
+        self.widget_mut().filters.insert(TypeId::of::<M>(), Box::new(filter));
         self
     }
 
@@ -204,10 +205,10 @@ impl Widget {
         self.event(StateUpdated);
     }
 
-    pub fn update_modifier<F, T: DrawModifier + 'static>(&mut self, f: F)
+    pub fn update_filter<F, T: Filter + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
-        self.0.borrow_mut().update_modifier(f);
+        self.0.borrow_mut().update_filter(f);
         self.event(StateUpdated);
     }
 
@@ -307,8 +308,8 @@ impl Widget {
         let bounds = self.bounds();
         let clip_id = renderer.builder.define_clip(bounds, vec![], None);
         renderer.builder.push_clip_id(clip_id);
-        for (_, modifier) in &self.widget().draw_modifiers {
-            modifier.push(renderer);
+        for (_, filter) in &self.widget().filters {
+            filter.push(renderer);
         }
         if let Some(draw_state) = self.widget_mut().draw_state.state.as_mut() {
             draw_state.draw(bounds, crop_to, renderer);
@@ -318,8 +319,8 @@ impl Widget {
                 child.draw_widget(crop_to, renderer);
             }
         }
-        for (_, modifier) in &self.widget().draw_modifiers {
-            modifier.pop(renderer);
+        for (_, filter) in &self.widget().filters {
+            filter.pop(renderer);
         }
         renderer.builder.pop_clip_id();
     }
@@ -448,7 +449,7 @@ impl WidgetWeak {
 pub(super) struct WidgetInner {
     id: WidgetId,
     pub(super) draw_state: DrawState,
-    draw_modifiers: HashMap<TypeId, Box<DrawModifier>>,
+    filters: HashMap<TypeId, Box<Filter>>,
     cursor_hit_fn: Option<Box<Fn(Rect, Point) -> bool>>,
     props: PropSet,
     has_updated: bool,
@@ -469,7 +470,7 @@ impl WidgetInner {
         WidgetInner {
             id: id,
             draw_state: DrawState::default(),
-            draw_modifiers: HashMap::new(),
+            filters: HashMap::new(),
             cursor_hit_fn: None,
             props: PropSet::new(),
             layout: Layout::new(id.0, Some(name.clone())),
@@ -492,12 +493,12 @@ impl WidgetInner {
             f(state);
         }
     }
-    fn update_modifier<F, T: DrawModifier + Any + 'static>(&mut self, f: F)
+    fn update_filter<F, T: Filter + Any + 'static>(&mut self, f: F)
         where F: FnOnce(&mut T)
     {
-        if let Some(draw_modifier) = self.draw_modifiers.get_mut(&TypeId::of::<T>()) {
+        if let Some(filter) = self.filters.get_mut(&TypeId::of::<T>()) {
             self.has_updated = true;
-            f(draw_modifier.downcast_mut::<T>().unwrap());
+            f(filter.downcast_mut::<T>().unwrap());
         }
     }
 }
