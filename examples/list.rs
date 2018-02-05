@@ -26,7 +26,7 @@ fn main() {
         let rand = rand::thread_rng().gen_range(1, 6);
         lipsum(rand)
     });
-    list_widget.set_contents(list_data, list::default_text_adapter);
+    list::add_contents_to_list(&mut list_widget, list_data, list::default_text_adapter);
 
     let mut scroll_widget = ScrollContainer::default();
     scroll_widget.add_content(list_widget.clone());

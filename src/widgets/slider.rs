@@ -2,6 +2,7 @@ use std::ops::Range;
 
 use cassowary::strength::*;
 
+use layout::*;
 use layout::constraint::*;
 use layout::LayoutUpdated;
 use input::mouse::ClickEvent;

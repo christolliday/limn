@@ -74,31 +74,16 @@ impl WidgetModifier for List {
     }
 }
 
-impl Widget {
-    pub fn list_item(&mut self, parent_list: &Widget) -> &mut Self {
-        self.add_handler(ListItemHandler::new(parent_list.clone()))
-    }
-
-    pub fn on_item_selected<F>(&mut self, on_item_selected: F) -> &mut Self
-        where F: Fn(EventArgs) + 'static
-    {
-        self.add_handler(move |_: &ItemSelected, args: EventArgs| {
-            on_item_selected(args);
-        });
-        self
-    }
-
-    pub fn set_contents<C, I, F>(&mut self, contents: C, build: F)
-        where C: Iterator<Item=I>,
-              F: Fn(I, &mut Widget) -> Widget,
-    {
-        for item in contents {
-            let mut widget = build(item, self);
-            widget
-                .set_name("list_item")
-                .list_item(&self);
-            self.add_child(widget);
-        }
+pub fn add_contents_to_list<C, I, F>(list: &mut Widget, contents: C, build: F)
+    where C: Iterator<Item=I>,
+          F: Fn(I, &mut Widget) -> Widget,
+{
+    for item in contents {
+        let mut widget = build(item, list);
+        widget
+            .set_name("list_item")
+            .add_handler(ListItemHandler::new(list.clone()));
+        list.add_child(widget);
     }
 }
 
