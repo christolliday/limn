@@ -1,18 +1,6 @@
-use glutin;
-use cassowary::strength::*;
-use cassowary::WeightedRelation::*;
-
-use layout::*;
-use layout::constraint::*;
-use event::{EventArgs, EventHandler};
-use widget::Widget;
+use prelude::*;
+use draw::prelude::*;
 use widgets::slider::{SliderStyle, SliderEvent, SetSliderValue, Orientation};
-use geometry::{Size, Vector, Rect, RectExt};
-use layout::{LayoutUpdated, LAYOUT};
-use input::mouse::WidgetMouseWheel;
-use draw::rect::RectStyle;
-use color::*;
-use style::WidgetModifier;
 
 component_style!{pub struct ScrollContainer<name="scroll", style=ScrollStyle> {
     content: Option<Widget> = None,

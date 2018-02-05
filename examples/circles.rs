@@ -9,18 +9,7 @@ use std::ops::Range;
 
 use limn::glutin;
 use limn::prelude::*;
-
-use limn::input::mouse::WidgetMouseButton;
-use limn::widgets::button::{ButtonStyle, ToggleButtonStyle, ToggleEvent};
-use limn::widgets::slider::{Slider, SetSliderValue, SliderEvent};
-use limn::draw::text::TextStyle;
-use limn::draw::rect::{RectStyle};
-use limn::draw::ellipse::{self, EllipseStyle};
-use limn::widgets::edit_text::TextUpdated;
-use limn::widgets::text::StaticTextStyle;
-use limn::input::keyboard::KeyboardInput;
-use limn::input::drag::DragEvent;
-
+use limn::draw::ellipse::cursor_hit as ellipse_cursor_hit;
 
 fn create_slider_control<F: FnMut(&SliderEvent, EventArgs) + 'static>(title: &str, range: Range<f32>, mut on_slider_event: F) -> Widget {
     let mut widget = Widget::new("slider_container");
@@ -144,7 +133,7 @@ fn create_circle(id: CircleId, circle: &Circle, parent_ref: &mut Widget) -> Widg
     widget
         .set_draw_style(draw_style)
         .add_filter(OpacityFilter::default())
-        .set_cursor_hit_fn(ellipse::cursor_hit)
+        .set_cursor_hit_fn(ellipse_cursor_hit)
         .make_draggable()
         .add_handler(|event: &DragEvent, args: EventArgs| {
             args.widget.event(CircleEvent::Drag(*event));

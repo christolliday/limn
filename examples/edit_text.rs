@@ -6,10 +6,6 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::button::{ToggleButtonStyle, ToggleEvent};
-use limn::widgets::edit_text::EditText;
-use limn::draw::text::TextState;
-
 enum EditTextSettingsEvent {
     Align(Align),
     Wrap(Wrap),

@@ -19,9 +19,6 @@ use euclid::{Vector3D, Transform3D};
 
 use limn::prelude::*;
 
-use limn::widgets::slider::{Slider, SliderEvent};
-use limn::widgets::glcanvas::{GLCanvasBuilder, GLCanvasState};
-
 fn init_framebuffer(gl: &Rc<gl::Gl>) -> (GLuint, GLuint, GLuint) {
     // Make a texture that will be sent to WebRender
     let tex = gl.gen_textures(1)[0];

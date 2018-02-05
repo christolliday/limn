@@ -44,5 +44,11 @@ extern crate limn_core as core;
 
 pub use core::*;
 
-pub mod widgets;
 pub mod draw;
+pub mod widgets;
+
+pub mod prelude {
+    pub use core::prelude::*;
+    pub use draw::prelude::*;
+    pub use widgets::prelude::*;
+}

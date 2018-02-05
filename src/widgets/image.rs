@@ -1,9 +1,5 @@
-use widget::Widget;
-use draw::image::ImageState;
-use layout::constraint::*;
-use resources::image::ImageSource;
-
-use style::*;
+use prelude::*;
+use draw::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Image {

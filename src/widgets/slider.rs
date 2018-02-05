@@ -1,21 +1,7 @@
 use std::ops::Range;
 
-use cassowary::strength::*;
-
-use layout::*;
-use layout::constraint::*;
-use layout::LayoutUpdated;
-use input::mouse::ClickEvent;
-use input::drag::{DragEvent, DragState};
-use event::{EventHandler, EventArgs};
-use widget::Widget;
-use widget::property::Property;
-use draw::rect::RectStyle;
-use draw::ellipse::EllipseStyle;
-use geometry::RectExt;
-use color::*;
-use widget::property::states::*;
-use style::{WidgetModifier, DrawStyle};
+use prelude::*;
+use draw::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Orientation {

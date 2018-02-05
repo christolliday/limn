@@ -1,17 +1,5 @@
-use cassowary::Constraint;
-
-use layout::*;
-use layout::constraint::ConstraintBuilder;
-use layout::constraint::*;
-use widget::{Widget, StyleUpdated};
-use ui::{WidgetAttachedEvent, WidgetDetachedEvent};
-use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
-use draw::rect::RectStyle;
-use draw::text::{TextState, TextStyle};
-use event::{EventHandler, EventArgs};
-use color::*;
-use widget::property::states::*;
-use style::{WidgetModifier, DrawStyle};
+use prelude::*;
+use draw::prelude::*;
 
 const BACKSPACE: char = '\u{8}';
 

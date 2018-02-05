@@ -1,17 +1,6 @@
-use glutin;
-
-use layout::*;
-use layout::constraint::*;
-use event::EventArgs;
-use widget::Widget;
-use widget::property::Property;
-use input::mouse::WidgetMouseButton;
+use prelude::*;
+use draw::prelude::*;
 use widgets::text::StaticTextStyle;
-use draw::rect::RectStyle;
-use draw::text::TextStyle;
-use geometry::Size;
-use style::*;
-use widget::property::states::*;
 
 component_style!{pub struct Button<name="button", style=ButtonStyle> {
     rect: RectStyle = RectStyle::default(),
