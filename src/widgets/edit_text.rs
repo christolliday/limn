@@ -1,5 +1,6 @@
 use cassowary::Constraint;
 
+use layout::*;
 use layout::constraint::ConstraintBuilder;
 use layout::constraint::*;
 use widget::{Widget, StyleUpdated};

@@ -1,5 +1,6 @@
 use glutin;
 
+use layout::*;
 use layout::constraint::*;
 use event::EventArgs;
 use widget::Widget;
@@ -32,7 +33,7 @@ impl WidgetModifier for Button {
         draw_style.set_class("button_rect");
         widget
             .set_draw_style(draw_style)
-            .enable_press()
+            .add_handler(button_press_handler)
             .enable_hover();
         widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
@@ -86,7 +87,7 @@ impl WidgetModifier for ToggleButton {
         draw_style.set_class("button_rect");
         widget
             .set_draw_style(draw_style)
-            .enable_press()
+            .add_handler(button_press_handler)
             .enable_hover();
         widget.layout().add(constraints![
             min_size(Size::new(70.0, 30.0)),
@@ -108,7 +109,7 @@ impl WidgetModifier for ToggleButton {
         }
 
         widget.add_child(button_text_widget);
-        widget.enable_toggle();
+        widget.add_handler(button_toggle_handler);
     }
 }
 
@@ -118,30 +119,25 @@ pub enum ToggleEvent {
     Off,
 }
 
-impl Widget {
-    fn enable_press(&mut self) -> &mut Self {
-        self.add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
-            if !args.widget.props().contains(&Property::Inactive) {
-                let &WidgetMouseButton(state, _) = event;
-                match state {
-                    glutin::ElementState::Pressed => args.widget.add_prop(Property::Pressed),
-                    glutin::ElementState::Released => args.widget.remove_prop(Property::Pressed),
-                }
-            }
-        })
+fn button_press_handler(event: &WidgetMouseButton, mut args: EventArgs) {
+    if !args.widget.props().contains(&Property::Inactive) {
+        let &WidgetMouseButton(state, _) = event;
+        match state {
+            glutin::ElementState::Pressed => args.widget.add_prop(Property::Pressed),
+            glutin::ElementState::Released => args.widget.remove_prop(Property::Pressed),
+        }
     }
-    fn enable_toggle(&mut self) -> &mut Self {
-        self.add_handler(|event: &WidgetMouseButton, mut args: EventArgs| {
-            if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
-                let activated = args.widget.props().contains(&Property::Activated);
-                if activated {
-                    args.widget.event(ToggleEvent::Off);
-                    args.widget.remove_prop(Property::Activated);
-                } else {
-                    args.widget.event(ToggleEvent::On);
-                    args.widget.add_prop(Property::Activated);
-                }
-            }
-        })
+}
+
+fn button_toggle_handler(event: &WidgetMouseButton, mut args: EventArgs) {
+    if let WidgetMouseButton(glutin::ElementState::Released, _) = *event {
+        let activated = args.widget.props().contains(&Property::Activated);
+        if activated {
+            args.widget.event(ToggleEvent::Off);
+            args.widget.remove_prop(Property::Activated);
+        } else {
+            args.widget.event(ToggleEvent::On);
+            args.widget.add_prop(Property::Activated);
+        }
     }
 }

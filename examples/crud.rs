@@ -10,7 +10,7 @@ use limn::prelude::*;
 
 use limn::widgets::button::ButtonStyle;
 use limn::widgets::edit_text::{EditText, TextUpdated};
-use limn::widgets::list::{List, ListItemSelected};
+use limn::widgets::list::{List, ListItemSelected, ItemSelected, ListItemHandler};
 use limn::widgets::scroll::ScrollContainer;
 use limn::widgets::text::StaticTextStyle;
 use limn::draw::text::TextStyle;
@@ -103,8 +103,8 @@ impl PeopleHandler {
             let mut list_item_widget = Widget::new("list_item");
             list_item_widget
                 .set_draw_style(DrawStyle::from_class::<RectStyle>("list_item_rect"))
-                .list_item(&self.widgets.list_widget)
-                .on_item_selected(move |args| {
+                .add_handler(ListItemHandler::new(self.widgets.list_widget.clone()))
+                .add_handler(move |_: &ItemSelected, args: EventArgs| {
                     args.ui.event(PeopleEvent::PersonSelected(Some(id)));
                 })
                 .enable_hover();

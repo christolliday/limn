@@ -2,6 +2,7 @@ use glutin;
 use cassowary::strength::*;
 use cassowary::WeightedRelation::*;
 
+use layout::*;
 use layout::constraint::*;
 use event::{EventArgs, EventHandler};
 use widget::Widget;
