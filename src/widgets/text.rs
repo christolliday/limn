@@ -1,11 +1,5 @@
-use cassowary::Constraint;
-
-use widget::{Widget, StateUpdated, StyleUpdated};
-use draw::text::{TextState, TextStyle};
-use event::{EventHandler, EventArgs};
-use layout::constraint::*;
-use geometry::Size;
-use style::WidgetModifier;
+use prelude::*;
+use draw::prelude::*;
 use widgets::edit_text::TextUpdated;
 
 component_style!{pub struct StaticText<name="static_text", style=StaticTextStyle> {

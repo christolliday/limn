@@ -8,14 +8,6 @@ use std::collections::HashMap;
 
 use limn::prelude::*;
 
-use limn::widgets::button::ButtonStyle;
-use limn::widgets::edit_text::{EditText, TextUpdated};
-use limn::widgets::list::{List, ListItemSelected, ItemSelected, ListItemHandler};
-use limn::widgets::scroll::ScrollContainer;
-use limn::widgets::text::StaticTextStyle;
-use limn::draw::text::TextStyle;
-use limn::draw::rect::{RectState, RectStyle};
-
 named_id!(PersonId);
 
 #[derive(Clone, Debug)]

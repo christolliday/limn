@@ -5,7 +5,6 @@ extern crate limn;
 mod util;
 
 use limn::prelude::*;
-use limn::widgets::image::Image;
 
 fn main() {
     let window_builder = glutin::WindowBuilder::new()

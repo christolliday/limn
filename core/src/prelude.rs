@@ -1,5 +1,6 @@
 //! Re-exports of common crate-internal functions / structs
 
+pub use cassowary::Constraint;
 pub use cassowary::strength::*;
 pub use cassowary::WeightedRelation::*;
 
@@ -8,7 +9,7 @@ pub use glutin;
 pub use geometry::{Point, Rect, RectExt, Size, SizeExt, Vector};
 pub use event::{EventHandler, EventArgs};
 pub use event::event_global;
-pub use widget::{Widget, StyleUpdated};
+pub use widget::{Widget, StateUpdated, StyleUpdated};
 pub use widget::draw::{Draw, DrawEventHandler};
 pub use widget::property::Property;
 pub use widget::property::states::*;
@@ -33,7 +34,7 @@ pub use text_layout::{Align, Wrap};
 
 pub use input::mouse::{ClickEvent, WidgetMouseButton, WidgetMouseWheel};
 pub use input::drag::{DragEvent, DragState};
-pub use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent};
+pub use input::keyboard::{WidgetReceivedCharacter, KeyboardInputEvent, KeyboardInput};
 
 // Re-export macros
 pub use maplit::*;

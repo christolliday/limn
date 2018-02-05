@@ -6,9 +6,6 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::scroll::ScrollContainer;
-use limn::draw::rect::RectStyle;
-
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
         .with_title("Limn scroll demo")

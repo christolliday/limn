@@ -10,9 +10,7 @@ use rand::Rng;
 mod util;
 
 use limn::prelude::*;
-
-use limn::widgets::list::{self, List};
-use limn::widgets::scroll::ScrollContainer;
+use limn::widgets::list;
 
 fn main() {
     let window_builder = glutin::WindowBuilder::new()

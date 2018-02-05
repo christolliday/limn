@@ -6,10 +6,6 @@ mod util;
 
 use limn::prelude::*;
 
-use limn::widgets::text::StaticTextStyle;
-use limn::widgets::button::ButtonStyle;
-use limn::draw::text::TextState;
-
 struct CountEvent;
 
 fn main() {
