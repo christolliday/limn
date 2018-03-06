@@ -89,6 +89,7 @@ impl App {
         // the window size to the initial layout size
         self.handle_events();
         self.ui.resize_window_to_fit();
+        self.ui.window.borrow_mut().show();
         self.window_initialized = true;
         loop {
             if !self.ui.needs_redraw() && !self.ui.render.frame_ready() {
