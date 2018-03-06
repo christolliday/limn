@@ -18,6 +18,7 @@ impl Window {
             });
 
         let window = glutin::GlWindow::new(window_builder, context, events_loop).unwrap();
+        window.hide();
         unsafe { window.make_current().ok() };
         Window {
             window: window
@@ -49,5 +50,8 @@ impl Window {
         let (width, height) = self.window.get_inner_size().unwrap();
         let hidpi = self.hidpi_factor();
         Size::new(width as f32 / hidpi, height as f32 / hidpi)
+    }
+    pub fn show(&self) {
+        self.window.show()
     }
 }
