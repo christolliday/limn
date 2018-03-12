@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Resources` struct in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Resources">
+
+    <title>limn_core::resources::Resources - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct Resources</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#fields">Fields</a><div class="sidebar-links"><a href="#structfield.font_loader">font_loader</a><a href="#structfield.image_loader">image_loader</a><a href="#structfield.widget_id">widget_id</a><a href="#structfield.theme">theme</a></div><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.new">new</a><a href="#method.widget_id">widget_id</a></div><a class="sidebar-title" href="#implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Default">Default</a></div></div><p class='location'><a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>resources</a></p><script>window.sidebarCurrent = {name: 'Resources', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>resources</a>::<wbr><a class="struct" href=''>Resources</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_core/resources/mod.rs.html#65-70' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Resources {
+    pub font_loader: <a class="struct" href="../../limn_core/resources/font/struct.FontLoader.html" title="struct limn_core::resources::font::FontLoader">FontLoader</a>,
+    pub image_loader: <a class="struct" href="../../limn_core/resources/image/struct.ImageLoader.html" title="struct limn_core::resources::image::ImageLoader">ImageLoader</a>,
+    pub widget_id: <a class="struct" href="../../limn_core/resources/id/struct.IdGen.html" title="struct limn_core::resources::id::IdGen">IdGen</a>&lt;<a class="struct" href="../../limn_core/resources/struct.WidgetId.html" title="struct limn_core::resources::WidgetId">WidgetId</a>&gt;,
+    pub theme: <a class="struct" href="../../limn_core/style/struct.Theme.html" title="struct limn_core::style::Theme">Theme</a>,
+}</pre><h2 id='fields' class='fields small-section-header'>
+                       Fields<a href='#fields' class='anchor'></a></h2><span id="structfield.font_loader" class="structfield small-section-header">
+                           <a href="#structfield.font_loader" class="anchor field"></a>
+                           <span id="font_loader.v" class='invisible'>
+                           <code>font_loader: <a class="struct" href="../../limn_core/resources/font/struct.FontLoader.html" title="struct limn_core::resources::font::FontLoader">FontLoader</a></code>
+                           </span></span><span id="structfield.image_loader" class="structfield small-section-header">
+                           <a href="#structfield.image_loader" class="anchor field"></a>
+                           <span id="image_loader.v" class='invisible'>
+                           <code>image_loader: <a class="struct" href="../../limn_core/resources/image/struct.ImageLoader.html" title="struct limn_core::resources::image::ImageLoader">ImageLoader</a></code>
+                           </span></span><span id="structfield.widget_id" class="structfield small-section-header">
+                           <a href="#structfield.widget_id" class="anchor field"></a>
+                           <span id="widget_id.v" class='invisible'>
+                           <code>widget_id: <a class="struct" href="../../limn_core/resources/id/struct.IdGen.html" title="struct limn_core::resources::id::IdGen">IdGen</a>&lt;<a class="struct" href="../../limn_core/resources/struct.WidgetId.html" title="struct limn_core::resources::WidgetId">WidgetId</a>&gt;</code>
+                           </span></span><span id="structfield.theme" class="structfield small-section-header">
+                           <a href="#structfield.theme" class="anchor field"></a>
+                           <span id="theme.v" class='invisible'>
+                           <code>theme: <a class="struct" href="../../limn_core/style/struct.Theme.html" title="struct limn_core::style::Theme">Theme</a></code>
+                           </span></span>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/resources/struct.Resources.html" title="struct limn_core::resources::Resources">Resources</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/resources/mod.rs.html#83-97' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class="method"><span id='new.v' class='invisible'><code>pub fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/resources/mod.rs.html#85-87' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Creates a new <code>Resources</code> struct, same as calling <code>default()</code></p>
+</div><h4 id='method.widget_id' class="method"><span id='widget_id.v-1' class='invisible'><code>pub fn <a href='#method.widget_id' class='fnname'>widget_id</a>(&amp;mut self) -&gt; <a class="struct" href="../../limn_core/resources/struct.WidgetId.html" title="struct limn_core::resources::WidgetId">WidgetId</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/resources/mod.rs.html#89-91' title='goto source code'>[src]</a></span></h4>
+</div>
+            <h2 id='implementations' class='small-section-header'>
+              Trait Implementations<a href='#implementations' class='anchor'></a>
+            </h2>
+        <h3 id='impl-Default' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html" title="trait core::default::Default">Default</a> for <a class="struct" href="../../limn_core/resources/struct.Resources.html" title="struct limn_core::resources::Resources">Resources</a></code><a href='#impl-Default' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/resources/mod.rs.html#72-81' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.default' class="method"><span id='default.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default' class='fnname'>default</a>() -&gt; Self</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/resources/mod.rs.html#73-80' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Returns the &quot;default value&quot; for a type. <a href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

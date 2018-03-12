@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `event` mod in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, event">
+
+    <title>limn_core::event - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Module event</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'><a href='../index.html'>limn_core</a></p><script>window.sidebarCurrent = {name: 'event', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>limn_core</a>::<wbr><a class="mod" href=''>event</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_core/event.rs.html#1-287' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Contains types relevant to event handling and the event queue.</p>
+
+<p>The event system in limn is based on asynchronous message passing between the event handlers contained in widgets.
+By creating types implementing <code>EventHandler</code> you can define reusable behaviour that can be applied to any widget,
+or any application.</p>
+
+<p>Handlers can be added to a widget using <code>Widget::add_handler</code>, or to the root widget using <code>Ui::add_handler</code>.
+Typically handlers in the root widget are used to interface with the outside world or manage application global
+state. Input events are always sent to the root widget first, which has handlers that can redirect them to the
+appropriate widgets, the widget under the mouse, or the widget that has keyboard focus, for example.</p>
+
+<p>There are different ways events can be dispatched:</p>
+
+<ul>
+<li><p><code>Widget::event</code></p>
+
+<p>send an event to a single widget.</p></li>
+<li><p><code>Widget::event_subtree</code></p>
+
+<p>send an event to a widget and recursively send it to all it&#39;s children.</p></li>
+<li><p><code>Widget::event_bubble_up</code></p>
+
+<p>send an event to a widget, then send it to the widgets parent either until you
+reach the root or some widget marks it as handled.</p></li>
+<li><p><code>Ui::event</code></p>
+
+<p>send an event to the root widget. This is purely a convenience method, which removes the need to pass references to
+the root around, since <code>Ui</code> is available as an argument to every handle method.</p></li>
+</ul>
+
+<p>Currently, <code>limn</code> handles all widget events on a single thread, the UI thread, which is the only thread that can modify
+UI state. This means to keep your app responsive, any event handler that needs to block or do long running work must do
+it on another thread, either by spawning or notifying a thread, which can then send an event back to the UI when it&#39;s
+ready. The <code>event_global</code> helper method makes this easier, it is equivalent to <code>Ui::event</code> but requires the event be
+<code>Send</code> and can be called from any thread, without a reference to the <code>Ui</code>. <code>Widget</code> and any other types that can
+modify the UI are not thread safe, so can&#39;t currently be referenced from other threads, so if any specific widgets need
+to be notified from another thread, it&#39;s necessary to add a handler to the root widget to forward events.</p>
+
+<p>For further explanation of the single threaded event architecture see
+<a href="https://github.com/christolliday/limn/pull/20#discussion_r145373568">https://github.com/christolliday/limn/pull/20#discussion_r145373568</a></p>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.EventArgs.html"
+                                  title='struct limn_core::event::EventArgs'>EventArgs</a></td>
+                           <td class='docblock-short'>
+                                <p>Context passed to a <code>EventHandler</code>, provides access to the widget
+that holds it, the <code>Ui</code>, and a flag to notify the dispatcher that
+the event has been handled (in the case the event is bubbling up)</p>
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.EventHandler.html"
+                                  title='trait limn_core::event::EventHandler'>EventHandler</a></td>
+                           <td class='docblock-short'>
+                                <p>Used to create a stateful event handler for widgets.</p>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.event_global.html"
+                                  title='fn limn_core::event::event_global'>event_global</a></td>
+                           <td class='docblock-short'>
+                                <p>Send message to UI from any thread.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

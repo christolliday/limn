@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Align","The orientation of Alignment along some Axis."]],"struct":[["Range",""]],"trait":[["RectExt",""]],"type":[["Point",""],["Rect",""],["Size",""],["Vector",""]]});

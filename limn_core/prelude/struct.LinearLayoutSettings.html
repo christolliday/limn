@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `LinearLayoutSettings` struct in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, LinearLayoutSettings">
+
+    <title>limn_core::prelude::LinearLayoutSettings - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct LinearLayoutSettings</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#fields">Fields</a><div class="sidebar-links"><a href="#structfield.orientation">orientation</a><a href="#structfield.spacing">spacing</a><a href="#structfield.item_align">item_align</a><a href="#structfield.fill_equal">fill_equal</a><a href="#structfield.padding">padding</a></div><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.new">new</a></div><a class="sidebar-title" href="#implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Debug">Debug</a><a href="#impl-Copy">Copy</a><a href="#impl-Clone">Clone</a></div></div><p class='location'><a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>prelude</a></p><script>window.sidebarCurrent = {name: 'LinearLayoutSettings', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>prelude</a>::<wbr><a class="struct" href=''>LinearLayoutSettings</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#45-56' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct LinearLayoutSettings {
+    pub orientation: <a class="enum" href="../../limn_core/prelude/enum.Orientation.html" title="enum limn_core::prelude::Orientation">Orientation</a>,
+    pub spacing: <a class="enum" href="../../limn_core/prelude/enum.Spacing.html" title="enum limn_core::prelude::Spacing">Spacing</a>,
+    pub item_align: <a class="enum" href="../../limn_core/prelude/enum.ItemAlignment.html" title="enum limn_core::prelude::ItemAlignment">ItemAlignment</a>,
+    pub fill_equal: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>,
+    pub padding: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>,
+}</pre><h2 id='fields' class='fields small-section-header'>
+                       Fields<a href='#fields' class='anchor'></a></h2><span id="structfield.orientation" class="structfield small-section-header">
+                           <a href="#structfield.orientation" class="anchor field"></a>
+                           <span id="orientation.v" class='invisible'>
+                           <code>orientation: <a class="enum" href="../../limn_core/prelude/enum.Orientation.html" title="enum limn_core::prelude::Orientation">Orientation</a></code>
+                           </span></span><div class='docblock'><p>Horizontal or vertical orientation of the current layout</p>
+</div><span id="structfield.spacing" class="structfield small-section-header">
+                           <a href="#structfield.spacing" class="anchor field"></a>
+                           <span id="spacing.v" class='invisible'>
+                           <code>spacing: <a class="enum" href="../../limn_core/prelude/enum.Spacing.html" title="enum limn_core::prelude::Spacing">Spacing</a></code>
+                           </span></span><div class='docblock'><p>Specifies the extra space between elements along the primary axis</p>
+</div><span id="structfield.item_align" class="structfield small-section-header">
+                           <a href="#structfield.item_align" class="anchor field"></a>
+                           <span id="item_align.v" class='invisible'>
+                           <code>item_align: <a class="enum" href="../../limn_core/prelude/enum.ItemAlignment.html" title="enum limn_core::prelude::ItemAlignment">ItemAlignment</a></code>
+                           </span></span><div class='docblock'><p>Specifies alignment of items perpendicular to the primary axis</p>
+</div><span id="structfield.fill_equal" class="structfield small-section-header">
+                           <a href="#structfield.fill_equal" class="anchor field"></a>
+                           <span id="fill_equal.v" class='invisible'>
+                           <code>fill_equal: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code>
+                           </span></span><div class='docblock'><p>Constrain items to have equal size along primary axis, and fill container</p>
+</div><span id="structfield.padding" class="structfield small-section-header">
+                           <a href="#structfield.padding" class="anchor field"></a>
+                           <span id="padding.v" class='invisible'>
+                           <code>padding: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a></code>
+                           </span></span><div class='docblock'><p>Minimum spacing between items</p>
+</div>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/prelude/struct.LinearLayoutSettings.html" title="struct limn_core::prelude::LinearLayoutSettings">LinearLayoutSettings</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#58-71' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class="method"><span id='new.v' class='invisible'><code>pub fn <a href='#method.new' class='fnname'>new</a>(orientation: <a class="enum" href="../../limn_core/prelude/enum.Orientation.html" title="enum limn_core::prelude::Orientation">Orientation</a>) -&gt; <a class="struct" href="../../limn_core/prelude/struct.LinearLayoutSettings.html" title="struct limn_core::prelude::LinearLayoutSettings">LinearLayoutSettings</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#62-70' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Creates a default <code>LinearLayoutSettings</code>, aligned to the
+end of the parent container</p>
+</div></div>
+            <h2 id='implementations' class='small-section-header'>
+              Trait Implementations<a href='#implementations' class='anchor'></a>
+            </h2>
+        <h3 id='impl-Debug' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="struct" href="../../limn_core/prelude/struct.LinearLayoutSettings.html" title="struct limn_core::prelude::LinearLayoutSettings">LinearLayoutSettings</a></code><a href='#impl-Debug' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#44' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class="method"><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class="struct" href="https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html" title="struct core::fmt::Formatter">Formatter</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/core/fmt/struct.Error.html" title="struct core::fmt::Error">Error</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#44' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter. <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt">Read more</a></p>
+</div></div><h3 id='impl-Copy' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html" title="trait core::marker::Copy">Copy</a> for <a class="struct" href="../../limn_core/prelude/struct.LinearLayoutSettings.html" title="struct limn_core::prelude::LinearLayoutSettings">LinearLayoutSettings</a></code><a href='#impl-Copy' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#44' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div><h3 id='impl-Clone' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> for <a class="struct" href="../../limn_core/prelude/struct.LinearLayoutSettings.html" title="struct limn_core::prelude::LinearLayoutSettings">LinearLayoutSettings</a></code><a href='#impl-Clone' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#44' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class="method"><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class="struct" href="../../limn_core/prelude/struct.LinearLayoutSettings.html" title="struct limn_core::prelude::LinearLayoutSettings">LinearLayoutSettings</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/linear_layout.rs.html#44' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class="method"><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>Self)</code></span><span class='out-of-band'><div class='ghost'></div><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/clone.rs.html#112-114' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

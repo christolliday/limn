@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Filter` trait in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Filter">
+
+    <title>limn_core::widget::filter::Filter - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc trait">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Trait Filter</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#required-methods">Required Methods</a><div class="sidebar-links"><a href="#tymethod.push">push</a><a href="#tymethod.pop">pop</a></div><a class="sidebar-title" href="#implementors">Implementors</a><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.is">is</a><a href="#method.downcast_ref">downcast_ref</a><a href="#method.downcast_ref_unchecked">downcast_ref_unchecked</a><a href="#method.downcast_mut">downcast_mut</a><a href="#method.downcast_mut_unchecked">downcast_mut_unchecked</a><a href="#method.downcast">downcast</a><a href="#method.downcast_unchecked">downcast_unchecked</a></div></div><p class='location'><a href='../../index.html'>limn_core</a>::<wbr><a href='../index.html'>widget</a>::<wbr><a href='index.html'>filter</a></p><script>window.sidebarCurrent = {name: 'Filter', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Trait <a href='../../index.html'>limn_core</a>::<wbr><a href='../index.html'>widget</a>::<wbr><a href='index.html'>filter</a>::<wbr><a class="trait" href=''>Filter</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../../src/limn_core/widget/filter.rs.html#7-10' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait Filter: Any {
+    fn <a href='#tymethod.push' class='fnname'>push</a>(&amp;self, renderer: &amp;mut <a class="struct" href="../../../limn_core/render/struct.RenderBuilder.html" title="struct limn_core::render::RenderBuilder">RenderBuilder</a>);
+<div class='item-spacer'></div>    fn <a href='#tymethod.pop' class='fnname'>pop</a>(&amp;self, renderer: &amp;mut <a class="struct" href="../../../limn_core/render/struct.RenderBuilder.html" title="struct limn_core::render::RenderBuilder">RenderBuilder</a>);
+}</pre>
+            <h2 id='required-methods' class='small-section-header'>
+              Required Methods<a href='#required-methods' class='anchor'></a>
+            </h2>
+            <div class='methods'>
+        <h3 id='tymethod.push' class='method'><span id='push.v' class='invisible'><code>fn <a href='#tymethod.push' class='fnname'>push</a>(&amp;self, renderer: &amp;mut <a class="struct" href="../../../limn_core/render/struct.RenderBuilder.html" title="struct limn_core::render::RenderBuilder">RenderBuilder</a>)</code></span></h3><h3 id='tymethod.pop' class='method'><span id='pop.v' class='invisible'><code>fn <a href='#tymethod.pop' class='fnname'>pop</a>(&amp;self, renderer: &amp;mut <a class="struct" href="../../../limn_core/render/struct.RenderBuilder.html" title="struct limn_core::render::RenderBuilder">RenderBuilder</a>)</code></span></h3></div>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.is' class="method"><span id='is.v' class='invisible'><code>pub fn <a href='#method.is' class='fnname'>is</a>&lt;T:&nbsp;<a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a>&gt;(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></span></h4>
+<div class='docblock'><p>Returns true if the boxed type is the same as <code>T</code></p>
+</div><h4 id='method.downcast_ref' class="method"><span id='downcast_ref.v' class='invisible'><code>pub fn <a href='#method.downcast_ref' class='fnname'>downcast_ref</a>&lt;T:&nbsp;<a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a>&gt;(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>T&gt;</code></span></h4>
+<div class='docblock'><p>Returns some reference to the boxed value if it is of type <code>T</code>, or
+<code>None</code> if it isn&#39;t.</p>
+</div><h4 id='method.downcast_ref_unchecked' class="method"><div class="important-traits"><div class='tooltip'>ⓘ<span class='tooltiptext'>Important traits for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I</span></div><div class="content hidden"><h3 class="important">Important traits for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, I&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></span><span class="where fmt-newline">    type <a href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item' class="type">Item</a> = &lt;I as <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a>&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item" title="type core::iter::iterator::Iterator::Item">Item</a>;</span></code></div></div><span id='downcast_ref_unchecked.v' class='invisible'><code>pub unsafe fn <a href='#method.downcast_ref_unchecked' class='fnname'>downcast_ref_unchecked</a>&lt;T:&nbsp;<a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a>&gt;(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>T</code></span></h4>
+<div class='docblock'><p>Returns a reference to the boxed value, blindly assuming it to be of type <code>T</code>.
+If you are not <em>absolutely certain</em> of <code>T</code>, you <em>must not</em> call this.</p>
+</div><h4 id='method.downcast_mut' class="method"><span id='downcast_mut.v' class='invisible'><code>pub fn <a href='#method.downcast_mut' class='fnname'>downcast_mut</a>&lt;T:&nbsp;<a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a>&gt;(&amp;mut self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>T&gt;</code></span></h4>
+<div class='docblock'><p>Returns some mutable reference to the boxed value if it is of type <code>T</code>, or
+<code>None</code> if it isn&#39;t.</p>
+</div><h4 id='method.downcast_mut_unchecked' class="method"><div class="important-traits"><div class='tooltip'>ⓘ<span class='tooltiptext'>Important traits for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I</span></div><div class="content hidden"><h3 class="important">Important traits for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, I&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></span><span class="where fmt-newline">    type <a href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item' class="type">Item</a> = &lt;I as <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a>&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item" title="type core::iter::iterator::Iterator::Item">Item</a>;</span></code></div></div><span id='downcast_mut_unchecked.v' class='invisible'><code>pub unsafe fn <a href='#method.downcast_mut_unchecked' class='fnname'>downcast_mut_unchecked</a>&lt;T:&nbsp;<a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a>&gt;(&amp;mut self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>T</code></span></h4>
+<div class='docblock'><p>Returns a mutable reference to the boxed value, blindly assuming it to be of type <code>T</code>.
+If you are not <em>absolutely certain</em> of <code>T</code>, you <em>must not</em> call this.</p>
+</div></div><h3 id='impl-1' class='impl'><span class='in-band'><code>impl <a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a></code><a href='#impl-1' class='anchor'></a></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.downcast' class="method"><span id='downcast.v' class='invisible'><code>pub fn <a href='#method.downcast' class='fnname'>downcast</a>&lt;T:&nbsp;<a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a>&gt;(self: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;Self&gt;) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;T&gt;, <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;Self&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Returns the boxed value if it is of type <code>T</code>, or <code>Err(Self)</code> if it isn&#39;t.</p>
+</div><h4 id='method.downcast_unchecked' class="method"><div class="important-traits"><div class='tooltip'>ⓘ<span class='tooltiptext'>Important traits for <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;I&gt;</span></div><div class="content hidden"><h3 class="important">Important traits for <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;I&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;I&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> for <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;I&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></span><span class="where fmt-newline">    type <a href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item' class="type">Item</a> = &lt;I as <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a>&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item" title="type core::iter::iterator::Iterator::Item">Item</a>;</span></code></div></div><span id='downcast_unchecked.v' class='invisible'><code>pub unsafe fn <a href='#method.downcast_unchecked' class='fnname'>downcast_unchecked</a>&lt;T:&nbsp;<a class="trait" href="../../../limn_core/widget/filter/trait.Filter.html" title="trait limn_core::widget::filter::Filter">Filter</a>&gt;(self: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;Self&gt;) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;T&gt;</code></span></h4>
+<div class='docblock'><p>Returns the boxed value, blindly assuming it to be of type <code>T</code>.
+If you are not <em>absolutely certain</em> of <code>T</code>, you <em>must not</em> call this.</p>
+</div></div>
+        <h2 id='implementors' class='small-section-header'>
+          Implementors<a href='#implementors' class='anchor'></a>
+        </h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><div class='out-of-band'><a class='srclink' href='../../../src/limn_core/widget/filter.rs.html#26-45' title='goto source code'>[src]</a></div><code>impl Filter for <a class="struct" href="../../../limn_core/widget/filter/struct.OpacityFilter.html" title="struct limn_core::widget::filter::OpacityFilter">OpacityFilter</a></code></li>
+</ul><script type="text/javascript" async
+                         src="../../../implementors/limn_core/widget/filter/trait.Filter.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../../main.js"></script>
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

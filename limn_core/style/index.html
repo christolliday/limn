@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `style` mod in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, style">
+
+    <title>limn_core::style - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Module style</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></div><p class='location'><a href='../index.html'>limn_core</a></p><script>window.sidebarCurrent = {name: 'style', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>limn_core</a>::<wbr><a class="mod" href=''>style</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_core/style.rs.html#1-406' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Contains types relevant to declaring styleable components, and the theming engine which allows styleable components to inherit values from an application theme.</p>
+
+<p>Styleable components are arbitrary structs that can inherit values from a theme by defining a style struct that can be converted into the original struct
+by implementing the trait <code>ComponentStyle</code>.</p>
+
+<p>Currently this can be used for structs that implement <code>Draw</code> and <code>WidgetModifier</code> and so can be used to style both drawable types,
+and complex widgets.</p>
+
+<p>The macro <code>component_style!</code> can be used to simplify defining styleable types:</p>
+
+<pre class="rust rust-example-rendered">
+<span class="macro">component_style</span><span class="macro">!</span>{<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Button</span><span class="op">&lt;</span><span class="ident">name</span><span class="op">=</span><span class="string">&quot;button&quot;</span>, <span class="ident">style</span><span class="op">=</span><span class="ident">ButtonStyle</span><span class="op">&gt;</span> {
+    <span class="ident">color</span>: <span class="ident">Color</span> <span class="op">=</span> <span class="ident">BLUE</span>,
+    <span class="ident">text</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>,
+}}</pre>
+
+<p>This declares two structs:</p>
+
+<pre class="rust rust-example-rendered">
+<span class="kw">struct</span> <span class="ident">Button</span> {
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="ident">text</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+}
+<span class="kw">struct</span> <span class="ident">ButtonStyle</span> {
+    <span class="ident">color</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Color</span><span class="op">&gt;</span>,
+    <span class="ident">text</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;&gt;</span>,
+}</pre>
+
+<p>and implements various traits on them, but most importantly:</p>
+
+<p><code>impl ComponentStyle&lt;Component = Button&gt; for ButtonStyle</code></p>
+
+<p>If you then implement <code>WidgetModifier</code> for <code>Button</code>, you can define how to initialize a button using the <code>rect</code> and <code>text</code> fields.
+Then by passing a <code>ButtonStyle</code> in place of a <code>Button</code> to initialize a widget, you can specify only the fields you want to be
+specific to that widget, with the remaining fields inherited from the theme.</p>
+
+<p>The theme will prioritize which values to use by (currently) simple specificity rules:</p>
+
+<p>-The specific style passed to a widget
+-Styles registered in the theme for named style classes that can be applied to widgets, eg. &quot;alert_button&quot;
+-The base style for the type, ie. <code>ButtonStyle</code>, registered in the theme
+-In values are found no where else, the default values specified in <code>component_style!</code>, in this example, <code>RectStyle::default()</code> and <code>None</code></p>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.DrawState.html"
+                                  title='struct limn_core::style::DrawState'>DrawState</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.DrawStyle.html"
+                                  title='struct limn_core::style::DrawStyle'>DrawStyle</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Theme.html"
+                                  title='struct limn_core::style::Theme'>Theme</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.Component.html"
+                                  title='trait limn_core::style::Component'>Component</a></td>
+                           <td class='docblock-short'>
+                                <p>A type that implements Component is any type that can have values stored in and retrieved from the Theme</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.ComponentStyle.html"
+                                  title='trait limn_core::style::ComponentStyle'>ComponentStyle</a></td>
+                           <td class='docblock-short'>
+                                <p>ComponentStyle corresponds to the style type for a given Component, or the set of optional values that can be merged
+with other ComponentStyles, from the theme, for instance, to produce a Component</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.DrawComponentStyle.html"
+                                  title='trait limn_core::style::DrawComponentStyle'>DrawComponentStyle</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.ModifierComponentStyle.html"
+                                  title='trait limn_core::style::ModifierComponentStyle'>ModifierComponentStyle</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.WidgetModifier.html"
+                                  title='trait limn_core::style::WidgetModifier'>WidgetModifier</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

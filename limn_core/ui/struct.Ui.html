@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Ui` struct in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Ui">
+
+    <title>limn_core::ui::Ui - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct Ui</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#fields">Fields</a><div class="sidebar-links"><a href="#structfield.window">window</a></div><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.get_widget">get_widget</a><a href="#method.get_root">get_root</a><a href="#method.event">event</a><a href="#method.close">close</a><a href="#method.check_layout_changes">check_layout_changes</a><a href="#method.redraw">redraw</a><a href="#method.needs_redraw">needs_redraw</a><a href="#method.widgets_bfs">widgets_bfs</a><a href="#method.widgets_under_cursor">widgets_under_cursor</a><a href="#method.widget_under_cursor">widget_under_cursor</a><a href="#method.set_debug_draw_bounds">set_debug_draw_bounds</a><a href="#method.debug_widget_positions">debug_widget_positions</a><a href="#method.print_widgets">print_widgets</a></div></div><p class='location'><a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>ui</a></p><script>window.sidebarCurrent = {name: 'Ui', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>ui</a>::<wbr><a class="struct" href=''>Ui</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_core/ui.rs.html#29-39' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Ui {
+    pub window: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html" title="struct alloc::rc::Rc">Rc</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html" title="struct core::cell::RefCell">RefCell</a>&lt;<a class="struct" href="../../limn_core/window/struct.Window.html" title="struct limn_core::window::Window">Window</a>&gt;&gt;,
+    // some fields omitted
+}</pre><div class='docblock'><p>The core of a limn application, holds the root of the widget tree and other application global state.
+<code>Ui</code> is accessible to every event handler, so features helper methods that can be accessed at any time.</p>
+</div><h2 id='fields' class='fields small-section-header'>
+                       Fields<a href='#fields' class='anchor'></a></h2><span id="structfield.window" class="structfield small-section-header">
+                           <a href="#structfield.window" class="anchor field"></a>
+                           <span id="window.v" class='invisible'>
+                           <code>window: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html" title="struct alloc::rc::Rc">Rc</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html" title="struct core::cell::RefCell">RefCell</a>&lt;<a class="struct" href="../../limn_core/window/struct.Window.html" title="struct limn_core::window::Window">Window</a>&gt;&gt;</code>
+                           </span></span>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/ui/struct.Ui.html" title="struct limn_core::ui::Ui">Ui</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#41-228' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.get_widget' class="method"><span id='get_widget.v' class='invisible'><code>pub fn <a href='#method.get_widget' class='fnname'>get_widget</a>(&amp;self, widget_id: <a class="struct" href="../../limn_core/resources/struct.WidgetId.html" title="struct limn_core::resources::WidgetId">WidgetId</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#62-64' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.get_root' class="method"><span id='get_root.v' class='invisible'><code>pub fn <a href='#method.get_root' class='fnname'>get_root</a>(&amp;self) -&gt; <a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#66-68' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.event' class="method"><span id='event.v' class='invisible'><code>pub fn <a href='#method.event' class='fnname'>event</a>&lt;T:&nbsp;'static&gt;(&amp;self, data: T)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#70-72' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.close' class="method"><span id='close.v' class='invisible'><code>pub fn <a href='#method.close' class='fnname'>close</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#74-76' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.check_layout_changes' class="method"><span id='check_layout_changes.v' class='invisible'><code>pub fn <a href='#method.check_layout_changes' class='fnname'>check_layout_changes</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#111-118' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.redraw' class="method"><span id='redraw.v' class='invisible'><code>pub fn <a href='#method.redraw' class='fnname'>redraw</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#120-122' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.needs_redraw' class="method"><span id='needs_redraw.v' class='invisible'><code>pub fn <a href='#method.needs_redraw' class='fnname'>needs_redraw</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#124-126' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.widgets_bfs' class="method"><div class="important-traits"><div class='tooltip'>ⓘ<span class='tooltiptext'>Important traits for <a class="struct" href="../../limn_core/ui/struct.WidgetsBfs.html" title="struct limn_core::ui::WidgetsBfs">WidgetsBfs</a></span></div><div class="content hidden"><h3 class="important">Important traits for <a class="struct" href="../../limn_core/ui/struct.WidgetsBfs.html" title="struct limn_core::ui::WidgetsBfs">WidgetsBfs</a></h3><code class="content"><span class="where fmt-newline">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> for <a class="struct" href="../../limn_core/ui/struct.WidgetsBfs.html" title="struct limn_core::ui::WidgetsBfs">WidgetsBfs</a></span><span class="where fmt-newline">    type <a href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item' class="type">Item</a> = <a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a>;</span></code></div></div><span id='widgets_bfs.v' class='invisible'><code>pub fn <a href='#method.widgets_bfs' class='fnname'>widgets_bfs</a>(&amp;self) -&gt; <a class="struct" href="../../limn_core/ui/struct.WidgetsBfs.html" title="struct limn_core::ui::WidgetsBfs">WidgetsBfs</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#154-156' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.widgets_under_cursor' class="method"><div class="important-traits"><div class='tooltip'>ⓘ<span class='tooltiptext'>Important traits for <a class="struct" href="../../limn_core/ui/struct.WidgetsUnderCursor.html" title="struct limn_core::ui::WidgetsUnderCursor">WidgetsUnderCursor</a></span></div><div class="content hidden"><h3 class="important">Important traits for <a class="struct" href="../../limn_core/ui/struct.WidgetsUnderCursor.html" title="struct limn_core::ui::WidgetsUnderCursor">WidgetsUnderCursor</a></h3><code class="content"><span class="where fmt-newline">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> for <a class="struct" href="../../limn_core/ui/struct.WidgetsUnderCursor.html" title="struct limn_core::ui::WidgetsUnderCursor">WidgetsUnderCursor</a></span><span class="where fmt-newline">    type <a href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item' class="type">Item</a> = <a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a>;</span></code></div></div><span id='widgets_under_cursor.v' class='invisible'><code>pub fn <a href='#method.widgets_under_cursor' class='fnname'>widgets_under_cursor</a>(&amp;mut self, point: <a class="type" href="../../limn_core/geometry/type.Point.html" title="type limn_core::geometry::Point">Point</a>) -&gt; <a class="struct" href="../../limn_core/ui/struct.WidgetsUnderCursor.html" title="struct limn_core::ui::WidgetsUnderCursor">WidgetsUnderCursor</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#158-160' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.widget_under_cursor' class="method"><span id='widget_under_cursor.v' class='invisible'><code>pub fn <a href='#method.widget_under_cursor' class='fnname'>widget_under_cursor</a>(&amp;mut self, point: <a class="type" href="../../limn_core/geometry/type.Point.html" title="type limn_core::geometry::Point">Point</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#163-165' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Find the first widget under the cursor, ie. the last to be drawn that is under the cursor</p>
+</div><h4 id='method.set_debug_draw_bounds' class="method"><span id='set_debug_draw_bounds.v' class='invisible'><code>pub fn <a href='#method.set_debug_draw_bounds' class='fnname'>set_debug_draw_bounds</a>(&amp;mut self, debug_draw_bounds: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#208-211' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.debug_widget_positions' class="method"><span id='debug_widget_positions.v' class='invisible'><code>pub fn <a href='#method.debug_widget_positions' class='fnname'>debug_widget_positions</a>(&amp;self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#213-220' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.print_widgets' class="method"><span id='print_widgets.v' class='invisible'><code>pub fn <a href='#method.print_widgets' class='fnname'>print_widgets</a>(&amp;self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#222-227' title='goto source code'>[src]</a></span></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

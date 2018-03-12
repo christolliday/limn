@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `prelude` mod in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, prelude">
+
+    <title>limn_core::prelude - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Module prelude</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#reexports">Reexports</a></li><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div><p class='location'><a href='../index.html'>limn_core</a></p><script>window.sidebarCurrent = {name: 'prelude', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>limn_core</a>::<wbr><a class="mod" href=''>prelude</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_core/prelude.rs.html#1-40' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Re-exports of common crate-internal functions / structs</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use cassowary::strength::*;</code></td></tr><tr><td><code>pub use cassowary::WeightedRelation::*;</code></td></tr><tr><td><code>pub use geometry::<a class="type" href="../../limn_core/geometry/type.Point.html" title="type limn_core::geometry::Point">Point</a>;</code></td></tr><tr><td><code>pub use geometry::<a class="type" href="../../limn_core/geometry/type.Rect.html" title="type limn_core::geometry::Rect">Rect</a>;</code></td></tr><tr><td><code>pub use geometry::<a class="trait" href="../../limn_core/geometry/trait.RectExt.html" title="trait limn_core::geometry::RectExt">RectExt</a>;</code></td></tr><tr><td><code>pub use geometry::<a class="type" href="../../limn_core/geometry/type.Size.html" title="type limn_core::geometry::Size">Size</a>;</code></td></tr><tr><td><code>pub use geometry::<a class="trait" href="../../limn_core/geometry/trait.SizeExt.html" title="trait limn_core::geometry::SizeExt">SizeExt</a>;</code></td></tr><tr><td><code>pub use geometry::<a class="type" href="../../limn_core/geometry/type.Vector.html" title="type limn_core::geometry::Vector">Vector</a>;</code></td></tr><tr><td><code>pub use event::<a class="trait" href="../../limn_core/event/trait.EventHandler.html" title="trait limn_core::event::EventHandler">EventHandler</a>;</code></td></tr><tr><td><code>pub use event::<a class="struct" href="../../limn_core/event/struct.EventArgs.html" title="struct limn_core::event::EventArgs">EventArgs</a>;</code></td></tr><tr><td><code>pub use event::<a class="fn" href="../../limn_core/event/fn.event_global.html" title="fn limn_core::event::event_global">event_global</a>;</code></td></tr><tr><td><code>pub use widget::<a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a>;</code></td></tr><tr><td><code>pub use widget::<a class="struct" href="../../limn_core/widget/struct.StateUpdated.html" title="struct limn_core::widget::StateUpdated">StateUpdated</a>;</code></td></tr><tr><td><code>pub use widget::<a class="struct" href="../../limn_core/widget/struct.StyleUpdated.html" title="struct limn_core::widget::StyleUpdated">StyleUpdated</a>;</code></td></tr><tr><td><code>pub use widget::draw::<a class="trait" href="../../limn_core/widget/draw/trait.Draw.html" title="trait limn_core::widget::draw::Draw">Draw</a>;</code></td></tr><tr><td><code>pub use widget::draw::<a class="struct" href="../../limn_core/widget/draw/struct.DrawEventHandler.html" title="struct limn_core::widget::draw::DrawEventHandler">DrawEventHandler</a>;</code></td></tr><tr><td><code>pub use widget::property::<a class="enum" href="../../limn_core/widget/property/enum.Property.html" title="enum limn_core::widget::property::Property">Property</a>;</code></td></tr><tr><td><code>pub use widget::property::<a class="mod" href="../../limn_core/widget/property/states/index.html" title="mod limn_core::widget::property::states">states</a>::*;</code></td></tr><tr><td><code>pub use widget::filter::<a class="struct" href="../../limn_core/widget/filter/struct.OpacityFilter.html" title="struct limn_core::widget::filter::OpacityFilter">OpacityFilter</a>;</code></td></tr><tr><td><code>pub use style::<a class="trait" href="../../limn_core/style/trait.Component.html" title="trait limn_core::style::Component">Component</a>;</code></td></tr><tr><td><code>pub use style::<a class="struct" href="../../limn_core/style/struct.DrawState.html" title="struct limn_core::style::DrawState">DrawState</a>;</code></td></tr><tr><td><code>pub use style::<a class="struct" href="../../limn_core/style/struct.DrawStyle.html" title="struct limn_core::style::DrawStyle">DrawStyle</a>;</code></td></tr><tr><td><code>pub use style::<a class="trait" href="../../limn_core/style/trait.ComponentStyle.html" title="trait limn_core::style::ComponentStyle">ComponentStyle</a>;</code></td></tr><tr><td><code>pub use style::<a class="trait" href="../../limn_core/style/trait.WidgetModifier.html" title="trait limn_core::style::WidgetModifier">WidgetModifier</a>;</code></td></tr><tr><td><code>pub use render::<a class="struct" href="../../limn_core/render/struct.RenderBuilder.html" title="struct limn_core::render::RenderBuilder">RenderBuilder</a>;</code></td></tr><tr><td><code>pub use resources::<a class="fn" href="../../limn_core/resources/fn.resources.html" title="fn limn_core::resources::resources">resources</a>;</code></td></tr><tr><td><code>pub use resources::<a class="struct" href="../../limn_core/resources/struct.WidgetId.html" title="struct limn_core::resources::WidgetId">WidgetId</a>;</code></td></tr><tr><td><code>pub use resources::id::<a class="trait" href="../../limn_core/resources/id/trait.Id.html" title="trait limn_core::resources::id::Id">Id</a>;</code></td></tr><tr><td><code>pub use resources::id::<a class="struct" href="../../limn_core/resources/id/struct.IdGen.html" title="struct limn_core::resources::id::IdGen">IdGen</a>;</code></td></tr><tr><td><code>pub use resources::image::<a class="enum" href="../../limn_core/resources/image/enum.ImageSource.html" title="enum limn_core::resources::image::ImageSource">ImageSource</a>;</code></td></tr><tr><td><code>pub use ui::<a class="struct" href="../../limn_core/ui/struct.Ui.html" title="struct limn_core::ui::Ui">Ui</a>;</code></td></tr><tr><td><code>pub use ui::<a class="struct" href="../../limn_core/ui/struct.WidgetAttachedEvent.html" title="struct limn_core::ui::WidgetAttachedEvent">WidgetAttachedEvent</a>;</code></td></tr><tr><td><code>pub use ui::<a class="struct" href="../../limn_core/ui/struct.WidgetDetachedEvent.html" title="struct limn_core::ui::WidgetDetachedEvent">WidgetDetachedEvent</a>;</code></td></tr><tr><td><code>pub use app::<a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a>;</code></td></tr><tr><td><code>pub use app::<a class="struct" href="../../limn_core/app/struct.FrameEvent.html" title="struct limn_core::app::FrameEvent">FrameEvent</a>;</code></td></tr><tr><td><code>pub use window::<a class="struct" href="../../limn_core/window/struct.Window.html" title="struct limn_core::window::Window">Window</a>;</code></td></tr><tr><td><code>pub use <a class="mod" href="../../limn_core/color/index.html" title="mod limn_core::color">color</a>::*;</code></td></tr><tr><td><code>pub use <a class="mod" href="../../limn_core/layout/index.html" title="mod limn_core::layout">layout</a>::*;</code></td></tr><tr><td><code>pub use layout::<a class="mod" href="../../limn_layout/constraint/index.html" title="mod limn_layout::constraint">constraint</a>::*;</code></td></tr><tr><td><code>pub use input::mouse::<a class="struct" href="../../limn_core/input/mouse/struct.ClickEvent.html" title="struct limn_core::input::mouse::ClickEvent">ClickEvent</a>;</code></td></tr><tr><td><code>pub use input::mouse::<a class="struct" href="../../limn_core/input/mouse/struct.WidgetMouseButton.html" title="struct limn_core::input::mouse::WidgetMouseButton">WidgetMouseButton</a>;</code></td></tr><tr><td><code>pub use input::mouse::<a class="struct" href="../../limn_core/input/mouse/struct.WidgetMouseWheel.html" title="struct limn_core::input::mouse::WidgetMouseWheel">WidgetMouseWheel</a>;</code></td></tr><tr><td><code>pub use input::drag::<a class="struct" href="../../limn_core/input/drag/struct.DragEvent.html" title="struct limn_core::input::drag::DragEvent">DragEvent</a>;</code></td></tr><tr><td><code>pub use input::drag::<a class="enum" href="../../limn_core/input/drag/enum.DragState.html" title="enum limn_core::input::drag::DragState">DragState</a>;</code></td></tr><tr><td><code>pub use input::keyboard::<a class="struct" href="../../limn_core/input/keyboard/struct.WidgetReceivedCharacter.html" title="struct limn_core::input::keyboard::WidgetReceivedCharacter">WidgetReceivedCharacter</a>;</code></td></tr><tr><td><code>pub use input::keyboard::<a class="enum" href="../../limn_core/input/keyboard/enum.KeyboardInputEvent.html" title="enum limn_core::input::keyboard::KeyboardInputEvent">KeyboardInputEvent</a>;</code></td></tr><tr><td><code>pub use input::keyboard::<a class="struct" href="../../limn_core/input/keyboard/struct.KeyboardInput.html" title="struct limn_core::input::keyboard::KeyboardInput">KeyboardInput</a>;</code></td></tr><tr><td><code>pub use <a class="mod" href="https://docs.rs/maplit/maplit/index.html" title="mod maplit">maplit</a>::*;</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="glutin/index.html"
+                                  title='mod limn_core::prelude::glutin'>glutin</a></td>
+                           <td class='docblock-short'>
+                                <p>The purpose of this library is to provide an OpenGL context on as many platforms as possible.</p>
+                           </td>
+                       </tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.btreemap.html"
+                                  title='macro limn_core::prelude::btreemap'>btreemap</a></td>
+                           <td class='docblock-short'>
+                                <p>Create a <strong>BTreeMap</strong> from a list of key-value pairs</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.btreeset.html"
+                                  title='macro limn_core::prelude::btreeset'>btreeset</a></td>
+                           <td class='docblock-short'>
+                                <p>Create a <strong>BTreeSet</strong> from a list of elements.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.constraints.html"
+                                  title='macro limn_core::prelude::constraints'>constraints</a></td>
+                           <td class='docblock-short'>
+                                <p>Used to specify a list of constraints.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.convert_args.html"
+                                  title='macro limn_core::prelude::convert_args'>convert_args</a></td>
+                           <td class='docblock-short'>
+                                <p>Macro that converts the keys or key-value pairs passed to another maplit
+macro. The default conversion is to use the <a href="https://doc.rust-lang.org/std/convert/trait.Into.html"><code>Into</code></a> trait, if no
+custom conversion is passed.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.hashmap.html"
+                                  title='macro limn_core::prelude::hashmap'>hashmap</a></td>
+                           <td class='docblock-short'>
+                                <p>Create a <strong>HashMap</strong> from a list of key-value pairs</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.hashset.html"
+                                  title='macro limn_core::prelude::hashset'>hashset</a></td>
+                           <td class='docblock-short'>
+                                <p>Create a <strong>HashSet</strong> from a list of elements.</p>
+                           </td>
+                       </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Constraint.html"
+                                  title='struct limn_core::prelude::Constraint'>Constraint</a></td>
+                           <td class='docblock-short'>
+                                <p>A constraint, consisting of an equation governed by an expression and a relational operator,
+and an associated strength.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.LAYOUT.html"
+                                  title='struct limn_core::prelude::LAYOUT'>LAYOUT</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.LinearLayoutSettings.html"
+                                  title='struct limn_core::prelude::LinearLayoutSettings'>LinearLayoutSettings</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Align.html"
+                                  title='enum limn_core::prelude::Align'>Align</a></td>
+                           <td class='docblock-short'>
+                                <p>The orientation of <strong>Align</strong>ment along some <strong>Axis</strong>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.ItemAlignment.html"
+                                  title='enum limn_core::prelude::ItemAlignment'>ItemAlignment</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Orientation.html"
+                                  title='enum limn_core::prelude::Orientation'>Orientation</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Spacing.html"
+                                  title='enum limn_core::prelude::Spacing'>Spacing</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Wrap.html"
+                                  title='enum limn_core::prelude::Wrap'>Wrap</a></td>
+                           <td class='docblock-short'>
+                                <p>The way in which text should wrap around the width.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

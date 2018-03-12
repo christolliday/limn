@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Window","A simple wrapper around a `glutin::GlWindow`."]]});

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `FontLoader` struct in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, FontLoader">
+
+    <title>limn_core::resources::font::FontLoader - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct FontLoader</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#fields">Fields</a><div class="sidebar-links"><a href="#structfield.render">render</a><a href="#structfield.font_info">font_info</a><a href="#structfield.bundled_font_info">bundled_font_info</a><a href="#structfield.font_instances">font_instances</a></div><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.new">new</a><a href="#method.get_font">get_font</a><a href="#method.get_font_instance">get_font_instance</a><a href="#method.register_font_data">register_font_data</a></div><a class="sidebar-title" href="#implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Default">Default</a></div></div><p class='location'><a href='../../index.html'>limn_core</a>::<wbr><a href='../index.html'>resources</a>::<wbr><a href='index.html'>font</a></p><script>window.sidebarCurrent = {name: 'FontLoader', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../../index.html'>limn_core</a>::<wbr><a href='../index.html'>resources</a>::<wbr><a href='index.html'>font</a>::<wbr><a class="struct" href=''>FontLoader</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#47-52' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct FontLoader {
+    pub render: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;RenderApi&gt;,
+    pub font_info: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, <a class="struct" href="../../../limn_core/resources/font/struct.FontInfo.html" title="struct limn_core::resources::font::FontInfo">FontInfo</a>&gt;,
+    pub bundled_font_info: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, <a class="struct" href="../../../limn_core/resources/font/struct.FontInfo.html" title="struct limn_core::resources::font::FontInfo">FontInfo</a>&gt;,
+    pub font_instances: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a><a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, Au<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>, FontInstanceKey&gt;,
+}</pre><h2 id='fields' class='fields small-section-header'>
+                       Fields<a href='#fields' class='anchor'></a></h2><span id="structfield.render" class="structfield small-section-header">
+                           <a href="#structfield.render" class="anchor field"></a>
+                           <span id="render.v" class='invisible'>
+                           <code>render: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;RenderApi&gt;</code>
+                           </span></span><span id="structfield.font_info" class="structfield small-section-header">
+                           <a href="#structfield.font_info" class="anchor field"></a>
+                           <span id="font_info.v" class='invisible'>
+                           <code>font_info: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, <a class="struct" href="../../../limn_core/resources/font/struct.FontInfo.html" title="struct limn_core::resources::font::FontInfo">FontInfo</a>&gt;</code>
+                           </span></span><span id="structfield.bundled_font_info" class="structfield small-section-header">
+                           <a href="#structfield.bundled_font_info" class="anchor field"></a>
+                           <span id="bundled_font_info.v" class='invisible'>
+                           <code>bundled_font_info: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, <a class="struct" href="../../../limn_core/resources/font/struct.FontInfo.html" title="struct limn_core::resources::font::FontInfo">FontInfo</a>&gt;</code>
+                           </span></span><span id="structfield.font_instances" class="structfield small-section-header">
+                           <a href="#structfield.font_instances" class="anchor field"></a>
+                           <span id="font_instances.v" class='invisible'>
+                           <code>font_instances: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a><a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, Au<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>, FontInstanceKey&gt;</code>
+                           </span></span>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../../limn_core/resources/font/struct.FontLoader.html" title="struct limn_core::resources::font::FontLoader">FontLoader</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#54-101' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class="method"><span id='new.v' class='invisible'><code>pub fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#55-57' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.get_font' class="method"><span id='get_font.v' class='invisible'><code>pub fn <a href='#method.get_font' class='fnname'>get_font</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;descriptor: &amp;<a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;&amp;<a class="struct" href="../../../limn_core/resources/font/struct.FontInfo.html" title="struct limn_core::resources::font::FontInfo">FontInfo</a>, Error&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#59-73' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.get_font_instance' class="method"><span id='get_font_instance.v' class='invisible'><code>pub fn <a href='#method.get_font_instance' class='fnname'>get_font_instance</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;descriptor: &amp;<a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;font_size: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;&amp;FontInstanceKey, Error&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#75-84' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.register_font_data' class="method"><span id='register_font_data.v' class='invisible'><code>pub fn <a href='#method.register_font_data' class='fnname'>register_font_data</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;descriptor: <a class="struct" href="../../../limn_core/resources/font/struct.FontDescriptor.html" title="struct limn_core::resources::font::FontDescriptor">FontDescriptor</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;data: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.u8.html">u8</a>&gt;<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>, Error&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#92-96' title='goto source code'>[src]</a></span></h4>
+</div>
+            <h2 id='implementations' class='small-section-header'>
+              Trait Implementations<a href='#implementations' class='anchor'></a>
+            </h2>
+        <h3 id='impl-Default' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html" title="trait core::default::Default">Default</a> for <a class="struct" href="../../../limn_core/resources/font/struct.FontLoader.html" title="struct limn_core::resources::font::FontLoader">FontLoader</a></code><a href='#impl-Default' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#46' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.default' class="method"><span id='default.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default' class='fnname'>default</a>() -&gt; <a class="struct" href="../../../limn_core/resources/font/struct.FontLoader.html" title="struct limn_core::resources::font::FontLoader">FontLoader</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../../src/limn_core/resources/font.rs.html#46' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Returns the &quot;default value&quot; for a type. <a href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../../main.js"></script>
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

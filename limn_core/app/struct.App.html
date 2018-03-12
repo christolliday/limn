@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `App` struct in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, App">
+
+    <title>limn_core::app::App - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct App</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.add_layout_handlers">add_layout_handlers</a><a href="#method.new">new</a><a href="#method.main_loop">main_loop</a><a href="#method.add_handler">add_handler</a><a href="#method.get_root">get_root</a><a href="#method.window">window</a><a href="#method.add_ui_handlers">add_ui_handlers</a><a href="#method.add_mouse_handlers">add_mouse_handlers</a><a href="#method.add_keyboard_handlers">add_keyboard_handlers</a><a href="#method.add_drag_handlers">add_drag_handlers</a><a href="#method.add_input_handlers">add_input_handlers</a></div></div><p class='location'><a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>app</a></p><script>window.sidebarCurrent = {name: 'App', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>app</a>::<wbr><a class="struct" href=''>App</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_core/app.rs.html#25-34' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct App { /* fields omitted */ }</pre><div class='docblock'><p>The <code>App</code> type is just a thin wrapper around a <code>Ui</code> containing
+the methods used to initialize and run an <code>App</code>.</p>
+
+<p>The main difference between <code>App</code> and <code>Ui</code> is that <code>App</code> is available
+while initializing your application, and <code>Ui</code> is available to
+every event handler. As such, <code>App</code> should contain methods that
+can&#39;t, or shouldn&#39;t be called while the <code>App</code> is running.</p>
+
+<p>There should be only one <code>App</code> per Window.</p>
+</div>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/layout.rs.html#43-68' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.add_layout_handlers' class="method"><span id='add_layout_handlers.v' class='invisible'><code>pub fn <a href='#method.add_layout_handlers' class='fnname'>add_layout_handlers</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/layout.rs.html#44-67' title='goto source code'>[src]</a></span></h4>
+</div><h3 id='impl-1' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a></code><a href='#impl-1' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/app.rs.html#36-145' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class="method"><span id='new.v' class='invisible'><code>pub fn <a href='#method.new' class='fnname'>new</a>(window: <a class="struct" href="../../limn_core/window/struct.Window.html" title="struct limn_core::window::Window">Window</a>, events_loop: <a class="struct" href="../../limn_core/prelude/glutin/struct.EventsLoop.html" title="struct limn_core::prelude::glutin::EventsLoop">EventsLoop</a>) -&gt; Self</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/app.rs.html#43-54' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Creates a new <code>App</code> from an existing <code>Window</code>.
+Automatically initializes the default event handlers for a typical
+desktop app:</p>
+
+<p><code>ui_handlers</code>, <code>layout_handlers</code>, <code>input_handlers</code>,
+<code>mouse_handlers</code>, <code>keyboard_handlers</code> and <code>drag_handlers</code></p>
+</div><h4 id='method.main_loop' class="method"><span id='main_loop.v' class='invisible'><code>pub fn <a href='#method.main_loop' class='fnname'>main_loop</a>(self, root: <a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/app.rs.html#83-123' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Updates the UI and redraws the window (the applications main loop)</p>
+</div><h4 id='method.add_handler' class="method"><div class="important-traits"><div class='tooltip'>ⓘ<span class='tooltiptext'>Important traits for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I</span></div><div class="content hidden"><h3 class="important">Important traits for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, I&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> for <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a mut </a>I <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></span><span class="where fmt-newline">    type <a href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item' class="type">Item</a> = &lt;I as <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a>&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item" title="type core::iter::iterator::Iterator::Item">Item</a>;</span></code></div></div><span id='add_handler.v' class='invisible'><code>pub fn <a href='#method.add_handler' class='fnname'>add_handler</a>&lt;E:&nbsp;'static, T:&nbsp;<a class="trait" href="../../limn_core/event/trait.EventHandler.html" title="trait limn_core::event::EventHandler">EventHandler</a>&lt;E&gt; + 'static&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handler: T<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/app.rs.html#133-136' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Add a new global event handler</p>
+</div><h4 id='method.get_root' class="method"><span id='get_root.v' class='invisible'><code>pub fn <a href='#method.get_root' class='fnname'>get_root</a>(&amp;self) -&gt; <a class="struct" href="../../limn_core/widget/struct.Widget.html" title="struct limn_core::widget::Widget">Widget</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/app.rs.html#138-140' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.window' class="method"><span id='window.v' class='invisible'><code>pub fn <a href='#method.window' class='fnname'>window</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/cell/struct.Ref.html" title="struct core::cell::Ref">Ref</a>&lt;<a class="struct" href="../../limn_core/window/struct.Window.html" title="struct limn_core::window::Window">Window</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/app.rs.html#142-144' title='goto source code'>[src]</a></span></h4>
+</div><h3 id='impl-2' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a></code><a href='#impl-2' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#235-250' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.add_ui_handlers' class="method"><span id='add_ui_handlers.v' class='invisible'><code>pub fn <a href='#method.add_ui_handlers' class='fnname'>add_ui_handlers</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/ui.rs.html#236-249' title='goto source code'>[src]</a></span></h4>
+</div><h3 id='impl-3' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a></code><a href='#impl-3' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/mouse.rs.html#93-98' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.add_mouse_handlers' class="method"><span id='add_mouse_handlers.v' class='invisible'><code>pub fn <a href='#method.add_mouse_handlers' class='fnname'>add_mouse_handlers</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/mouse.rs.html#94-97' title='goto source code'>[src]</a></span></h4>
+</div><h3 id='impl-4' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a></code><a href='#impl-4' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/keyboard.rs.html#123-133' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.add_keyboard_handlers' class="method"><span id='add_keyboard_handlers.v' class='invisible'><code>pub fn <a href='#method.add_keyboard_handlers' class='fnname'>add_keyboard_handlers</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/keyboard.rs.html#124-132' title='goto source code'>[src]</a></span></h4>
+</div><h3 id='impl-5' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a></code><a href='#impl-5' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/drag.rs.html#98-114' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.add_drag_handlers' class="method"><span id='add_drag_handlers.v' class='invisible'><code>pub fn <a href='#method.add_drag_handlers' class='fnname'>add_drag_handlers</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/drag.rs.html#103-113' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Add handlers to UI to enable drag detection
+UI receives messages from draggable widgets when they are clicked,
+and combines that with mouse move and mouse release events to
+synthesize <code>DragEvent</code>s</p>
+</div></div><h3 id='impl-6' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/app/struct.App.html" title="struct limn_core::app::App">App</a></code><a href='#impl-6' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/mod.rs.html#21-53' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.add_input_handlers' class="method"><span id='add_input_handlers.v' class='invisible'><code>pub fn <a href='#method.add_input_handlers' class='fnname'>add_input_handlers</a>(&amp;mut self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_core/input/mod.rs.html#22-52' title='goto source code'>[src]</a></span></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+initSidebarItems({"macro":[["constraints","Used to specify a list of constraints."]],"struct":[["LayoutChanged",""],["LayoutUpdated",""],["LimnSolver",""],["ResizeWindow",""],["UpdateLayout",""]]});

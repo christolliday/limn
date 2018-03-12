@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="Source to the Rust file `core/src/prelude.rs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang">
+
+    <title>prelude.rs.html -- source</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc source">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content"><pre class="line-numbers"><span id="1"> 1</span>
+<span id="2"> 2</span>
+<span id="3"> 3</span>
+<span id="4"> 4</span>
+<span id="5"> 5</span>
+<span id="6"> 6</span>
+<span id="7"> 7</span>
+<span id="8"> 8</span>
+<span id="9"> 9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+</pre><pre class="rust ">
+<span class="doccomment">//! Re-exports of common crate-internal functions / structs</span>
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">cassowary</span>::<span class="ident">Constraint</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">cassowary</span>::<span class="ident">strength</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">cassowary</span>::<span class="ident">WeightedRelation</span>::<span class="kw-2">*</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">glutin</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">geometry</span>::{<span class="ident">Point</span>, <span class="ident">Rect</span>, <span class="ident">RectExt</span>, <span class="ident">Size</span>, <span class="ident">SizeExt</span>, <span class="ident">Vector</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">event</span>::{<span class="ident">EventHandler</span>, <span class="ident">EventArgs</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">event</span>::<span class="ident">event_global</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">widget</span>::{<span class="ident">Widget</span>, <span class="ident">StateUpdated</span>, <span class="ident">StyleUpdated</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">widget</span>::<span class="ident">draw</span>::{<span class="ident">Draw</span>, <span class="ident">DrawEventHandler</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">widget</span>::<span class="ident">property</span>::<span class="ident">Property</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">widget</span>::<span class="ident">property</span>::<span class="ident">states</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">widget</span>::<span class="ident">filter</span>::<span class="ident">OpacityFilter</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">style</span>::{<span class="ident">Component</span>, <span class="ident">DrawState</span>, <span class="ident">DrawStyle</span>, <span class="ident">ComponentStyle</span>, <span class="ident">WidgetModifier</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">render</span>::<span class="ident">RenderBuilder</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">resources</span>::<span class="ident">resources</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">resources</span>::<span class="ident">WidgetId</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">resources</span>::<span class="ident">id</span>::{<span class="ident">Id</span>, <span class="ident">IdGen</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">resources</span>::<span class="ident">image</span>::<span class="ident">ImageSource</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ui</span>::<span class="ident">Ui</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ui</span>::{<span class="ident">WidgetAttachedEvent</span>, <span class="ident">WidgetDetachedEvent</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">app</span>::{<span class="ident">App</span>, <span class="ident">FrameEvent</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">window</span>::<span class="ident">Window</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">color</span>::<span class="kw-2">*</span>;
+<span class="comment">// re exports macros in limn-layout</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">layout</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">layout</span>::<span class="ident">constraint</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">layout</span>::<span class="ident">LAYOUT</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">layout</span>::<span class="ident">linear_layout</span>::{<span class="ident">LinearLayoutSettings</span>, <span class="ident">Orientation</span>, <span class="ident">Spacing</span>, <span class="ident">ItemAlignment</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">text_layout</span>::{<span class="ident">Align</span>, <span class="ident">Wrap</span>};
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">input</span>::<span class="ident">mouse</span>::{<span class="ident">ClickEvent</span>, <span class="ident">WidgetMouseButton</span>, <span class="ident">WidgetMouseWheel</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">input</span>::<span class="ident">drag</span>::{<span class="ident">DragEvent</span>, <span class="ident">DragState</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">input</span>::<span class="ident">keyboard</span>::{<span class="ident">WidgetReceivedCharacter</span>, <span class="ident">KeyboardInputEvent</span>, <span class="ident">KeyboardInput</span>};
+
+<span class="comment">// Re-export macros</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">maplit</span>::<span class="kw-2">*</span>;
+</pre>
+</section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

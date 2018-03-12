@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `SliderStyle` struct in crate `limn`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, SliderStyle">
+
+    <title>limn::widgets::slider::SliderStyle - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct SliderStyle</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#fields">Fields</a><div class="sidebar-links"><a href="#structfield.orientation">orientation</a><a href="#structfield.range">range</a><a href="#structfield.init_value">init_value</a><a href="#structfield.variable_handle_size">variable_handle_size</a><a href="#structfield.handle_style">handle_style</a><a href="#structfield.bar_style">bar_style</a><a href="#structfield.border">border</a><a href="#structfield.bar_color">bar_color</a><a href="#structfield.handle_color">handle_color</a><a href="#structfield.highlight">highlight</a><a href="#structfield.width">width</a></div><a class="sidebar-title" href="#implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Clone">Clone</a><a href="#impl-Debug">Debug</a><a href="#impl-Default">Default</a><a href="#impl-ComponentStyle">ComponentStyle</a></div></div><p class='location'><a href='../../index.html'>limn</a>::<wbr><a href='../index.html'>widgets</a>::<wbr><a href='index.html'>slider</a></p><script>window.sidebarCurrent = {name: 'SliderStyle', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../../index.html'>limn</a>::<wbr><a href='../index.html'>widgets</a>::<wbr><a href='index.html'>slider</a>::<wbr><a class="struct" href=''>SliderStyle</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span></span></h1>
+<pre class='rust struct'>pub struct SliderStyle {
+    pub orientation: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../../../limn/widgets/slider/enum.Orientation.html" title="enum limn::widgets::slider::Orientation">Orientation</a>&gt;,
+    pub range: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/core/ops/range/struct.Range.html" title="struct core::ops::range::Range">Range</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>&gt;&gt;,
+    pub init_value: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>&gt;&gt;,
+    pub variable_handle_size: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>&gt;,
+    pub handle_style: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../../../limn/widgets/slider/enum.HandleStyle.html" title="enum limn::widgets::slider::HandleStyle">HandleStyle</a>&gt;,
+    pub bar_style: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../../../limn/widgets/slider/enum.BarStyle.html" title="enum limn::widgets::slider::BarStyle">BarStyle</a>&gt;,
+    pub border: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>, Color<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;&gt;,
+    pub bar_color: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Color&gt;,
+    pub handle_color: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Color&gt;,
+    pub highlight: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Color&gt;&gt;,
+    pub width: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>&gt;,
+}</pre><h2 id='fields' class='fields small-section-header'>
+                       Fields<a href='#fields' class='anchor'></a></h2><span id="structfield.orientation" class="structfield small-section-header">
+                           <a href="#structfield.orientation" class="anchor field"></a>
+                           <span id="orientation.v" class='invisible'>
+                           <code>orientation: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../../../limn/widgets/slider/enum.Orientation.html" title="enum limn::widgets::slider::Orientation">Orientation</a>&gt;</code>
+                           </span></span><span id="structfield.range" class="structfield small-section-header">
+                           <a href="#structfield.range" class="anchor field"></a>
+                           <span id="range.v" class='invisible'>
+                           <code>range: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/core/ops/range/struct.Range.html" title="struct core::ops::range::Range">Range</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>&gt;&gt;</code>
+                           </span></span><span id="structfield.init_value" class="structfield small-section-header">
+                           <a href="#structfield.init_value" class="anchor field"></a>
+                           <span id="init_value.v" class='invisible'>
+                           <code>init_value: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>&gt;&gt;</code>
+                           </span></span><span id="structfield.variable_handle_size" class="structfield small-section-header">
+                           <a href="#structfield.variable_handle_size" class="anchor field"></a>
+                           <span id="variable_handle_size.v" class='invisible'>
+                           <code>variable_handle_size: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>&gt;</code>
+                           </span></span><span id="structfield.handle_style" class="structfield small-section-header">
+                           <a href="#structfield.handle_style" class="anchor field"></a>
+                           <span id="handle_style.v" class='invisible'>
+                           <code>handle_style: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../../../limn/widgets/slider/enum.HandleStyle.html" title="enum limn::widgets::slider::HandleStyle">HandleStyle</a>&gt;</code>
+                           </span></span><span id="structfield.bar_style" class="structfield small-section-header">
+                           <a href="#structfield.bar_style" class="anchor field"></a>
+                           <span id="bar_style.v" class='invisible'>
+                           <code>bar_style: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../../../limn/widgets/slider/enum.BarStyle.html" title="enum limn::widgets::slider::BarStyle">BarStyle</a>&gt;</code>
+                           </span></span><span id="structfield.border" class="structfield small-section-header">
+                           <a href="#structfield.border" class="anchor field"></a>
+                           <span id="border.v" class='invisible'>
+                           <code>border: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>, Color<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;&gt;</code>
+                           </span></span><span id="structfield.bar_color" class="structfield small-section-header">
+                           <a href="#structfield.bar_color" class="anchor field"></a>
+                           <span id="bar_color.v" class='invisible'>
+                           <code>bar_color: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Color&gt;</code>
+                           </span></span><span id="structfield.handle_color" class="structfield small-section-header">
+                           <a href="#structfield.handle_color" class="anchor field"></a>
+                           <span id="handle_color.v" class='invisible'>
+                           <code>handle_color: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Color&gt;</code>
+                           </span></span><span id="structfield.highlight" class="structfield small-section-header">
+                           <a href="#structfield.highlight" class="anchor field"></a>
+                           <span id="highlight.v" class='invisible'>
+                           <code>highlight: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Color&gt;&gt;</code>
+                           </span></span><span id="structfield.width" class="structfield small-section-header">
+                           <a href="#structfield.width" class="anchor field"></a>
+                           <span id="width.v" class='invisible'>
+                           <code>width: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a>&gt;</code>
+                           </span></span>
+            <h2 id='implementations' class='small-section-header'>
+              Trait Implementations<a href='#implementations' class='anchor'></a>
+            </h2>
+        <h3 id='impl-Clone' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> for <a class="struct" href="../../../limn/widgets/slider/struct.SliderStyle.html" title="struct limn::widgets::slider::SliderStyle">SliderStyle</a></code><a href='#impl-Clone' class='anchor'></a></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.clone' class="method"><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class="struct" href="../../../limn/widgets/slider/struct.SliderStyle.html" title="struct limn::widgets::slider::SliderStyle">SliderStyle</a></code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class="method"><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>Self)</code></span><span class='out-of-band'><div class='ghost'></div><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/clone.rs.html#112-114' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 id='impl-Debug' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="struct" href="../../../limn/widgets/slider/struct.SliderStyle.html" title="struct limn::widgets::slider::SliderStyle">SliderStyle</a></code><a href='#impl-Debug' class='anchor'></a></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class="method"><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class="struct" href="https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html" title="struct core::fmt::Formatter">Formatter</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/core/fmt/type.Result.html" title="type core::fmt::Result">Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter. <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt">Read more</a></p>
+</div></div><h3 id='impl-Default' class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html" title="trait core::default::Default">Default</a> for <a class="struct" href="../../../limn/widgets/slider/struct.SliderStyle.html" title="struct limn::widgets::slider::SliderStyle">SliderStyle</a></code><a href='#impl-Default' class='anchor'></a></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.default' class="method"><span id='default.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default' class='fnname'>default</a>() -&gt; <a class="struct" href="../../../limn/widgets/slider/struct.SliderStyle.html" title="struct limn::widgets::slider::SliderStyle">SliderStyle</a></code></span></h4>
+<div class='docblock'><p>Returns the &quot;default value&quot; for a type. <a href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default">Read more</a></p>
+</div></div><h3 id='impl-ComponentStyle' class='impl'><span class='in-band'><code>impl ComponentStyle for <a class="struct" href="../../../limn/widgets/slider/struct.SliderStyle.html" title="struct limn::widgets::slider::SliderStyle">SliderStyle</a></code><a href='#impl-ComponentStyle' class='anchor'></a></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='associatedtype.Component' class="type"><span id='Component.t' class='invisible'><code>type <a href='#associatedtype.Component' class="type">Component</a> = <a class="struct" href="../../../limn/widgets/slider/struct.Slider.html" title="struct limn::widgets::slider::Slider">Slider</a></code></span></h4>
+<h4 id='method.merge' class="method"><span id='merge.v' class='invisible'><code>fn <a href='#method.merge' class='fnname'>merge</a>(&amp;self, other: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>Self) -&gt; Self</code></span></h4>
+<h4 id='method.component' class="method"><span id='component.v' class='invisible'><code>fn <a href='#method.component' class='fnname'>component</a>(self) -&gt; Self::Component</code></span></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "limn";
+    </script>
+    <script src="../../../main.js"></script>
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

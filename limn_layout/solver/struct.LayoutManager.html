@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `LayoutManager` struct in crate `limn_layout`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, LayoutManager">
+
+    <title>limn_layout::solver::LayoutManager - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct LayoutManager</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.new">new</a><a href="#method.register_layout">register_layout</a><a href="#method.update_layout">update_layout</a><a href="#method.add_constraint">add_constraint</a><a href="#method.remove_constraint">remove_constraint</a><a href="#method.queue_constraint">queue_constraint</a><a href="#method.dequeue_constraints">dequeue_constraints</a><a href="#method.layout_hidden">layout_hidden</a><a href="#method.layout_name">layout_name</a><a href="#method.children">children</a><a href="#method.layout_vars">layout_vars</a><a href="#method.fmt_variable">fmt_variable</a><a href="#method.fmt_edit_variable">fmt_edit_variable</a><a href="#method.fmt_constraint">fmt_constraint</a></div></div><p class='location'><a href='../index.html'>limn_layout</a>::<wbr><a href='index.html'>solver</a></p><script>window.sidebarCurrent = {name: 'LayoutManager', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>limn_layout</a>::<wbr><a href='index.html'>solver</a>::<wbr><a class="struct" href=''>LayoutManager</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_layout/solver.rs.html#278-286' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct LayoutManager { /* fields omitted */ }</pre>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_layout/solver/struct.LayoutManager.html" title="struct limn_layout::solver::LayoutManager">LayoutManager</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#288-474' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class="method"><span id='new.v' class='invisible'><code>pub fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#290-299' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.register_layout' class="method"><span id='register_layout.v' class='invisible'><code>pub fn <a href='#method.register_layout' class='fnname'>register_layout</a>(&amp;mut self, layout: &amp;mut <a class="struct" href="../../limn_layout/struct.Layout.html" title="struct limn_layout::Layout">Layout</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#301-318' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.update_layout' class="method"><span id='update_layout.v' class='invisible'><code>pub fn <a href='#method.update_layout' class='fnname'>update_layout</a>(&amp;mut self, layout: &amp;mut <a class="struct" href="../../limn_layout/struct.Layout.html" title="struct limn_layout::Layout">Layout</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#320-327' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.add_constraint' class="method"><span id='add_constraint.v' class='invisible'><code>pub fn <a href='#method.add_constraint' class='fnname'>add_constraint</a>(&amp;mut self, constraint: &amp;Constraint) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#329-342' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.remove_constraint' class="method"><span id='remove_constraint.v' class='invisible'><code>pub fn <a href='#method.remove_constraint' class='fnname'>remove_constraint</a>(&amp;mut self, constraint: &amp;Constraint)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#344-352' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.queue_constraint' class="method"><span id='queue_constraint.v' class='invisible'><code>pub fn <a href='#method.queue_constraint' class='fnname'>queue_constraint</a>(&amp;mut self, variable: Variable, constraint: Constraint)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#363-367' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.dequeue_constraints' class="method"><span id='dequeue_constraints.v' class='invisible'><code>pub fn <a href='#method.dequeue_constraints' class='fnname'>dequeue_constraints</a>(&amp;mut self, layout: &amp;mut <a class="struct" href="../../limn_layout/struct.Layout.html" title="struct limn_layout::Layout">Layout</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;Constraint&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#370-393' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.layout_hidden' class="method"><span id='layout_hidden.v' class='invisible'><code>pub fn <a href='#method.layout_hidden' class='fnname'>layout_hidden</a>(&amp;self, id: <a class="type" href="../../limn_layout/type.LayoutId.html" title="type limn_layout::LayoutId">LayoutId</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#395-397' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.layout_name' class="method"><span id='layout_name.v' class='invisible'><code>pub fn <a href='#method.layout_name' class='fnname'>layout_name</a>(&amp;self, id: <a class="type" href="../../limn_layout/type.LayoutId.html" title="type limn_layout::LayoutId">LayoutId</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#399-401' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.children' class="method"><span id='children.v' class='invisible'><code>pub fn <a href='#method.children' class='fnname'>children</a>(&amp;self, id: <a class="type" href="../../limn_layout/type.LayoutId.html" title="type limn_layout::LayoutId">LayoutId</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../limn_layout/type.LayoutId.html" title="type limn_layout::LayoutId">LayoutId</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#407-409' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.layout_vars' class="method"><span id='layout_vars.v' class='invisible'><code>pub fn <a href='#method.layout_vars' class='fnname'>layout_vars</a>(&amp;self, id: <a class="type" href="../../limn_layout/type.LayoutId.html" title="type limn_layout::LayoutId">LayoutId</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;Variable&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#410-413' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.fmt_variable' class="method"><span id='fmt_variable.v' class='invisible'><code>pub fn <a href='#method.fmt_variable' class='fnname'>fmt_variable</a>(&amp;self, var: Variable) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#415-426' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.fmt_edit_variable' class="method"><span id='fmt_edit_variable.v' class='invisible'><code>pub fn <a href='#method.fmt_edit_variable' class='fnname'>fmt_edit_variable</a>(&amp;self, edit_var: &amp;<a class="struct" href="../../limn_layout/struct.EditVariable.html" title="struct limn_layout::EditVariable">EditVariable</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#428-430' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.fmt_constraint' class="method"><span id='fmt_constraint.v' class='invisible'><code>pub fn <a href='#method.fmt_constraint' class='fnname'>fmt_constraint</a>(&amp;self, constraint: &amp;Constraint) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#432-434' title='goto source code'>[src]</a></span></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_layout";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

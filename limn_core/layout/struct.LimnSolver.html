@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `LimnSolver` struct in crate `limn_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, LimnSolver">
+
+    <title>limn_core::layout::LimnSolver - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Struct LimnSolver</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#fields">Fields</a><div class="sidebar-links"><a href="#structfield.solver">solver</a><a href="#structfield.strict">strict</a></div><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.new">new</a><a href="#method.update_layout">update_layout</a><a href="#method.remove_layout">remove_layout</a><a href="#method.hide_layout">hide_layout</a><a href="#method.unhide_layout">unhide_layout</a><a href="#method.update_solver">update_solver</a><a href="#method.has_edit_variable">has_edit_variable</a><a href="#method.has_constraint">has_constraint</a><a href="#method.fetch_changes">fetch_changes</a><a href="#method.debug_variables">debug_variables</a><a href="#method.debug_constraints">debug_constraints</a><a href="#method.debug_constraint">debug_constraint</a><a href="#method.debug_associated_constraints">debug_associated_constraints</a><a href="#method.debug_layouts">debug_layouts</a><a href="#method.debug_layout">debug_layout</a></div></div><p class='location'><a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>layout</a></p><script>window.sidebarCurrent = {name: 'LimnSolver', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>limn_core</a>::<wbr><a href='index.html'>layout</a>::<wbr><a class="struct" href=''>LimnSolver</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_layout/solver.rs.html#11-15' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct LimnSolver {
+    pub solver: Solver,
+    pub strict: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>,
+    // some fields omitted
+}</pre><h2 id='fields' class='fields small-section-header'>
+                       Fields<a href='#fields' class='anchor'></a></h2><span id="structfield.solver" class="structfield small-section-header">
+                           <a href="#structfield.solver" class="anchor field"></a>
+                           <span id="solver.v" class='invisible'>
+                           <code>solver: Solver</code>
+                           </span></span><span id="structfield.strict" class="structfield small-section-header">
+                           <a href="#structfield.strict" class="anchor field"></a>
+                           <span id="strict.v" class='invisible'>
+                           <code>strict: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code>
+                           </span></span>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 id='impl' class='impl'><span class='in-band'><code>impl <a class="struct" href="../../limn_core/layout/struct.LimnSolver.html" title="struct limn_core::layout::LimnSolver">LimnSolver</a></code><a href='#impl' class='anchor'></a></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#17-262' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class="method"><span id='new.v' class='invisible'><code>pub fn <a href='#method.new' class='fnname'>new</a>() -&gt; <a class="struct" href="../../limn_core/layout/struct.LimnSolver.html" title="struct limn_core::layout::LimnSolver">LimnSolver</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#18-24' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.update_layout' class="method"><span id='update_layout.v' class='invisible'><code>pub fn <a href='#method.update_layout' class='fnname'>update_layout</a>(&amp;mut self, layout: &amp;mut <a class="struct" href="../../limn_layout/struct.Layout.html" title="struct limn_layout::Layout">Layout</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#26-61' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.remove_layout' class="method"><span id='remove_layout.v' class='invisible'><code>pub fn <a href='#method.remove_layout' class='fnname'>remove_layout</a>(&amp;mut self, id: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#93-102' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.hide_layout' class="method"><span id='hide_layout.v' class='invisible'><code>pub fn <a href='#method.hide_layout' class='fnname'>hide_layout</a>(&amp;mut self, id: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#104-128' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.unhide_layout' class="method"><span id='unhide_layout.v' class='invisible'><code>pub fn <a href='#method.unhide_layout' class='fnname'>unhide_layout</a>(&amp;mut self, id: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#129-155' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.update_solver' class="method"><span id='update_solver.v' class='invisible'><code>pub fn <a href='#method.update_solver' class='fnname'>update_solver</a>&lt;F&gt;(&amp;mut self, f: F) <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="https://doc.rust-lang.org/nightly/core/ops/function/trait.Fn.html" title="trait core::ops::function::Fn">Fn</a>(&amp;mut Solver) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>,&nbsp;</span></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#156-160' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.has_edit_variable' class="method"><span id='has_edit_variable.v' class='invisible'><code>pub fn <a href='#method.has_edit_variable' class='fnname'>has_edit_variable</a>(&amp;mut self, v: &amp;Variable) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#162-164' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.has_constraint' class="method"><span id='has_constraint.v' class='invisible'><code>pub fn <a href='#method.has_constraint' class='fnname'>has_constraint</a>(&amp;self, constraint: &amp;<a class="struct" href="../../limn_core/prelude/struct.Constraint.html" title="struct limn_core::prelude::Constraint">Constraint</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#165-167' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.fetch_changes' class="method"><span id='fetch_changes.v' class='invisible'><code>pub fn <a href='#method.fetch_changes' class='fnname'>fetch_changes</a>(&amp;mut self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>, <a class="enum" href="../../limn_layout/enum.VarType.html" title="enum limn_layout::VarType">VarType</a>, <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f64.html">f64</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#169-179' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.debug_variables' class="method"><span id='debug_variables.v' class='invisible'><code>pub fn <a href='#method.debug_variables' class='fnname'>debug_variables</a>(&amp;self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#181-186' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.debug_constraints' class="method"><span id='debug_constraints.v' class='invisible'><code>pub fn <a href='#method.debug_constraints' class='fnname'>debug_constraints</a>(&amp;self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#188-207' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.debug_constraint' class="method"><span id='debug_constraint.v' class='invisible'><code>pub fn <a href='#method.debug_constraint' class='fnname'>debug_constraint</a>(&amp;self, constraint: &amp;<a class="struct" href="../../limn_core/prelude/struct.Constraint.html" title="struct limn_core::prelude::Constraint">Constraint</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#209-211' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.debug_associated_constraints' class="method"><span id='debug_associated_constraints.v' class='invisible'><code>pub fn <a href='#method.debug_associated_constraints' class='fnname'>debug_associated_constraints</a>(&amp;self, constraint: &amp;<a class="struct" href="../../limn_core/prelude/struct.Constraint.html" title="struct limn_core::prelude::Constraint">Constraint</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#213-240' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.debug_layouts' class="method"><span id='debug_layouts.v' class='invisible'><code>pub fn <a href='#method.debug_layouts' class='fnname'>debug_layouts</a>(&amp;self)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#242-250' title='goto source code'>[src]</a></span></h4>
+<h4 id='method.debug_layout' class="method"><span id='debug_layout.v' class='invisible'><code>pub fn <a href='#method.debug_layout' class='fnname'>debug_layout</a>(&amp;self, id: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/limn_layout/solver.rs.html#252-261' title='goto source code'>[src]</a></span></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

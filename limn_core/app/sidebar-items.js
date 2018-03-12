@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["App","The `App` type is just a thin wrapper around a `Ui` containing the methods used to initialize and run an `App`."],["FrameEvent","Event emitted after every frame is rendered."]]});

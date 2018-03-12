@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `xys_per_line` fn in crate `limn_text_layout`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, xys_per_line">
+
+    <title>limn_text_layout::cursor::xys_per_line - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc fn">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'><a href='../index.html'>limn_text_layout</a>::<wbr><a href='index.html'>cursor</a></p><script>window.sidebarCurrent = {name: 'xys_per_line', ty: 'fn', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Function <a href='../index.html'>limn_text_layout</a>::<wbr><a href='index.html'>cursor</a>::<wbr><a class="fn" href=''>xys_per_line</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/limn_text_layout/cursor.rs.html#260-271' title='goto source code'>[src]</a></span></h1>
+<div class="important-traits"><div class='tooltip'>ⓘ<span class='tooltiptext'>Important traits for <a class="struct" href="../../limn_text_layout/cursor/struct.XysPerLine.html" title="struct limn_text_layout::cursor::XysPerLine">XysPerLine</a>&lt;'a, I&gt;</span></div><div class="content hidden"><h3 class="important">Important traits for <a class="struct" href="../../limn_text_layout/cursor/struct.XysPerLine.html" title="struct limn_text_layout::cursor::XysPerLine">XysPerLine</a>&lt;'a, I&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, I&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a> for <a class="struct" href="../../limn_text_layout/cursor/struct.XysPerLine.html" title="struct limn_text_layout::cursor::XysPerLine">XysPerLine</a>&lt;'a, I&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html" title="trait core::iter::iterator::Iterator">Iterator</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a><a class="struct" href="../../limn_text_layout/line/struct.LineInfo.html" title="struct limn_text_layout::line::LineInfo">LineInfo</a>, <a class="type" href="../../limn_text_layout/types/type.Rect.html" title="type limn_text_layout::types::Rect">Rect</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;,&nbsp;</span></span><span class="where fmt-newline">    type <a href='https://doc.rust-lang.org/nightly/core/iter/iterator/trait.Iterator.html#associatedtype.Item' class="type">Item</a> = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a><a class="struct" href="../../limn_text_layout/cursor/struct.Xs.html" title="struct limn_text_layout::cursor::Xs">Xs</a>&lt;'a, 'a&gt;, <a class="struct" href="../../limn_text_layout/types/struct.Range.html" title="struct limn_text_layout::types::Range">Range</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>;</span></code></div></div><pre class='rust fn'>pub fn xys_per_line&lt;'a, I&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;lines_with_rects: I, <br>&nbsp;&nbsp;&nbsp;&nbsp;font: &amp;'a <a class="type" href="../../limn_text_layout/type.Font.html" title="type limn_text_layout::Font">Font</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;text: &amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;font_size: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.f32.html">f32</a><br>) -&gt; <a class="struct" href="../../limn_text_layout/cursor/struct.XysPerLine.html" title="struct limn_text_layout::cursor::XysPerLine">XysPerLine</a>&lt;'a, I&gt;</pre><div class='docblock'><p>Every possible cursor position within each line of text yielded by the given iterator.</p>
+
+<p>Yields <code>(xs, y_range)</code>, where <code>y_range</code> is the <code>Range</code> occupied by the line across the <em>y</em>
+axis and <code>xs</code> is every possible cursor position along the <em>x</em> axis</p>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "limn_text_layout";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

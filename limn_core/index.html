@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `limn_core` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, limn_core">
+
+    <title>limn_core - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
+        
+        <p class='location'>Crate limn_core</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#reexports">Reexports</a></li><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'limn_core', ty: 'mod', relpath: '../'};</script></div>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Crate <a class="mod" href=''>limn_core</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/limn_core/lib.rs.html#1-66' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Limn is a cross platform, event driven, component based GUI library.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub extern crate <a class="mod" href="../limn_text_layout/index.html" title="mod limn_text_layout">limn_text_layout</a> as text_layout;</code></td></tr><tr><td><code>pub extern crate cassowary;</code></td></tr><tr><td><code>pub extern crate rusttype;</code></td></tr><tr><td><code>pub extern crate <a class="mod" href="../limn_core/prelude/glutin/index.html" title="mod limn_core::prelude::glutin">glutin</a>;</code></td></tr><tr><td><code>pub extern crate webrender;</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="app/index.html"
+                                  title='mod limn_core::app'>app</a></td>
+                           <td class='docblock-short'>
+                                <p>Contains the <code>App</code> type, used to initialize and run a Limn application.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="color/index.html"
+                                  title='mod limn_core::color'>color</a></td>
+                           <td class='docblock-short'>
+                                <p>Color helper types and constants</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="event/index.html"
+                                  title='mod limn_core::event'>event</a></td>
+                           <td class='docblock-short'>
+                                <p>Contains types relevant to event handling and the event queue.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="geometry/index.html"
+                                  title='mod limn_core::geometry'>geometry</a></td>
+                           <td class='docblock-short'>
+                                <p>Geometric type definitions, such as <code>Point</code>, <code>Rect</code> and <code>Size</code></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="input/index.html"
+                                  title='mod limn_core::input'>input</a></td>
+                           <td class='docblock-short'>
+                                <p>Contains handlers for input events from <code>winit</code> (keyboard, mouse etc.),
+generally responsible for forwarding input to other handlers.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="layout/index.html"
+                                  title='mod limn_core::layout'>layout</a></td>
+                           <td class='docblock-short'>
+                                <p>Module for layout / resizing handlers and layout solving</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="prelude/index.html"
+                                  title='mod limn_core::prelude'>prelude</a></td>
+                           <td class='docblock-short'>
+                                <p>Re-exports of common crate-internal functions / structs</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="render/index.html"
+                                  title='mod limn_core::render'>render</a></td>
+                           <td class='docblock-short'>
+                                <p>Helper functions and useful types for interacting with WebRender</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="resources/index.html"
+                                  title='mod limn_core::resources'>resources</a></td>
+                           <td class='docblock-short'>
+                                <p>Font, image and texture resources</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="style/index.html"
+                                  title='mod limn_core::style'>style</a></td>
+                           <td class='docblock-short'>
+                                <p>Contains types relevant to declaring styleable components, and the theming engine which allows styleable components to inherit values from an application theme.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="ui/index.html"
+                                  title='mod limn_core::ui'>ui</a></td>
+                           <td class='docblock-short'>
+                                <p>Contains <code>Ui</code>, which contains application global state and is accessible to every event handler.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="widget/index.html"
+                                  title='mod limn_core::widget'>widget</a></td>
+                           <td class='docblock-short'>
+                                <p>Module for <code>Widget</code> and callback handlers
+Types used to create and manage widgets.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="window/index.html"
+                                  title='mod limn_core::window'>window</a></td>
+                           <td class='docblock-short'>
+                                <p>Wrapper around <code>glutin::Window</code></p>
+                           </td>
+                       </tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.component_style.html"
+                                  title='macro limn_core::component_style'>component_style</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.forward_event.html"
+                                  title='macro limn_core::forward_event'>forward_event</a></td>
+                           <td class='docblock-short'>
+                                <p>Specifies a handler that redirects events from one widget to another.
+Optionally you can specify a closure that modifies the event.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.multi_event.html"
+                                  title='macro limn_core::multi_event'>multi_event</a></td>
+                           <td class='docblock-short'>
+                                <p>Simplifies setting up an EventHandler that can receive multiple events. Generates an event enum and matches each event to a method on the handler.
+Also creates an associated method on the handler, <code>add_adapters</code> that should be called when the handler is added to a widget, to add the &quot;adapter&quot;
+handlers that redirect each event to the main event handler.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.named_id.html"
+                                  title='macro limn_core::named_id'>named_id</a></td>
+                           <td class='docblock-short'>
+                                <p>Create a new simple id type, wrapper around a usize that can be created via <code>IdGen</code></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="macro" href="macro.style.html"
+                                  title='macro limn_core::style'>style</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>↑</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>↓</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>↹</dt>
+                    <dd>Switch tab</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt style="width:31px;">+ / -</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "limn_core";
+    </script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>
