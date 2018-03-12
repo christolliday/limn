@@ -159,13 +159,15 @@ impl WidgetModifier for Slider {
         }
         slider_handle.make_draggable();
 
-        forward_event!(DragEvent: slider_handle -> widget);
-        forward_event!(ClickEvent: slider_bar_pre -> widget);
-        forward_event!(ClickEvent: slider_bar_post -> widget);
+        forward_event!(DragEvent: slider_handle -> SliderInputEvent: widget);
+        forward_event!(ClickEvent: slider_bar_pre -> SliderInputEvent: widget);
+        forward_event!(ClickEvent: slider_bar_post -> SliderInputEvent: widget);
+        forward_event!(SetSliderValue: widget -> SliderInputEvent: widget);
+        forward_event!(SetSliderRange: widget -> SliderInputEvent: widget);
+        forward_event!(LayoutUpdated: widget -> SliderInputEvent: widget);
         let widget_c = widget.clone();
         let handle_c = slider_handle.clone();
         widget.add_handler(SliderHandler::new(self.orientation, self.range.clone(), widget_c, handle_c, self.init_value));
-        SliderHandler::add_adapters(widget);
 
         widget.add_child(slider_bar_pre);
         widget.add_child(slider_bar_post);

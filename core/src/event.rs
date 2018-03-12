@@ -248,6 +248,7 @@ macro_rules! multi_event {
             )*
         }
         impl $handler {
+            #[allow(dead_code)]
             fn add_adapters(widget: &mut Widget) {
                 $(
                     widget.add_handler(|event: &$event_type, args: EventArgs| {
@@ -270,10 +271,10 @@ macro_rules! multi_event {
 /// Optionally you can specify a closure that modifies the event.
 #[macro_export]
 macro_rules! forward_event {
-    ( $event:ty : $source:ident -> $destination:ident ) => {
+    ( $event:ident : $source:ident -> $multi_event:ident : $destination:ident ) => {
         let destination = $destination.clone();
         $source.add_handler(move |event: &$event, _: EventArgs| {
-            destination.event(event.clone());
+            destination.event($multi_event::$event(event.clone()));
         });
     };
     ( $event:ty : $closure:expr ; $source:ident -> $destination:ident ) => {
