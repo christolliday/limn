@@ -33,7 +33,8 @@ fn main() {
     let mut scroll_widget = Widget::from_modifier(scroll_widget);
     list_widget.layout().add(constraints![shrink(), match_width(&scroll_widget)]);
     scroll_widget.layout().add(constraints![
-        match_layout(&root).padding(50.0),
+        bound_by(&root).padding(50.0),
+        size(Size::new(300.0, 300.0)),
     ]);
     root.add_child(scroll_widget);
 

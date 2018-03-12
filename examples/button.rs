@@ -21,6 +21,7 @@ fn main() {
         center(&root),
         bound_by(&root).padding(50.0).strength(WEAK),
     ]);
+    root.layout().add(shrink());
     root.add_child(button);
 
     app.main_loop(root);
