@@ -9,7 +9,7 @@ pub struct Window {
     pub window: glutin::GlWindow
 }
 impl Window {
-    pub fn new(window_builder: glutin::WindowBuilder, events_loop: &glutin::EventsLoop) -> Self {
+    pub fn new(mut window_builder: glutin::WindowBuilder, events_loop: &glutin::EventsLoop) -> Self {
         let context = glutin::ContextBuilder::new()
             .with_vsync(true)
             .with_gl(glutin::GlRequest::GlThenGles {
@@ -17,8 +17,9 @@ impl Window {
                 opengles_version: (3, 0)
             });
 
+        // create the window in a hidden state, so the window is first shown after being properly sized
+        window_builder = window_builder.with_visibility(false);
         let window = glutin::GlWindow::new(window_builder, context, events_loop).unwrap();
-        window.hide();
         unsafe { window.make_current().ok() };
         Window {
             window: window
