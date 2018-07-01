@@ -300,9 +300,11 @@ impl ScrollParent {
 
 fn get_scroll(event: glutin::MouseScrollDelta) -> Vector {
     let vec = match event {
-        glutin::MouseScrollDelta::LineDelta(x, y) |
-        glutin::MouseScrollDelta::PixelDelta(x, y) => {
+        glutin::MouseScrollDelta::LineDelta(x, y) => {
             Vector::new(-x, y)
+        },
+        glutin::MouseScrollDelta::PixelDelta(glutin::dpi::LogicalPosition{x, y}) => {
+            Vector::new(-x as f32, y as f32)
         }
     };
     vec * 13.0

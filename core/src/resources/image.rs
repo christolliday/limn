@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use failure::Error;
 
-use webrender::api::{RenderApi, ResourceUpdates, ExternalImageId, ExternalImageData, ImageKey, ImageFormat, ImageData, ImageDescriptor};
+use webrender::api::{RenderApi, ResourceUpdate, AddImage, UpdateImage, ExternalImageId, ExternalImageData, ImageKey, ImageFormat, ImageData, ImageDescriptor};
 use image::{self, ImageError, DynamicImage, GenericImage};
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
@@ -89,16 +89,21 @@ impl ImageLoader {
 
     pub fn create_image_resource(&mut self, data: ImageData, descriptor: ImageDescriptor) -> ImageInfo {
         let key = self.render_api().generate_image_key();
-        let mut resources = ResourceUpdates::new();
-        resources.add_image(key, descriptor, data, None);
-        self.render_api().update_resources(resources);
+        let update = ResourceUpdate::AddImage(AddImage {key, descriptor, data, tiling: None});
+        self.render_api().update_resources(vec![update]);
         ImageInfo { key: key, descriptor: descriptor }
     }
 
     pub fn update_texture(&mut self, key: ImageKey, descriptor: ImageDescriptor, data: ExternalImageData) {
-        let mut resources = ResourceUpdates::new();
-        resources.update_image(key, descriptor, ImageData::External(data), None);
-        self.render_api().update_resources(resources);
+        let update = ResourceUpdate::UpdateImage(
+            UpdateImage {
+                key: key,
+                descriptor: descriptor,
+                data: ImageData::External(data),
+                dirty_rect: None
+            }
+        );
+        self.render_api().update_resources(vec![update]);
         let ExternalImageData { id: ExternalImageId(texture_id), .. } = data;
         self.texture_descriptors.insert(texture_id, descriptor);
     }
@@ -135,7 +140,7 @@ fn prepare_image(image: DynamicImage) -> Result<(ImageData, ImageDescriptor), Er
         premultiply(bytes.as_mut_slice());
     }
     let opaque = is_image_opaque(format, &bytes[..]);
-    let descriptor = ImageDescriptor::new(image_dims.0, image_dims.1, format, opaque);
+    let descriptor = ImageDescriptor::new(image_dims.0, image_dims.1, format, opaque, false);
     let data = ImageData::new(bytes);
     Ok((data, descriptor))
 }

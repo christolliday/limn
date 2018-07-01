@@ -23,7 +23,7 @@ impl App {
         self.add_handler(|event: &InputEvent, args: EventArgs| {
             let InputEvent(event) = event.clone();
             match event {
-                glutin::WindowEvent::Closed => {
+                glutin::WindowEvent::CloseRequested => {
                     args.ui.close();
                 }
                 glutin::WindowEvent::MouseWheel { delta, .. } => {
@@ -33,7 +33,7 @@ impl App {
                     args.widget.event(MouseButton(state, button));
                 }
                 glutin::WindowEvent::CursorMoved { position, .. } => {
-                    let point = Point::new(position.0 as f32, position.1 as f32);
+                    let point = Point::new(position.x as f32, position.y as f32);
                     args.widget.event(MouseMoved(point));
                 }
                 glutin::WindowEvent::CursorLeft { .. } => {

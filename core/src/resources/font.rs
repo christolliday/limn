@@ -5,7 +5,7 @@ use failure::Error;
 use rusttype;
 use font_loader::system_fonts::{self, FontProperty, FontPropertyBuilder};
 use app_units;
-use webrender::api::{RenderApi, ResourceUpdates, FontKey, FontInstanceKey};
+use webrender::api::{RenderApi, ResourceUpdate, AddFont, AddFontInstance, FontKey, FontInstanceKey};
 
 use text_layout;
 
@@ -102,17 +102,24 @@ impl FontLoader {
 
 fn webrender_load_font(render_api: &RenderApi, data: Vec<u8>) -> Result<FontKey, io::Error> {
     let key = render_api.generate_font_key();
-    let mut resources = ResourceUpdates::new();
-    resources.add_raw_font(key, data, 0);
-    render_api.update_resources(resources);
+    let update = ResourceUpdate::AddFont(AddFont::Raw(key, data, 0));
+    render_api.update_resources(vec![update]);
     Ok(key)
 }
 
 fn webrender_load_font_instance(render_api: &RenderApi, font_key: FontKey, size: app_units::Au) -> FontInstanceKey {
     let instance_key = render_api.generate_font_instance_key();
-    let mut resources = ResourceUpdates::new();
-    resources.add_font_instance(instance_key, font_key, size, None, None, Vec::new());
-    render_api.update_resources(resources);
+    let update = ResourceUpdate::AddFontInstance(
+        AddFontInstance {
+            key: instance_key,
+            font_key: font_key,
+            glyph_size: size,
+            options: None,
+            platform_options: None,
+            variations: vec![]
+        }
+    );
+    render_api.update_resources(vec![update]);
     instance_key
 }
 

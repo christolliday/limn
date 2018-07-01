@@ -85,7 +85,8 @@ impl Ui {
     }
 
     pub(super) fn window_resized(&mut self, window_dims: Size) {
-        let window_size = self.window.borrow_mut().size_px();
+        let window = self.window.borrow_mut();
+        let window_size = window.size_px();
         self.render.window_resized(window_size);
         let mut root = self.get_root();
 

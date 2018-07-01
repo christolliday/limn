@@ -28,12 +28,11 @@ impl Filter for OpacityFilter {
         if self.alpha != 1.0 {
             renderer.builder.push_stacking_context(
                 &PrimitiveInfo::new(Rect::zero()),
-                ScrollPolicy::Fixed,
                 None,
                 TransformStyle::Flat,
-                None,
                 MixBlendMode::Normal,
                 vec![FilterOp::Opacity(PropertyBinding::Value(self.alpha), self.alpha)],
+                GlyphRasterSpace::Screen,
             );
         }
     }

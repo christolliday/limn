@@ -26,7 +26,7 @@ impl GLCanvasState {
             channel_index: 0,
             image_type: ExternalImageType::TextureHandle(TextureTarget::Default),
         };
-        let descriptor = ImageDescriptor::new(0, 0, ImageFormat::BGRA8, true);
+        let descriptor = ImageDescriptor::new(0, 0, ImageFormat::BGRA8, true, false);
         let image_info = resources().image_loader.create_image_resource(ImageData::External(data), descriptor);
         GLCanvasState {
             data: data,
@@ -36,7 +36,7 @@ impl GLCanvasState {
 
     pub fn measure(&self) -> Size {
         let descriptor = self.image_info.descriptor;
-        Size::new(descriptor.width as f32, descriptor.height as f32)
+        Size::new(descriptor.size.width as f32, descriptor.size.height as f32)
     }
 }
 
@@ -44,8 +44,8 @@ impl Draw for GLCanvasState {
     fn draw(&mut self, bounds: Rect, _: Rect, renderer: &mut RenderBuilder) {
         let descriptor = self.image_info.descriptor;
         let (bounds_width, bounds_height) = (bounds.width() as u32, bounds.height() as u32);
-        if bounds_width != descriptor.width || bounds_height != descriptor.height {
-            let descriptor = ImageDescriptor::new(bounds_width, bounds_height, ImageFormat::BGRA8, true);
+        if bounds_width != descriptor.size.width || bounds_height != descriptor.size.height {
+            let descriptor = ImageDescriptor::new(bounds_width, bounds_height, ImageFormat::BGRA8, true, false);
             resources().image_loader.update_texture(self.image_info.key, descriptor, self.data);
             self.image_info.descriptor = descriptor;
         }

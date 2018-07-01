@@ -15,8 +15,8 @@ homepage = "https://github.com/christolliday/limn"
 limn-core = { path = "core", version = "0.0.1" }
 
 [dev-dependencies]
-euclid = "0.16"
-gleam = "0.4.20"
+euclid = "0.17"
+gleam = "0.5"
 find_folder = "0.3.0"
 chrono = "0.4"
 env_logger = "0.4"
