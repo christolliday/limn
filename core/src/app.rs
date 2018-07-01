@@ -4,7 +4,7 @@ use std::time::{Instant, Duration};
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use glutin;
+use glutin::{self, dpi::LogicalSize};
 
 use window::Window;
 use ui::Ui;
@@ -68,7 +68,7 @@ impl App {
     fn handle_window_event(&mut self, event: glutin::Event) {
         debug!("handle window event {:?}", event);
         if let glutin::Event::WindowEvent { event, .. } = event {
-            if let glutin::WindowEvent::Resized(width, height) = event {
+            if let glutin::WindowEvent::Resized(LogicalSize {width, height}) = event {
                 // ignore resize events before ui has been measured
                 if self.window_initialized {
                     self.ui.window_resized(Size::new(width as f32, height as f32));

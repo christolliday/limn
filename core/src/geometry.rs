@@ -14,7 +14,7 @@ use webrender::api::*;
 /// integration, but doesn't imply that the reference frame is a layer. Positions
 /// should generally be relative to the window, where the origin is the top left,
 /// and x and y values increase moving down and to the right.
-pub type DensityIndependentPixel = LayerPixel;
+pub type DensityIndependentPixel = LayoutPixel;
 
 pub type Size = euclid::TypedSize2D<f32, DensityIndependentPixel>;
 pub type Point = euclid::TypedPoint2D<f32, DensityIndependentPixel>;

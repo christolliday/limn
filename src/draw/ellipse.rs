@@ -36,8 +36,7 @@ fn clip_ellipse(rect: Rect) -> LocalClip {
 }
 
 fn push_ellipse(renderer: &mut RenderBuilder, rect: Rect, clip_rect: Rect, color: Color) {
-    let clip = clip_ellipse(clip_rect);
-    let info = PrimitiveInfo::with_clip(rect, clip);
+    let info = PrimitiveInfo::with_clip_rect(rect, clip_rect);
     renderer.builder.push_rect(&info, color.into());
 }
 

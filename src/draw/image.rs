@@ -28,7 +28,7 @@ impl ImageState {
     }
     pub fn measure(&self) -> Size {
         let descriptor = resources().image_loader.get_image(&self.image).unwrap().descriptor;
-        Size::new(descriptor.width as f32, descriptor.height as f32)
+        Size::new(descriptor.size.width as f32, descriptor.size.height as f32)
     }
     pub fn scale(&mut self, scale: Size) {
         self.scale = scale;

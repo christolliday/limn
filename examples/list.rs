@@ -15,7 +15,7 @@ use limn::widgets::list;
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
         .with_title("Limn list demo")
-        .with_min_dimensions(100, 300);
+        .with_min_dimensions(glutin::dpi::LogicalSize{width: 100.0, height: 300.0});
     let app = util::init(window_builder);
     let mut root = Widget::new("root");
 

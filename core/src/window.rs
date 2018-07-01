@@ -1,6 +1,7 @@
 use gleam::gl;
 use glutin;
 use glutin::GlContext;
+use glutin::dpi::LogicalSize;
 use webrender::api::DeviceUintSize;
 use geometry::Size;
 
@@ -35,22 +36,22 @@ impl Window {
         self.window.swap_buffers().ok();
     }
     pub fn hidpi_factor(&self) -> f32 {
-        self.window.hidpi_factor()
+        self.window.get_hidpi_factor() as f32
     }
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.window.set_inner_size(width, height);
+        self.window.set_inner_size(LogicalSize{width: width as f64, height: height as f64});
     }
     /// Get the size of the client area of the window in actual pixels.
     /// This is the size of the framebuffer
     pub fn size_px(&self) -> DeviceUintSize {
-        let (width, height) = self.window.get_inner_size().unwrap();
-        DeviceUintSize::new(width, height)
+        let LogicalSize{width, height} = self.window.get_inner_size().unwrap();
+        let hidpi = self.hidpi_factor();
+        DeviceUintSize::new(width as u32 * hidpi as u32, height as u32 * hidpi as u32)
     }
     /// Get the size of the client area of the window in density independent pixels.
     pub fn size_dp(&self) -> Size {
-        let (width, height) = self.window.get_inner_size().unwrap();
-        let hidpi = self.hidpi_factor();
-        Size::new(width as f32 / hidpi, height as f32 / hidpi)
+        let LogicalSize{width, height} = self.window.get_inner_size().unwrap();
+        Size::new(width as f32, height as f32)
     }
     pub fn show(&self) {
         self.window.show()

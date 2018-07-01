@@ -31,7 +31,7 @@ pub(super) struct WebRenderContext {
 // Context needed for widgets to draw or update resources in a particular frame
 pub struct RenderBuilder {
     pub builder: DisplayListBuilder,
-    pub resources: ResourceUpdates,
+    pub resources: Vec<ResourceUpdate>,
 }
 
 impl WebRenderContext {
@@ -42,7 +42,7 @@ impl WebRenderContext {
 
         let opts = webrender::RendererOptions {
             resource_override_path: None,
-            debug: true,
+            debug_flags: webrender::DebugFlags::empty(),
             precache_shaders: false,
             device_pixel_ratio: window.hidpi_factor(),
             .. webrender::RendererOptions::default()
@@ -84,10 +84,10 @@ impl WebRenderContext {
         let builder = DisplayListBuilder::new(self.pipeline_id, window_size);
         RenderBuilder {
             builder: builder,
-            resources: ResourceUpdates::new(),
+            resources: vec![],
         }
     }
-    pub fn set_display_list(&mut self, builder: DisplayListBuilder, resources: ResourceUpdates, window_size: LayoutSize) {
+    pub fn set_display_list(&mut self, builder: DisplayListBuilder, resources: Vec<ResourceUpdate>, window_size: LayoutSize) {
         let mut txn = Transaction::new();
         txn.set_display_list(
             self.epoch,
@@ -145,7 +145,7 @@ impl RenderNotifier for Notifier {
         self.frame_ready.store(true, atomic::Ordering::Release);
     }
 
-    fn new_document_ready(&self, _: DocumentId, _: bool, _: bool) {
+    fn new_frame_ready(&self, _: DocumentId, _: bool, _: bool, _: Option<u64>) {
         self.wake_up();
     }
 
@@ -177,7 +177,7 @@ impl webrender::ExternalImageHandler for LimnExternalImageHandler {
         webrender::ExternalImage {
             uv: TexelRect {
                 uv0: TypedPoint2D::zero(),
-                uv1: TypedPoint2D::<f32, DevicePixel>::new(descriptor.width as f32, descriptor.height as f32),
+                uv1: TypedPoint2D::<f32, DevicePixel>::new(descriptor.size.width as f32, descriptor.size.height as f32),
             },
             source: webrender::ExternalImageSource::NativeTexture(key.0 as _),
         }

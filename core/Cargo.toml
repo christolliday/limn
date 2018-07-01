@@ -9,16 +9,17 @@ limn-text_layout = { path = "../text_layout", version = "0.0.1" }
 limn-layout = { path = "../layout", version = "0.0.1" }
 cassowary = "0.3.0"
 
-euclid = "0.16"
+euclid = "0.17"
 log = "0.3"
-gleam = "0.4.20"
+gleam = "0.5"
 
-webrender = { git = "https://github.com/servo/webrender", rev = "c383ef73113d0d5f8634385565ce83a4c84ca944" }
+#webrender = { git = "https://github.com/servo/webrender", rev = "c383ef73113d0d5f8634385565ce83a4c84ca944" }
+webrender = { git = "https://github.com/servo/webrender", rev = "34a498f7e46c385a189299e7369e204e1cb2060c" }
 
 stb_truetype = "0.2.1"
 app_units = "0.6"
 rusttype = "0.2.1"
-glutin = "0.13.1"
+glutin = "0.17"
 image = "0.16"
 
 lazy_static = "0.2.2"

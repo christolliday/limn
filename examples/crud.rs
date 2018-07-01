@@ -170,7 +170,7 @@ impl EventHandler<PeopleEvent> for PeopleHandler {
 fn main() {
     let window_builder = glutin::WindowBuilder::new()
         .with_title("Limn CRUD demo")
-        .with_min_dimensions(100, 100);
+        .with_min_dimensions(glutin::dpi::LogicalSize{width: 100.0, height: 100.0});
     let mut app = util::init(window_builder);
     let mut root = Widget::new("root");
 
